@@ -1,0 +1,32 @@
+
+version: '3.8'
+
+services:
+  osrm:
+    image: osrm/osrm-backend
+    container_name: oasis-osrm
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/data
+    command: osrm-routed --algorithm mld /data/map.osrm
+    restart: always
+
+  # Helper service to initialize the map data (only needs to run once)
+  osrm-init:
+    image: osrm/osrm-backend
+    container_name: oasis-osrm-init
+    volumes:
+      - ./data:/data
+    # Note: Replace URL with the Geofabrik link for your region
+    entrypoint: |
+      /bin/bash -c "
+      if [ ! -f /data/map.osrm ]; then
+        apt-get update && apt-get install -y wget
+        echo 'Downloading map data...'
+        wget -O /data/map.osm.pbf http://download.geofabrik.de/central-america/nicaragua-latest.osm.pbf
+        osrm-extract -p /usr/local/share/osrm/profiles/driving.lua /data/map.osm.pbf
+        osrm-partition /data/map.osrm
+        osrm-customize /data/map.osrm
+      fi
+      "

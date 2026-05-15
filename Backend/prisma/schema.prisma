@@ -1,0 +1,451 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String                  @id @default(cuid())
+  email                   String                  @unique
+  passwordHash            String
+  name                    String
+  phone                   String?
+  role                    String
+  isActive                Boolean                 @default(true)
+  emailVerified           Boolean                 @default(false)
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  appointmentsAsDoctor    Appointment[]           @relation("DoctorAppointments")
+  appointmentsAsPatient   Appointment[]           @relation("PatientAppointments")
+  auditLogs               AuditLog[]
+  deliveryDriverProfile   DeliveryDriverProfile?
+  deliveryOrdersAsPatient DeliveryOrder[]         @relation("PatientDeliveries")
+  deliveryOrdersAsDriver  DeliveryOrder[]         @relation("DriverDeliveries")
+  doctorProfile           DoctorProfile?
+  patientProfile          PatientProfile?
+  pharmacyManagerProfile  PharmacyManagerProfile?
+  prescriptionsAsDoctor   Prescription[]          @relation("DoctorPrescriptions")
+  prescriptionsAsPatient  Prescription[]          @relation("PatientPrescriptions")
+  receptionistProfile     ReceptionistProfile?
+  refreshTokens           RefreshToken[]
+  salesAsPatient          Sale[]                  @relation("PatientSales")
+  chatParticipants        ChatParticipant[]
+  chatMessages            ChatMessage[]
+  reviews                 Review[]
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
+}
+
+model PatientProfile {
+  userId       String   @id @map("user_id")
+  dateOfBirth  String?
+  bloodType    String?
+  allergies    String?
+  medicalNotes String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("patient_profiles")
+}
+
+model DoctorProfile {
+  userId        String   @id @map("user_id")
+  clinicId      String?  @map("clinic_id")
+  specialty     String   @default("Medicina General")
+  licenseNumber String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  clinic        Clinic?  @relation(fields: [clinicId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
+  @@map("doctor_profiles")
+}
+
+model PharmacyManagerProfile {
+  userId     String    @id @map("user_id")
+  pharmacyId String?   @map("pharmacy_id")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  pharmacy   Pharmacy? @relation(fields: [pharmacyId], references: [id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pharmacy_manager_profiles")
+}
+
+model DeliveryDriverProfile {
+  userId       String   @id @map("user_id")
+  vehicleType  String   @default("motocicleta")
+  licensePlate String?
+  isAvailable  Boolean  @default(true)
+  currentLat   Float?
+  currentLng   Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_driver_profiles")
+}
+
+model ReceptionistProfile {
+  userId    String   @id @map("user_id")
+  clinicId  String?  @map("clinic_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clinic    Clinic?  @relation(fields: [clinicId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("receptionist_profiles")
+}
+
+model Clinic {
+  id                   String                @id @default(cuid())
+  name                 String
+  address              String
+  latitude             Float                 @default(19.4326)
+  longitude            Float                 @default(-99.1332)
+  phone                String?
+  isActive             Boolean               @default(true)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  appointments         Appointment[]
+  doctorProfiles       DoctorProfile[]
+  prescriptions        Prescription[]
+  receptionistProfiles ReceptionistProfile[]
+  sales                Sale[]
+
+  @@index([isActive])
+  @@map("clinics")
+}
+
+model Pharmacy {
+  id                      String                   @id @default(cuid())
+  name                    String
+  address                 String
+  latitude                Float                    @default(19.4326)
+  longitude               Float                    @default(-99.1332)
+  phone                   String?
+  isActive                Boolean                  @default(true)
+  deliveryFee             Float                    @default(29.90)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  deliveryOrders          DeliveryOrder[]
+  inventory               Inventory[]
+  pharmacyManagerProfiles PharmacyManagerProfile[]
+  fulfilledPrescriptions  Prescription[]           @relation("FulfilledPharmacy")
+  sales                   Sale[]
+
+  @@index([isActive])
+  @@map("pharmacies")
+}
+
+model Medicine {
+  id                   String             @id @default(cuid())
+  name                 String
+  genericName          String?
+  description          String?
+  dosageForm           String?
+  concentration        String?
+  requiresPrescription Boolean            @default(true)
+  isActive             Boolean            @default(true)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  inventory            Inventory[]
+  prescriptionLines    PrescriptionLine[]
+  saleItems            SaleItem[]
+
+  @@index([name])
+  @@index([genericName])
+  @@map("medicines")
+}
+
+model Inventory {
+  id             String   @id @default(cuid())
+  pharmacyId     String
+  medicineId     String
+  quantity       Int      @default(0)
+  minStock       Int      @default(10)
+  unitPrice      Float
+  batchNumber    String?
+  expirationDate String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  medicine       Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+  pharmacy       Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  movements      InventoryMovement[]
+
+  @@unique([pharmacyId, medicineId])
+  @@index([pharmacyId])
+  @@index([medicineId])
+  @@map("inventory")
+}
+
+model Appointment {
+  id                 String         @id @default(cuid())
+  patientId          String
+  doctorId           String
+  clinicId           String
+  dateTime           DateTime
+  durationMinutes    Int            @default(30)
+  status             String         @default("scheduled")
+  cancellationReason String?
+  notes              String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  clinic             Clinic         @relation(fields: [clinicId], references: [id])
+  doctor             User           @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  patient            User           @relation("PatientAppointments", fields: [patientId], references: [id])
+  prescriptions      Prescription[]
+  sale               Sale?
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([clinicId])
+  @@index([dateTime])
+  @@index([status])
+  @@map("appointments")
+}
+
+model Prescription {
+  id                  String             @id @default(cuid())
+  patientId           String
+  doctorId            String
+  clinicId            String
+  appointmentId       String?
+  status              String             @default("active")
+  qrCode              String?            @unique
+  notes               String?
+  issuedAt            DateTime           @default(now())
+  expirationDate      String
+  fulfilledAt         DateTime?
+  fulfilledPharmacyId String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  prescriptionLines   PrescriptionLine[]
+  fulfilledPharmacy   Pharmacy?          @relation("FulfilledPharmacy", fields: [fulfilledPharmacyId], references: [id])
+  appointment         Appointment?       @relation(fields: [appointmentId], references: [id])
+  clinic              Clinic             @relation(fields: [clinicId], references: [id])
+  doctor              User               @relation("DoctorPrescriptions", fields: [doctorId], references: [id])
+  patient             User               @relation("PatientPrescriptions", fields: [patientId], references: [id])
+  sales               Sale[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+  @@index([qrCode])
+  @@index([appointmentId])
+  @@map("prescriptions")
+}
+
+model PrescriptionLine {
+  id                 String       @id @default(cuid())
+  prescriptionId     String
+  medicineId         String
+  quantity           Int
+  dosageInstructions String
+  quantityFulfilled  Int          @default(0)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  medicine           Medicine     @relation(fields: [medicineId], references: [id])
+  prescription       Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@index([prescriptionId])
+  @@index([medicineId])
+  @@map("prescription_lines")
+}
+
+model Sale {
+  id              String         @id @default(cuid())
+  pharmacyId      String?
+  clinicId        String?
+  patientId       String?
+  prescriptionId  String?
+  appointmentId   String?        @unique
+  isDelivery      Boolean        @default(false)
+  deliveryAddress String?
+  deliveryLat     Float?
+  deliveryLng     Float?
+  deliveryNotes   String?
+  status          String         @default("pending")
+  totalAmount     Float          @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deliveryOrder   DeliveryOrder?
+  saleItems       SaleItem[]
+  prescription    Prescription?  @relation(fields: [prescriptionId], references: [id])
+  patient         User?          @relation("PatientSales", fields: [patientId], references: [id])
+  pharmacy        Pharmacy?      @relation(fields: [pharmacyId], references: [id])
+  clinic          Clinic?        @relation(fields: [clinicId], references: [id])
+  appointment     Appointment?   @relation(fields: [appointmentId], references: [id])
+
+  @@index([pharmacyId])
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([status])
+  @@map("sales")
+}
+
+model SaleItem {
+  id         String   @id @default(cuid())
+  saleId     String
+  medicineId String
+  quantity   Int
+  unitPrice  Float
+  createdAt  DateTime @default(now())
+  medicine   Medicine @relation(fields: [medicineId], references: [id])
+  sale       Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@map("sale_items")
+}
+
+model DeliveryOrder {
+  id               String          @id @default(cuid())
+  saleId           String          @unique
+  pharmacyId       String
+  deliveryDriverId String?
+  patientId        String
+  pickupAddress    String
+  pickupLat        Float
+  pickupLng        Float
+  deliveryAddress  String
+  deliveryLat      Float
+  deliveryLng      Float
+  status           String          @default("pending")
+  assignedAt       DateTime?
+  pickedUpAt       DateTime?
+  deliveredAt      DateTime?
+  notes            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  patient          User            @relation("PatientDeliveries", fields: [patientId], references: [id])
+  deliveryDriver   User?           @relation("DriverDeliveries", fields: [deliveryDriverId], references: [id])
+  pharmacy         Pharmacy        @relation(fields: [pharmacyId], references: [id])
+  sale             Sale            @relation(fields: [saleId], references: [id])
+  deliveryRoutes   DeliveryRoute[]
+
+  @@index([saleId])
+  @@index([pharmacyId])
+  @@index([deliveryDriverId])
+  @@index([patientId])
+  @@index([status])
+  @@map("delivery_orders")
+}
+
+model DeliveryRoute {
+  id              String        @id @default(cuid())
+  deliveryOrderId String
+  driverLat       Float
+  driverLng       Float
+  recordedAt      DateTime      @default(now())
+  deliveryOrder   DeliveryOrder @relation(fields: [deliveryOrderId], references: [id], onDelete: Cascade)
+
+  @@index([deliveryOrderId])
+  @@index([recordedAt])
+  @@map("delivery_routes")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  details    String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model InventoryMovement {
+  id             String   @id @default(cuid())
+  inventoryId    String
+  userId         String?
+  type           String   // "restock", "sale", "adjustment", "in", "out"
+  quantityChange Int
+  reason         String?
+  createdAt      DateTime @default(now())
+  inventory      Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId])
+  @@map("inventory_movements")
+}
+
+model ChatSession {
+  id          String        @id @default(cuid())
+  type        String        // "doctor_patient", "patient_pharmacy", "patient_delivery", "delivery_pharmacy"
+  targetId    String?       // reference to appointmentId, deliveryId, or orderId
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  messages    ChatMessage[]
+  participants ChatParticipant[]
+
+  @@map("chat_sessions")
+}
+
+model ChatParticipant {
+  id        String      @id @default(cuid())
+  sessionId String
+  userId    String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@map("chat_participants")
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  senderId  String
+  content   String
+  isRead    Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender    User        @relation(fields: [senderId], references: [id])
+
+  @@map("chat_messages")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String
+  targetId   String   // id of doctor, medicine, or pharmacy
+  targetType String   // "doctor", "medicine", "pharmacy"
+  rating     Int      // 1-5
+  comment    String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}

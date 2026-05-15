@@ -1,0 +1,610 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   OASIS — "Spatial Oasis & Liquid Glass" Design System
+   Paradigm: Spatial UI + Liquid Glassmorphism 2.0
+   + Ergonomía Adaptativa 2026
+   ============================================ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* OASIS Extended Palette */
+  --color-oasis-teal: #0D9488;
+  --color-oasis-sky: #38BDF8;
+  --color-oasis-amber: #F59E0B;
+  --color-oasis-teal-light: #14B8A6;
+  --color-oasis-sky-light: #7DD3FC;
+  --color-oasis-amber-light: #FCD34D;
+  --color-oasis-teal-dark: #0F766E;
+  --color-oasis-sky-dark: #0284C7;
+}
+
+/* --- OASIS Light Theme --- */
+:root {
+  --radius: 0.75rem;
+  --background: #FAFAFA; /* Slight green tint — oasis feel */
+  --foreground: #0F172A;
+  --card: rgba(255, 255, 255, 0.55);
+  --card-foreground: #0F172A;
+  --popover: rgba(255, 255, 255, 0.8);
+  --popover-foreground: #0F172A;
+  --primary: #0D9488;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E0F2FE;
+  --secondary-foreground: #0C4A6E;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #ECFDF5;
+  --accent-foreground: #065F46;
+  --destructive: #EF4444;
+  --border: rgba(148, 163, 184, 0.18);
+  --input: rgba(148, 163, 184, 0.22);
+  --ring: #0D9488;
+  --chart-1: #0D9488;
+  --chart-2: #38BDF8;
+  --chart-3: #F59E0B;
+  --chart-4: #8B5CF6;
+  --chart-5: #EC4899;
+  --sidebar: rgba(255, 255, 255, 0.45);
+  --sidebar-foreground: #0F172A;
+  --sidebar-primary: #0D9488;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(13, 148, 136, 0.08);
+  --sidebar-accent-foreground: #0D9488;
+  --sidebar-border: rgba(148, 163, 184, 0.12);
+  --sidebar-ring: #0D9488;
+}
+
+/* --- OASIS Dark Theme (OLED Deep) --- */
+.dark {
+  --background: #050505; /* Deep OLED black */
+  --foreground: #F8FAFC;
+  --card: rgba(22, 22, 22, 0.55);
+  --card-foreground: #F8FAFC;
+  --popover: rgba(22, 22, 22, 0.8);
+  --popover-foreground: #F8FAFC;
+  --primary: #14B8A6;
+  --primary-foreground: #050505;
+  --secondary: rgba(56, 189, 248, 0.1);
+  --secondary-foreground: #7DD3FC;
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #94A3B8;
+  --accent: rgba(13, 148, 136, 0.1);
+  --accent-foreground: #14B8A6;
+  --destructive: #F87171;
+  --border: rgba(255, 255, 255, 0.07);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #14B8A6;
+  --chart-1: #14B8A6;
+  --chart-2: #38BDF8;
+  --chart-3: #F59E0B;
+  --chart-4: #A78BFA;
+  --chart-5: #F472B6;
+  --sidebar: rgba(16, 16, 16, 0.55);
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #14B8A6;
+  --sidebar-primary-foreground: #050505;
+  --sidebar-accent: rgba(20, 184, 166, 0.08);
+  --sidebar-accent-foreground: #14B8A6;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-ring: #14B8A6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ============================================
+   OASIS — Liquid Glass 2.0
+   Specular highlights + depth layers
+   ============================================ */
+
+/* Glass Card — Primary glass surface (z-depth: 1) */
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 4px 20px rgba(0, 0, 0, 0.03);
+  position: relative;
+}
+
+/* Specular highlight — top edge glow */
+.glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .glass::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+}
+
+/* Glass Strong — Elevated glass (z-depth: 2) */
+.glass-strong {
+  background: var(--card);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.glass-strong::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .glass-strong::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+}
+
+/* Glass Sidebar — Navigation panel glass */
+.glass-sidebar {
+  background: var(--sidebar);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-right: 1px solid var(--sidebar-border);
+  position: relative;
+}
+
+.glass-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .glass-sidebar::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+}
+
+/* Glass Input */
+.glass-input {
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  transition: all 0.2s ease-out;
+}
+
+.glass-input:focus-within {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: #0D9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08);
+}
+
+.dark .glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .glass-input:focus-within {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #14B8A6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+}
+
+/* Glass Button — Primary CTA (water gradient) */
+.glass-btn-primary {
+  background: linear-gradient(135deg, #0D9488, #06B6D4);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25);
+  transition: all 0.2s ease-out;
+}
+
+.glass-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+  background: linear-gradient(135deg, #0F766E, #0891B2);
+}
+
+.glass-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+}
+
+.dark .glass-btn-primary {
+  background: linear-gradient(135deg, #14B8A6, #22D3EE);
+  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.2);
+  color: #050505;
+}
+
+.dark .glass-btn-primary:hover {
+  background: linear-gradient(135deg, #0D9488, #06B6D4);
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.3);
+}
+
+/* Glass Button — Secondary */
+.glass-btn-secondary {
+  background: rgba(13, 148, 136, 0.08);
+  color: #0D9488;
+  border: 1px solid rgba(13, 148, 136, 0.15);
+  transition: all 0.2s ease-out;
+}
+
+.dark .glass-btn-secondary {
+  background: rgba(20, 184, 166, 0.08);
+  color: #14B8A6;
+  border-color: rgba(20, 184, 166, 0.12);
+}
+
+.glass-btn-secondary:hover {
+  background: rgba(13, 148, 136, 0.12);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   OASIS — Organic Blobs (Spatial Base Layer)
+   ============================================ */
+
+.blob-1 {
+  position: fixed;
+  top: -10%;
+  right: -5%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.07) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+  animation: blob-float-1 20s ease-in-out infinite;
+}
+
+.blob-2 {
+  position: fixed;
+  bottom: -15%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+  animation: blob-float-2 25s ease-in-out infinite;
+}
+
+.blob-3 {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.03) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+  animation: blob-float-3 30s ease-in-out infinite;
+}
+
+.dark .blob-1 {
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.05) 0%, transparent 70%);
+}
+
+.dark .blob-2 {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.03) 0%, transparent 70%);
+}
+
+.dark .blob-3 {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.02) 0%, transparent 70%);
+}
+
+@keyframes blob-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-30px, 20px) scale(1.05); }
+  50% { transform: translate(15px, -15px) scale(0.95); }
+  75% { transform: translate(-20px, -10px) scale(1.02); }
+}
+
+@keyframes blob-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(25px, -20px) scale(1.03); }
+  66% { transform: translate(-15px, 15px) scale(0.97); }
+}
+
+@keyframes blob-float-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-20px, 25px) scale(1.04); }
+}
+
+/* ============================================
+   OASIS — Organic Diagonal Shimmer
+   ============================================ */
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: var(--muted);
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+  animation: shimmer-diagonal 1.8s ease-in-out infinite;
+}
+
+.dark .shimmer::after {
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 70%
+  );
+}
+
+@keyframes shimmer-diagonal {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(100%) skewX(-15deg); }
+}
+
+/* ============================================
+   OASIS — Custom Scrollbar
+   ============================================ */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.2);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.35);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   OASIS — Map Overrides
+   ============================================ */
+
+.maplibregl-map {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.map-marker {
+  transition: transform 0.15s ease;
+}
+.map-marker:hover {
+  transform: scale(1.15);
+}
+
+@keyframes user-pulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.user-location-marker {
+  pointer-events: none;
+}
+
+/* ============================================
+   OASIS — QR Scanner
+   ============================================ */
+
+@keyframes qr-scan-move {
+  0% { top: 15%; }
+  50% { top: 80%; }
+  100% { top: 15%; }
+}
+.qr-scan-line {
+  animation: qr-scan-move 2.5s ease-in-out infinite;
+}
+
+/* ============================================
+   OASIS — Interactive Bento Grid
+   ============================================ */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   OASIS — Sidebar Width Tokens
+   ============================================ */
+
+:root {
+  --sidebar-width-collapsed: 72px;
+  --sidebar-width-expanded: 260px;
+  --topbar-height: 60px;
+}
+
+/* ============================================
+   OASIS — Ripple Effect
+   ============================================ */
+
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(13, 148, 136, 0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ripple:active::after {
+  opacity: 1;
+}
+
+/* ============================================
+   OASIS — Landing Page Animations
+   ============================================ */
+
+@keyframes oasis-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes oasis-pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(13, 148, 136, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(13, 148, 136, 0.4); }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in-up-delay-1 {
+  animation: fade-in-up 0.6s ease-out 0.1s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-2 {
+  animation: fade-in-up 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-3 {
+  animation: fade-in-up 0.6s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+@keyframes water-drop {
+  0% { transform: scale(0); opacity: 1; }
+  50% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
