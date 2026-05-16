@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Pharmacies API Service
+// OASIS - Pharmacies API Service
 // GET /pharmacies, GET /pharmacies/:id
 // POST /pharmacies, PUT /pharmacies/:id
 // NO mock fallbacks — all calls go to the real backend

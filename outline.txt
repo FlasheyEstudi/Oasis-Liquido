@@ -1,0 +1,26 @@
+The user wants me to review and determine failures and make a goal so that the program is 100% functional and professional following the same design and polishing it. I need to review every API and backend call and verify if it's consumed 100% in the frontend and the database is correct.
+
+However, the user's prompt is followed by a document that lists a set of specific improvements they want to implement. I should focus on these specific improvements for the roles:
+
+### 🩺 Doctor
+4. **Smart Prescriber con Búsqueda Inteligente de Farmacias**: Cuando el paciente escanea un QR o toca la receta, el sistema busca automáticamente la farmacia más cercana que tenga TODOS los medicamentos. Si ninguna tiene el stock completo, el sistema puede dividir la receta en dos pedidos (ej., Farmacia A tiene mayoría, Farmacia B tiene los restantes).
+8. **Telemedicina vía WhatsApp**: Sistema que toma los datos del paciente (nombre, teléfono, cita) y genera un enlace/mensaje que redirige a WhatsApp para iniciar la videollamada.
+17. **Seguimiento con Citas**: Sistema para agendar nuevas citas de seguimiento directamente desde el perfil del paciente.
+
+### 🏥 Gerente de Farmacia
+4. **Alerta de Stock Bajo**: Sistema que alerta cuando el stock está por debajo del umbral configurado.
+
+### 🏍️ Repartidor
+1. **Enrutamiento Gratuito**: Usar OpenStreetMap + Leaflet u OpenRouteService (100% gratis, sin límites de API).
+2. **Prueba de Entrega vía QR (Opcional)**: El repartidor puede escanear un código QR generado dinámicamente en la app del paciente para confirmar la entrega.
+
+Let's check the current status and implement what's missing.
+
+* 🏥 Gerente Farmacia (4 - Alerta de stock bajo): There is `lowStockItems` and `lowStockOnly` filter in the frontend (`inventory.tsx` and `pharmacy-dashboard.tsx`). The backend (`inventory.route.ts`) supports `low_stock` boolean parameter. It seems partially there but maybe needs a more formal alert system.
+* 🩺 Doctor (8 - Telemedicina vía WhatsApp): Add a WhatsApp button in Doctor's consultation/appointment view.
+* 🩺 Doctor (17 - Seguimiento con Citas): Add a way to schedule a follow-up appointment from the patient profile / consultation view.
+* 🏍️ Repartidor (1 - Enrutamiento gratuito): It says they use maplibre-gl and OpenFreeMap. Let's check `Frontend/src/components/delivery/delivery-detail.tsx` to see if they use maplibre-gl or something else, or if there is route finding.
+* 🏍️ Repartidor (2 - Prueba de entrega QR): Check delivery completion flow.
+* 🩺 Doctor (4 - Smart Prescriber): "Cuando el paciente escanea un QR o toca la receta..." - this belongs to the *Patient* role technically, even though it's listed under Doctor's list of changes. Let's see the patient's prescription fulfillment flow (`Frontend/src/components/patient/prescription-detail.tsx` or similar).
+
+Let me check `Frontend/src/components/patient/prescription-detail.tsx` first.

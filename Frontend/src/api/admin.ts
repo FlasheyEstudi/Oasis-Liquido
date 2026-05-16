@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Admin API Service
+// OASIS - Admin API Service
 // GET /admin/stats
 // GET /admin/audit-logs
 // NO mock fallbacks — all calls go to the real backend

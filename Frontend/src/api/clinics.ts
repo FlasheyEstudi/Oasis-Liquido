@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Clinics API Service
+// OASIS - Clinics API Service
 // GET /clinics, GET /clinics/:id
 // GET /clinics/:id/doctors, POST /clinics
 // PUT /clinics/:id, DELETE /clinics/:id (soft-delete)

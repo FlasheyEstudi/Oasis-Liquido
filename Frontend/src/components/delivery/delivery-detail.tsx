@@ -27,6 +27,7 @@ import {
   Building2,
   Route,
   Loader2,
+  QrCode,
 } from 'lucide-react';
 
 // Status timeline steps for delivery
@@ -369,16 +370,32 @@ export function DeliveryDetail() {
             </motion.button>
           )}
           {order.status === 'in_transit' && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="glass-btn-primary rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center disabled:opacity-50"
-              onClick={() => handleStatusUpdate('delivered')}
-              disabled={isUpdating}
-            >
-              {isUpdating ? <Loader2 className="size-5 animate-spin" /> : <CheckCircle2 className="size-5" />}
-              {isUpdating ? 'Actualizando...' : 'Marcar como entregado'}
-            </motion.button>
+            <div className="flex flex-col gap-2 w-full">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full glass rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center border border-teal-500/20 text-teal-600 dark:text-teal-400 hover:bg-teal-500/10"
+                onClick={() => {
+                  setNotification({ type: 'info', message: 'Simulando escaneo de QR de cliente...' });
+                  setTimeout(() => handleStatusUpdate('delivered'), 1500);
+                }}
+                disabled={isUpdating}
+              >
+                <QrCode className="size-5" />
+                Escanear QR de entrega (Opcional)
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="glass-btn-primary rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center disabled:opacity-50"
+                onClick={() => handleStatusUpdate('delivered')}
+                disabled={isUpdating}
+              >
+                {isUpdating ? <Loader2 className="size-5 animate-spin" /> : <CheckCircle2 className="size-5" />}
+                {isUpdating ? 'Actualizando...' : 'Marcar como entregado'}
+              </motion.button>
+            </div>
           )}
         </div>
       )}

@@ -57,9 +57,28 @@ export async function getPharmacies(filters: {
     where,
     include: {
       _count: { select: { inventory: true, sales: true } },
+      ...(filters.medicineIds && filters.medicineIds.length > 0 ? {
+        inventory: {
+          where: {
+            medicineId: { in: filters.medicineIds },
+            quantity: { gt: 0 }
+          },
+          select: { medicineId: true, quantity: true }
+        }
+      } : {})
     },
     orderBy: { name: 'asc' },
   });
+
+  // Calculate matchedMedicinesCount
+  if (filters.medicineIds && filters.medicineIds.length > 0) {
+    pharmacies = pharmacies.map(p => ({
+      ...p,
+      matchedMedicinesCount: (p as any).inventory?.length || 0,
+      matchedMedicines: (p as any).inventory?.map((i: any) => i.medicineId) || [],
+    }));
+  }
+
 
   // Filter by radius if lat/lng provided
   if (filters.lat !== undefined && filters.lng !== undefined) {

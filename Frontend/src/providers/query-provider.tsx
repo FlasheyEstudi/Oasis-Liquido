@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - React Query Provider
+// OASIS - React Query Provider
 // Configures QueryClient with sensible defaults
 // SSR-safe: uses useState to avoid shared client across requests
 // ============================================

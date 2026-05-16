@@ -1,0 +1,26 @@
+Okay, here are the steps we'll take:
+
+**1. Patient / Doctor: Smart Prescriber (Búsqueda inteligente)**
+We'll update `pharmacy-map.tsx` to handle the smart search correctly. The requirement says:
+"Cuando el paciente escanea un QR o toca la receta, el sistema busca automáticamente la farmacia más cercana que tenga TODOS los medicamentos."
+Actually, currently `GET /api/pharmacies` filters pharmacies that have *at least one* of the `medicine_ids`. If we want it to return only pharmacies that have *all* medicines, we need to update `Backend/src/lib/services/pharmacy.service.ts` or add a new parameter like `matchAllMedicines=true`. Let's update `getPharmacies` so if `medicineIds` is passed, it only returns pharmacies that have all the medicines (this makes sense as default behavior).
+Wait, "dividir receta" is hard. Let's just implement the backend filter first.
+And wait, the prompt says "Si ninguna tiene el stock completo, el sistema puede dividir la receta en dos pedidos". This is very complex. Is it okay to just do a smart search and suggest what they have? We can just add a visual indicator in `pharmacy-map.tsx` showing which medicines are in stock for each pharmacy.
+
+**2. Doctor: Telemedicina vía WhatsApp**
+In `consultation.tsx` (or `doctor-dashboard.tsx`), we can add a WhatsApp button if the appointment is considered telemedicine. But there's no `isTelemedicine` flag in `Appointment`. We can just add a button "Iniciar Videollamada (WhatsApp)" next to "Iniciar" consultation, which generates a link: `https://wa.me/${patientPhone}?text=Hola,%20soy%20el%20Dr.%20${doctorName}.%20Iniciemos%20su%20consulta%20médica:`
+
+**3. Doctor/Patient: Seguimiento con Citas**
+In `consultation.tsx`, add a section at the end (or step 4) to schedule a follow up appointment.
+
+**4. Pharmacy Manager: Alerta de stock bajo**
+In `pharmacy-dashboard.tsx` we already show "X stock bajo" in red. We can add a toast notification on load, or a specific visual banner for "Critical low stock". Wait, let's see what "Sistema que alerta cuando el stock está por debajo del umbral configurado" means. It's likely just highlighting it more prominently or sending a Toast.
+
+**5. Delivery: Enrutamiento Gratuito**
+The API `Backend/src/app/api/v1/routes/driving/route.ts` already queries `OSRM_BASE_URL` (default `http://localhost:5000/route/v1/driving/...`). This *is* free routing (OpenRouteService/OSRM)! Wait, let's make sure the frontend uses it. Does `delivery-detail.tsx` query it?
+Let's grep for "routes/driving".
+
+**6. Delivery: Prueba de Entrega vía QR**
+In `delivery-detail.tsx`, before marking as delivered, add an optional step to scan QR, or just a button "Escanear QR de entrega (Opcional)" which would simulate a scan and then mark delivered.
+
+Let's check `routes/driving` usage in frontend.

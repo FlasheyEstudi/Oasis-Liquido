@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Deliveries API Service
+// OASIS - Deliveries API Service
 // GET /delivery-orders, GET /delivery-orders/:id
 // PATCH /delivery-orders/:id/status, PATCH /delivery-orders/:id/assign
 // GET /delivery-orders/:id/route

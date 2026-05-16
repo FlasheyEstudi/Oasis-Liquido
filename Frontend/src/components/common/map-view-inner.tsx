@@ -254,7 +254,7 @@ export function MapViewInner({
       // If no geometry but we have points, fetch from OSRM proxy
       if (!geometry && route.origin && route.destination) {
         try {
-          const res = await fetch(`/api/v1/routes/driving?origin=${route.origin}&destination=${route.destination}`);
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/routes/driving?origin=${route.origin}&destination=${route.destination}`);
           const result = await res.json();
           if (result.success) {
             geometry = result.data.geometry;
