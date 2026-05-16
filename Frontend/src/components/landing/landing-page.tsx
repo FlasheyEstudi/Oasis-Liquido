@@ -247,7 +247,7 @@ export function LandingPage() {
                 <Heart className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                MediRed
+                OASIS
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -388,7 +388,7 @@ export function LandingPage() {
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">Clínica</span>
-                          <span className="font-medium text-gray-900">MediRed Centro</span>
+                          <span className="font-medium text-gray-900">OASIS Centro</span>
                         </div>
                       </div>
                     </CardContent>
@@ -578,7 +578,7 @@ export function LandingPage() {
               Comienza a cuidar tu salud hoy
             </h2>
             <p className="mt-4 text-lg text-emerald-100 max-w-2xl mx-auto">
-              Únete a miles de personas que ya confían en MediRed para gestionar su salud de forma moderna y segura.
+              Únete a miles de personas que ya confían en OASIS para gestionar su salud de forma moderna y segura.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -611,7 +611,7 @@ export function LandingPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
                   <Heart className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-lg font-bold text-white">MediRed</span>
+                <span className="text-lg font-bold text-white">OASIS</span>
               </div>
               <p className="text-sm leading-relaxed max-w-md">
                 Plataforma integral de gestión de red clínica y farmacéutica. Conectando pacientes, médicos y farmacias para una salud más accesible.
@@ -636,7 +636,7 @@ export function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-xs">
-            © {new Date().getFullYear()} MediRed. Todos los derechos reservados.
+            © {new Date().getFullYear()} OASIS. Todos los derechos reservados.
           </div>
         </div>
       </footer>

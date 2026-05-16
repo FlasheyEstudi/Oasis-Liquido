@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import {
   useInventory,
@@ -86,6 +87,16 @@ export function PharmacyDashboard() {
 
   const lowStockItems = inventory.filter((item) => item.quantity < 10).length;
   const pendingOrdersCount = deliveryOrders.length;
+
+
+  useEffect(() => {
+    if (lowStockItems > 0 && !isLoading) {
+      setNotification({
+        type: 'warning',
+        message: `¡Atención! Tienes ${lowStockItems} productos con stock bajo que requieren reabastecimiento.`
+      });
+    }
+  }, [lowStockItems, isLoading, setNotification]);
 
   if (isLoading) {
     return (

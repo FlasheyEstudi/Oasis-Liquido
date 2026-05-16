@@ -1,0 +1,10 @@
+Ah, so the `medicineIds` filter in `getPharmacies` just checks if `some` inventory item matches, and `quantity: { gt: 0 }`. It does NOT guarantee that the pharmacy has ALL medicines, or sufficient quantities, nor does it split prescriptions.
+This means we need to implement "Smart Prescriber con Búsqueda Inteligente de Farmacias":
+1. For Doctor: Telemedicina vía WhatsApp (A simple redirect to WhatsApp url when starting a consultation if it's telemedicine, or button to start telemedicine).
+2. For Doctor: Seguimiento con Citas (A button in patient profile or consultation to schedule a new appointment).
+3. For Pharmacy Manager: Alerta de Stock Bajo (An alert when stock is below configured threshold `minStock`).
+4. For Patient: Búsqueda Inteligente de Farmacias.
+5. For Delivery: Enrutamiento Gratuito (Using maplibre/OSM instead of paid APIs). Wait, is it already using OSRM? Let's check `Backend/src/app/api/v1/routes/driving/route.ts`.
+6. For Delivery: Prueba de Entrega vía QR (Optional QR scan at patient door).
+
+Let's check routing first.

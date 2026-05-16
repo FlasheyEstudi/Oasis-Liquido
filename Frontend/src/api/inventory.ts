@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Inventory API Service
+// OASIS - Inventory API Service
 // GET /pharmacies/:id/inventory
 // PATCH /pharmacies/:id/inventory
 // NO mock fallbacks — all calls go to the real backend

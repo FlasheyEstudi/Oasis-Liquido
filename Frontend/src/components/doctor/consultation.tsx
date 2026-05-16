@@ -6,6 +6,7 @@ import {
   useAppointment,
   useAppointments,
   useMedicines,
+  useCreateAppointment,
   useCreatePrescription,
   useUpdateAppointmentStatus,
   getHookErrorMessage,
@@ -45,7 +46,9 @@ import {
   CheckCircle2,
   Loader2,
   Stethoscope,
+  MessageCircle,
   Clock,
+  Calendar,
 } from 'lucide-react';
 
 interface PrescriptionLineForm {
@@ -76,6 +79,9 @@ export function Consultation() {
   const [prescriptionLines, setPrescriptionLines] = useState<PrescriptionLineForm[]>([]);
   const [createdPrescriptionQr, setCreatedPrescriptionQr] = useState<string | null>(null);
 
+  const createAppointmentMutation = useCreateAppointment();
+  const [isSchedulingFollowUp, setIsSchedulingFollowUp] = useState(false);
+  const [followUpScheduled, setFollowUpScheduled] = useState(false);
   const createPrescriptionMutation = useCreatePrescription();
   const updateStatusMutation = useUpdateAppointmentStatus();
 
@@ -101,6 +107,31 @@ export function Consultation() {
     setPrescriptionLines((prev) =>
       prev.map((line, i) => (i === index ? { ...line, [field]: value } : line))
     );
+  };
+
+
+  const handleScheduleFollowUp = async () => {
+    if (!appointment) return;
+    try {
+      setIsSchedulingFollowUp(true);
+      const followUpDate = new Date();
+      followUpDate.setMonth(followUpDate.getMonth() + 1);
+
+      await createAppointmentMutation.mutateAsync({
+        patient_id: appointment.patient_id,
+        doctor_id: appointment.doctor_id,
+        clinic_id: appointment.clinic_id,
+        date_time: followUpDate.toISOString(),
+        duration_minutes: 30,
+        notes: 'Cita de seguimiento automática',
+      });
+      setFollowUpScheduled(true);
+      setNotification({ type: 'success', message: 'Cita de seguimiento agendada para 1 mes' });
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Error al agendar cita de seguimiento' });
+    } finally {
+      setIsSchedulingFollowUp(false);
+    }
   };
 
   const handleCreatePrescription = async () => {
@@ -249,12 +280,30 @@ export function Consultation() {
           <p className="text-sm text-muted-foreground mb-6">
             La consulta ha sido marcada como completada.
           </p>
-          <Button
-            className="glass-btn-primary rounded-full"
-            onClick={() => navigate('inicio')}
-          >
-            Volver al inicio
-          </Button>
+          <div className="space-y-3">
+            {!followUpScheduled ? (
+              <Button
+                variant="outline"
+                className="w-full rounded-full gap-2 border-teal-500/20 text-teal-600 dark:text-teal-400 hover:bg-teal-500/10"
+                onClick={handleScheduleFollowUp}
+                disabled={isSchedulingFollowUp}
+              >
+                {isSchedulingFollowUp ? <Loader2 className="size-4 animate-spin" /> : <Calendar className="size-4" />}
+                Agendar Seguimiento (1 mes)
+              </Button>
+            ) : (
+              <div className="flex items-center justify-center gap-2 text-sm text-teal-600 dark:text-teal-400 bg-teal-500/10 p-2 rounded-full">
+                <CheckCircle2 className="size-4" />
+                Seguimiento agendado
+              </div>
+            )}
+            <Button
+              className="glass-btn-primary w-full rounded-full"
+              onClick={() => navigate('inicio')}
+            >
+              Volver al inicio
+            </Button>
+          </div>
         </GlassCard>
       </div>
     );
@@ -296,6 +345,23 @@ export function Consultation() {
                   <p className="text-xs text-muted-foreground">{patient?.email}</p>
                 </div>
               </div>
+
+              <Button
+                variant="outline"
+                className="w-full rounded-xl gap-2 mt-2 bg-green-500/10 hover:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/20"
+                onClick={() => {
+                  const phone = patient?.phone || patientProfile?.emergency_phone;
+                  if (!phone) {
+                    setNotification({ type: 'error', message: 'El paciente no tiene número de teléfono registrado' });
+                    return;
+                  }
+                  const message = `Hola, soy el Dr. ${user?.name || ''}. Iniciemos su consulta médica por telemedicina:`;
+                  window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+                }}
+              >
+                <MessageCircle className="size-4" />
+                Iniciar Telemedicina (WhatsApp)
+              </Button>
 
               <Separator className="opacity-50" />
 

@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Tipos TypeScript
+// OASIS - Tipos TypeScript
 // Contrato de API - Sección 3 del documento técnico
 // ============================================
 

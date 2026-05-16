@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - React Query Hooks
+// OASIS - React Query Hooks
 // Comprehensive hooks for EVERY API endpoint
 // Uses @tanstack/react-query v5
 // NO mock fallbacks — all calls go to the real backend

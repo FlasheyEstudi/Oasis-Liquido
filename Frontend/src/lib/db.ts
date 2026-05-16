@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - DB Client (Re-export de Prisma)
+// OASIS - DB Client (Re-export de Prisma)
 // ============================================
 
 import { PrismaClient } from '@prisma/client';

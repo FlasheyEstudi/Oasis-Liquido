@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Prescriptions API Service
+// OASIS - Prescriptions API Service
 // GET /prescriptions, GET /prescriptions/:id
 // POST /prescriptions, POST /prescriptions/validate
 // POST /prescriptions/:id/fulfill

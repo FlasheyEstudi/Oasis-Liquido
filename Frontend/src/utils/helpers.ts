@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Funciones auxiliares
+// OASIS - Funciones auxiliares
 // ============================================
 
 import { format, formatDistanceToNow, parseISO, isValid } from 'date-fns';

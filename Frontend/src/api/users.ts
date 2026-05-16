@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Users API Service (Admin)
+// OASIS - Users API Service (Admin)
 // GET /users, GET /users/:id
 // POST /users, PATCH /users/:id
 // NO mock fallbacks — all calls go to the real backend

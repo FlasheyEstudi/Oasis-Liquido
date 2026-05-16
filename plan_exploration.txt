@@ -1,0 +1,5 @@
+Wait, let me review what "Smart Prescriber con Búsqueda Inteligente de Farmacias" is:
+4. Smart Prescriber con Búsqueda Inteligente de Farmacias: Cuando el paciente escanea un QR o toca la receta, el sistema busca automáticamente la farmacia más cercana que tenga TODOS los medicamentos. Si ninguna tiene el stock completo, el sistema puede dividir la receta en dos pedidos (ej., Farmacia A tiene mayoría, Farmacia B tiene los restantes).
+
+This logic should be part of the patient interface where they look for pharmacies to fulfill their prescription. Right now, `pharmaciesQuery` passes `medicineIds` to search for pharmacies. The API `GET /api/pharmacies` filters pharmacies that have ALL `medicine_ids` in stock (or at least it filters by medicine ids).
+Let's see what `GET /api/pharmacies` does with `medicineIds`.

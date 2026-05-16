@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Appointments API Service
+// OASIS - Appointments API Service
 // GET /appointments, GET /appointments/:id
 // POST /appointments, PATCH /appointments/:id
 // PATCH /appointments/:id/status

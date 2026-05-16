@@ -62,7 +62,7 @@ export function LoadingScreen({ isVisible }: LoadingScreenProps) {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="mt-6 text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent"
           >
-            MediRed
+            OASIS
           </motion.h1>
 
           {/* Subtitle */}

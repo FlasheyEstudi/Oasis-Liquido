@@ -1,5 +1,5 @@
 // ============================================
-// MediRed - Validadores de formularios
+// OASIS - Validadores de formularios
 // ============================================
 
 /** Valida formato de email */

@@ -28,6 +28,7 @@ import {
   LayoutList,
   Map,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 
 const fadeInUp = {
