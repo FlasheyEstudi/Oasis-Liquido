@@ -88,13 +88,56 @@ export async function createAppointment(data: {
   notes?: string;
   patientId: string;
 }, ipAddress?: string, userAgent?: string) {
+  const startTime = new Date(data.date_time);
+  const duration = data.duration_minutes || 30;
+  const endTime = new Date(startTime.getTime() + duration * 60000);
+
+  // Check for overlapping appointments for this doctor
+  const conflict = await db.appointment.findFirst({
+    where: {
+      doctorId: data.doctor_id,
+      status: { notIn: ['cancelled', 'no_show'] },
+      OR: [
+        // New appointment starts during an existing one
+        {
+          dateTime: { lte: startTime },
+          updatedAt: { gte: startTime } // Wait, Prisma doesn't store endTime. We need to calculate it or assume standard duration.
+        }
+      ]
+    }
+  });
+
+  // Better overlap check: 
+  // (StartA < EndB) AND (EndA > StartB)
+  // We don't have EndB in DB, so we assume duration is 30 mins if not specified.
+  
+  const existingAppointments = await db.appointment.findMany({
+    where: {
+      doctorId: data.doctor_id,
+      status: { notIn: ['cancelled', 'no_show'] },
+      dateTime: {
+        gte: new Date(startTime.getTime() - 24 * 60 * 60 * 1000), // Check within 24h range for efficiency
+        lte: new Date(startTime.getTime() + 24 * 60 * 60 * 1000)
+      }
+    }
+  });
+
+  for (const existing of existingAppointments) {
+    const exStart = new Date(existing.dateTime);
+    const exEnd = new Date(exStart.getTime() + (existing.durationMinutes || 30) * 60000);
+    
+    if (startTime < exEnd && endTime > exStart) {
+      throw new Error('CONFLICT: El doctor ya tiene una cita en este horario');
+    }
+  }
+
   const appointment = await db.appointment.create({
     data: {
       patientId: data.patientId,
       doctorId: data.doctor_id,
       clinicId: data.clinic_id,
-      dateTime: new Date(data.date_time),
-      durationMinutes: data.duration_minutes || 30,
+      dateTime: startTime,
+      durationMinutes: duration,
       notes: data.notes,
     },
     include: {

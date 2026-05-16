@@ -11,7 +11,7 @@ import type {
   Clinic,
   CreateClinicRequest,
   UpdateClinicRequest,
-  DoctorProfile,
+  User,
   PaginatedResponse,
 } from '@/types';
 
@@ -37,8 +37,8 @@ export async function getById(id: string): Promise<Clinic> {
 }
 
 /** Get doctors for a specific clinic */
-export async function getDoctors(clinicId: string, params?: { specialty?: string; search?: string }): Promise<DoctorProfile[]> {
-  const result = await get<DoctorProfile[]>(`/clinics/${clinicId}/doctors`, params as Record<string, unknown>);
+export async function getDoctors(clinicId: string, params?: { specialty?: string; search?: string }): Promise<User[]> {
+  const result = await get<User[]>(`/clinics/${clinicId}/doctors`, params as Record<string, unknown>);
   return result.data;
 }
 
@@ -63,4 +63,10 @@ export async function deleteClinic(id: string): Promise<Clinic> {
 /** Get clinic reports */
 export async function getReport(id: string, type: string = 'summary'): Promise<any> {
   return get(`/clinics/${id}/reports`, { type });
+}
+
+/** Create a sale/billing for a clinic service */
+export async function createSale(clinicId: string, data: any): Promise<any> {
+  const result = await post(`/clinics/${clinicId}/sales`, data);
+  return result.data;
 }

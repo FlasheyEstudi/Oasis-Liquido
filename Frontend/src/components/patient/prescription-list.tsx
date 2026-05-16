@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { QRCodeSVG } from 'qrcode.react';
+import { QrCode } from '@/components/common/qr-code';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -247,9 +247,11 @@ export function PrescriptionList() {
           </DialogHeader>
           {qrDialog && (
             <div className="flex flex-col items-center py-4">
-              <div className="rounded-2xl border border-border bg-white dark:bg-white p-3 shadow-sm">
-                <QRCodeSVG value={qrDialog.qr_code_data} size={180} level="M" includeMargin />
-              </div>
+              <QrCode 
+                value={qrDialog.qr_code_data} 
+                size={200} 
+                label="Receta Médica"
+              />
               <div className="mt-4 text-center space-y-1">
                 <p className="text-sm font-medium text-foreground">
                   {qrDialog.doctor?.name || 'Médico'}

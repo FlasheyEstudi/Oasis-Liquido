@@ -30,20 +30,26 @@ export async function createSale(
   const saleItemsData: Array<{ medicine_id: string; quantity: number; unit_price: number }> = [];
 
   for (const item of data.items) {
-    const inventoryItem = await db.inventory.findFirst({
-      where: { pharmacyId, medicineId: item.medicine_id },
-    });
+    let unitPrice = (item as any).unit_price || 0;
+    
+    // If it's a pharmacy sale, get price from inventory and check stock
+    if (pharmacyId && !data.clinic_id) {
+      const inventoryItem = await db.inventory.findFirst({
+        where: { pharmacyId, medicineId: item.medicine_id },
+      });
 
-    if (!inventoryItem || inventoryItem.quantity < item.quantity) {
-      throw new Error(`INSUFFICIENT_STOCK: Medicine ${item.medicine_id} insufficient stock`);
+      if (!inventoryItem || inventoryItem.quantity < item.quantity) {
+        throw new Error(`INSUFFICIENT_STOCK: Medicine ${item.medicine_id} insufficient stock`);
+      }
+      unitPrice = inventoryItem.unitPrice;
     }
 
-    const lineTotal = inventoryItem.unitPrice * item.quantity;
+    const lineTotal = unitPrice * item.quantity;
     totalAmount += lineTotal;
     saleItemsData.push({
       medicine_id: item.medicine_id,
       quantity: item.quantity,
-      unit_price: inventoryItem.unitPrice,
+      unit_price: unitPrice,
     });
   }
 
@@ -83,28 +89,30 @@ export async function createSale(
     },
   });
 
-  // Decrement inventory for each item
-  for (const item of data.items) {
-    const inventoryItem = await db.inventory.findFirst({
-      where: { pharmacyId, medicineId: item.medicine_id },
-    });
-
-    if (inventoryItem) {
-      await db.inventory.update({
-        where: { id: inventoryItem.id },
-        data: { quantity: inventoryItem.quantity - item.quantity },
+  // Decrement inventory only for pharmacy sales
+  if (pharmacyId && !data.clinic_id) {
+    for (const item of data.items) {
+      const inventoryItem = await db.inventory.findFirst({
+        where: { pharmacyId, medicineId: item.medicine_id },
       });
 
-      // Record movement for Kardex
-      await (db as any).inventoryMovement.create({
-        data: {
-          inventoryId: inventoryItem.id,
-          userId: creatorId || patientId || 'system',
-          quantityChange: -item.quantity,
-          type: 'sale',
-          reason: `Venta #${sale.id.slice(-6)}`,
-        }
-      });
+      if (inventoryItem) {
+        await db.inventory.update({
+          where: { id: inventoryItem.id },
+          data: { quantity: inventoryItem.quantity - item.quantity },
+        });
+
+        // Record movement for Kardex
+        await (db as any).inventoryMovement.create({
+          data: {
+            inventoryId: inventoryItem.id,
+            userId: creatorId || patientId || 'system',
+            quantityChange: -item.quantity,
+            type: 'sale',
+            reason: `Venta #${sale.id.slice(-6)}`,
+          }
+        });
+      }
     }
   }
 

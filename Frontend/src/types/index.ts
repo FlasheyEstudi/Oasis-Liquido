@@ -214,8 +214,8 @@ export type UpdateMedicineRequest = Partial<CreateMedicineRequest>
 export interface InventoryItem {
   id: string;
   medicine: Medicine;
-  stock_quantity: number;
-  price: number;
+  quantity: number;
+  unitPrice: number;
   updated_at: string;
 }
 
@@ -354,6 +354,7 @@ export interface DeliveryOrderItem {
 export interface CreateSaleRequest {
   items: SaleItemRequest[];
   patient_id?: string;
+  prescription_id?: string;
   is_delivery: boolean;
   delivery_address?: string;
   delivery_lat?: number;
@@ -448,30 +449,31 @@ export interface ApiError {
 
 // --- UI Navigation Types ---
 export type AppPage =
-  | 'landing'
-  | 'login'
-  | 'register'
-  | 'forgot-password'
-  | 'reset-password'
-  | 'home'
-  | 'appointments'
-  | 'new-appointment'
-  | 'appointment-detail'
-  | 'prescriptions'
-  | 'prescription-detail'
-  | 'pharmacy-map'
-  | 'pharmacy-detail'
-  | 'delivery-request'
-  | 'order-tracking'
-  | 'consultation'
-  | 'manage-clinics'
-  | 'manage-pharmacies'
-  | 'manage-users'
-  | 'inventory'
-  | 'fulfillment'
-  | 'order-management'
-  | 'driver-home'
-  | 'delivery-detail'
-  | 'profile'
-  | 'audit-logs'
-  | 'pos';
+  | 'bienvenida'
+  | 'entrar'
+  | 'registro'
+  | 'recuperar-cuenta'
+  | 'cambiar-clave'
+  | 'inicio'
+  | 'citas'
+  | 'nueva-cita'
+  | 'detalle-cita'
+  | 'recetas'
+  | 'detalle-receta'
+  | 'mapa-farmacias'
+  | 'detalle-farmacia'
+  | 'solicitud-envio'
+  | 'seguimiento'
+  | 'consulta'
+  | 'gestionar-clinicas'
+  | 'gestionar-farmacias'
+  | 'gestionar-usuarios'
+  | 'inventario'
+  | 'surtimiento'
+  | 'gestion-pedidos'
+  | 'inicio-repartidor'
+  | 'detalle-envio'
+  | 'perfil'
+  | 'auditoria'
+  | 'venta'
+  | string; // Keep string for dynamic routes like verify-

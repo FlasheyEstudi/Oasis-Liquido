@@ -153,7 +153,7 @@ export function Consultation() {
     return (
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('home')} className="rounded-full">
+          <Button variant="ghost" size="icon" onClick={() => navigate('inicio')} className="rounded-full">
             <ArrowLeft className="size-5" />
           </Button>
           <div className="flex-1">
@@ -251,7 +251,7 @@ export function Consultation() {
           </p>
           <Button
             className="glass-btn-primary rounded-full"
-            onClick={() => navigate('home')}
+            onClick={() => navigate('inicio')}
           >
             Volver al inicio
           </Button>
@@ -264,7 +264,7 @@ export function Consultation() {
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('home')} className="rounded-full">
+        <Button variant="ghost" size="icon" onClick={() => navigate('inicio')} className="rounded-full">
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
@@ -567,7 +567,7 @@ export function Consultation() {
 
           {/* Finish Consultation */}
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => navigate('home')} className="rounded-full">
+            <Button variant="outline" onClick={() => navigate('inicio')} className="rounded-full">
               Volver
             </Button>
             <Button

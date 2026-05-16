@@ -7,7 +7,7 @@ import { validateBody, fulfillPrescriptionSchema } from '@/lib/validators';
 import * as prescriptionService from '@/lib/services/prescription.service';
 
 export const POST = withAuth(
-  async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+  async (req: AuthenticatedRequest, context: { params: Promise<any> }) => {
     try {
       const { id } = await context.params;
 
@@ -19,21 +19,26 @@ export const POST = withAuth(
         req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined;
       const userAgent = req.headers.get('user-agent') || undefined;
 
+      // Ensure we pass the user's pharmacyId for validation
       const result = await prescriptionService.fulfillPrescription(
         id,
         validation.data,
         req.user.userId,
+        req.user.pharmacyId, // Authorized pharmacyId from JWT
         ipAddress,
         userAgent
       );
 
       return successResponse(result, 'Receta dispensada exitosamente');
     } catch (error: any) {
+      if (error.message.includes('FORBIDDEN')) {
+        return errorResponse(ErrorCodes.FORBIDDEN, error.message, 403);
+      }
       if (error.message === 'NOT_FOUND') {
         return errorResponse(ErrorCodes.NOT_FOUND, 'Receta no encontrada', 404);
       }
-      if (error.message === 'INSUFFICIENT_STOCK') {
-        return errorResponse(ErrorCodes.INSUFFICIENT_STOCK, 'Stock insuficiente', 400);
+      if (error.message.includes('INSUFFICIENT_STOCK')) {
+        return errorResponse(ErrorCodes.INSUFFICIENT_STOCK, error.message, 400);
       }
       if (error.message === 'PRESCRIPTION_EXPIRED') {
         return errorResponse(ErrorCodes.PRESCRIPTION_EXPIRED, 'Receta expirada', 400);
@@ -44,8 +49,8 @@ export const POST = withAuth(
       if (error.message === 'INVALID_STATUS_TRANSITION') {
         return errorResponse(ErrorCodes.INVALID_STATUS_TRANSITION, 'Transición de estado no válida', 400);
       }
-      return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
+      return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error interno del servidor', 500);
     }
   },
-  { roles: ['pharmacy_manager'] }
+  { roles: ['pharmacy_manager', 'admin'] }
 );

@@ -7,7 +7,7 @@ import {
   useUpdateDeliveryStatus,
 } from '@/hooks/use-api';
 import { formatDate, formatCurrency, formatDistance } from '@/utils/helpers';
-import { DELIVERY_STATUS_CONFIG } from '@/utils/constants';
+import { DELIVERY_STATUS_CONFIG, DEFAULT_LAT, DEFAULT_LNG } from '@/utils/constants';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { StatusBadge } from '@/components/common/status-badge';
 import { MapView } from '@/components/common/map-view';

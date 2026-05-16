@@ -34,13 +34,13 @@ interface AuthState {
 /** Obtiene la página home según el rol */
 function getHomeForRole(role: UserRole): AppPage {
   switch (role) {
-    case 'admin': return 'home';
-    case 'doctor': return 'home';
-    case 'receptionist': return 'home';
-    case 'patient': return 'home';
-    case 'pharmacy_manager': return 'home';
-    case 'delivery_driver': return 'driver-home';
-    default: return 'home';
+    case 'admin': return 'inicio';
+    case 'doctor': return 'inicio';
+    case 'receptionist': return 'inicio';
+    case 'patient': return 'inicio';
+    case 'pharmacy_manager': return 'inicio';
+    case 'delivery_driver': return 'inicio-repartidor';
+    default: return 'inicio';
   }
 }
 
@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
   isHydrated: false,
-  currentPage: 'landing',
+  currentPage: 'bienvenida',
   selectedItemId: null,
   notification: null,
 
@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user: null,
       isAuthenticated: false,
       isLoading: false,
-      currentPage: 'landing',
+      currentPage: 'bienvenida',
       selectedItemId: null,
       notification: null,
     });
@@ -122,14 +122,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: false,
         isHydrated: true,
         isLoading: false,
-        currentPage: 'landing',
+        currentPage: 'bienvenida',
       });
     }
   },
 
   getRoleHome: () => {
     const { user } = get();
-    if (!user) return 'login';
+    if (!user) return 'entrar';
     return getHomeForRole(user.role);
   },
 }));

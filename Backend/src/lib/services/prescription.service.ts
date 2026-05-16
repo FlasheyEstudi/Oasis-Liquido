@@ -169,6 +169,7 @@ export async function validatePrescription(qrData: string) {
 /**
  * Fulfill a prescription (dispense medicines)
  * Updates prescription lines, decrements inventory, updates prescription status
+ * Uses $transaction for atomicity and validates pharmacy ownership
  */
 export async function fulfillPrescription(
   prescriptionId: string,
@@ -180,90 +181,100 @@ export async function fulfillPrescription(
     }>;
   },
   userId: string,
+  userPharmacyId?: string, // Added for validation
   ipAddress?: string,
   userAgent?: string
 ) {
-  const prescription = await db.prescription.findUnique({
-    where: { id: prescriptionId },
-    include: { prescriptionLines: true },
-  });
+  // 1. Validate ownership if user is pharmacy_manager
+  if (userPharmacyId && userPharmacyId !== data.pharmacy_id) {
+    throw new Error('FORBIDDEN: No tienes permisos para esta farmacia');
+  }
 
-  if (!prescription) throw new Error('NOT_FOUND');
-
-  // Update each prescription line
-  for (const item of data.items) {
-    const line = prescription.prescriptionLines.find((l) => l.id === item.prescription_line_id);
-    if (!line) continue;
-
-    const newFulfilled = line.quantityFulfilled + item.quantity_fulfilled;
-    if (newFulfilled > line.quantity) {
-      throw new Error(`Cannot fulfill more than prescribed for line ${item.prescription_line_id}`);
-    }
-
-    // Update prescription line
-    await db.prescriptionLine.update({
-      where: { id: item.prescription_line_id },
-      data: { quantityFulfilled: newFulfilled },
+  // 2. Start transaction
+  return await db.$transaction(async (tx) => {
+    const prescription = await tx.prescription.findUnique({
+      where: { id: prescriptionId },
+      include: { prescriptionLines: true },
     });
 
-    // Decrement inventory
-    const inventoryItem = await db.inventory.findFirst({
-      where: {
-        pharmacyId: data.pharmacy_id,
-        medicineId: line.medicineId,
+    if (!prescription) throw new Error('NOT_FOUND');
+
+    // Update each prescription line and inventory
+    for (const item of data.items) {
+      const line = prescription.prescriptionLines.find((l) => l.id === item.prescription_line_id);
+      if (!line) continue;
+
+      const newFulfilled = line.quantityFulfilled + item.quantity_fulfilled;
+      if (newFulfilled > line.quantity) {
+        throw new Error(`Cannot fulfill more than prescribed for line ${item.prescription_line_id}`);
+      }
+
+      // Update prescription line
+      await tx.prescriptionLine.update({
+        where: { id: item.prescription_line_id },
+        data: { quantityFulfilled: newFulfilled },
+      });
+
+      // Decrement inventory atomically
+      const inventoryItem = await tx.inventory.findFirst({
+        where: {
+          pharmacyId: data.pharmacy_id,
+          medicineId: line.medicineId,
+        },
+      });
+
+      if (!inventoryItem || inventoryItem.quantity < item.quantity_fulfilled) {
+        throw new Error(`INSUFFICIENT_STOCK: ${line.medicineId}`);
+      }
+
+      await tx.inventory.update({
+        where: { id: inventoryItem.id },
+        data: { quantity: { decrement: item.quantity_fulfilled } },
+      });
+    }
+
+    // Check if all lines are fully fulfilled
+    const updatedLines = await tx.prescriptionLine.findMany({
+      where: { prescriptionId },
+    });
+
+    const allFulfilled = updatedLines.every((l) => l.quantityFulfilled >= l.quantity);
+    const anyFulfilled = updatedLines.some((l) => l.quantityFulfilled > 0);
+
+    let newStatus = prescription.status;
+    if (allFulfilled) {
+      newStatus = 'fulfilled';
+    } else if (anyFulfilled) {
+      newStatus = 'partially_fulfilled';
+    }
+
+    // Update prescription
+    const updated = await tx.prescription.update({
+      where: { id: prescriptionId },
+      data: {
+        status: newStatus,
+        fulfilledAt: allFulfilled ? new Date() : undefined,
+        fulfilledPharmacyId: data.pharmacy_id,
+      },
+      include: {
+        patient: { select: { id: true, name: true, email: true } },
+        doctor: { select: { id: true, name: true, doctorProfile: true } },
+        prescriptionLines: { include: { medicine: true } },
+        fulfilledPharmacy: { select: { id: true, name: true } },
       },
     });
 
-    if (!inventoryItem || inventoryItem.quantity < item.quantity_fulfilled) {
-      throw new Error('INSUFFICIENT_STOCK');
-    }
-
-    await db.inventory.update({
-      where: { id: inventoryItem.id },
-      data: { quantity: inventoryItem.quantity - item.quantity_fulfilled },
+    // Audit log (inside transaction or just after)
+    await createAuditLog({
+      userId,
+      action: 'update',
+      entityType: 'prescription',
+      entityId: prescriptionId,
+      details: JSON.stringify({ action: 'fulfill', pharmacy_id: data.pharmacy_id, items: data.items }),
+      ipAddress,
+      userAgent,
     });
-  }
 
-  // Check if all lines are fully fulfilled
-  const updatedLines = await db.prescriptionLine.findMany({
-    where: { prescriptionId },
+    return updated;
   });
-
-  const allFulfilled = updatedLines.every((l) => l.quantityFulfilled >= l.quantity);
-  const anyFulfilled = updatedLines.some((l) => l.quantityFulfilled > 0);
-
-  let newStatus = prescription.status;
-  if (allFulfilled) {
-    newStatus = 'fulfilled';
-  } else if (anyFulfilled) {
-    newStatus = 'partially_fulfilled';
-  }
-
-  // Update prescription
-  const updated = await db.prescription.update({
-    where: { id: prescriptionId },
-    data: {
-      status: newStatus,
-      fulfilledAt: allFulfilled ? new Date() : undefined,
-      fulfilledPharmacyId: data.pharmacy_id,
-    },
-    include: {
-      patient: { select: { id: true, name: true, email: true } },
-      doctor: { select: { id: true, name: true, doctorProfile: true } },
-      prescriptionLines: { include: { medicine: true } },
-      fulfilledPharmacy: { select: { id: true, name: true } },
-    },
-  });
-
-  await createAuditLog({
-    userId,
-    action: 'update',
-    entityType: 'prescription',
-    entityId: prescriptionId,
-    details: JSON.stringify({ action: 'fulfill', pharmacy_id: data.pharmacy_id, items: data.items }),
-    ipAddress,
-    userAgent,
-  });
-
-  return updated;
 }

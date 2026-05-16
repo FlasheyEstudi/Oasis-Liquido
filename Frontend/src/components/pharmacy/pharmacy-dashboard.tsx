@@ -19,7 +19,6 @@ import {
   Package,
   FileText,
   ClipboardList,
-  QrCode,
   Warehouse,
   Truck,
   AlertTriangle,
@@ -27,6 +26,7 @@ import {
   Pill,
   ShoppingCart,
 } from 'lucide-react';
+import { QrCode } from '@/components/common/qr-code';
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.06 } },
@@ -84,7 +84,7 @@ export function PharmacyDashboard() {
   const isLoading = invLoading || delLoading || prescLoading || reportLoading;
   const firstError = invError || delError || prescError;
 
-  const lowStockItems = inventory.filter((item) => item.stock_quantity < 10).length;
+  const lowStockItems = inventory.filter((item) => item.quantity < 10).length;
   const pendingOrdersCount = deliveryOrders.length;
 
   if (isLoading) {
@@ -184,34 +184,50 @@ export function PharmacyDashboard() {
       {/* Welcome Card */}
       <motion.div className="col-span-8" variants={fadeUp}>
         <GlassCard>
-          <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-2xl font-bold text-foreground"
-          >
-            {pharmacyName}
-          </motion.h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Hola, {firstName} — Panel de operaciones
-          </p>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Package className="size-3.5" />
-              <span>{inventory.length} productos</span>
-            </div>
-            {lowStockItems > 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-                <AlertTriangle className="size-3.5" />
-                <span>{lowStockItems} stock bajo</span>
+          <div className="flex items-center justify-between">
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-2xl font-bold text-foreground"
+              >
+                {pharmacyName}
+              </motion.h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Hola, {firstName} — Panel de operaciones
+              </p>
+              <div className="flex items-center gap-4 mt-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Package className="size-3.5" />
+                  <span>{inventory.length} productos</span>
+                </div>
+                {lowStockItems > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="size-3.5" />
+                    <span>{lowStockItems} stock bajo</span>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+            <div className="group relative cursor-pointer" onClick={() => navigate('perfil')}>
+              <div className="absolute -inset-2 bg-gradient-to-r from-teal-500 to-sky-500 rounded-[2rem] opacity-20 blur-xl group-hover:opacity-40 transition-opacity" />
+              <div className="relative glass-strong rounded-3xl p-2 border border-white/20 shadow-2xl transition-transform group-hover:scale-105">
+                <QrCode 
+                  value={`pharmacy-id-${pharmacyId}`} 
+                  size={90} 
+                  label="FARMACIA ID"
+                  className="bg-white rounded-2xl"
+                  showValue={false}
+                />
+              </div>
+            </div>
           </div>
         </GlassCard>
       </motion.div>
 
       {/* Pending Orders Count */}
       <motion.div className="col-span-4" variants={fadeUp}>
-        <GlassCard hover onClick={() => navigate('order-management')}>
+        <GlassCard hover onClick={() => navigate('gestion-pedidos')}>
           <div className="flex items-center gap-3">
             <div className="flex size-14 items-center justify-center rounded-full bg-sky-500/10">
               <ClipboardList className="size-6 text-sky-600 dark:text-sky-400" />
@@ -230,10 +246,10 @@ export function PharmacyDashboard() {
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">Acciones rápidas</h3>
           <div className="grid grid-cols-4 gap-3">
             {[
-              { icon: QrCode, label: 'Escanear QR', page: 'fulfillment' as const, iconBg: 'bg-teal-500/10', iconColor: 'text-teal-600 dark:text-teal-400', hoverBg: 'hover:bg-teal-500/10 hover:border-teal-500/30' },
-              { icon: ShoppingCart, label: 'Punto de Venta', page: 'pos' as const, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-600 dark:text-purple-400', hoverBg: 'hover:bg-purple-500/10 hover:border-purple-500/30' },
-              { icon: Warehouse, label: 'Inventario', page: 'inventory' as const, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-600 dark:text-sky-400', hoverBg: 'hover:bg-sky-500/10 hover:border-sky-500/30' },
-              { icon: Truck, label: 'Pedidos', page: 'order-management' as const, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400', hoverBg: 'hover:bg-amber-500/10 hover:border-amber-500/30' },
+              { icon: Warehouse, label: 'Escanear QR', page: 'surtimiento' as const, iconBg: 'bg-teal-500/10', iconColor: 'text-teal-600 dark:text-teal-400', hoverBg: 'hover:bg-teal-500/10 hover:border-teal-500/30' },
+              { icon: ShoppingCart, label: 'Punto de Venta', page: 'venta' as const, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-600 dark:text-purple-400', hoverBg: 'hover:bg-purple-500/10 hover:border-purple-500/30' },
+              { icon: Warehouse, label: 'Inventario', page: 'inventario' as const, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-600 dark:text-sky-400', hoverBg: 'hover:bg-sky-500/10 hover:border-sky-500/30' },
+              { icon: Truck, label: 'Pedidos', page: 'gestion-pedidos' as const, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400', hoverBg: 'hover:bg-amber-500/10 hover:border-amber-500/30' },
             ].map((action) => (
               <motion.button
                 key={action.page}
@@ -264,7 +280,7 @@ export function PharmacyDashboard() {
             <motion.button
               whileHover={{ x: 4 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('fulfillment')}
+              onClick={() => navigate('surtimiento')}
               className="text-sm text-teal-600 dark:text-teal-400 font-medium"
             >
               Ver todas
@@ -285,7 +301,7 @@ export function PharmacyDashboard() {
                     key={prescription.id}
                     whileHover={{ x: 4 }}
                     className="flex items-center gap-3 p-3 rounded-2xl hover:bg-teal-500/5 transition-colors cursor-pointer"
-                    onClick={() => navigate('fulfillment', prescription.id)}
+                    onClick={() => navigate('surtimiento', prescription.id)}
                   >
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-teal-500/10">
                       <Pill className="size-4 text-teal-600 dark:text-teal-400" />
@@ -319,7 +335,7 @@ export function PharmacyDashboard() {
             <motion.button
               whileHover={{ x: 4 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('order-management')}
+              onClick={() => navigate('gestion-pedidos')}
               className="text-sm text-teal-600 dark:text-teal-400 font-medium"
             >
               Ver todos
@@ -340,7 +356,7 @@ export function PharmacyDashboard() {
                     key={order.id}
                     whileHover={{ x: 4 }}
                     className="flex items-center gap-3 p-3 rounded-2xl hover:bg-sky-500/5 transition-colors cursor-pointer"
-                    onClick={() => navigate('order-management', order.id)}
+                    onClick={() => navigate('gestion-pedidos', order.id)}
                   >
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500/10">
                       <Truck className="size-4 text-amber-600 dark:text-amber-400" />

@@ -15,8 +15,16 @@ import axios, {
 } from 'axios';
 
 // Config values (fallback to defaults if constants are missing)
-const API_BASE_URL = ''; // Use empty string to leverage Next.js rewrites and avoid CORS
+// Use the server IP directly to avoid proxy issues in static/mobile mode
+const API_BASE_URL = 'http://192.168.0.100:8000';
 const API_PREFIX = '/api/v1';
+
+/**
+ * Get the base API URL including prefix
+ */
+export function getApiUrl(): string {
+  return `${API_BASE_URL}${API_PREFIX}`;
+}
 
 // --- In-memory access token ---
 let accessToken: string | null = null;
@@ -131,7 +139,7 @@ apiClient.interceptors.response.use(
         accessToken = null;
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('auth:expired'));
-          window.location.href = '/login';
+          window.location.href = '/entrar';
         }
         return Promise.reject(refreshError);
       } finally {

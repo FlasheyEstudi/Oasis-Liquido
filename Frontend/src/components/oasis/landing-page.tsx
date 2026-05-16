@@ -133,7 +133,7 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: any = {
   hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
@@ -209,7 +209,7 @@ export function OasisLandingPage() {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => navigate('login')}
+                onClick={() => navigate('entrar')}
                 className="hidden sm:block text-sm font-medium text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               >
                 Iniciar sesión
@@ -217,7 +217,7 @@ export function OasisLandingPage() {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => navigate('register')}
+                onClick={() => navigate('registro')}
                 className="glass-btn-primary rounded-xl px-4 py-2 text-sm font-semibold flex items-center gap-1.5"
               >
                 Comenzar
@@ -283,7 +283,7 @@ export function OasisLandingPage() {
             <motion.button
               whileHover={{ scale: 1.04, y: -2 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('register')}
+              onClick={() => navigate('registro')}
               className="glass-btn-primary rounded-2xl px-8 py-3.5 text-base font-semibold flex items-center gap-2 shadow-lg shadow-teal-500/20"
             >
               Comenzar ahora
@@ -292,7 +292,7 @@ export function OasisLandingPage() {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('login')}
+              onClick={() => navigate('entrar')}
               className="glass rounded-2xl px-8 py-3.5 text-base font-semibold text-slate-700 dark:text-slate-200 hover:shadow-md transition-all flex items-center gap-2"
             >
               <Play className="size-4 text-teal-500" />
@@ -579,7 +579,7 @@ export function OasisLandingPage() {
             <motion.button
               whileHover={{ scale: 1.04, y: -2 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('register')}
+              onClick={() => navigate('registro')}
               className="glass-btn-primary rounded-2xl px-10 py-4 text-lg font-semibold inline-flex items-center gap-2 shadow-xl shadow-teal-500/20 relative"
             >
               Crear cuenta gratuita

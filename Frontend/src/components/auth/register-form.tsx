@@ -289,7 +289,7 @@ export function RegisterForm() {
               ¿Ya tienes cuenta?{' '}
               <button
                 type="button"
-                onClick={() => navigate('login')}
+                onClick={() => navigate('entrar')}
                 disabled={isSubmitting}
                 className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold transition-colors disabled:opacity-50"
               >

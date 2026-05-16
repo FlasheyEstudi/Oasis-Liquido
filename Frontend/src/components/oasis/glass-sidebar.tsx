@@ -102,7 +102,7 @@ export function GlassSidebar() {
       {/* Logo Area */}
       <div className="flex items-center h-[60px] px-4 border-b border-sidebar-border">
         <motion.button
-          onClick={() => navigate('home')}
+          onClick={() => navigate('inicio')}
           className="flex items-center gap-3 w-full overflow-hidden"
           whileTap={{ scale: 0.95 }}
         >

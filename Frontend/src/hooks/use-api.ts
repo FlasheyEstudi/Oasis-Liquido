@@ -145,10 +145,11 @@ export function useUpdatePatientProfile() {
 // ============================================
 
 /** List appointments */
-export function useAppointments(params?: AppointmentListParams) {
+export function useAppointments(params?: AppointmentListParams, enabled = true) {
   return useQuery({
     queryKey: ['appointments', params],
     queryFn: () => appointmentsApi.list(params),
+    enabled,
   });
 }
 
@@ -308,6 +309,19 @@ export function useClinicReport(id: string, type: string = 'summary', enabled = 
     queryKey: ['clinics', id, 'reports', type],
     queryFn: () => clinicsApi.getReport(id, type),
     enabled: !!id && enabled,
+  });
+}
+
+/** Create a clinic sale/billing */
+export function useCreateClinicSale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { clinicId: string; data: any }) =>
+      clinicsApi.createSale(args.clinicId, args.data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['clinics', variables.clinicId, 'reports'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
   });
 }
 

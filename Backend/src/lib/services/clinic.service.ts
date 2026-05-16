@@ -145,5 +145,12 @@ export async function getClinicDoctors(clinicId: string, filters?: { search?: st
     orderBy: { name: 'asc' },
   });
 
-  return doctors;
+  return doctors.map(doc => ({
+    ...doc,
+    doctor_profile: doc.doctorProfile ? {
+      ...doc.doctorProfile,
+      license_number: doc.doctorProfile.licenseNumber,
+      clinic_id: doc.doctorProfile.clinicId,
+    } : null
+  }));
 }

@@ -18,7 +18,7 @@ import {
 import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useInventory, useCreateSale } from '@/hooks/use-api';
+import { useInventory, useCreateSale, useValidatePrescription, getHookErrorMessage } from '@/hooks/use-api';
 import { formatCurrency } from '@/utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -39,38 +39,46 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
   const [qrMode, setQrMode] = useState(false);
   const [qrValue, setQrValue] = useState('');
   const [isPrescriptionApplied, setIsPrescriptionApplied] = useState(false);
+  const [guestName, setGuestName] = useState('');
   const [lastSale, setLastSale] = useState<any>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
   const createSale = useCreateSale();
+  const validatePrescription = useValidatePrescription();
 
   // Fetch inventory
   const { data: inventoryData, isLoading: isLoadingInventory, refetch: refetchInventory } = useInventory(
     pharmacyId,
-    { search },
+    { search: '' }, // Fetch all initially to match prescription items
     !!pharmacyId
   );
 
   const inventory = inventoryData?.data || [];
 
   const addToCart = (item: any) => {
-    const existing = cart.find(i => i.id === item.medicineId);
+    // Standardize field names from inventory mapping
+    const medicineId = item.medicineId || item.medicine_id || item.id;
+    const medicineName = item.medicine?.name || item.name;
+    const unitPrice = item.unitPrice || item.price || 0;
+    const stock = item.quantity || item.stock || 0;
+
+    const existing = cart.find(i => i.id === medicineId);
     if (existing) {
-      if (existing.quantity >= item.quantity) {
+      if (existing.quantity >= stock) {
         toast.error('Stock máximo alcanzado');
         return;
       }
-      setCart(cart.map(i => i.id === item.medicineId ? { ...i, quantity: i.quantity + 1 } : i));
+      setCart(cart.map(i => i.id === medicineId ? { ...i, quantity: i.quantity + 1 } : i));
     } else {
       setCart([...cart, { 
-        id: item.medicineId, 
-        name: item.medicine.name, 
-        price: item.unitPrice, 
+        id: medicineId, 
+        name: medicineName, 
+        price: unitPrice, 
         quantity: 1, 
-        stock: item.quantity 
+        stock: stock 
       }]);
     }
-    toast.success(`${item.medicine.name} añadido`);
+    toast.success(`${medicineName} añadido`);
   };
 
   const removeFromCart = (id: string) => {
@@ -95,35 +103,86 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
     setIsProcessing(true);
     try {
       const result = await createSale.mutateAsync({
-        pharmacy_id: pharmacyId,
-        items: cart.map((item) => ({ medicine_id: item.id, quantity: item.quantity })),
-        prescription_id: isPrescriptionApplied ? qrValue : undefined,
-        is_delivery: false,
+        pharmacyId: pharmacyId,
+        data: {
+          items: cart.map((item) => ({ 
+            medicine_id: item.id, 
+            quantity: item.quantity,
+            unit_price: item.price
+          })),
+          prescription_id: isPrescriptionApplied ? qrValue : undefined,
+          is_delivery: false,
+          notes: guestName ? `Cliente: ${guestName}` : undefined,
+        },
       });
 
-      if (result.success) {
-        setLastSale(result.data);
+      if (result) {
+        setLastSale(result);
         setReceiptOpen(true);
         toast.success('Venta completada con éxito');
         setCart([]);
+        setGuestName('');
         setQrValue('');
         setIsPrescriptionApplied(false);
         refetchInventory();
-      } else {
-        toast.error(result.error?.message || 'Error al procesar la venta');
       }
-    } catch (error) {
-      toast.error('Error de conexión');
+    } catch (error: any) {
+      const msg = getHookErrorMessage(error);
+      toast.error(msg || 'Error al procesar la venta');
+      console.error('Checkout Error:', error);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const applyPrescription = () => {
-    if (!qrValue) return;
-    setIsPrescriptionApplied(true);
-    setQrMode(false);
-    toast.success('Receta vinculada correctamente');
+  const applyPrescription = async () => {
+    if (!qrValue.trim()) {
+      toast.error('Ingresa un código de receta');
+      return;
+    }
+
+    try {
+      const prescription = await validatePrescription.mutateAsync({ qr_data: qrValue.trim() });
+      
+      if (prescription) {
+        setIsPrescriptionApplied(true);
+        setQrMode(false);
+        
+        // Auto-fill cart with items from prescription
+        const newCartItems: CartItem[] = [];
+        
+        for (const line of prescription.lines || []) {
+          // Find item in inventory
+          const invItem = inventory.find((inv: any) => inv.medicineId === line.medicine_id);
+          
+          if (invItem) {
+            newCartItems.push({
+              id: line.medicine_id,
+              name: line.medicine?.name || 'Medicamento',
+              price: invItem.unitPrice,
+              quantity: line.quantity - (line.quantity_fulfilled || 0),
+              stock: invItem.quantity
+            });
+          } else {
+            toast.warning(`Medicamento ${line.medicine?.name} no está disponible en esta farmacia`);
+          }
+        }
+
+        if (newCartItems.length > 0) {
+          setCart(newCartItems);
+          toast.success(`Receta vinculada: ${newCartItems.length} medicamentos añadidos`);
+        } else {
+          toast.info('Receta vinculada, pero no hay medicamentos disponibles');
+        }
+        
+        // Set guest name to patient name
+        if (prescription.patient?.name) {
+          setGuestName(prescription.patient.name);
+        }
+      }
+    } catch (err) {
+      toast.error('Receta no encontrada o inválida');
+    }
   };
 
   return (
@@ -151,9 +210,9 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
                 </GlassCard>
               ))
             ) : inventory.length > 0 ? (
-              inventory.map((item: any) => (
+              inventory.map((item: any, index: number) => (
                 <motion.div
-                  key={item.id}
+                  key={item.id || `inv-${index}`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -207,11 +266,21 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
             </span>
           </div>
 
+          <div className="mb-4">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Nombre del Cliente (Opcional)</label>
+            <Input 
+              placeholder="Ej: Juan Pérez (Cliente Físico)" 
+              className="h-9 text-xs rounded-xl"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+            />
+          </div>
+
           <div className="flex-1 overflow-y-auto mb-6 pr-2 custom-scrollbar">
             <AnimatePresence initial={false}>
-              {cart.map((item) => (
+              {cart.map((item, index) => (
                 <motion.div
-                  key={item.id}
+                  key={item.id || `cart-${index}`}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
@@ -288,6 +357,7 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
         {qrMode && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
+              key="qr-modal-overlay"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}

@@ -141,7 +141,7 @@ export function LoginForm() {
             <motion.div custom={3} variants={fadeInUp} className="flex justify-end">
               <button
                 type="button"
-                onClick={() => navigate('forgot-password')}
+                onClick={() => navigate('recuperar-cuenta')}
                 disabled={isSubmitting}
                 className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium transition-colors disabled:opacity-50"
               >
@@ -177,7 +177,7 @@ export function LoginForm() {
               ¿No tienes cuenta?{' '}
               <button
                 type="button"
-                onClick={() => navigate('register')}
+                onClick={() => navigate('registro')}
                 disabled={isSubmitting}
                 className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold transition-colors disabled:opacity-50"
               >

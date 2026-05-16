@@ -94,7 +94,7 @@ export function PharmacyMap() {
         <Button
           variant="ghost"
           className="rounded-full gap-2 text-muted-foreground"
-          onClick={() => navigate('prescriptions')}
+          onClick={() => navigate('recetas')}
         >
           <ArrowLeft className="size-4" />
           Volver

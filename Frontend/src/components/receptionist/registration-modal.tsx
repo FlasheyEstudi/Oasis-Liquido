@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/glass-card';
+import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';

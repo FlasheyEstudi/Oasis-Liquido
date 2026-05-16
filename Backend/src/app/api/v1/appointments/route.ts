@@ -69,6 +69,9 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     return successResponse(appointment, 'Cita creada exitosamente', 201);
   } catch (error: any) {
-    return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
+    if (error.message.includes('CONFLICT')) {
+      return errorResponse(ErrorCodes.CONFLICT, error.message, 409);
+    }
+    return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error interno del servidor', 500);
   }
 }, { roles: ['patient'] });

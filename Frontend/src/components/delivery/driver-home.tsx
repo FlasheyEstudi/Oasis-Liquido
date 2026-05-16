@@ -29,10 +29,10 @@ import {
 } from 'lucide-react';
 import type { DeliveryStatus } from '@/types';
 
-const stagger = {
+const stagger: any = {
   animate: { transition: { staggerChildren: 0.06 } },
 };
-const fadeUp = {
+const fadeUp: any = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
 };
@@ -49,7 +49,7 @@ export function DriverHome() {
     data: assignedResult,
     isLoading: assignedLoading,
   } = useDeliveryOrders({
-    delivery_driver_id: driverId || undefined,
+    driver_id: driverId || undefined,
     status: 'assigned',
   });
 
@@ -57,7 +57,7 @@ export function DriverHome() {
     data: pickedUpResult,
     isLoading: pickedUpLoading,
   } = useDeliveryOrders({
-    delivery_driver_id: driverId || undefined,
+    driver_id: driverId || undefined,
     status: 'picked_up',
   });
 
@@ -65,7 +65,7 @@ export function DriverHome() {
     data: inTransitResult,
     isLoading: inTransitLoading,
   } = useDeliveryOrders({
-    delivery_driver_id: driverId || undefined,
+    driver_id: driverId || undefined,
     status: 'in_transit',
   });
 
@@ -73,7 +73,7 @@ export function DriverHome() {
     data: deliveredResult,
     isLoading: deliveredLoading,
   } = useDeliveryOrders({
-    delivery_driver_id: driverId || undefined,
+    driver_id: driverId || undefined,
     status: 'delivered',
   });
 

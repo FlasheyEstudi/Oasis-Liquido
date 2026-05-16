@@ -179,8 +179,12 @@ export const createSaleSchema = z.object({
   items: z.array(z.object({
     medicine_id: z.string().min(1, 'Medicamento requerido'),
     quantity: z.number().int().min(1, 'Cantidad mínima: 1'),
+    unit_price: z.number().min(0).optional(),
   })).min(1, 'Al menos un item requerido'),
   prescription_id: z.string().optional(),
+  patient_id: z.string().optional(),
+  clinic_id: z.string().optional(),
+  appointment_id: z.string().optional(),
   is_delivery: z.boolean().default(false),
   delivery_address: z.string().optional(),
   delivery_lat: z.number().optional(),

@@ -8,7 +8,7 @@ import { parsePagination } from '@/lib/utils/pagination';
 import { db } from '@/lib/db';
 
 export const GET = withAuth(
-  async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+  async (req: AuthenticatedRequest, context: { params: Promise<any> }) => {
     try {
       const { id } = await context.params;
 

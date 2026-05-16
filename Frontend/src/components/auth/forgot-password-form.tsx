@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { post, getErrorMessage } from '@/api/client';
 import { OrganicBlobs } from '@/components/oasis/organic-blobs';
 
-const fadeInUp = {
+const fadeInUp: any = {
   hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
     opacity: 1,

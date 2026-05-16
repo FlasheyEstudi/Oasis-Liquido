@@ -81,7 +81,7 @@ export function Inventory() {
       medicine_id: adjustingItem.medicine.id,
       quantity_change: quantityChange,
     };
-    if (newPrice && parseFloat(newPrice) !== adjustingItem.price) {
+    if (newPrice && parseFloat(newPrice) !== adjustingItem.unitPrice) {
       data.price = parseFloat(newPrice);
     }
     adjustInventory.mutate(
@@ -104,7 +104,7 @@ export function Inventory() {
   const openAdjustDialog = (item: InventoryItem) => {
     setAdjustingItem(item);
     setQuantityChange(0);
-    setNewPrice(item.price.toString());
+    setNewPrice(item.unitPrice.toString());
     setAdjustDialogOpen(true);
   };
 
@@ -189,7 +189,7 @@ export function Inventory() {
           {/* Table rows */}
           <AnimatePresence>
             {inventory.map((item, index) => {
-              const si = stockIndicator(item.stock_quantity);
+              const si = stockIndicator(item.quantity);
               return (
                 <motion.div
                   key={item.id}
@@ -219,7 +219,7 @@ export function Inventory() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground md:hidden">
-                        {DOSAGE_FORMS[item.medicine.dosage_form || ''] || item.medicine.dosage_form || 'N/A'} · {formatCurrency(item.price)}
+                        {DOSAGE_FORMS[item.medicine.dosage_form || ''] || item.medicine.dosage_form || 'N/A'} · {formatCurrency(item.unitPrice)}
                       </p>
                     </div>
                   </div>
@@ -231,14 +231,14 @@ export function Inventory() {
 
                   {/* Price (desktop) */}
                   <p className="hidden md:block text-sm font-medium text-foreground text-right self-center">
-                    {formatCurrency(item.price)}
+                    {formatCurrency(item.unitPrice)}
                   </p>
 
                   {/* Stock indicator */}
                   <div className="flex items-center gap-2 justify-end md:justify-center self-center">
                     <div className="flex items-center gap-1.5">
                       <div className={cn('size-2 rounded-full', si.dot)} />
-                      <span className={cn('text-sm font-bold', si.textColor)}>{item.stock_quantity}</span>
+                      <span className={cn('text-sm font-bold', si.textColor)}>{item.quantity}</span>
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -335,7 +335,7 @@ export function Inventory() {
           <div className="space-y-4 py-4">
             <div className="flex items-center justify-between p-3 rounded-2xl glass">
               <span className="text-sm text-muted-foreground">Stock actual</span>
-              <span className="text-lg font-bold text-foreground">{adjustingItem?.stock_quantity || 0} uds</span>
+              <span className="text-lg font-bold text-foreground">{adjustingItem?.quantity || 0} uds</span>
             </div>
 
             <div className="space-y-2">
@@ -375,14 +375,14 @@ export function Inventory() {
                 value={newPrice}
                 onChange={(e) => setNewPrice(e.target.value)}
                 className="glass-input rounded-xl w-full px-4 py-2.5 text-sm"
-                placeholder={adjustingItem?.price.toString()}
+                placeholder={adjustingItem?.unitPrice.toString()}
               />
             </div>
 
             <div className="flex items-center justify-between p-3 rounded-2xl bg-teal-500/5">
               <span className="text-sm text-teal-700 dark:text-teal-400">Stock resultante</span>
               <span className="text-lg font-bold text-teal-700 dark:text-teal-400">
-                {(adjustingItem?.stock_quantity || 0) + quantityChange} uds
+                {(adjustingItem?.quantity || 0) + quantityChange} uds
               </span>
             </div>
           </div>

@@ -10,6 +10,7 @@ interface GlassCardProps {
   hover?: boolean;
   onClick?: () => void;
   layoutId?: string;
+  variants?: any;
 }
 
 export function GlassCard({
@@ -19,6 +20,7 @@ export function GlassCard({
   hover = false,
   onClick,
   layoutId,
+  variants,
 }: GlassCardProps) {
   const glassClass = variant === 'strong'
     ? 'glass-strong'
@@ -30,8 +32,9 @@ export function GlassCard({
     <motion.div
       layout={!!layoutId}
       layoutId={layoutId}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
+      variants={variants}
+      initial={variants ? undefined : { opacity: 0, y: 16 }}
+      animate={variants ? undefined : { opacity: 1, y: 0 }}
       transition={{
         layout: { type: 'spring', stiffness: 200, damping: 25 },
         opacity: { duration: 0.3 },

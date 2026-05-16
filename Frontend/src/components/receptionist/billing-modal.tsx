@@ -9,7 +9,8 @@ import {
   X,
   Loader2,
   User,
-  Stethoscope
+  Stethoscope,
+  Download
 } from 'lucide-react';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,8 @@ import { formatCurrency } from '@/utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useCreateClinicSale } from '@/hooks/use-api';
+import { getApiUrl, getAccessToken } from '@/api/client';
 
 interface ClinicBillingModalProps {
   isOpen: boolean;
@@ -27,48 +30,70 @@ interface ClinicBillingModalProps {
 }
 
 export function ClinicBillingModal({ isOpen, onClose, appointment, onSuccess }: ClinicBillingModalProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
+  const createSale = useCreateClinicSale();
   const [amount, setAmount] = useState('500'); // Default consultation fee
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [lastSaleId, setLastSaleId] = useState<string | null>(null);
 
   if (!appointment) return null;
 
   const handleProcessBilling = async () => {
-    setIsProcessing(true);
-    try {
-      const response = await fetch(`/api/v1/clinics/${appointment.clinicId}/sales`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          appointment_id: appointment.id,
-          patient_id: appointment.patientId,
-          items: [
-            { medicine_id: 'service-consultation', quantity: 1, unit_price: parseFloat(amount) }
-          ],
-          total_amount: parseFloat(amount),
-          is_delivery: false
-        })
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        toast.success('Cobro procesado exitosamente');
-        onSuccess();
-        onClose();
-      } else {
-        toast.error(result.error?.message || 'Error al procesar cobro');
+    createSale.mutate({
+      clinicId: appointment.clinicId,
+      data: {
+        appointment_id: appointment.id,
+        patient_id: appointment.patientId,
+        items: [
+          { medicine_id: 'service-consultation', quantity: 1, unit_price: parseFloat(amount) }
+        ],
+        total_amount: parseFloat(amount),
+        is_delivery: false
       }
-    } catch (error) {
-      toast.error('Error de conexión');
+    }, {
+      onSuccess: (result) => {
+        toast.success('Cobro procesado exitosamente');
+        setLastSaleId(result.id || result.data?.id || result.sale_id);
+        onSuccess();
+        // Don't close yet, allow PDF download
+      },
+      onError: (error: any) => {
+        toast.error(error.message || 'Error al procesar cobro');
+      }
+    });
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!lastSaleId) return;
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`${getApiUrl()}/sales/${lastSaleId}/receipt`, {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`
+        }
+      });
+      if (!response.ok) throw new Error();
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `recibo-clinica-${lastSaleId.slice(-6)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Recibo descargado');
+    } catch {
+      toast.error('Error al descargar PDF');
     } finally {
-      setIsProcessing(false);
+      setIsDownloading(false);
     }
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div key="billing-modal-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -145,20 +170,40 @@ export function ClinicBillingModal({ isOpen, onClose, appointment, onSuccess }: 
                 </button>
               </div>
 
-              <Button 
-                className="w-full h-16 text-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-500/20 rounded-2xl"
-                disabled={isProcessing || !amount}
-                onClick={handleProcessBilling}
-              >
-                {isProcessing ? (
-                  <Loader2 className="size-6 animate-spin" />
-                ) : (
-                  <>
-                    <CheckCircle2 className="size-6 mr-2" />
-                    Finalizar Cobro
-                  </>
-                )}
-              </Button>
+              {lastSaleId ? (
+                <div className="space-y-3">
+                  <Button 
+                    variant="outline"
+                    className="w-full h-14 rounded-2xl border-2 font-bold flex items-center justify-center gap-2"
+                    onClick={handleDownloadPDF}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
+                    Descargar Recibo PDF
+                  </Button>
+                  <Button 
+                    className="w-full h-14 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold"
+                    onClick={onClose}
+                  >
+                    Cerrar
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  className="w-full h-16 text-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-500/20 rounded-2xl"
+                  disabled={createSale.isPending || !amount}
+                  onClick={handleProcessBilling}
+                >
+                  {createSale.isPending ? (
+                    <Loader2 className="size-6 animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle2 className="size-6 mr-2" />
+                      Finalizar Cobro
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </motion.div>
         </div>

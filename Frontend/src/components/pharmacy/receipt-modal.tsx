@@ -6,7 +6,8 @@ import {
   Download, 
   CheckCircle2, 
   Receipt,
-  Scissors
+  Scissors,
+  Loader2
 } from 'lucide-react';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReviewModal } from '@/components/oasis/review-modal';
 import { toast } from 'sonner';
+import { getApiUrl, getAccessToken } from '@/api/client';
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -24,16 +26,47 @@ interface ReceiptModalProps {
 }
 
 export function ReceiptModal({ isOpen, onClose, sale }: ReceiptModalProps) {
-  const [showReview, setShowReview] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
+  const [showReview, setShowReview] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   if (!sale) return null;
+
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`${getApiUrl()}/sales/${sale.id}/receipt`, {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to generate PDF');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `recibo-${sale.id.slice(-6)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Recibo descargado correctamente');
+    } catch (error) {
+      toast.error('Error al descargar el recibo');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Determine if we should show review button (only for patients or if handed to patient)
+  const canReview = sale.patientId && user?.role !== 'pharmacy_manager';
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+        <div key="receipt-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -76,8 +109,8 @@ export function ReceiptModal({ isOpen, onClose, sale }: ReceiptModalProps) {
               </div>
 
               <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800 py-6 space-y-4">
-                {sale.saleItems?.map((item: any) => (
-                  <div key={item.id} className="flex justify-between text-sm">
+                {sale.saleItems?.map((item: any, index: number) => (
+                  <div key={item.id || `item-${index}`} className="flex justify-between text-sm">
                     <div className="flex-1">
                       <p className="font-semibold text-zinc-800 dark:text-zinc-200">{item.medicine?.name}</p>
                       <p className="text-xs text-zinc-500">x{item.quantity}</p>
@@ -98,8 +131,12 @@ export function ReceiptModal({ isOpen, onClose, sale }: ReceiptModalProps) {
 
               <div className="mt-8 text-center">
                 <div className="inline-block p-2 bg-white rounded-xl border border-zinc-100 shadow-sm">
-                   <div className="size-24 bg-zinc-100 rounded-lg flex items-center justify-center border-2 border-dashed border-zinc-200">
-                      <Receipt className="size-10 text-zinc-300" />
+                   <div className="size-24 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://oasis-aura.com/#verify-sale-${sale.id}`)}`} 
+                        alt="QR Code" 
+                        className="size-full object-contain"
+                      />
                    </div>
                 </div>
                 <p className="text-[10px] text-zinc-400 mt-4 font-bold uppercase tracking-[0.2em]">Gracias por confiar en Oasis</p>
@@ -109,24 +146,40 @@ export function ReceiptModal({ isOpen, onClose, sale }: ReceiptModalProps) {
             <div className="grid grid-cols-2 gap-4 mt-12">
               <Button 
                 variant="outline" 
-                className="h-14 rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 font-bold flex items-center gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                onClick={() => window.print()}
+                className="h-14 rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 font-bold flex items-center gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50"
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
               >
-                <Printer className="size-5" />
-                Imprimir
+                {isDownloading ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  <Download className="size-5" />
+                )}
+                Descargar PDF
               </Button>
-              <Button 
-                className="h-14 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold flex items-center gap-2 hover:opacity-90 shadow-xl"
-                onClick={() => setShowReview(true)}
-              >
-                Calificar Servicio
-              </Button>
+              {sale.patientId ? (
+                <Button 
+                  className="h-14 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold flex items-center gap-2 hover:opacity-90 shadow-xl"
+                  onClick={() => setShowReview(true)}
+                >
+                  Calificar Servicio
+                </Button>
+              ) : (
+                <Button 
+                  variant="ghost"
+                  className="h-14 rounded-2xl font-bold flex items-center gap-2"
+                  onClick={onClose}
+                >
+                  Nueva Venta
+                </Button>
+              )}
             </div>
           </motion.div>
         </div>
       )}
 
       <ReviewModal 
+        key="review-modal-inner"
         isOpen={showReview}
         onClose={() => setShowReview(false)}
         targetName={sale.pharmacy?.name || 'Farmacia'}

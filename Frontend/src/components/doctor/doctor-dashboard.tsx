@@ -27,7 +27,9 @@ import {
   ChevronRight,
   Activity,
   Star,
+  QrCode as QrCodeIcon,
 } from 'lucide-react';
+import { QrCode } from '@/components/common/qr-code';
 
 function ShimmerBlock({ className }: { className?: string }) {
   return <div className={cn('shimmer rounded-2xl', className)} />;
@@ -53,7 +55,7 @@ export function DoctorDashboard() {
         data: { status: 'in_progress' },
       });
       setNotification({ type: 'success', message: 'Consulta iniciada' });
-      navigate('consultation', appointmentId);
+      navigate('consulta', appointmentId);
     } catch {
       setNotification({ type: 'error', message: 'No se pudo iniciar la consulta' });
     }
@@ -138,26 +140,37 @@ export function DoctorDashboard() {
               </div>
             </div>
           </div>
-          {stats.inProgress > 0 && (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="flex flex-col items-end gap-2"
-            >
-              <div className="flex size-14 items-center justify-center rounded-full bg-amber-500/10 ring-2 ring-amber-500/30">
-                <Activity className="size-7 text-amber-600 dark:text-amber-400" />
-              </div>
-              <Button
-                className="glass-btn-primary rounded-full px-4 text-sm"
-                onClick={() => {
-                  const active = appointments.find((a) => a.status === 'in_progress');
-                  if (active) navigate('consultation', active.id);
-                }}
+          <div className="flex items-center gap-6">
+            {stats.inProgress > 0 && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="hidden md:flex flex-col items-end gap-2"
               >
-                Continuar consulta
-              </Button>
-            </motion.div>
-          )}
+                <Button
+                  className="glass-btn-primary rounded-full px-4 text-sm"
+                  onClick={() => {
+                    const active = appointments.find((a) => a.status === 'in_progress');
+                    if (active) navigate('consulta', active.id);
+                  }}
+                >
+                  Continuar consulta
+                </Button>
+              </motion.div>
+            )}
+            <div className="group relative cursor-pointer" onClick={() => navigate('perfil')}>
+              <div className="absolute -inset-2 bg-gradient-to-r from-teal-500 to-sky-500 rounded-[2rem] opacity-20 blur-xl group-hover:opacity-40 transition-opacity" />
+              <div className="relative glass-strong rounded-3xl p-2 border border-white/20 shadow-2xl transition-transform group-hover:scale-105">
+                <QrCode 
+                  value={`doctor-id-${user?.id}`} 
+                  size={90} 
+                  label="DR. ID"
+                  className="bg-white rounded-2xl"
+                  showValue={false}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </GlassCard>
 
@@ -246,7 +259,7 @@ export function DoctorDashboard() {
                     appointment.status === 'in_progress' && 'bg-amber-500/5',
                     appointment.status === 'completed' && 'opacity-60',
                   )}
-                  onClick={() => navigate('consultation', appointment.id)}
+                  onClick={() => navigate('consulta', appointment.id)}
                 >
                   {/* Time */}
                   <div className="flex min-w-[56px] flex-col items-center">
@@ -336,7 +349,7 @@ export function DoctorDashboard() {
           </button>
 
           <button
-            onClick={() => navigate('prescriptions')}
+            onClick={() => navigate('recetas')}
             className={cn(
               'flex flex-col items-center gap-2 rounded-2xl p-5',
               'glass-input cursor-pointer transition-all duration-200',

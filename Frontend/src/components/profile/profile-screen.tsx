@@ -8,6 +8,7 @@ import { ROLE_LABELS, ROLE_COLORS } from '@/utils/constants';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { QrCode } from '@/components/common/qr-code';
 import {
   User as UserIcon,
   Phone,
@@ -177,6 +178,15 @@ export function ProfileScreen() {
                 {ROLE_LABELS[role]}
               </span>
             </div>
+          </div>
+
+          {/* Digital ID QR */}
+          <div className="hidden sm:block">
+            <QrCode 
+              value={`${profile.role}-id-${profile.id}`} 
+              size={60} 
+              label="ID Digital"
+            />
           </div>
 
           {/* Edit button */}

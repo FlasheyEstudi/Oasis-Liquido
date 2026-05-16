@@ -75,7 +75,7 @@ export function AdminHome() {
   }
 
   const statusData = stats?.appointments_by_status || {};
-  const maxStatusValue = Math.max(...Object.values(statusData), 1);
+  const maxStatusValue = Math.max(...(Object.values(statusData) as number[]), 1);
 
   const statCards = [
     { title: 'Clínicas', value: stats?.total_clinics ?? 0, icon: Building2, bg: 'bg-teal-500/10', color: 'text-teal-600 dark:text-teal-400' },
@@ -103,8 +103,15 @@ export function AdminHome() {
               Bienvenido, {user?.name || 'Admin'}
             </p>
           </div>
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-amber-500/10">
-            <Shield className="size-6 text-amber-600 dark:text-amber-400" />
+          <div className="flex items-center gap-6">
+            <div className="group relative cursor-pointer" onClick={() => navigate('perfil')}>
+              <div className="absolute -inset-2 bg-gradient-to-r from-amber-500/20 to-teal-500/20 rounded-[2rem] opacity-0 blur-xl group-hover:opacity-100 transition-opacity" />
+              <div className="relative glass-strong rounded-2xl p-1.5 border border-white/20 shadow-xl transition-transform group-hover:scale-105">
+                <div className="flex size-14 items-center justify-center rounded-xl bg-amber-500/10">
+                  <Shield className="size-8 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </GlassCard>
@@ -165,7 +172,7 @@ export function AdminHome() {
           <div className="space-y-3">
             {Object.entries(statusData).map(([status, count]) => {
               const config = APPOINTMENT_STATUS_CONFIG[status];
-              const percentage = (count / maxStatusValue) * 100;
+              const percentage = ((count as number) / maxStatusValue) * 100;
               return (
                 <div key={status} className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
@@ -202,10 +209,10 @@ export function AdminHome() {
         </div>
         <div className="space-y-2">
           {[
-            { label: 'Gestionar Clínicas', icon: Building2, color: 'text-teal-600 dark:text-teal-400', page: 'manage-clinics' as const },
-            { label: 'Gestionar Farmacias', icon: Pill, color: 'text-sky-600 dark:text-sky-400', page: 'manage-pharmacies' as const },
-            { label: 'Gestionar Usuarios', icon: Users, color: 'text-violet-600 dark:text-violet-400', page: 'manage-users' as const },
-            { label: 'Ver Auditoría', icon: FileText, color: 'text-amber-600 dark:text-amber-400', page: 'audit-logs' as const },
+            { label: 'Gestionar Clínicas', icon: Building2, color: 'text-teal-600 dark:text-teal-400', page: 'gestionar-clinicas' as const },
+            { label: 'Gestionar Farmacias', icon: Pill, color: 'text-sky-600 dark:text-sky-400', page: 'gestionar-farmacias' as const },
+            { label: 'Gestionar Usuarios', icon: Users, color: 'text-violet-600 dark:text-violet-400', page: 'gestionar-usuarios' as const },
+            { label: 'Ver Auditoría', icon: FileText, color: 'text-amber-600 dark:text-amber-400', page: 'auditoria' as const },
           ].map((action) => (
             <motion.button
               key={action.page}
@@ -232,7 +239,7 @@ export function AdminHome() {
               <FileText className="size-4 text-amber-600 dark:text-amber-400" />
               <h3 className="text-sm font-semibold">Actividad reciente</h3>
             </div>
-            <Button variant="ghost" size="sm" className="text-teal-600 dark:text-teal-400 rounded-full text-xs" onClick={() => navigate('audit-logs')}>
+            <Button variant="ghost" size="sm" className="text-teal-600 dark:text-teal-400 rounded-full text-xs" onClick={() => navigate('auditoria')}>
               Ver todo <ArrowRight className="size-3 ml-1" />
             </Button>
           </div>

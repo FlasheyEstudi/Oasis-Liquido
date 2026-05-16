@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import {
   useClinics,
   useClinicDoctors,
   useCreateAppointment,
+  useAppointments,
   getHookErrorMessage,
 } from '@/hooks/use-api';
 import { formatDate, getInitials } from '@/utils/helpers';
@@ -28,8 +29,9 @@ import {
   Stethoscope,
   CalendarIcon,
   MapPin,
-  ArrowLeft,
   Search,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
@@ -73,13 +75,36 @@ export function NewAppointment() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
+  // Fetch occupied slots for the selected doctor/date
+  const { data: occupiedAppointments, isLoading: isLoadingOccupied } = useAppointments({
+    doctor_id: selectedDoctorId || undefined,
+    date_from: selectedDate ? new Date(new Date(selectedDate).setHours(0,0,0,0)).toISOString() : undefined,
+    date_to: selectedDate ? new Date(new Date(selectedDate).setHours(23,59,59,999)).toISOString() : undefined,
+    status: 'scheduled,confirmed,in_progress'
+  }, !!(selectedDoctorId && selectedDate));
+
+  // Filter available slots
+  const availableSlots = useMemo(() => {
+    const slots = TIME_SLOTS.map(slot => ({
+      time: slot,
+      isOccupied: false
+    }));
+
+    if (!occupiedAppointments?.data) return slots;
+    
+    const occupiedTimes = occupiedAppointments.data.map(app => {
+      const date = new Date(app.date_time);
+      return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    });
+
+    return slots.map(slot => ({
+      ...slot,
+      isOccupied: occupiedTimes.includes(slot.time)
+    }));
+  }, [occupiedAppointments, selectedDate]);
+
   // Step 4: Submit
   const createMutation = useCreateAppointment();
-
-  // Map markers for selected clinic
-  const clinicMarkers: MapMarker[] = selectedClinic
-    ? [{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }]
-    : clinics.map((c) => ({ id: c.id, lat: c.latitude, lng: c.longitude, type: 'clinic' as const, label: c.name }));
 
   const handleClinicSelect = (clinicId: string) => {
     setSelectedClinicId(clinicId);
@@ -112,8 +137,9 @@ export function NewAppointment() {
 
       setNotification({ type: 'success', message: 'Cita agendada correctamente' });
       navigate('appointments');
-    } catch {
-      setNotification({ type: 'error', message: 'No se pudo agendar la cita' });
+    } catch (error: any) {
+      const msg = getHookErrorMessage(error);
+      setNotification({ type: 'error', message: msg || 'No se pudo agendar la cita' });
     }
   };
 
@@ -127,7 +153,7 @@ export function NewAppointment() {
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      {/* Step Indicator — Glass pills */}
+      {/* Step Indicator */}
       <div className="flex items-center justify-center gap-1">
         {STEPS.map((s, idx) => (
           <div key={s.number} className="flex items-center">
@@ -176,11 +202,9 @@ export function NewAppointment() {
 
       {/* Step Content */}
       <AnimatePresence mode="wait">
-        {/* Step 1: Select Clinic */}
         {step === 1 && (
           <motion.div key="step1" {...fadeInUp} transition={{ duration: 0.25 }}>
             <div className="bento-grid">
-              {/* Clinic list */}
               <div className="col-span-8">
                 <GlassCard className="min-h-[300px]">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Selecciona una clínica</h3>
@@ -190,72 +214,37 @@ export function NewAppointment() {
                         <div key={i} className="shimmer rounded-2xl h-16" />
                       ))}
                     </div>
-                  ) : clinicsQuery.isError ? (
-                    <div className="flex flex-col items-center py-8 text-center">
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {getHookErrorMessage(clinicsQuery.error)}
-                      </p>
-                      <Button variant="outline" className="rounded-full" onClick={() => clinicsQuery.refetch()}>
-                        Reintentar
-                      </Button>
-                    </div>
-                  ) : clinics.length === 0 ? (
-                    <div className="flex flex-col items-center py-8 text-center">
-                      <Building2 className="size-10 text-muted-foreground/30 mb-3" />
-                      <p className="text-sm text-muted-foreground">No hay clínicas disponibles</p>
-                    </div>
                   ) : (
                     <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
                       {clinics.map((clinic) => (
-                        <motion.div
+                        <div
                           key={clinic.id}
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.99 }}
                           className={cn(
                             'flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all',
-                            selectedClinicId === clinic.id
-                              ? 'bg-teal-500/10 ring-2 ring-teal-500/30'
-                              : 'hover:bg-muted/50'
+                            selectedClinicId === clinic.id ? 'bg-teal-500/10 ring-2 ring-teal-500/30' : 'hover:bg-muted/50'
                           )}
                           onClick={() => handleClinicSelect(clinic.id)}
                         >
-                          <div className={cn(
-                            'flex size-11 items-center justify-center rounded-full',
-                            selectedClinicId === clinic.id ? 'bg-teal-500/20' : 'bg-muted'
-                          )}>
-                            <Building2 className={cn(
-                              'size-5',
-                              selectedClinicId === clinic.id
-                                ? 'text-teal-600 dark:text-teal-400'
-                                : 'text-muted-foreground'
-                            )} />
+                          <div className={cn('flex size-11 items-center justify-center rounded-full', selectedClinicId === clinic.id ? 'bg-teal-500/20' : 'bg-muted')}>
+                            <Building2 className={cn('size-5', selectedClinicId === clinic.id ? 'text-teal-600 dark:text-teal-400' : 'text-muted-foreground')} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-foreground">{clinic.name}</p>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                              <MapPin className="size-3" />
-                              {clinic.address}
-                            </p>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="size-3" />{clinic.address}</p>
                           </div>
-                          {selectedClinicId === clinic.id && (
-                            <CheckCircle className="size-5 text-teal-600 dark:text-teal-400 shrink-0" />
-                          )}
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   )}
                 </GlassCard>
               </div>
-
-              {/* Clinic map preview */}
               <div className="col-span-4">
                 <GlassCard className="!p-3">
                   <MapView
-                    markers={clinicMarkers}
+                    markers={selectedClinic ? [{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }] : clinics.map(c => ({ id: c.id, lat: c.latitude, lng: c.longitude, type: 'clinic', label: c.name }))}
                     center={[selectedClinic?.latitude ?? DEFAULT_LAT, selectedClinic?.longitude ?? DEFAULT_LNG]}
                     height="280px"
                     zoom={selectedClinic ? 15 : 12}
-                    showUserLocation
                   />
                 </GlassCard>
               </div>
@@ -263,172 +252,96 @@ export function NewAppointment() {
           </motion.div>
         )}
 
-        {/* Step 2: Select Doctor */}
         {step === 2 && (
           <motion.div key="step2" {...fadeInUp} transition={{ duration: 0.25 }}>
             <GlassCard className="min-h-[400px]">
               <div className="flex items-center justify-between gap-4 mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Selecciona un médico</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Médicos disponibles en {selectedClinic?.name}
-                  </p>
-                </div>
-                <div className="relative max-w-xs">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar médico..."
-                    value={doctorSearch}
-                    onChange={(e) => setDoctorSearch(e.target.value)}
-                    className="glass-input rounded-full pl-9 pr-4 py-1.5 h-9 text-sm"
-                  />
-                </div>
+                <h3 className="text-lg font-semibold text-foreground">Selecciona un médico</h3>
+                <Input
+                  placeholder="Buscar médico..."
+                  value={doctorSearch}
+                  onChange={(e) => setDoctorSearch(e.target.value)}
+                  className="glass-input rounded-full max-w-xs h-9 text-sm"
+                />
               </div>
-              {doctorsQuery.isLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="shimmer rounded-2xl h-16" />
-                  ))}
-                </div>
-              ) : doctorsQuery.isError ? (
-                <div className="flex flex-col items-center py-8 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {getHookErrorMessage(doctorsQuery.error)}
-                  </p>
-                  <Button variant="outline" className="rounded-full" onClick={() => doctorsQuery.refetch()}>
-                    Reintentar
-                  </Button>
-                </div>
-              ) : doctors.length === 0 ? (
-                <div className="flex flex-col items-center py-8 text-center">
-                  <Stethoscope className="size-10 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">No hay médicos disponibles en esta clínica</p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-                  {doctors.map((doc, index) => {
-                    const doctorId = doc.user_id;
-                    return (
-                      <motion.div
-                        key={doctorId}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        className={cn(
-                          'flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all',
-                          selectedDoctorId === doctorId
-                            ? 'bg-teal-500/10 ring-2 ring-teal-500/30'
-                            : 'hover:bg-muted/50'
-                        )}
-                        onClick={() => setSelectedDoctorId(doctorId)}
-                      >
-                        <Avatar className="size-11">
-                          <AvatarFallback className={cn(
-                            'text-sm font-semibold',
-                            selectedDoctorId === doctorId
-                              ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400'
-                              : 'bg-muted text-muted-foreground'
-                          )}>
-                            {doc.doctor_profile?.specialty ? doc.doctor_profile.specialty.slice(0, 2).toUpperCase() : 'MG'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground">
-                            Dr. {doc.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Stethoscope className="size-3" />
-                            {doc.doctor_profile?.specialty || 'Medicina General'}
-                          </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Stethoscope className="size-3" />
-                            Cédula: {doc.doctor_profile?.license_number || '—'}
-                          </p>
-                        </div>
-                        {selectedDoctorId === doctorId && (
-                          <CheckCircle className="size-5 text-teal-600 dark:text-teal-400 shrink-0" />
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
+              <div className="space-y-3">
+                {doctors.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className={cn(
+                      'flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all',
+                      selectedDoctorId === doc.id ? 'bg-teal-500/10 ring-2 ring-teal-500/30' : 'hover:bg-muted/50'
+                    )}
+                    onClick={() => setSelectedDoctorId(doc.id)}
+                  >
+                    <Avatar><AvatarFallback>{getInitials(doc.name)}</AvatarFallback></Avatar>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground">Dr. {doc.name}</p>
+                      <p className="text-xs text-muted-foreground">{doc.doctor_profile?.specialty || 'Medicina General'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </GlassCard>
           </motion.div>
         )}
 
-        {/* Step 3: Select Date & Time */}
         {step === 3 && (
           <motion.div key="step3" {...fadeInUp} transition={{ duration: 0.25 }}>
             <div className="bento-grid">
-              {/* Date Picker */}
               <div className="col-span-6">
                 <GlassCard>
                   <h3 className="text-lg font-semibold text-foreground mb-4">Fecha</h3>
-                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal rounded-full glass-input',
-                          !selectedDate && 'text-muted-foreground'
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 size-4" />
-                        {selectedDate
-                          ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM, yyyy")
-                          : 'Selecciona una fecha'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 rounded-2xl glass-strong" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => {
-                          setSelectedDate(date);
-                          setCalendarOpen(false);
-                        }}
-                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => { setSelectedDate(date); setSelectedTime(null); }}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    className="rounded-2xl border bg-white/5"
+                  />
                 </GlassCard>
               </div>
-
-              {/* Time Slots */}
               <div className="col-span-6">
-                <GlassCard>
+                <GlassCard className="min-h-[300px] flex flex-col">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Hora disponible</h3>
-                  {selectedDate ? (
+                  {!selectedDate ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground opacity-50">
+                      <CalendarIcon className="size-10 mb-2" />
+                      <p className="text-sm">Selecciona una fecha primero</p>
+                    </div>
+                  ) : isLoadingOccupied ? (
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                      <Loader2 className="size-8 text-teal-600 animate-spin" />
+                      <p className="text-xs text-muted-foreground mt-2">Buscando horarios...</p>
+                    </div>
+                  ) : (
                     <div className="grid grid-cols-3 gap-2">
-                      {TIME_SLOTS.map((time, i) => (
-                        <motion.button
+                      {availableSlots.map(({ time, isOccupied }) => (
+                        <button
                           key={time}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: i * 0.02 }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          disabled={isOccupied}
                           className={cn(
-                            'flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all',
+                            'flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all relative overflow-hidden',
                             selectedTime === time
                               ? 'glass-btn-primary text-white'
-                              : 'glass text-muted-foreground hover:text-foreground'
+                              : isOccupied 
+                                ? 'bg-red-500/10 text-red-400 cursor-not-allowed border border-red-500/20'
+                                : 'glass text-muted-foreground hover:text-foreground'
                           )}
                           onClick={() => setSelectedTime(time)}
                         >
+                          {isOccupied && <div className="absolute inset-0 bg-red-500/5 backdrop-grayscale" />}
                           <Clock className="size-3.5" />
                           {time}
-                        </motion.button>
+                        </button>
                       ))}
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-6">
-                      Selecciona una fecha primero
-                    </p>
+                  )}
+                  {selectedDate && !isLoadingOccupied && (
+                    <div className="mt-4 flex items-center gap-3 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                      <div className="flex items-center gap-1"><div className="size-2 rounded-full bg-teal-500" /> Disponible</div>
+                      <div className="flex items-center gap-1"><div className="size-2 rounded-full bg-red-500/30 border border-red-500/20" /> Ocupado</div>
+                    </div>
                   )}
                 </GlassCard>
               </div>
@@ -436,108 +349,50 @@ export function NewAppointment() {
           </motion.div>
         )}
 
-        {/* Step 4: Confirm */}
         {step === 4 && (
           <motion.div key="step4" {...fadeInUp} transition={{ duration: 0.25 }}>
-            <div className="bento-grid">
-              {/* Doctor & appointment details */}
-              <div className="col-span-8">
-                <GlassCard>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Confirma tu cita</h3>
-                  <div className="rounded-2xl bg-teal-500/5 dark:bg-teal-500/10 p-5 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-14">
-                        <AvatarFallback className="bg-teal-500/20 text-teal-600 dark:text-teal-400 text-lg font-semibold">
-                          {selectedDoctor?.doctor_profile?.specialty ? selectedDoctor.doctor_profile.specialty.slice(0, 2).toUpperCase() : 'DR'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-base font-semibold text-foreground">
-                          Dr. {selectedDoctor?.name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedDoctor?.doctor_profile?.license_number && `Cédula: ${selectedDoctor.doctor_profile.license_number}`}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 pt-3 border-t border-border">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Building2 className="size-4 text-muted-foreground" />
-                        <span className="text-foreground">{selectedClinic?.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="size-4 text-muted-foreground" />
-                        <span className="text-foreground">{selectedClinic?.address}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CalendarIcon className="size-4 text-muted-foreground" />
-                        <span className="text-foreground">
-                          {selectedDate
-                            ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM, yyyy")
-                            : ''}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="size-4 text-muted-foreground" />
-                        <span className="text-foreground">{selectedTime} hrs • 30 min</span>
-                      </div>
-                    </div>
+            <GlassCard>
+              <h3 className="text-lg font-semibold text-foreground mb-6 text-center">Confirma tu cita</h3>
+              <div className="max-w-md mx-auto space-y-6">
+                <div className="flex flex-col items-center text-center p-6 rounded-3xl bg-teal-500/5 border border-teal-500/10">
+                  <Avatar className="size-20 mb-4 border-2 border-teal-500/20">
+                    <AvatarFallback className="text-xl">{getInitials(selectedDoctor?.name || '')}</AvatarFallback>
+                  </Avatar>
+                  <h4 className="text-xl font-bold text-foreground">Dr. {selectedDoctor?.name}</h4>
+                  <p className="text-teal-600 dark:text-teal-400 font-medium">{selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl glass space-y-1">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Ubicación</p>
+                    <p className="text-sm font-semibold truncate">{selectedClinic?.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{selectedClinic?.address}</p>
                   </div>
-                </GlassCard>
-              </div>
-
-              {/* Clinic map */}
-              <div className="col-span-4">
-                <GlassCard className="!p-3">
-                  {selectedClinic && (
-                    <MapView
-                      markers={[{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }]}
-                      center={[selectedClinic.latitude, selectedClinic.longitude]}
-                      height="200px"
-                      zoom={15}
-                      showUserLocation
-                    />
-                  )}
-                </GlassCard>
-              </div>
-
-              {/* Submit button */}
-              <div className="col-span-12">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={createMutation.isPending}
-                  className="w-full glass-btn-primary rounded-full h-12 text-base"
+                  <div className="p-4 rounded-2xl glass space-y-1">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Horario</p>
+                    <p className="text-sm font-semibold">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
+                    <p className="text-xs text-muted-foreground">{selectedTime} hrs • 30 min</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={createMutation.isPending} 
+                  className="w-full glass-btn-primary rounded-full h-14 text-lg font-bold shadow-xl shadow-teal-500/20"
                 >
-                  {createMutation.isPending ? 'Agendando...' : 'Confirmar cita'}
+                  {createMutation.isPending ? <Loader2 className="size-6 animate-spin" /> : 'CONFIRMAR CITA'}
                 </Button>
               </div>
-            </div>
+            </GlassCard>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-2">
-        <Button
-          variant="outline"
-          className="rounded-full gap-1"
-          onClick={handleBack}
-        >
-          <ChevronLeft className="size-4" />
-          {step === 1 ? 'Volver a Citas' : 'Anterior'}
+      <div className="flex items-center justify-between pt-4">
+        <Button variant="ghost" className="rounded-full gap-2 px-6" onClick={handleBack}>
+          <ChevronLeft className="size-4" /> {step === 1 ? 'Cancelar' : 'Anterior'}
         </Button>
         {step < 4 && (
-          <Button
-            onClick={() => setStep(step + 1)}
-            disabled={!canProceed()}
-            className="glass-btn-primary rounded-full gap-1"
-          >
-            Siguiente
-            <ChevronRight className="size-4" />
+          <Button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="glass-btn-primary rounded-full gap-2 px-8">
+            Siguiente <ChevronRight className="size-4" />
           </Button>
         )}
       </div>

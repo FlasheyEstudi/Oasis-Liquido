@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { QRCodeSVG } from 'qrcode.react';
+import { QrCode } from '@/components/common/qr-code';
+import { toast } from 'sonner';
 import {
   ArrowLeft,
   Search,
@@ -37,7 +38,7 @@ export function PrescriptionDetail() {
         <Button
           variant="ghost"
           className="rounded-full gap-2 text-muted-foreground"
-          onClick={() => navigate('prescriptions')}
+          onClick={() => navigate('recetas')}
         >
           <ArrowLeft className="size-4" />
           Volver a recetas
@@ -68,7 +69,7 @@ export function PrescriptionDetail() {
         <Button
           variant="ghost"
           className="rounded-full gap-2 text-muted-foreground"
-          onClick={() => navigate('prescriptions')}
+          onClick={() => navigate('recetas')}
         >
           <ArrowLeft className="size-4" />
           Volver a recetas
@@ -106,7 +107,7 @@ export function PrescriptionDetail() {
       <Button
         variant="ghost"
         className="rounded-full gap-2 text-muted-foreground"
-        onClick={() => navigate('prescriptions')}
+        onClick={() => navigate('recetas')}
       >
         <ArrowLeft className="size-4" />
         Volver a recetas
@@ -163,9 +164,11 @@ export function PrescriptionDetail() {
 
           {/* QR Code */}
           <div className="mt-6 flex justify-center">
-            <div className="rounded-2xl border border-border bg-white dark:bg-white p-3 shadow-sm">
-              <QRCodeSVG value={prescription.qr_code_data} size={140} level="M" includeMargin />
-            </div>
+            <QrCode 
+              value={`https://oasis-aura.com/#verify-prescription-${prescription.id}`} 
+              size={160} 
+              label="Receta Digital"
+            />
           </div>
         </GlassCard>
 
@@ -276,7 +279,7 @@ export function PrescriptionDetail() {
                         <motion.button
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => toast.success(`Alarma programada: ${line.medicine?.name} cada ${line.dosage_instructions.match(/\d+/)?.[0] || '8'} horas`)}
+                          onClick={() => toast.success(`Alarma programada: ${line.medicine?.name} cada ${line.dosage_instructions?.match(/\d+/)?.[0] || '8'} horas`)}
                           className="flex items-center gap-3 p-3 rounded-2xl bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 transition-all text-left"
                         >
                           <div className="size-10 rounded-full bg-teal-500 flex items-center justify-center text-white shrink-0">

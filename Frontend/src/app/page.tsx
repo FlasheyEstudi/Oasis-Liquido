@@ -12,7 +12,27 @@ import { LoginForm } from '@/components/auth/login-form';
 import { RegisterForm } from '@/components/auth/register-form';
 import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
 import { ResetPasswordForm } from '@/components/auth/reset-password-form';
-// Patient
+import dynamic from 'next/dynamic';
+
+// Heavy roles (Dynamic imports to reduce APK size)
+const AdminHome = dynamic(() => import('@/components/admin/admin-home').then(m => m.AdminHome));
+const ManageClinics = dynamic(() => import('@/components/admin/manage-clinics').then(m => m.ManageClinics));
+const ManagePharmacies = dynamic(() => import('@/components/admin/manage-pharmacies').then(m => m.ManagePharmacies));
+const ManageUsers = dynamic(() => import('@/components/admin/manage-users').then(m => m.ManageUsers));
+const AuditLogs = dynamic(() => import('@/components/admin/audit-logs').then(m => m.AuditLogs));
+
+const DoctorDashboard = dynamic(() => import('@/components/doctor/doctor-dashboard').then(m => m.DoctorDashboard));
+const Consultation = dynamic(() => import('@/components/doctor/consultation').then(m => m.Consultation));
+
+const PharmacyDashboard = dynamic(() => import('@/components/pharmacy/pharmacy-dashboard').then(m => m.PharmacyDashboard));
+const Inventory = dynamic(() => import('@/components/pharmacy/inventory').then(m => m.Inventory));
+const Fulfillment = dynamic(() => import('@/components/pharmacy/fulfillment').then(m => m.Fulfillment));
+const OrderManagement = dynamic(() => import('@/components/pharmacy/order-management').then(m => m.OrderManagement));
+const PharmacyPOS = dynamic(() => import('@/components/pharmacy/pos').then(m => m.PharmacyPOS));
+
+const ReceptionistDashboard = dynamic(() => import('@/components/receptionist/receptionist-dashboard').then(m => m.ReceptionistDashboard));
+
+// Mobile Core Roles (Standard imports for instant load)
 import { PatientHome } from '@/components/patient/patient-home';
 import { AppointmentList } from '@/components/patient/appointment-list';
 import { NewAppointment } from '@/components/patient/new-appointment';
@@ -21,28 +41,14 @@ import { PrescriptionDetail } from '@/components/patient/prescription-detail';
 import { PharmacyMap } from '@/components/patient/pharmacy-map';
 import { DeliveryRequest } from '@/components/patient/delivery-request';
 import { OrderTracking } from '@/components/patient/order-tracking';
-// Doctor
-import { DoctorDashboard } from '@/components/doctor/doctor-dashboard';
-import { Consultation } from '@/components/doctor/consultation';
-// Admin
-import { AdminHome } from '@/components/admin/admin-home';
-import { ManageClinics } from '@/components/admin/manage-clinics';
-import { ManagePharmacies } from '@/components/admin/manage-pharmacies';
-import { ManageUsers } from '@/components/admin/manage-users';
-import { AuditLogs } from '@/components/admin/audit-logs';
-// Pharmacy Manager
-import { PharmacyDashboard } from '@/components/pharmacy/pharmacy-dashboard';
-import { Inventory } from '@/components/pharmacy/inventory';
-import { Fulfillment } from '@/components/pharmacy/fulfillment';
-import { OrderManagement } from '@/components/pharmacy/order-management';
-import { PharmacyPOS } from '@/components/pharmacy/pos';
-// Receptionist
-import { ReceptionistDashboard } from '@/components/receptionist/receptionist-dashboard';
-// Delivery Driver
 import { DriverHome } from '@/components/delivery/driver-home';
 import { DeliveryDetail } from '@/components/delivery/delivery-detail';
 // Profile
 import { ProfileScreen } from '@/components/profile/profile-screen';
+// Verification
+import { VerificationScreen } from '@/components/common/verification-screen';
+import { ShieldCheck } from 'lucide-react';
+
 
 export default function Home() {
   const currentPage = useAuthStore((s) => s.currentPage);
@@ -51,68 +57,61 @@ export default function Home() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const navigate = useAuthStore((s) => s.navigate);
 
-  const [showSplash, setShowSplash] = useState(true);
 
-  // Sync URL hash with currentPage
+  // Sync URL pathname with currentPage
   useEffect(() => {
-    if (currentPage === 'landing' || currentPage === 'login' || currentPage === 'register') {
-      if (window.location.hash) window.history.pushState(null, '', window.location.pathname);
-      return;
+    if (typeof window === 'undefined') return;
+    
+    const path = currentPage === 'bienvenida' ? '/' : `/${currentPage}`;
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
     }
-    window.location.hash = currentPage;
   }, [currentPage]);
 
-  // Read hash on mount/hashchange
+  // Read pathname on mount/popstate
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash && hash !== currentPage) {
-        navigate(hash as any);
+    const handlePopState = () => {
+      const path = window.location.pathname.replace('/', '');
+      const targetPage = path || 'bienvenida';
+      if (targetPage !== currentPage) {
+        navigate(targetPage as any);
       }
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    // Handle initial hash
-    const initialHash = window.location.hash.replace('#', '');
-    if (initialHash) navigate(initialHash as any);
+    window.addEventListener('popstate', handlePopState);
+    // Handle initial path
+    const initialPath = window.location.pathname.replace('/', '');
+    if (initialPath) navigate(initialPath as any);
 
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [navigate]);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [navigate, currentPage]);
 
   // Hydrate auth state from localStorage on mount
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
-  // Hide splash after hydration + minimum time
-  useEffect(() => {
-    if (isHydrated) {
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [isHydrated]);
-
-  // Show loading screen during initial load
-  if (!isHydrated || showSplash) {
+  // Show loading screen during hydration
+  if (!isHydrated) {
     return <LoadingScreen isVisible={true} />;
   }
 
   // Landing page
-  if (currentPage === 'landing') return <OasisLandingPage />;
+  if (currentPage === 'bienvenida') return <OasisLandingPage />;
 
   // Auth pages
-  if (currentPage === 'login') return <LoginForm />;
-  if (currentPage === 'register') return <RegisterForm />;
-  if (currentPage === 'forgot-password') return <ForgotPasswordForm />;
-  if (currentPage === 'reset-password') return <ResetPasswordForm />;
+  if (currentPage === 'entrar') return <LoginForm />;
+  if (currentPage === 'registro') return <RegisterForm />;
+  if (currentPage === 'recuperar-cuenta') return <ForgotPasswordForm />;
+  if (currentPage === 'cambiar-clave') return <ResetPasswordForm />;
 
   // App pages
   const renderPage = () => {
     switch (currentPage) {
       // Home — dashboard per role
-      case 'home': {
+      case 'home':
+      case 'inicio': {
+
         switch (user?.role) {
           case 'admin':
             return <AdminHome />;
@@ -132,60 +131,92 @@ export default function Home() {
 
       // Patient
       case 'appointments':
+      case 'citas':
         return <AppointmentList />;
       case 'appointment-detail':
+      case 'detalle-cita':
         return <AppointmentList />;
       case 'new-appointment':
+      case 'nueva-cita':
         return <NewAppointment />;
       case 'prescriptions':
+      case 'recetas':
         return <PrescriptionList />;
       case 'prescription-detail':
+      case 'detalle-receta':
         return <PrescriptionDetail />;
       case 'pharmacy-map':
+      case 'mapa-farmacias':
         return <PharmacyMap />;
       case 'pharmacy-detail':
+      case 'detalle-farmacia':
         return <PharmacyMap />;
       case 'delivery-request':
+      case 'solicitud-envio':
         return <DeliveryRequest />;
       case 'order-tracking':
+      case 'seguimiento':
         return <OrderTracking />;
 
       // Doctor
       case 'consultation':
+      case 'consulta':
         return <Consultation />;
 
       // Admin
       case 'manage-clinics':
+      case 'gestionar-clinicas':
         return <ManageClinics />;
       case 'manage-pharmacies':
+      case 'gestionar-farmacias':
         return <ManagePharmacies />;
       case 'manage-users':
+      case 'gestionar-usuarios':
         return <ManageUsers />;
       case 'audit-logs':
+      case 'auditoria':
         return <AuditLogs />;
 
       // Pharmacy
       case 'inventory':
+      case 'inventario':
         return <Inventory />;
       case 'fulfillment':
+      case 'surtimiento':
         return <Fulfillment />;
       case 'order-management':
+      case 'gestion-pedidos':
         return <OrderManagement />;
       case 'pos':
+      case 'venta':
         const pId = user?.pharmacy_manager_profile?.pharmacy_id || (user as any)?.pharmacyManagerProfile?.pharmacyId || '';
         return <PharmacyPOS pharmacyId={pId} />;
 
       // Driver
       case 'driver-home':
+      case 'inicio-repartidor':
         return <DriverHome />;
       case 'delivery-detail':
+      case 'detalle-envio':
         return <DeliveryDetail />;
 
       // Profile
       case 'profile':
+      case 'perfil':
         return <ProfileScreen />;
 
-      default:
+      // Verification (Public)
+      default: {
+        const page = currentPage as string;
+        if (page.startsWith('verificar-venta-')) {
+          const id = page.replace('verificar-venta-', '');
+          return <VerificationScreen type="sale" id={id} />;
+        }
+        if (page.startsWith('verificar-receta-')) {
+          const id = page.replace('verificar-receta-', '');
+          return <VerificationScreen type="prescription" id={id} />;
+        }
+        
         return (
           <div className="flex min-h-[50vh] items-center justify-center">
             <div className="text-center">
@@ -195,6 +226,7 @@ export default function Home() {
             </div>
           </div>
         );
+      }
     }
   };
 

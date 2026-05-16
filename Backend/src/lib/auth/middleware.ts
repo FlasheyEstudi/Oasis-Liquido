@@ -11,7 +11,7 @@ export interface AuthenticatedRequest extends NextRequest {
 
 type HandlerFn = (
   req: any,
-  context: { params: Promise<Record<string, string>> }
+  context: any
 ) => Promise<NextResponse>;
 
 interface AuthOptions {

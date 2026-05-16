@@ -11,9 +11,10 @@ import { formatDate, formatDuration, getInitials } from '@/utils/helpers';
 import { APP_NAME, APPOINTMENT_STATUS_CONFIG, PRESCRIPTION_STATUS_CONFIG } from '@/utils/constants';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { QrCode } from '@/components/common/qr-code';
 import {
   Calendar,
   FileText,
@@ -22,7 +23,7 @@ import {
   Plus,
   Clock,
   Pill,
-  QrCode,
+  QrCode as QrCodeIcon,
   ChevronRight,
   Activity,
   AlertCircle,
@@ -30,13 +31,14 @@ import {
   Sun,
   Moon,
   CloudSun,
+  Shield,
 } from 'lucide-react';
 
 function getGreeting(): { text: string; icon: React.ReactNode } {
   const hour = new Date().getHours();
-  if (hour < 12) return { text: 'Buenos días', icon: <Sun className="size-5 text-amber-400" /> };
-  if (hour < 18) return { text: 'Buenas tardes', icon: <CloudSun className="size-5 text-orange-400" /> };
-  return { text: 'Buenas noches', icon: <Moon className="size-5 text-sky-400" /> };
+  if (hour < 12) return { text: 'Buenos días', icon: <Sun className="size-8 text-amber-400" /> };
+  if (hour < 18) return { text: 'Buenas tardes', icon: <CloudSun className="size-8 text-orange-400" /> };
+  return { text: 'Buenas noches', icon: <Moon className="size-8 text-sky-400" /> };
 }
 
 export function PatientHome() {
@@ -128,8 +130,8 @@ export function PatientHome() {
   return (
     <div className="bento-grid">
       {/* Welcome Card - col-span-8 */}
-      <GlassCard className="col-span-12 lg:col-span-8 bg-gradient-to-br from-teal-500/10 to-sky-500/10">
-        <div className="flex items-start justify-between">
+      <GlassCard className="col-span-12 lg:col-span-8 bg-gradient-to-br from-teal-500/10 to-sky-500/10 overflow-hidden relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               {greeting.icon}
@@ -150,12 +152,49 @@ export function PatientHome() {
               </div>
             )}
           </div>
-          <Avatar className="size-20 shrink-0 border-4 border-white/50 shadow-xl">
-            <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-2xl font-black">
-              {getInitials(user?.name || 'Paciente')}
-            </AvatarFallback>
-          </Avatar>
+          <div className="flex items-center justify-between w-full sm:w-auto gap-4 overflow-hidden border-t sm:border-t-0 border-white/10 pt-4 sm:pt-0">
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <Avatar className="size-16 sm:size-20 border-2 border-white/20 shadow-xl ring-4 ring-teal-500/10">
+                <AvatarImage src={user?.avatar_url} alt={user?.name} />
+                <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-lg sm:text-xl font-bold">
+                  {getInitials(user?.name || 'Paciente')}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-[10px] font-bold text-teal-600/60 dark:text-teal-400/60 uppercase tracking-widest">Nivel Aura</p>
+                <div className="flex items-center gap-1">
+                  <div className="size-1.5 rounded-full bg-teal-500 animate-pulse" />
+                  <span className="text-xs font-bold">Verificado</span>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="group relative cursor-pointer shrink-0" 
+              onClick={() => {
+                navigate('perfil');
+              }}
+            >
+              <div className="absolute -inset-3 bg-gradient-to-r from-teal-500/20 via-sky-500/20 to-indigo-500/20 rounded-[2rem] opacity-0 blur-2xl group-hover:opacity-100 transition-all duration-700" />
+              <div className="relative glass-strong rounded-[1.8rem] p-0.5 border border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-105 active:scale-95">
+                <div className="overflow-hidden rounded-[1.6rem] bg-black/5 dark:bg-white/5">
+                  <QrCode 
+                    value={`patient-id-${user?.id}`} 
+                    size={75} 
+                    label="PASAPORTE"
+                    className="scale-90"
+                    showValue={false}
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-gradient-to-tr from-teal-500 to-sky-500 border-2 border-white shadow-xl ring-2 ring-white/10">
+                  <Shield className="size-3.5 text-white" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        {/* Background decoration */}
+        <div className="absolute -right-20 -bottom-20 size-64 bg-teal-500/5 rounded-full blur-3xl" />
       </GlassCard>
 
       {/* Next Appointment Card - col-span-4 */}
@@ -198,7 +237,7 @@ export function PatientHome() {
             <Button
               size="sm"
               className="glass-btn-primary rounded-full h-7 text-xs mt-2"
-              onClick={(e) => { e.stopPropagation(); navigate('new-appointment'); }}
+              onClick={(e) => { e.stopPropagation(); navigate('nueva-cita'); }}
             >
               Agendar
             </Button>
@@ -210,10 +249,10 @@ export function PatientHome() {
       <GlassCard className="col-span-12 !p-4">
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'Agendar cita', icon: Plus, page: 'new-appointment' as const, color: 'teal' },
-            { label: 'Ver recetas', icon: FileText, page: 'prescriptions' as const, color: 'sky' },
-            { label: 'Farmacias', icon: MapPin, page: 'pharmacy-map' as const, color: 'amber' },
-            { label: 'Delivery', icon: Truck, page: 'order-tracking' as const, color: 'teal' },
+            { label: 'Agendar cita', icon: Plus, page: 'nueva-cita' as const, color: 'teal' },
+            { label: 'Ver recetas', icon: FileText, page: 'recetas' as const, color: 'sky' },
+            { label: 'Farmacias', icon: MapPin, page: 'mapa-farmacias' as const, color: 'amber' },
+            { label: 'Delivery', icon: Truck, page: 'seguimiento' as const, color: 'teal' },
           ].map((action) => (
             <motion.button
               key={action.page}
@@ -247,7 +286,7 @@ export function PatientHome() {
             variant="ghost"
             size="sm"
             className="text-teal-600 dark:text-teal-400 text-xs h-7 rounded-full"
-            onClick={() => navigate('prescriptions')}
+            onClick={() => navigate('recetas')}
           >
             Ver todas <ChevronRight className="size-3 ml-0.5" />
           </Button>
@@ -264,10 +303,10 @@ export function PatientHome() {
                 key={presc.id}
                 whileHover={{ x: 4 }}
                 className="flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => navigate('prescription-detail', presc.id)}
+                onClick={() => navigate('detalle-receta', presc.id)}
               >
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-teal-500/10">
-                  <QrCode className="size-4 text-teal-600 dark:text-teal-400" />
+                  <QrCodeIcon className="size-4 text-teal-600 dark:text-teal-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
@@ -305,7 +344,7 @@ export function PatientHome() {
           <motion.div
             whileHover={{ scale: 1.02 }}
             className="rounded-2xl bg-teal-500/8 dark:bg-teal-500/10 p-4 cursor-pointer"
-            onClick={() => navigate('appointments')}
+            onClick={() => navigate('citas')}
           >
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="size-4 text-teal-600 dark:text-teal-400" />
@@ -321,7 +360,7 @@ export function PatientHome() {
           <motion.div
             whileHover={{ scale: 1.02 }}
             className="rounded-2xl bg-amber-500/8 dark:bg-amber-500/10 p-4 cursor-pointer"
-            onClick={() => navigate('prescriptions')}
+            onClick={() => navigate('recetas')}
           >
             <div className="flex items-center gap-2 mb-2">
               <FileText className="size-4 text-amber-600 dark:text-amber-400" />
@@ -337,7 +376,7 @@ export function PatientHome() {
           <motion.div
             whileHover={{ scale: 1.02 }}
             className="rounded-2xl bg-sky-500/8 dark:bg-sky-500/10 p-4 cursor-pointer"
-            onClick={() => navigate('order-tracking')}
+            onClick={() => navigate('seguimiento')}
           >
             <div className="flex items-center gap-2 mb-2">
               <Truck className="size-4 text-sky-600 dark:text-sky-400" />
@@ -350,7 +389,7 @@ export function PatientHome() {
           <motion.div
             whileHover={{ scale: 1.02 }}
             className="rounded-2xl bg-emerald-500/8 dark:bg-emerald-500/10 p-4 flex flex-col items-center justify-center cursor-pointer"
-            onClick={() => navigate('new-appointment')}
+            onClick={() => navigate('nueva-cita')}
           >
             <div className="flex size-10 items-center justify-center rounded-full glass-btn-primary mb-2">
               <Plus className="size-5 text-white" />
