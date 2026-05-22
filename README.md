@@ -1,13 +1,13 @@
-```text
+<div align="center">
+
+<pre>
   ██████╗    █████╗     ██████╗    ██╗    ██████╗ 
  ██╔═══██╗  ██╔══██╗   ██╔════╝    ██║   ██╔════╝ 
  ██║   ██║  ███████║   ╚█████╗     ██║   ╚█████╗  
  ██║   ██║  ██╔══██║    ╚═══██╗    ██║    ╚═══██╗ 
  ╚██████╔╝  ██║  ██║   ██████╔╝    ██║   ██████╔╝ 
   ╚═════╝   ╚═╝  ╚═╝   ╚═════╝     ╚═╝   ╚═════╝  
-```
-
-<div align="center">
+</pre>
 
 **Ecosistema Digital de Salud, Farmacias y Logística de Distribución**
 
@@ -20,7 +20,7 @@
 
 ---
 
-*Una plataforma empresarial moderna que interconecta Clínicas, Doctores, Farmacias, Cajeros, Repartidores y Pacientes en Nicaragua con soporte offline de vanguardia y notificaciones push inmediatas.*
+*Una suite digital premium de grado empresarial que interconecta Clínicas, Médicos, Farmacias, Cajeros, Repartidores Freelance y Pacientes en Nicaragua con soporte resiliente offline de vanguardia, analíticas avanzadas en vivo y notificaciones nativas push.*
 
 </div>
 
@@ -29,10 +29,10 @@
 ## 🌟 Características Clave del Ecosistema
 
 > [!IMPORTANT]
-> Oasis Nicaragua no es solo un software de administración; es una suite completa diseñada para resolver los desafíos más críticos de la salud, distribución y facturación en Centroamérica.
+> **Oasis** ha sido diseñado con un enfoque implacable en el rendimiento, la accesibilidad ("Modo Adulto Mayor") y la resiliencia operativa en zonas con conectividad intermitente en Centroamérica.
 
-### 🏥 1. Módulo Clínico Avanzado
-* **Consultas Médicas en Tiempo Real:** Emisión de recetas digitales encriptadas con códigos de barras/QR de alta seguridad.
+### 🏥 1. Módulo Clínico Avanzado & Portal Médico
+* **Consultas Médicas en Tiempo Real:** Interfaz médica sofisticada para emisión y firma digital de recetas encriptadas, integrando códigos QR de alta seguridad para despacho inmediato.
 * **Control de Citas Centralizado:** Recepcionistas con agendas interactivas fluidas, gestión de pacientes y prevención inteligente de inasistencias (*no-shows*).
 * **Firma Digital Segura:** Verificación y firma atómica de recetas por médicos certificados.
 
@@ -48,6 +48,12 @@
 
 ### 🔔 4. Notificaciones Push Contextuales (FCM)
 * **Integración Nativa con Firebase:** Envío instantáneo de alertas a dispositivos móviles y escritorio al asignar un delivery, emitir una receta o completar una entrega.
+
+### 📊 5. Panel de Control y Analíticas Premium (Super Admin)
+* **Calendario de Ingresos (Mapa de Calor):** Visualización interactiva diaria de ingresos y ventas en las últimas 4 semanas mediante rejilla de color degradado esmeralda y tooltips flotantes en vivo.
+* **Distribución Geográfica (Leaflet):** Mapa en vivo de Nicaragua con burbujas de volumen de ventas proporcionales y coloración de crecimiento por departamento en tiempo real.
+* **Gráfico de Ventas por Entidad:** Ranking dinámico comparativo de ingresos generados por clínicas y farmacias con animaciones fluidas.
+* **Sankey Flow Diagram:** Embudo de conversión transaccional desde la consulta médica, recetas emitidas, POS surtido, hasta la entrega final del repartidor.
 
 ---
 
@@ -209,5 +215,5 @@ NEXT_PUBLIC_FIREBASE_VAPID_KEY="B..."
 <div align="center">
 Desarrollado con ❤️ para la salud y optimización logística en Centroamérica. 
 
-**Oasis Nicaragua — © 2026 Todos los derechos reservados.**
+**Oasis — © 2026 Todos los derechos reservados.**
 </div>
