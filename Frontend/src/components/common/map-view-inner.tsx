@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { MAP_STYLE_URL, DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM } from '@/utils/constants';
+import { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM } from '@/utils/constants';
 import { cn } from '@/lib/utils';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 import type { MapMarker, MapViewProps } from './map-view';
 
@@ -20,25 +20,39 @@ const MARKER_COLORS: Record<string, string> = {
 
 const DEFAULT_MARKER_COLOR = '#6b7280'; // gray-500
 
-// --- SVG marker icon ---
-function createMarkerSVG(color: string): string {
-  return `<svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="${color}"/>
-    <circle cx="14" cy="14" r="6" fill="white"/>
-  </svg>`;
+// --- Custom Leaflet Marker Icon ---
+function createMarkerIcon(color: string): L.DivIcon {
+  const html = `
+    <div style="position: relative; width: 28px; height: 36px; display: flex; align-items: center; justify-content: center;">
+      <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="${color}"/>
+        <circle cx="14" cy="14" r="6" fill="white"/>
+      </svg>
+    </div>
+  `;
+  return L.divIcon({
+    html,
+    className: 'custom-map-marker',
+    iconSize: [28, 36],
+    iconAnchor: [14, 36],
+    popupAnchor: [0, -32],
+  });
 }
 
-// --- Pulsing dot for user location ---
-function createUserLocationElement(): HTMLDivElement {
-  const el = document.createElement('div');
-  el.className = 'user-location-marker';
-  el.innerHTML = `
+// --- Pulsing Leaflet Icon for user location ---
+function createUserLocationIcon(): L.DivIcon {
+  const html = `
     <div style="position:relative;width:24px;height:24px;">
       <div style="position:absolute;inset:0;border-radius:50%;background:rgba(59,130,246,0.25);animation:user-pulse 2s ease-in-out infinite;"></div>
       <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#3b82f6;border:3px solid white;box-shadow:0 0 6px rgba(59,130,246,0.5);"></div>
     </div>
   `;
-  return el;
+  return L.divIcon({
+    html,
+    className: 'custom-user-location',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
 }
 
 // --- Polyline decoder (Google encoded polyline format) ---
@@ -81,31 +95,32 @@ function decodePolyline(encoded: string): [number, number][] {
 }
 
 // --- Parse route geometry ---
-function parseRouteGeometry(geometry: string): [number, number][] | null {
-  // Try GeoJSON first
+function parseRouteGeometry(geometry: any): [number, number][] | null {
+  if (typeof geometry === 'object' && geometry !== null) {
+    if (geometry.type === 'LineString' && Array.isArray(geometry.coordinates)) {
+      return geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]);
+    }
+  }
+  // Try GeoJSON parsing if it's a string
   try {
-    const parsed = JSON.parse(geometry);
+    const parsed = typeof geometry === 'string' ? JSON.parse(geometry) : geometry;
     if (parsed.type === 'LineString' && Array.isArray(parsed.coordinates)) {
-      return parsed.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]); // GeoJSON is [lng,lat]
-    }
-    if (parsed.type === 'Feature' && parsed.geometry?.type === 'LineString') {
-      return parsed.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]);
-    }
-    if (parsed.type === 'FeatureCollection' && parsed.features?.[0]?.geometry?.type === 'LineString') {
-      return parsed.features[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]);
+      return parsed.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]);
     }
   } catch {
-    // Not JSON, try polyline decoding
+    // Not JSON
   }
 
-  // Try polyline decoding
-  try {
-    const decoded = decodePolyline(geometry);
-    if (decoded.length >= 2) {
-      return decoded;
+  if (typeof geometry === 'string') {
+    // Try polyline decoding
+    try {
+      const decoded = decodePolyline(geometry);
+      if (decoded.length >= 2) {
+        return decoded;
+      }
+    } catch {
+      // Failed
     }
-  } catch {
-    // Failed to decode
   }
 
   return null;
@@ -123,142 +138,124 @@ export function MapViewInner({
   theme = 'light',
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
-  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const popupRef = useRef<maplibregl.Popup | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const userMarkerRef = useRef<L.Marker | null>(null);
+  const routeLineRef = useRef<L.Polyline | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
-  // Determine center: center prop is [lat, lng] for backward compat, MapLibre uses [lng, lat]
-  const mapCenter: [number, number] = center
-    ? [center[1], center[0]]  // [lat, lng] -> [lng, lat]
-    : [DEFAULT_LNG, DEFAULT_LAT];
+  // Default coordinate center (Leaflet expects [lat, lng])
+  const mapCenter: [number, number] = center || [DEFAULT_LAT, DEFAULT_LNG];
 
-  // Initialize map
+  // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    let map: maplibregl.Map;
+    let map: L.Map;
 
     try {
-      map = new maplibregl.Map({
-        container: mapContainer.current,
-        style: MAP_STYLE_URL,
-        center: mapCenter,
-        zoom: zoom,
-      });
+      map = L.map(mapContainer.current, {
+        zoomControl: false,
+        attributionControl: false,
+      }).setView(mapCenter, zoom);
 
-      map.addControl(new maplibregl.NavigationControl(), 'top-right');
-      map.addControl(new maplibregl.ScaleControl(), 'bottom-left');
+      // Positioning control on top-right to preserve visual cleanliness
+      L.control.zoom({
+        position: 'topright',
+      }).addTo(map);
 
-      map.on('load', () => {
-        setMapLoaded(true);
-      });
+      // CartoDB Voyager (light) and Dark Matter (dark) tiles feel extremely premium
+      const tileUrl = theme === 'dark'
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
-      map.on('error', (e) => {
-        // Ignore normal tile or source loading errors so they don't crash the UI map container
-        const isFatal = e.error?.message?.includes('style') || e.error?.message?.includes('initialize');
-        if (isFatal) {
-          setMapError('Error al cargar el estilo del mapa');
-        }
-        console.warn('MapLibre tile/style warning:', e);
-      });
+      L.tileLayer(tileUrl, {
+        maxZoom: 19,
+      }).addTo(map);
 
       mapRef.current = map;
+      setMapLoaded(true);
     } catch (err) {
-      console.error('Failed to initialize map:', err);
-      // Defer state update to avoid synchronous setState in effect
+      console.error('Failed to initialize Leaflet map:', err);
       setTimeout(() => setMapError('No se pudo inicializar el mapa'), 0);
     }
 
     return () => {
-      // Clean up markers
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       if (userMarkerRef.current) {
         userMarkerRef.current.remove();
         userMarkerRef.current = null;
       }
-      if (popupRef.current) {
-        popupRef.current.remove();
-        popupRef.current = null;
+      if (routeLineRef.current) {
+        routeLineRef.current.remove();
+        routeLineRef.current = null;
       }
-      map?.remove();
-      mapRef.current = null;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
       setMapLoaded(false);
     };
-    // Only re-initialize when container changes
   }, []);
 
-  // Update markers
+  // Update Markers when prop changes
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
 
     // Remove existing markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
-    if (popupRef.current) {
-      popupRef.current.remove();
-      popupRef.current = null;
-    }
 
     // Add new markers
-    markers.forEach((marker, index) => {
+    markers.forEach((marker) => {
       const color = marker.color || MARKER_COLORS[marker.type || ''] || DEFAULT_MARKER_COLOR;
-      const el = document.createElement('div');
-      el.className = 'map-marker';
-      el.style.cursor = 'pointer';
-      el.innerHTML = createMarkerSVG(color);
+      const icon = createMarkerIcon(color);
 
-      const maplibreMarker = new maplibregl.Marker({ element: el })
-        .setLngLat([marker.lng, marker.lat])
+      const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
         .addTo(mapRef.current!);
 
-      // Click handler
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
+      if (marker.label) {
+        leafletMarker.bindPopup(`
+          <div style="padding: 4px 8px; font-size: 13px; font-weight: 500; color: #1e293b; font-family: sans-serif;">
+            ${marker.label}
+          </div>
+        `);
+      }
 
-        // Close existing popup
-        if (popupRef.current) {
-          popupRef.current.remove();
-        }
+      if (onMarkerClick) {
+        leafletMarker.on('click', () => {
+          onMarkerClick(marker);
+        });
+      }
 
-        // Create new popup
-        if (marker.label) {
-          const popup = new maplibregl.Popup({ offset: 25, closeButton: true, closeOnClick: true })
-            .setLngLat([marker.lng, marker.lat])
-            .setHTML(`<div style="padding:4px 8px;font-size:13px;font-weight:500;">${marker.label}</div>`)
-            .addTo(mapRef.current!);
-          popupRef.current = popup;
-        }
-
-        onMarkerClick?.(marker);
-      });
-
-      markersRef.current.push(maplibreMarker);
+      markersRef.current.push(leafletMarker);
     });
   }, [markers, mapLoaded, onMarkerClick]);
 
-  // Update route
+  // Update Route Polyline
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
 
-    const fetchRoute = async () => {
+    const drawRoute = async () => {
       const map = mapRef.current!;
-      
-      // Remove existing route layer and source
-      if (map.getLayer('route-line')) map.removeLayer('route-line');
-      if (map.getSource('route-source')) map.removeSource('route-source');
+
+      // Remove existing polyline
+      if (routeLineRef.current) {
+        routeLineRef.current.remove();
+        routeLineRef.current = null;
+      }
 
       if (!route) return;
 
       let geometry = route.geometry;
 
-      // If no geometry but we have points, fetch from OSRM proxy
       if (!geometry && route.origin && route.destination) {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/routes/driving?origin=${route.origin}&destination=${route.destination}`);
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/routes/driving?origin=${route.origin}&destination=${route.destination}`
+          );
           const result = await res.json();
           if (result.success) {
             geometry = result.data.geometry;
@@ -273,56 +270,34 @@ export function MapViewInner({
       const coords = parseRouteGeometry(geometry);
       if (!coords || coords.length < 2) return;
 
-      // Convert [lat, lng] to [lng, lat] for GeoJSON
-      const geoJsonCoords = coords.map(([lat, lng]) => [lng, lat]);
+      // Draw beautiful, logical street-aware polyline following roads
+      const polyline = L.polyline(coords, {
+        color: '#0d9488', // Teal-600
+        weight: 5,
+        opacity: 0.85,
+        lineJoin: 'round',
+        lineCap: 'round',
+      }).addTo(map);
 
-      map.addSource('route-source', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: geoJsonCoords,
-          },
-          properties: {},
-        },
-      });
+      routeLineRef.current = polyline;
 
-      map.addLayer({
-        id: 'route-line',
-        type: 'line',
-        source: 'route-source',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#059669',
-          'line-width': 4,
-          'line-opacity': 0.8,
-        },
-      });
-
-      // Fit map to route bounds
-      const bounds = new maplibregl.LngLatBounds();
-      geoJsonCoords.forEach((c) => bounds.extend(c as [number, number]));
-      map.fitBounds(bounds, { padding: 40, duration: 1000 });
+      // Adjust map view bounding box to fit the route perfectly
+      const bounds = L.latLngBounds(coords);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
     };
 
-    fetchRoute();
+    drawRoute();
   }, [route, mapLoaded]);
 
-  // Handle user location
+  // Handle Geolocation for user marker
   useEffect(() => {
     if (!mapRef.current || !mapLoaded || !showUserLocation) return;
 
-    // Remove existing user marker
     if (userMarkerRef.current) {
       userMarkerRef.current.remove();
       userMarkerRef.current = null;
     }
 
-    // Request geolocation
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
@@ -330,23 +305,18 @@ export function MapViewInner({
         if (!mapRef.current) return;
         const { latitude, longitude } = position.coords;
 
-        const el = createUserLocationElement();
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([longitude, latitude])
-          .addTo(mapRef.current);
+        const icon = createUserLocationIcon();
+        const marker = L.marker([latitude, longitude], { icon }).addTo(mapRef.current);
 
         userMarkerRef.current = marker;
 
-        // Pan to user location
-        mapRef.current.flyTo({
-          center: [longitude, latitude],
-          zoom: zoom,
-          duration: 1500,
+        mapRef.current.flyTo([latitude, longitude], zoom, {
+          animate: true,
+          duration: 1.5,
         });
       },
       (err) => {
         console.warn('Geolocation error:', err);
-        // Fall back to default center - already set
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
@@ -359,56 +329,92 @@ export function MapViewInner({
     };
   }, [showUserLocation, mapLoaded, zoom]);
 
-  // Update center when prop changes
+  // Handle Center coordinate updates
   useEffect(() => {
-    if (!mapRef.current || !mapLoaded) return;
-    mapRef.current.flyTo({
-      center: mapCenter,
-      duration: 1000,
-    });
-  }, [mapCenter[0], mapCenter[1], mapLoaded]);
+    if (!mapRef.current || !mapLoaded || !center) return;
+    mapRef.current.panTo(center, { animate: true, duration: 1.0 });
+  }, [center?.[0], center?.[1], mapLoaded]);
 
-  // Error state
+  // Error overlay
   if (mapError) {
     return (
       <div
         className={cn(
-          'flex flex-col items-center justify-center bg-red-50 rounded-lg border border-red-200',
+          'flex flex-col items-center justify-center bg-red-950/20 rounded-2xl border border-red-900/30',
           className
         )}
         style={{ height }}
       >
-        <MapPin className="size-10 text-red-300 mb-2" />
-        <p className="text-sm font-medium text-red-600">{mapError}</p>
-        <p className="text-xs text-red-400 mt-1">Verifica tu conexión a internet</p>
+        <MapPin className="size-10 text-red-500/50 mb-2 animate-bounce" />
+        <p className="text-sm font-medium text-red-400">{mapError}</p>
+        <p className="text-xs text-red-500/70 mt-1">Verifica tu conexión y permisos de geolocalización</p>
       </div>
     );
   }
 
   return (
-    <div 
+    <div
       className={cn(
-        'relative rounded-lg overflow-hidden border', 
-        theme === 'dark' && 'map-dark-filter',
+        'relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl glass',
         className
-      )} 
+      )}
       style={{ height }}
     >
       <style jsx global>{`
-        .map-dark-filter .maplibregl-map {
-          filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-          background: #111 !important;
+        /* Custom pulses for geolocation */
+        @keyframes user-pulse {
+          0% {
+            transform: scale(0.6);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(2.4);
+            opacity: 0;
+          }
         }
-        .map-dark-filter .maplibregl-marker,
-        .map-dark-filter .maplibregl-ctrl,
-        .map-dark-filter .maplibregl-popup {
-          filter: invert(100%) hue-rotate(180deg);
+        /* Override default leaflet styling for clean UI */
+        .leaflet-container {
+          background: #09090b !important; /* zinc-950 background */
+          font-family: inherit;
+        }
+        .leaflet-bar {
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
+          background: rgba(15, 23, 42, 0.7) !important;
+          backdrop-filter: blur(12px) !important;
+          overflow: hidden;
+        }
+        .leaflet-bar a {
+          background: transparent !important;
+          color: rgba(255, 255, 255, 0.7) !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+          font-weight: bold;
+          transition: all 0.2s;
+        }
+        .leaflet-bar a:hover {
+          color: #ffffff !important;
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+        .leaflet-bar a:last-child {
+          border-bottom: none !important;
+        }
+        .leaflet-popup-content-wrapper {
+          background: rgba(15, 23, 42, 0.85) !important;
+          backdrop-filter: blur(12px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-radius: 16px !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        }
+        .leaflet-popup-tip {
+          background: rgba(15, 23, 42, 0.85) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
         }
       `}</style>
 
       {/* Premium Cinematic Loading overlay */}
       {!mapLoaded && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-950/40 backdrop-blur-md">
+        <div className="absolute inset-0 z-[1000] flex flex-col items-center justify-center bg-zinc-950/60 backdrop-blur-md">
           <div className="relative">
             <div className="size-16 rounded-full border-b-2 border-t-2 border-emerald-500 animate-spin" />
             <div className="absolute inset-0 size-16 rounded-full border-r-2 border-l-2 border-sky-500 animate-spin-slow" />
@@ -418,16 +424,16 @@ export function MapViewInner({
             Localizando Oasis...
           </p>
           <div className="mt-2 w-32 h-1 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-emerald-500 to-sky-500 animate-shimmer" style={{ width: '100%' }} />
+            <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 animate-shimmer" style={{ width: '100%' }} />
           </div>
         </div>
       )}
 
-      {/* Map container */}
-      <div 
-        ref={mapContainer} 
-        className="absolute inset-0" 
-        style={{ height: '100%' }} 
+      {/* Leaflet Map container */}
+      <div
+        ref={mapContainer}
+        className="absolute inset-0 z-0"
+        style={{ height: '100%' }}
       />
     </div>
   );

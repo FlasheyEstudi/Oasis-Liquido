@@ -154,6 +154,7 @@ export const createPrescriptionSchema = z.object({
   appointment_id: z.string().optional(),
   expiration_date: z.string().min(1, 'Fecha de expiración requerida'),
   notes: z.string().optional(),
+  signature_pin: z.string().length(4, 'El PIN debe ser de 4 dígitos').regex(/^\d+$/, 'El PIN debe contener solo dígitos'),
   lines: z.array(z.object({
     medicine_id: z.string().min(1, 'Medicamento requerido'),
     quantity: z.number().int().min(1, 'Cantidad mínima: 1'),

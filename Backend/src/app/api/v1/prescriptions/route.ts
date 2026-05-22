@@ -53,6 +53,12 @@ export const POST = withAuth(
 
       return successResponse(result, 'Receta creada exitosamente', 201);
     } catch (error: any) {
+      if (error.message === 'DOCTOR_PROFILE_NOT_FOUND') {
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Perfil de doctor no encontrado', 404);
+      }
+      if (error.message === 'INCORRECT_PIN') {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'PIN de firma incorrecto', 403);
+      }
       if (error.message === 'NOT_FOUND') {
         return errorResponse(ErrorCodes.NOT_FOUND, 'Recurso no encontrado', 404);
       }

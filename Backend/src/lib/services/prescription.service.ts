@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { createAuditLog } from './audit.service';
 import crypto from 'crypto';
+import { hashPassword, verifyPassword } from '@/lib/auth/password';
 
 function mapPrescription(presc: any) {
   if (!presc) return null;
@@ -103,6 +104,7 @@ export async function createPrescription(
     appointment_id?: string;
     expiration_date: string;
     notes?: string;
+    signature_pin: string;
     lines: Array<{
       medicine_id: string;
       quantity: number;
@@ -113,9 +115,44 @@ export async function createPrescription(
   ipAddress?: string,
   userAgent?: string
 ) {
-  // Generate unique QR code
-  const qrCode = `RX-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+  // 1. Fetch Doctor Profile
+  const doctorProfile = await db.doctorProfile.findUnique({
+    where: { userId: doctorId },
+  });
 
+  if (!doctorProfile) {
+    throw new Error('DOCTOR_PROFILE_NOT_FOUND');
+  }
+
+  let finalHashedPin = doctorProfile.signaturePin;
+
+  // 2. Default PIN flow (if no PIN is configured, set this one as default)
+  if (!doctorProfile.signaturePin) {
+    finalHashedPin = await hashPassword(data.signature_pin);
+    await db.doctorProfile.update({
+      where: { userId: doctorId },
+      data: { signaturePin: finalHashedPin },
+    });
+  } else {
+    // 3. Verify PIN
+    const isValid = await verifyPassword(data.signature_pin, doctorProfile.signaturePin);
+    if (!isValid) {
+      throw new Error('INCORRECT_PIN');
+    }
+  }
+
+  // 4. Generate verification code & QR code
+  const verificationCode = `RX-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+  const qrCode = verificationCode;
+
+  // 5. Generate HMAC-SHA256 digital signature using the hashed PIN as the secret key
+  const messageToSign = `${doctorId}|${data.patient_id}|${data.expiration_date}`;
+  const digitalSignature = crypto
+    .createHmac('sha256', finalHashedPin!)
+    .update(messageToSign)
+    .digest('hex');
+
+  // 6. Create the signed prescription atomically
   const prescription = await db.prescription.create({
     data: {
       patientId: data.patient_id,
@@ -123,6 +160,9 @@ export async function createPrescription(
       clinicId: data.clinic_id,
       appointmentId: data.appointment_id,
       qrCode,
+      verificationCode,
+      digitalSignature,
+      status: 'active',
       notes: data.notes,
       expirationDate: data.expiration_date,
       prescriptionLines: {

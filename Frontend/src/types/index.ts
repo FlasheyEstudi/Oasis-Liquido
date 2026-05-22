@@ -304,6 +304,7 @@ export interface CreatePrescriptionRequest {
   clinic_id: string;
   expiration_date: string;
   notes?: string;
+  signature_pin: string;
   lines: CreatePrescriptionLineRequest[];
 }
 

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import {
   useDeliveryOrder,
   useDeliveryRoute,
   useUpdateDeliveryStatus,
+  useUpdateDeliveryLocation,
 } from '@/hooks/use-api';
 import { formatDate, formatCurrency, formatDistance } from '@/utils/helpers';
 import { DELIVERY_STATUS_CONFIG, DEFAULT_LAT, DEFAULT_LNG } from '@/utils/constants';
@@ -68,7 +69,60 @@ export function DeliveryDetail() {
   } = useDeliveryRoute(selectedItemId || '', !!selectedItemId);
 
   const updateDeliveryStatus = useUpdateDeliveryStatus();
+  const updateLocation = useUpdateDeliveryLocation();
   const isUpdating = updateDeliveryStatus.isPending;
+
+  // Active GPS geolocation tracking when order is in_transit
+  useEffect(() => {
+    if (!order || order.status !== 'in_transit') return;
+
+    let watchId: number | null = null;
+    let fallbackInterval: NodeJS.Timeout | null = null;
+
+    const handleCoordsUpdate = (coords: GeolocationCoordinates) => {
+      console.log('GPS Coordinates update:', coords.latitude, coords.longitude);
+      updateLocation.mutate({
+        orderId: order.id,
+        lat: coords.latitude,
+        lng: coords.longitude,
+      });
+    };
+
+    if ('geolocation' in navigator) {
+      // 1. watchPosition for active updates
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          handleCoordsUpdate(position.coords);
+        },
+        (error) => {
+          console.warn('watchPosition failed:', error.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+
+      // 2. Poll fallback every 10s via getCurrentPosition
+      fallbackInterval = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            handleCoordsUpdate(position.coords);
+          },
+          (error) => {
+            console.warn('getCurrentPosition fallback failed:', error.message);
+          },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      }, 10000);
+    }
+
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      if (fallbackInterval !== null) {
+        clearInterval(fallbackInterval);
+      }
+    };
+  }, [order?.status, order?.id]);
 
   const handleStatusUpdate = (newStatus: 'picked_up' | 'in_transit' | 'delivered') => {
     if (!order) return;

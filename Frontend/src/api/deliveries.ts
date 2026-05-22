@@ -63,3 +63,10 @@ export async function createSale(pharmacyId: string, data: CreateSaleRequest): P
   const result = await post<SaleResponse['data']>(`/pharmacies/${pharmacyId}/sales`, data);
   return result.data;
 }
+
+/** Update delivery driver current location */
+export async function updateLocation(orderId: string, lat: number, lng: number): Promise<{ success: boolean }> {
+  const result = await post<{ success: boolean }>('/delivery/location', { orderId, lat, lng });
+  return result.data;
+}
+

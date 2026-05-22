@@ -583,6 +583,15 @@ export function useDeliveryOrderTracking(id: string) {
   });
 }
 
+/** Update delivery driver current location */
+export function useUpdateDeliveryLocation() {
+  return useMutation({
+    mutationFn: ({ orderId, lat, lng }: { orderId: string; lat: number; lng: number }) =>
+      deliveriesApi.updateLocation(orderId, lat, lng),
+  });
+}
+
+
 // ============================================
 // USER HOOKS (Admin)
 // ============================================

@@ -18,14 +18,32 @@ export async function GET(req: NextRequest) {
 
     const osrmBaseUrl = process.env.OSRM_BASE_URL || 'http://localhost:5000';
     // OSRM expects coordinates in format: {longitude},{latitude}
-    const url = `${osrmBaseUrl}/route/v1/driving/${origin};${destination}?overview=full&geometries=geojson`;
+    const path = `/route/v1/driving/${origin};${destination}?overview=full&geometries=geojson`;
+    const primaryUrl = `${osrmBaseUrl}${path}`;
+    const fallbackUrl = `https://router.project-osrm.org${path}`;
 
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OSRM Error:', errorText);
-      return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error al contactar motor de rutas', 502);
+    let response: Response;
+    let fallbackUsed = false;
+
+    try {
+      response = await fetch(primaryUrl);
+      if (!response.ok) {
+        throw new Error(`Primary OSRM server responded with status: ${response.status}`);
+      }
+    } catch (primaryError: any) {
+      console.warn(`Primary OSRM engine failed (${primaryUrl}): ${primaryError.message}. Falling back to public OSRM...`);
+      try {
+        response = await fetch(fallbackUrl);
+        fallbackUsed = true;
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Fallback OSRM Error:', errorText);
+          return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error al contactar motor de rutas fallback', 502);
+        }
+      } catch (fallbackError: any) {
+        console.error('Fallback OSRM also failed:', fallbackError);
+        return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Ambos motores de ruta (primario y fallback) fallaron', 502);
+      }
     }
 
     const data = await response.json();
@@ -40,7 +58,8 @@ export async function GET(req: NextRequest) {
       distance: route.distance, // in meters
       duration: route.duration, // in seconds
       geometry: route.geometry, // GeoJSON LineString
-      waypoints: data.waypoints
+      waypoints: data.waypoints,
+      fallbackUsed
     });
   } catch (error: any) {
     console.error('Route API Error:', error);
