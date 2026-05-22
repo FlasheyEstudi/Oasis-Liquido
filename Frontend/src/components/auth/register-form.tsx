@@ -190,11 +190,9 @@ export function RegisterForm() {
                   className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50 appearance-none bg-transparent"
                 >
                   <option value="patient" className="bg-slate-800 text-white">Paciente</option>
-                  <option value="doctor" className="bg-slate-800 text-white">Médico</option>
-                  <option value="pharmacy_manager" className="bg-slate-800 text-white">Farmacéutico</option>
-                  <option value="delivery_driver" className="bg-slate-800 text-white">Repartidor</option>
-                  <option value="receptionist" className="bg-slate-800 text-white">Recepcionista</option>
-                  <option value="admin" className="bg-slate-800 text-white">Administrador</option>
+                  <option value="clinic_owner" className="bg-slate-800 text-white">Dueño de Clínica</option>
+                  <option value="pharmacy_owner" className="bg-slate-800 text-white">Dueño de Farmacia</option>
+                  <option value="delivery_driver" className="bg-slate-800 text-white">Repartidor / Delivery</option>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                   <ArrowRight className="h-4 w-4 text-muted-foreground rotate-90" />

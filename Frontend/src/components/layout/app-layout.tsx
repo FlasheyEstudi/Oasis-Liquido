@@ -148,15 +148,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex bg-background relative">
+    <div className="h-screen w-screen flex bg-background relative overflow-hidden">
       <OrganicBlobs />
 
-      {/* Desktop Sidebar — hover to expand */}
-      <div
-        className="hidden lg:block relative z-30 shrink-0"
-        onMouseEnter={() => setSidebarHovered(true)}
-        onMouseLeave={() => setSidebarHovered(false)}
-      >
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block shrink-0">
         <GlassSidebar />
       </div>
 
@@ -167,20 +163,17 @@ export function AppLayout({ children }: AppLayoutProps) {
       />
 
       {/* Main Content Area */}
-      <div
-        className="flex-1 flex flex-col min-w-0 relative z-10"
-        style={{ marginLeft: isDesktop ? 0 : 0 }}
-      >
+      <div className="flex-1 flex flex-col min-w-0 h-full relative z-10">
         {/* Top Bar */}
         <ContextualTopBar onMenuClick={() => setBottomSheetOpen(true)} />
 
         {/* Content */}
-        <main className="flex-1 p-4 lg:p-6 overflow-auto pb-24 lg:pb-6">
+        <main className="flex-1 p-4 lg:p-6 overflow-y-auto min-h-0 pb-24 lg:pb-6">
           {children}
         </main>
 
         {/* Footer — desktop only */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block shrink-0">
           <Footer />
         </div>
       </div>

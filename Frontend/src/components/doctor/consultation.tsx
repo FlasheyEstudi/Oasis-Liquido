@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   User,
@@ -49,6 +49,8 @@ import {
   MessageCircle,
   Clock,
   Calendar,
+  Lock,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface PrescriptionLineForm {
@@ -78,6 +80,10 @@ export function Consultation() {
   const [notes, setNotes] = useState('');
   const [prescriptionLines, setPrescriptionLines] = useState<PrescriptionLineForm[]>([]);
   const [createdPrescriptionQr, setCreatedPrescriptionQr] = useState<string | null>(null);
+
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [signaturePin, setSignaturePin] = useState('');
+  const [pinError, setPinError] = useState('');
 
   const createAppointmentMutation = useCreateAppointment();
   const [isSchedulingFollowUp, setIsSchedulingFollowUp] = useState(false);
@@ -134,7 +140,7 @@ export function Consultation() {
     }
   };
 
-  const handleCreatePrescription = async () => {
+  const handleCreatePrescription = async (pin: string) => {
     if (!appointment) return;
     if (prescriptionLines.some((l) => !l.medicine_id)) {
       setNotification({ type: 'warning', message: 'Selecciona un medicamento para cada línea' });
@@ -155,13 +161,18 @@ export function Consultation() {
         clinic_id: appointment.clinic_id,
         expiration_date: expirationDate.toISOString().split('T')[0],
         notes: notes || undefined,
+        signature_pin: pin,
         lines,
       });
 
       setCreatedPrescriptionQr(prescription.qr_code_data);
-      setNotification({ type: 'success', message: 'Receta emitida correctamente' });
-    } catch {
-      setNotification({ type: 'error', message: 'No se pudo emitir la receta' });
+      setNotification({ type: 'success', message: 'Receta firmada y emitida correctamente' });
+      setPinModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      const errMsg = err?.response?.data?.message || 'PIN de firma incorrecto o perfil no verificado';
+      setPinError(errMsg);
+      setNotification({ type: 'error', message: errMsg });
     }
   };
 
@@ -610,21 +621,20 @@ export function Consultation() {
                 {/* Emit Prescription Button */}
                 {prescriptionLines.length > 0 && !createdPrescriptionQr && (
                   <Button
-                    className="glass-btn-primary w-full rounded-full"
-                    onClick={handleCreatePrescription}
+                    className="glass-btn-primary w-full rounded-full animate-pulse"
+                    onClick={() => {
+                      if (prescriptionLines.some((l) => !l.medicine_id)) {
+                        setNotification({ type: 'warning', message: 'Selecciona un medicamento para cada línea' });
+                        return;
+                      }
+                      setSignaturePin('');
+                      setPinError('');
+                      setPinModalOpen(true);
+                    }}
                     disabled={createPrescriptionMutation.isPending}
                   >
-                    {createPrescriptionMutation.isPending ? (
-                      <>
-                        <Loader2 className="size-4 animate-spin" />
-                        Emitiendo receta...
-                      </>
-                    ) : (
-                      <>
-                        <QrCodeIcon className="size-4" />
-                        Emitir receta
-                      </>
-                    )}
+                    <QrCodeIcon className="size-4" />
+                    Firmar y Emitir Receta
                   </Button>
                 )}
               </div>
@@ -656,6 +666,87 @@ export function Consultation() {
           </div>
         </div>
       </div>
+
+      {/* Signature PIN Verification Modal (Fase 5) */}
+      <AnimatePresence>
+        {pinModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 max-w-sm w-full shadow-2xl relative overflow-hidden"
+            >
+              {/* Decorative premium glow */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="text-center mb-6">
+                <div className="size-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mx-auto mb-4 animate-pulse">
+                  <Lock className="size-8" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">Firma Digital Requerida</h3>
+                <p className="text-xs text-gray-400 mt-2">
+                  Por favor, ingresa tu PIN de firma digital para firmar electrónicamente la receta de <span className="font-bold text-teal-400">{patient?.name}</span>.
+                </p>
+                <p className="text-[10px] text-gray-500 mt-1 italic">
+                  * Si es tu primera receta, el PIN ingresado se registrará como tu PIN de firma.
+                </p>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">PIN de Firma Digital</label>
+                  <input
+                    type="password"
+                    maxLength={6}
+                    placeholder="••••"
+                    value={signaturePin}
+                    onChange={(e) => {
+                      setSignaturePin(e.target.value);
+                      if (pinError) setPinError('');
+                    }}
+                    className="w-full h-12 text-center text-lg tracking-[0.5em] bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
+                  />
+                  {pinError && (
+                    <div className="flex items-center gap-1.5 text-[10px] text-red-400 font-bold mt-1 bg-red-500/10 p-2 rounded-lg">
+                      <ShieldAlert className="size-3.5 shrink-0" />
+                      <span>{pinError}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button 
+                  variant="ghost" 
+                  className="flex-1 text-gray-400 hover:text-white" 
+                  onClick={() => {
+                    setPinModalOpen(false);
+                    setPinError('');
+                  }}
+                  disabled={createPrescriptionMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold animate-pulse"
+                  disabled={!signaturePin.trim() || createPrescriptionMutation.isPending}
+                  onClick={() => handleCreatePrescription(signaturePin)}
+                >
+                  {createPrescriptionMutation.isPending ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin mr-1" />
+                      Firmando...
+                    </>
+                  ) : (
+                    'Firmar Receta'
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

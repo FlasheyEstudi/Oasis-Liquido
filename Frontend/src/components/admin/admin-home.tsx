@@ -28,6 +28,14 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { AnalyticsCard } from '@/components/common/analytics-card';
+import {
+  RevenueHeatmapCalendar,
+  GeographicBubbleMap,
+  SalesByEntityChart,
+  PredictiveKPIGauges,
+  SankeyFlowDiagram,
+  RealTimeSystemStatus,
+} from '@/components/common/charts';
 
 function ShimmerBlock({ className }: { className?: string }) {
   return <div className={cn('shimmer rounded-3xl', className)} />;
@@ -158,31 +166,26 @@ export function AdminHome() {
         </motion.div>
       ))}
 
-      {/* Revenue Trend Chart */}
+      {/* 2026 Premium Analíticas Integradas */}
       <motion.div className="col-span-12 lg:col-span-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <AnalyticsCard
-          title="Tendencia de Ingresos"
-          subtitle="Ventas proyectadas de los últimos 7 días"
-          data={stats?.revenue_chart || []}
-          dataKey="amount"
-          xAxisKey="date"
-          color="#10b981"
-          currentValue={formatCurrency(stats?.monthly_revenue ?? 0)}
-          percentageChange={8.4}
-        />
+        <RevenueHeatmapCalendar />
       </motion.div>
 
-      {/* Peak Hours Analysis */}
-      <motion.div className="col-span-12 lg:col-span-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-        <AnalyticsCard
-          title="Análisis de Horas Punta"
-          subtitle="Distribución de citas por hora"
-          type="bar"
-          data={stats?.peak_hours || []}
-          dataKey="count"
-          xAxisKey="hour"
-          color="#0ea5e9"
-        />
+      <motion.div className="col-span-12 lg:col-span-4 flex flex-col gap-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+        <PredictiveKPIGauges />
+        <RealTimeSystemStatus />
+      </motion.div>
+
+      <motion.div className="col-span-12 md:col-span-6 lg:col-span-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <GeographicBubbleMap />
+      </motion.div>
+
+      <motion.div className="col-span-12 md:col-span-6 lg:col-span-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+        <SalesByEntityChart />
+      </motion.div>
+
+      <motion.div className="col-span-12 lg:col-span-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+        <SankeyFlowDiagram />
       </motion.div>
 
       {/* Appointments by Status Chart */}

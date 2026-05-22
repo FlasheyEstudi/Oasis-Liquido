@@ -70,3 +70,9 @@ export async function createSale(clinicId: string, data: any): Promise<any> {
   const result = await post(`/clinics/${clinicId}/sales`, data);
   return result.data;
 }
+
+/** Get medical dimensions performance radar stats */
+export async function getRadarData(): Promise<any> {
+  const result = await get<any>('/clinic-owner/analytics/radar');
+  return result.data;
+}

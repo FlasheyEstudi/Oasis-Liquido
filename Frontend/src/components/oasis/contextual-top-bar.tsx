@@ -8,6 +8,7 @@ import {
   Search,
   Menu,
   Bell,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -111,6 +112,16 @@ export function ContextualTopBar({ onMenuClick }: ContextualTopBarProps) {
             ⌘K
           </kbd>
         </motion.button>
+
+        {/* Beta Feedback trigger in navbar */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-beta-feedback'))}
+          title="Reportar problema o sugerencia de la Beta"
+          className="relative p-2 rounded-xl hover:bg-slate-500/5 transition-colors text-teal-600 dark:text-teal-400"
+        >
+          <MessageSquare className="size-[18px]" />
+          <span className="absolute top-1 right-1 size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        </button>
 
         {/* Notifications */}
         <button className="relative p-2 rounded-xl hover:bg-slate-500/5 transition-colors text-slate-500 dark:text-slate-400">

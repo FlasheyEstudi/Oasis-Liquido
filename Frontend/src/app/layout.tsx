@@ -37,6 +37,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { BetaFeedback } from "@/components/common/BetaFeedback";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -54,8 +57,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
             <Toaster />
+            <BetaFeedback />
             <PWAInitializer />
           </QueryProvider>
         </ThemeProvider>

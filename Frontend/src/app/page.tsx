@@ -21,6 +21,7 @@ const ManageClinics = dynamic(() => import('@/components/admin/manage-clinics').
 const ManagePharmacies = dynamic(() => import('@/components/admin/manage-pharmacies').then(m => m.ManagePharmacies));
 const ManageUsers = dynamic(() => import('@/components/admin/manage-users').then(m => m.ManageUsers));
 const AuditLogs = dynamic(() => import('@/components/admin/audit-logs').then(m => m.AuditLogs));
+const ManageFeedback = dynamic(() => import('@/components/admin/manage-feedback').then(m => m.ManageFeedback));
 
 const DoctorDashboard = dynamic(() => import('@/components/doctor/doctor-dashboard').then(m => m.DoctorDashboard));
 const Consultation = dynamic(() => import('@/components/doctor/consultation').then(m => m.Consultation));
@@ -178,6 +179,9 @@ export default function Home() {
       case 'audit-logs':
       case 'auditoria':
         return <AuditLogs />;
+      case 'manage-feedback':
+      case 'gestionar-feedback':
+        return <ManageFeedback />;
 
       // Pharmacy
       case 'inventory':

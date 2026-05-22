@@ -15,7 +15,7 @@ export const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  role: z.enum(['patient']).default('patient'), // Only patient for public registration
+  role: z.enum(['patient', 'clinic_owner', 'pharmacy_owner', 'delivery_driver']).default('patient'),
 });
 
 export const forgotPasswordSchema = z.object({

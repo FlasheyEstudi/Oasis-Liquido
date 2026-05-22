@@ -70,3 +70,52 @@ export async function updateLocation(orderId: string, lat: number, lng: number):
   return result.data;
 }
 
+/** GET available orders for drivers */
+export async function getAvailableDeliveries(): Promise<any[]> {
+  const result = await get<any[]>('/delivery/orders/available');
+  return result.data;
+}
+
+/** GET assigned orders for drivers */
+export async function getAssignedDeliveries(): Promise<any[]> {
+  const result = await get<any[]>('/delivery/orders/assigned');
+  return result.data;
+}
+
+/** ACCEPT an order */
+export async function acceptDelivery(id: string): Promise<any> {
+  const result = await post<any>(`/delivery/orders/${id}/accept`, {});
+  return result.data;
+}
+
+/** REJECT an order */
+export async function rejectDelivery(id: string): Promise<any> {
+  const result = await post<any>(`/delivery/orders/${id}/reject`, {});
+  return result.data;
+}
+
+/** PICKUP an order */
+export async function pickupDelivery(id: string): Promise<any> {
+  const result = await post<any>(`/delivery/orders/${id}/pickup`, {});
+  return result.data;
+}
+
+/** DELIVER an order */
+export async function deliverDelivery(id: string): Promise<any> {
+  const result = await post<any>(`/delivery/orders/${id}/deliver`, {});
+  return result.data;
+}
+
+/** FAIL an order */
+export async function failDelivery(id: string, reason: string): Promise<any> {
+  const result = await post<any>(`/delivery/orders/${id}/fail`, { reason });
+  return result.data;
+}
+
+/** GET driver earnings statistics */
+export async function getDriverEarnings(): Promise<any> {
+  const result = await get<any>('/delivery/earnings');
+  return result.data;
+}
+
+

@@ -12,6 +12,12 @@ import type { Clinic } from '@/types';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { ClinicStaffManagement } from '../common/staff-management';
 import {
+  CircularPerformanceRadar,
+  AppointmentWaveform,
+  PatientJourneyTimeline,
+  NoShowPredictionGauge,
+} from '@/components/common/charts';
+import {
   Table,
   TableBody,
   TableCell,
@@ -242,6 +248,29 @@ export function ManageClinics() {
           {/* Workers list & invitations */}
           <div className="lg:col-span-2">
             <ClinicStaffManagement clinicId={ownedClinic.id} />
+          </div>
+        </div>
+
+        {/* 2026 Premium Analíticas de Clínica */}
+        <div className="mt-8">
+          <div className="flex flex-col gap-1 mb-6">
+            <h3 className="text-lg font-bold text-foreground">Analíticas y KPIs de Clínica</h3>
+            <p className="text-xs text-muted-foreground">Métricas en tiempo real y predictivas para optimización de sede</p>
+          </div>
+          
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <CircularPerformanceRadar />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <AppointmentWaveform />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <PatientJourneyTimeline />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <NoShowPredictionGauge />
+            </motion.div>
           </div>
         </div>
       </div>

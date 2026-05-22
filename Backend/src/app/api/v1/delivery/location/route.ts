@@ -33,6 +33,15 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       });
     }
 
+    // Save tracking history point to delivery_routes
+    await db.deliveryRoute.create({
+      data: {
+        deliveryOrderId: orderId,
+        driverLat: lat,
+        driverLng: lng
+      }
+    });
+
     // Emit real-time update via Socket.IO
     emitDeliveryLocation(orderId, lat, lng);
 

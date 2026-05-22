@@ -174,7 +174,7 @@ export function PatientHome() {
   };
 
   return (
-    <div className="bento-grid">
+    <div className={cn("bento-grid transition-all duration-300", isElderlyMode && "text-base font-medium [&_h2]:text-4xl [&_h3]:text-2xl [&_p]:text-lg [&_span]:text-base [&_button]:py-4 [&_button]:px-6 [&_button]:text-base [&_svg]:size-6")}>
       {/* Welcome Card - col-span-8 */}
       <GlassCard className="col-span-12 lg:col-span-8 bg-gradient-to-br from-teal-500/10 to-sky-500/10 overflow-hidden relative">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">

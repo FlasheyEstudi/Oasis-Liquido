@@ -12,6 +12,13 @@ import type { Pharmacy } from '@/types';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { PharmacyStaffManagement } from '../common/staff-management';
 import {
+  InventoryVelocityChart,
+  StockExpiryTimeline,
+  DemandForecastSparklines,
+  DriverEfficiencyBubble,
+  SalesMicroAnimationCards,
+} from '@/components/common/charts';
+import {
   Table,
   TableBody,
   TableCell,
@@ -250,6 +257,32 @@ export function ManagePharmacies() {
           {/* Workers list & invitations */}
           <div className="lg:col-span-2">
             <PharmacyStaffManagement pharmacyId={ownedPharmacy.id} />
+          </div>
+        </div>
+
+        {/* 2026 Premium Analíticas de Farmacia */}
+        <div className="mt-8">
+          <div className="flex flex-col gap-1 mb-6">
+            <h3 className="text-lg font-bold text-foreground">Analíticas y KPIs de Farmacia</h3>
+            <p className="text-xs text-muted-foreground">Métricas en tiempo real y predictivas para control de inventario y ventas</p>
+          </div>
+          
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <SalesMicroAnimationCards />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <InventoryVelocityChart />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <DemandForecastSparklines />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="lg:col-span-2">
+              <DriverEfficiencyBubble />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-1">
+              <StockExpiryTimeline />
+            </motion.div>
           </div>
         </div>
       </div>

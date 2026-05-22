@@ -841,3 +841,174 @@ export function useAcceptInvitation() {
 export function getHookErrorMessage(error: unknown): string {
   return getErrorMessage(error);
 }
+
+// ============================================
+// PREMIUM ANALYTICS HOOKS
+// ============================================
+
+/** Get Sankey conversion analytics flow */
+export function useSankeyData(enabled = true) {
+  return useQuery({
+    queryKey: ['analytics', 'sankey'],
+    queryFn: () => adminApi.getSankeyData(),
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/** Get active nodes network map */
+export function useNetworkData(enabled = true) {
+  return useQuery({
+    queryKey: ['analytics', 'network'],
+    queryFn: () => adminApi.getNetworkData(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Get daily heatmap calendar sales */
+export function useHeatmapData(enabled = true) {
+  return useQuery({
+    queryKey: ['analytics', 'heatmap'],
+    queryFn: () => adminApi.getHeatmapData(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Get medical dimensions performance radar stats */
+export function useRadarData(enabled = true) {
+  return useQuery({
+    queryKey: ['analytics', 'radar'],
+    queryFn: () => clinicsApi.getRadarData(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ============================================
+// BETA FEEDBACK HOOKS
+// ============================================
+
+/** Submit new beta feedback */
+export function useSubmitBetaFeedback() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { type: string; content: string; userId?: string }) =>
+      adminApi.submitBetaFeedback(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['beta-feedback'] });
+    },
+  });
+}
+
+/** Get all beta feedback submissions (admin) */
+export function useBetaFeedbacks(enabled = true) {
+  return useQuery({
+    queryKey: ['beta-feedback'],
+    queryFn: () => adminApi.getBetaFeedback(),
+    enabled,
+  });
+}
+
+/** Update status of a beta feedback submission (admin) */
+export function useUpdateBetaFeedbackStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      adminApi.updateBetaFeedbackStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['beta-feedback'] });
+    },
+  });
+}
+
+// ============================================
+// DRIVER OPERATIONS HOOKS
+// ============================================
+
+/** Hook for getting available delivery orders for freelance/internal drivers */
+export function useAvailableDeliveries(enabled = true) {
+  return useQuery({
+    queryKey: ['deliveries', 'available'],
+    queryFn: () => deliveriesApi.getAvailableDeliveries(),
+    enabled,
+    refetchInterval: 15000, // Poll every 15 seconds for new available orders
+  });
+}
+
+/** Hook for getting assigned active deliveries for currently logged in driver */
+export function useAssignedDeliveries(enabled = true) {
+  return useQuery({
+    queryKey: ['deliveries', 'assigned'],
+    queryFn: () => deliveriesApi.getAssignedDeliveries(),
+    enabled,
+  });
+}
+
+/** Hook for accepting a delivery order */
+export function useAcceptDelivery() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deliveriesApi.acceptDelivery(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+    },
+  });
+}
+
+/** Hook for rejecting a delivery order */
+export function useRejectDelivery() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deliveriesApi.rejectDelivery(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+    },
+  });
+}
+
+/** Hook for picking up a delivery order from pharmacy */
+export function usePickupDelivery() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deliveriesApi.pickupDelivery(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+    },
+  });
+}
+
+/** Hook for delivering a delivery order (scanned or confirmed) */
+export function useDeliverDelivery() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deliveriesApi.deliverDelivery(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+    },
+  });
+}
+
+/** Hook for reporting a failed delivery order */
+export function useFailDelivery() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => deliveriesApi.failDelivery(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+    },
+  });
+}
+
+/** Hook for getting driver statistics / earnings */
+export function useDriverEarnings(enabled = true) {
+  return useQuery({
+    queryKey: ['deliveries', 'earnings'],
+    queryFn: () => deliveriesApi.getDriverEarnings(),
+    enabled,
+  });
+}
+
+
+

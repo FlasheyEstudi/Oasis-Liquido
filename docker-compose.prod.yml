@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Base de Datos PostgreSQL local en producción (en caso de no usar DB externa)
+  postgres_prod:
+    image: postgres:15-alpine
+    container_name: oasis_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_USER: oasis_prod_user
+      POSTGRES_PASSWORD: SecureProdPass2026!
+      POSTGRES_DB: oasis_nicaragua
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oasis_prod_user -d oasis_nicaragua"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Servidor Backend API (Next.js Node Server)
+  backend_prod:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: oasis_backend_prod
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://oasis_prod_user:SecureProdPass2026!@postgres_prod:5432/oasis_nicaragua?schema=public
+      - JWT_SECRET=ea210515159495c0ad09559c5d010bb1503c7349919f88c88c7d6c3c54d1933a
+      - JWT_EXPIRES_IN_PATIENT=24h
+      - JWT_EXPIRES_IN_STAFF=8h
+      - PORT=4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres_prod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # Servidor Frontend SPA (Next.js SSR/Static Server)
+  frontend_prod:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: oasis_frontend_prod
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend_prod:4000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend_prod
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_prod_data:
+    driver: local

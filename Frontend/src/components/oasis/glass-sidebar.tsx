@@ -20,6 +20,7 @@ import {
   LogOut,
   User,
   Droplets,
+  MessageSquare,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -71,6 +72,7 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'manage-pharmacies', label: 'Farmacias', icon: <Pill className="size-[18px]" /> },
         { page: 'manage-users', label: 'Usuarios', icon: <Shield className="size-[18px]" /> },
         { page: 'audit-logs', label: 'Auditoría', icon: <FileText className="size-[18px]" /> },
+        { page: 'manage-feedback', label: 'Beta Feedback', icon: <MessageSquare className="size-[18px]" /> },
       ];
     case 'receptionist':
       return [
@@ -107,7 +109,7 @@ export function GlassSidebar() {
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="glass-sidebar fixed left-0 top-0 bottom-0 z-40 flex flex-col overflow-hidden"
+      className="glass-sidebar sticky left-0 top-0 h-screen z-40 flex flex-col overflow-hidden shrink-0"
     >
       {/* Logo Area */}
       <div className="flex items-center h-[60px] px-4 border-b border-sidebar-border">
@@ -248,6 +250,31 @@ export function GlassSidebar() {
             </AnimatePresence>
           </motion.button>
         )}
+
+        {/* Beta Feedback Trigger */}
+        <motion.button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-beta-feedback'))}
+          whileTap={{ scale: 0.95 }}
+          className={cn(
+            'flex items-center gap-3 w-full rounded-xl transition-all duration-200',
+            expanded ? 'px-3 py-2.5' : 'justify-center px-0 py-2.5',
+            'text-slate-500 dark:text-slate-400 hover:text-teal-500 hover:bg-teal-500/5'
+          )}
+        >
+          <MessageSquare className="size-[18px] shrink-0" />
+          <AnimatePresence>
+            {expanded && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-sm font-medium"
+              >
+                Enviar Feedback
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
 
         {/* Logout */}
         <motion.button

@@ -39,6 +39,7 @@ model User {
   caregiverRelations      FamilyRelationship[]    @relation("CaregiverRelations")
   patientRelations        FamilyRelationship[]    @relation("PatientRelations")
   sentInvitations         Invitation[]            @relation("SentInvitations")
+  betaFeedbacks           BetaFeedback[]
 
   @@index([email])
   @@index([role])
@@ -559,3 +560,19 @@ model Invitation {
   @@index([email])
   @@map("invitations")
 }
+
+model BetaFeedback {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  type      String   // "bug" | "suggestion" | "general"
+  content   String
+  status    String   @default("pending") // "pending" | "resolved" | "ignored"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([status])
+  @@map("beta_feedbacks")
+}
+

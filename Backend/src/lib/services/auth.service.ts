@@ -111,9 +111,11 @@ export async function register(name: string, email: string, password: string, ro
       role,
       emailVerified: false,
       patientProfile: role === 'patient' ? { create: {} } : undefined,
+      deliveryDriverProfile: role === 'delivery_driver' ? { create: {} } : undefined,
     },
     include: {
       patientProfile: true,
+      deliveryDriverProfile: true,
     },
   });
 

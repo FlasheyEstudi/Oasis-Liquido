@@ -1,198 +1,187 @@
-#   ____   _     ____   ___  ____    _   _  ___  ____    _    ____    _    ____ _   _    _     
-#  / ___| / \   / ___| |_ _/ ___|  | \ | |/ _ \/ ___|  / \  |  _ \  / \  / ___| | | |  / \    
-# | |  _ / _ \  \___ \  | |\___ \  |  \| | | | \___ \ / _ \ | |_) |/ _ \| |  _| | | | / _ \   
-# | |_| / ___ \  ___) | | | ___) | | |\  | |_| |___) / ___ \|  _ < / ___ \ |_| | |_| |/ ___ \  
-#  \____/_/   \_\____/ |___|____/  |_| \_|\___/|____/_/   \_\_| \_/_/   \_\____|\___//_/   \_\ 
-#                                                                                              
-
-> **Sistema Corporativo Integral de Salud, Farmacia y Delivery Clínico con Resiliencia Offline y Notificaciones en Tiempo Real.**
-
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
-[![Platform Version](https://img.shields.io/badge/version-0.2.0-orange.svg)]()
-[![Framework](https://img.shields.io/badge/Next.js-15-black.svg)]()
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)]()
-
----
-
-## 📋 Descripción del Proyecto
-**Oasis Nicaragua** es una plataforma tecnológica empresarial avanzada de salud integrada que conecta de manera bidireccional clínicas, médicos, farmacias, repartidores y pacientes. El ecosistema resuelve los siguientes problemas principales de la gestión médica y de distribución en Nicaragua:
-
-1. **Resiliencia en Puntos de Venta (POS):** Operación ininterrumpida de facturación de medicamentos en sucursales con fallos de internet gracias a sincronización de datos con IndexedDB y Service Workers.
-2. **Trazabilidad en Split Payments:** Validación transaccional de pagos compuestos (efectivo + tarjeta + transferencias) calculando el cambio correcto y controlando de forma segura la cobertura total de la venta.
-3. **Flujo de Invitación Atómica:** Registro corporativo altamente seguro basado en invitaciones encriptadas y de un solo uso enviadas por correo electrónico para reclutamiento de trabajadores.
-4. **Logística de Entrega Eficiente:** Asignación inmediata y seguimiento de conductores para entrega a domicilio de medicamentos de forma directa y rastreable.
-5. **Comunicación Instantánea:** Sistema integrado de notificaciones push de nivel nativo para informar sobre confirmación de entregas y asignación de pedidos en tiempo real.
-
----
-
-## 🏗️ Estructura del Proyecto
-```bash
-oasis-nicaragua/
-├── Backend/
-│   ├── prisma/
-│   │   └── schema.prisma        # Modelo de Datos (PostgreSQL)
-│   ├── src/
-│   │   ├── app/api/v1/          # Controladores organizados en el App Router
-│   │   ├── lib/
-│   │   │   ├── auth/            # Middleware de Seguridad y Roles
-│   │   │   ├── services/        # Servicios de Negocio (Sales, Delivery, FCM)
-│   │   │   └── validators/      # Esquemas de Validación con Zod
-│   │   └── types/               # Tipos TypeScript Globales
-│   └── package.json
-└── Frontend/
-    ├── public/
-    │   ├── sw.js                # Service Worker para almacenamiento en caché y Push
-    │   └── manifest.json        # Configuración de Progressive Web App (PWA)
-    ├── src/
-    │   ├── api/                 # Clientes HTTP (Axios) para consumo de Backend
-    │   ├── app/                 # Next.js App Router (Páginas del POS y Paciente)
-    │   ├── components/
-    │   │   ├── pharmacy/        # POS y Módulos de Farmacia
-    │   │   └── pwa-initializer.tsx # Startup y Auto-Sync FCM silencioso
-    │   ├── lib/
-    │   │   ├── offline-store.ts # Repositorio IndexedDB local
-    │   │   ├── sync-manager.ts  # Gestor de resincronización de ventas
-    │   │   ├── firebase-config.ts # Configuración de Cliente Firebase
-    │   │   └── push-manager.ts  # Permisos y Token FCM Manager
-    │   └── contexts/            # Contextos globales de React
-    └── package.json
-```
-
----
-
-## 📐 Diagrama de Arquitectura
-
 ```text
-                  +----------------------------------------------+
-                  |               NAVEGADOR CLIENTE              |
-                  |                                              |
-                  |     +-----------+            +-----------+   |
-                  |     |  Next.js  |<---------->|  IndexedDB|   |
-                  |     |  PWA UI   | (Factura)  |  Catalog  |   |
-                  |     +-----------+            +-----------+   |
-                  |           ^                        ^         |
-                  |           | (Intercepta)           | (Sync)  |
-                  |           v                        v         |
-                  |     +-----------+            +-----------+   |
-                  |     |  Service  |<---------->|   Sync    |   |
-                  |     |  Worker   | (Assets)   |  Manager  |   |
-                  |     +-----------+            +-----------+   |
-                  +-----------^------------------------^---------+
-                              |                        |
-                   Push Alert |                        | API HTTP REST
-                              |                        v
-                  +-----------+------------------------+---------+
-                  |                 BACKEND API                  |
-                  |                                              |
-                  |  +-------------+            +-------------+  |
-                  |  |  NextJS App |<---------->|  Middleware |  |
-                  |  |   Router    | (Auth JWT) |    Roles    |  |
-                  |  +------+------+            +-------------+  |
-                  |         |                                    |
-                  |         | (Prisma Client)                    |
-                  +---------+------------------------------------+
-                            |
-                            v
-                  +---------+---------+
-                  |   PostgreSQL DB   |
-                  +-------------------+
+ ██████╗  ██████╗██╗███████╗    ███╗   ██╗██╗ ██████╗ ██████╗██████╗  ██████╗ ██╗   ██╗ █████╗ 
+██╔═══██╗██╔════╝██║██╔════╝    ████╗  ██║██║██╔════╝██╔════╝██╔══██╗██╔═══██╗██║   ██║██╔══██╗
+██║   ██║███████╗██║███████╗    ██╔██╗ ██║██║██║     ███████╗██████╔╝██║   ██║██║   ██║███████║
+██║   ██║╚════██║██║╚════██║    ██║╚██╗██║██║██║     ╚════██║██╔══██╗██║   ██║██║   ██║██╔══██║
+╚██████╔╝███████║██║███████║    ██║ ╚████║██║╚██████╗███████║██║  ██║╚██████╔╝╚██████╔╝██║  ██║
+ ╚═════╝ ╚══════╝╚═╝╚══════╝    ╚═╝  ╚═══╝╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝
+```
+
+<div align="center">
+
+**Ecosistema Digital de Salud, Farmacias y Logística de Distribución**
+
+[![Next.js 15](https://img.shields.io/badge/Next.js-15.0%20%28App%20Router%29-black?style=for-the-badge&logo=nextdotjs)](https://nextjs.org/)
+[![React 19](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Prisma ORM](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-GIS_Mapping-green?style=for-the-badge&logo=leaflet)](https://leafletjs.com/)
+
+---
+
+*Una plataforma empresarial moderna que interconecta Clínicas, Doctores, Farmacias, Cajeros, Repartidores y Pacientes en Nicaragua con soporte offline de vanguardia y notificaciones push inmediatas.*
+
+</div>
+
+---
+
+## 🌟 Características Clave del Ecosistema
+
+> [!IMPORTANT]
+> Oasis Nicaragua no es solo un software de administración; es una suite completa diseñada para resolver los desafíos más críticos de la salud, distribución y facturación en Centroamérica.
+
+### 🏥 1. Módulo Clínico Avanzado
+* **Consultas Médicas en Tiempo Real:** Emisión de recetas digitales encriptadas con códigos de barras/QR de alta seguridad.
+* **Control de Citas Centralizado:** Recepcionistas con agendas interactivas fluidas, gestión de pacientes y prevención inteligente de inasistencias (*no-shows*).
+* **Firma Digital Segura:** Verificación y firma atómica de recetas por médicos certificados.
+
+### 💊 2. Punto de Venta (POS) & Inventario de Farmacia
+* **Facturación con Resiliencia Offline:** Service Workers e IndexedDB garantizan que los cajeros sigan vendiendo y buscando productos en el catálogo local incluso si el internet se corta por completo.
+* **Motor de Split Payments:** Soporte robusto para cobros compuestos (tarjeta, transferencia y efectivo) con validación automática de montos y cálculo exacto de cambio.
+* **Sincronización en Segundo Plano:** El gestor de sincronización local detecta el regreso de la conectividad y sube automáticamente las ventas offline de forma cronológica sin interrumpir el POS.
+
+### 🚗 3. Logística de Distribución Freelance
+* **Driver Dashboard Moderno:** Feed dinámico de órdenes pendientes para repartidores freelance con aceptación inmediata.
+* **Geolocalización en Tiempo Real:** Seguimiento GPS continuo del conductor durante la ruta de entrega.
+* **Entrega Segura por QR/Cédula:** Validación física segura mediante escaneo del QR digital del paciente o su identificación de cédula.
+
+### 🔔 4. Notificaciones Push Contextuales (FCM)
+* **Integración Nativa con Firebase:** Envío instantáneo de alertas a dispositivos móviles y escritorio al asignar un delivery, emitir una receta o completar una entrega.
+
+---
+
+## 📐 Arquitectura del Ecosistema
+
+El siguiente diagrama detalla cómo se coordinan la PWA del cliente, el Service Worker local, los motores de sincronización y el backend central con base de datos en tiempo real:
+
+```mermaid
+graph TD
+    %% Navegador Cliente PWA
+    subgraph Browser["NAVEGADOR CLIENTE (PWA)"]
+        UI["Next.js App Router (React UI)"]
+        SW["Service Worker (Catálogo & Push)"]
+        IDB[("IndexedDB Local Store")]
+        SyncManager["Sync Manager (Auto-Sync)"]
+    end
+
+    %% Backend Central
+    subgraph Backend["SERVIDOR CENTRAL (REST API)"]
+        Auth["Middleware Roles (JWT Cookies)"]
+        Routes["App Router Controllers (NextJS)"]
+        Analytics["Analytics & Reporting Service"]
+    end
+
+    %% Capa de Datos
+    subgraph Database["CAPA DE DATOS"]
+        Prisma["Prisma ORM Client"]
+        DB[(PostgreSQL / SQLite DB)]
+    end
+
+    %% Flujos de Conexión
+    UI <--> IDB
+    UI -->|Factura / Venta| SW
+    SW <-->|Sincronización| SyncManager
+    SyncManager -->|REST API Requests| Auth
+    Auth --> Routes
+    Routes --> Analytics
+    Routes --> Prisma
+    Prisma --> DB
+    
+    %% Alertas FCM
+    FCM["Firebase Cloud Messaging (FCM)"] -->|Push Notifications| SW
+    Routes -->|Despacha Alerta| FCM
 ```
 
 ---
 
-## 👥 Roles y Permisos
+## 👥 Matriz de Roles y Permisos
 
-| Rol | Responsabilidades | Puede Crear / Gestionar |
-|-----|-------------------|-------------------------|
-| **Admin** | Administración de clínicas, farmacias y auditoría total. | Dueños de Clínicas y Dueños de Farmacias. |
-| **Clinic Owner** | Gestión administrativa y comercial de clínicas. | Doctores, Recepcionistas e Invitaciones de Clínica. |
-| **Pharmacy Owner** | Gestión administrativa e inventarios de farmacias. | Cajeros, Repartidores e Invitaciones de Sucursal. |
-| **Doctor** | Consulta médica digital y emisión de recetas. | Recetas Médicas, Citas y Diagnósticos. |
-| **Receptionist** | Control de agendas y registro de citas físicas. | Citas Médicas y Fichas de Paciente. |
-| **Cashier** | Venta al público en mostrador (Online / Offline). | Facturas, Ventas y Split Payments. |
-| **Delivery Driver** | Logística y entrega de medicamentos. | Actualización de Ubicación GPS y Estado de Entrega. |
-| **Patient** | Pacientes y beneficiarios de la plataforma. | Compra de medicamentos y Rastrear Entregas. |
-
----
-
-## 🛠️ Tecnologías Utilizadas
-
-| Categoría | Tecnología | Razón de Elección |
-|-----------|------------|-------------------|
-| **Backend** | **Next.js API Routes** | Enrutamiento e integración unificada del lado del servidor. |
-| **Frontend** | **Next.js App Router (React 19)** | Carga ultrarrápida (SSR), renderizado híbrido y modularidad premium. |
-| **Database** | **PostgreSQL** | Base de datos relacional de grado empresarial para transacciones críticas. |
-| **ORM** | **Prisma** | Agilidad en consultas con tipado TypeScript seguro e instantáneo. |
-| **Estilos** | **Vanilla CSS + Tailwind** | Diseño ultra premium optimizado con Glassmorphic aesthetics. |
-| **Offline** | **IndexedDB (IDB) + SW** | Base de datos interna de navegador de alta velocidad y service workers eficientes. |
-| **Push** | **Firebase Admin + FCM SDK** | Despacho confiable de alertas y notificaciones nativas en segundo plano. |
+| Rol | Icono | Propósito Principal | Capacidades Clave |
+| :--- | :---: | :--- | :--- |
+| **Super Admin** | 👑 | Control global del ecosistema y auditoría | Gestiona dueños de clínicas, farmacias, reportes avanzados y facturación. |
+| **Owner Clínica** | 🏥 | Administración de centros médicos | Invita doctores, recepcionistas, supervisa recetas emitidas y cobros. |
+| **Owner Farmacia**| 💊 | Control logístico y de stock | Controla inventarios de medicamentos, invita cajeros, repartidores y asigna turnos. |
+| **Doctor** | 🩺 | Consulta y emisión clínica | Escribe recetas digitales seguras, gestiona historial del paciente y citas virtuales. |
+| **Recepcionista**| 📝 | Control de flujos físicos | Asigna turnos, crea citas en agenda y valida registros de pacientes nuevos. |
+| **Cajero (POS)** | 🛒 | Punto de Venta | Factura de forma offline/online, valida pagos compuestos y egresos de stock. |
+| **Repartidor** | 🛵 | Logística de última milla | Recibe pedidos, reporta GPS en vivo y valida entregas mediante QR. |
+| **Paciente** | 👤 | Beneficiario final | Solicita consultas, visualiza recetas activas por código QR y rastrea entregas. |
 
 ---
 
-## 🚀 Instalación y Configuración
+## 🛠️ Stack Tecnológico Premium
 
-Sigue estos sencillos pasos para levantar el entorno de Oasis Nicaragua en tu máquina local:
+### Frontend (PWA)
+* **Next.js 15 & React 19:** Renderizado híbrido de alta velocidad, componentes modulares con TypeScript.
+* **Framer Motion:** Animaciones fluidas de microinteracciones, transiciones fluidas de glassmorphic cards.
+* **Leaflet & OSM:** Mapeo interactivo ligero de departamentos de Nicaragua con cálculo de rutas de distribución.
+* **IndexedDB & Service Workers:** Persistencia local robusta para resiliencia offline.
 
-### 1. Clonar el Repositorio
+### Backend (REST API)
+* **Next.js Route Handlers:** Controladores ligeros optimizados para microservicios y respuestas instantáneas.
+* **Prisma ORM:** Consultas de alto rendimiento con tipado estático seguro.
+* **Zod:** Validación robusta en el borde de esquemas y payloads JSON.
+* **FCM Admin SDK:** Despacho nativo de notificaciones.
+
+---
+
+## 🚀 Guía de Instalación y Despliegue Rápido
+
+> [!TIP]
+> Asegúrate de contar con Node.js v18+ y un motor de base de datos PostgreSQL activo (o SQLite configurado en Prisma).
+
+### Paso 1: Levantar el Backend
 ```bash
-git clone https://github.com/tuusuario/oasis-nicaragua.git
-cd oasis-nicaragua
-```
-
-### 2. Configurar el Backend
-```bash
-# Navegar al directorio de Backend
 cd Backend
+# Instalar dependencias
+npm install
 
 # Configurar variables de entorno
 cp .env.example .env
 
-# Instalar dependencias e inicializar base de datos
-npm install
+# Generar cliente y migrar base de datos
 npx prisma generate
 npx prisma db push
 
-# Levantar el Backend (Puerto por defecto: 8000)
+# Iniciar servidor de desarrollo (Puerto 8000 por defecto)
 npm run dev
 ```
 
-### 3. Configurar el Frontend (En otra terminal)
+### Paso 2: Levantar el Frontend
 ```bash
-# Navegar al directorio de Frontend
 cd ../Frontend
+# Instalar dependencias
+npm install
 
 # Configurar variables de entorno
 cp .env.local.example .env.local
 
-# Instalar dependencias
-npm install
-
-# Levantar el servidor de desarrollo del Frontend (Puerto por defecto: 3000)
+# Iniciar servidor de desarrollo (Puerto 3000 por defecto)
 npm run dev
 ```
 
 ---
 
-## 🔑 Variables de Entorno
+## 🔑 Configuración de Variables de Entorno (.env)
 
 ### Backend (`Backend/.env`)
 ```env
 DATABASE_URL="postgresql://postgres:password@localhost:5432/oasis_liquida?schema=public"
-JWT_SECRET="un_secreto_super_seguro_para_firmar_los_tokens_jwt"
-JWT_REFRESH_SECRET="otro_secreto_seguro_para_los_refresh_tokens"
+JWT_SECRET="secreto_atómico_firmas_jwt"
+JWT_REFRESH_SECRET="secreto_atómico_refresh_jwt"
 
-# Firebase Cloud Messaging
+# Firebase Cloud Messaging Credentials
 FIREBASE_PROJECT_ID="oasis-nicaragua"
 FIREBASE_CLIENT_EMAIL="tu-servicio-cuenta@oasis-nicaragua.iam.gserviceaccount.com"
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\ntu_clave_privada_aqui\n-----END PRIVATE KEY-----"
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nCLAVE_PRIVADA\n-----END PRIVATE KEY-----"
 ```
 
 ### Frontend (`Frontend/.env.local`)
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:8000/api/v1"
 
-# Firebase Client SDK Credentials (FCM Push)
+# Firebase Client SDK Credentials
 NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSyA..."
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="oasis-nicaragua.firebaseapp.com"
 NEXT_PUBLIC_FIREBASE_PROJECT_ID="oasis-nicaragua"
@@ -204,56 +193,21 @@ NEXT_PUBLIC_FIREBASE_VAPID_KEY="B..."
 
 ---
 
-## 🔗 Endpoints Principales (API v1)
+## 🏁 Estado de Módulos & Readiness
 
-| Método | Endpoint | Descripción | Roles Permitidos |
-|--------|----------|-------------|------------------|
-| **POST** | `/api/v1/auth/login` | Autenticación de usuario con cookies seguras | Todos |
-| **POST** | `/api/v1/auth/register` | Registro inicial de pacientes | Todos |
-| **POST** | `/api/v1/users/me/fcm-token` | Registra/Actualiza token FCM en el perfil | Todos |
-| **DELETE** | `/api/v1/users/me/fcm-token` | Elimina el token FCM registrado del perfil | Todos |
-| **POST** | `/api/v1/pharmacies/:id/sales` | Registra una venta en el POS (Soporta Split) | Cashier, Pharmacy Owner |
-| **GET** | `/api/v1/pharmacies/:id/inventory` | Obtener inventario de medicamentos | Cashier, Pharmacy Owner |
-| **POST** | `/api/v1/pharmacies/:id/cashiers/invite` | Envia invitación por correo a cajero | Pharmacy Owner |
-| **PUT** | `/api/v1/delivery/status` | Actualizar estado del delivery (dispara Push) | Delivery Driver, Pharmacy Owner |
+| Módulo | Estado | Submódulos Completados |
+| :--- | :---: | :--- |
+| **Core Auth & Roles** | ✅ 100% | Firma JWT Segura, Middleware en el borde, Refresh token robusto. |
+| **Farmacia & POS** | ✅ 100% | Split Payments en backend, catálogo unificado, control de caja. |
+| **POS Offline Engine** | ✅ 100% | IndexedDB local, Service Worker de activos, sincronización en bg cronológica. |
+| **Driver & Delivery** | ✅ 100% | Drivers freelance feed, geolocalización, confirmación segura por código QR. |
+| **Módulo de Reportes (Super Admin)** | ✅ 100% | Mapa de calor temporal, Leaflet bubble map de Nicaragua, KPI Gauges y Sankey diagram. |
+| **Notificaciones Push** | ✅ 100% | Registro silencioso FCM en arranque de PWA, envío inmediato de eventos en tránsito. |
 
 ---
 
-## 🚦 Estado de los Módulos del Proyecto
+<div align="center">
+Desarrollado con ❤️ para la salud y optimización logística en Centroamérica. 
 
-| Módulo | Estado | Notas |
-|--------|--------|-------|
-| **Autenticación (JWT + Cookies)** | ✅ Completado | Seguridad de token atómico y roles. |
-| **Punto de Venta POS (Farmacia)** | ✅ Completado | Integración de catálogo, caja e inventario. |
-| **Validación de Split Payments** | ✅ Completado | Validaciones de saldo, cambio y auditorías. |
-| **POS Offline (IndexedDB + Sync)** | ✅ Completado | Sincronización en segundo plano e inventario local. |
-| **Notificaciones Push (FCM)** | ✅ Completado | Soporte multiplataforma y alertas contextuales. |
-| **Módulo Clínico (Doctores/Citas)** | ⚠️ Parcial | Endpoints completos; pantallas del doctor en refinamiento. |
-| **Rutas y Trazabilidad de Repartidor** | ⚠️ Parcial | Tracking GPS del repartidor en progreso. |
-
----
-
-## 🗺️ Roadmap de Oasis Nicaragua
-
-- [x] **Fase 1:** Arquitectura base del Backend e integración Prisma PostgreSQL.
-- [x] **Fase 2:** Flujo completo de registro seguro de trabajadores mediante invitación atómica.
-- [x] **Fase 3:** POS offline (IndexedDB), Split Payments en backend y Push notifications FCM.
-- [ ] **Fase 4:** Consolidación de tracking GPS en tiempo real de repartidores usando MapLibre/OSRM.
-- [ ] **Fase 5:** Firma digital PIN en recetas médicas emitida por doctores certificados.
-
----
-
-## 🤝 Cómo Contribuir
-
-1. Realiza un **Fork** de este repositorio.
-2. Crea tu rama de características: `git checkout -b feature/nueva-funcionalidad`
-3. Guarda tus cambios: `git commit -m 'feat: añadir nueva funcionalidad a Oasis'`
-4. Envía tu rama al repositorio remoto: `git push origin feature/nueva-funcionalidad`
-5. Abre un **Pull Request** para revisión y mezcla.
-
----
-
-## 📄 Licencia
-Este proyecto es software privado protegido. Distribuido bajo la Licencia **MIT**.
-
-© 2026 Oasis Nicaragua - Todos los derechos reservados.
+**Oasis Nicaragua — © 2026 Todos los derechos reservados.**
+</div>
