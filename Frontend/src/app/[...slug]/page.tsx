@@ -1,6 +1,2 @@
-import { redirect } from 'next/navigation';
-
-export default function CatchAllPage() {
-  redirect('/');
-  return null;
-}
+import Home from '../page';
+export default Home;

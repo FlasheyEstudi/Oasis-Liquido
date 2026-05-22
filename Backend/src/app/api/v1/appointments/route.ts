@@ -52,7 +52,13 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     const validation = validateBody(createAppointmentSchema, body);
     if (!validation.success) return validation.error;
 
-    const patientId = req.user.userId;
+    let patientId = req.user.userId;
+    if (req.user.role !== 'patient') {
+      if (!body.patient_id) {
+        return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de paciente requerido', 400);
+      }
+      patientId = body.patient_id;
+    }
 
     const appointment = await appointmentService.createAppointment(
       {
@@ -74,4 +80,4 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error interno del servidor', 500);
   }
-}, { roles: ['patient'] });
+}, { roles: ['patient', 'doctor', 'receptionist', 'admin'] });

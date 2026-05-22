@@ -76,6 +76,7 @@ export const createAppointmentSchema = z.object({
   date_time: z.string().min(1, 'Fecha y hora requeridas'),
   duration_minutes: z.number().int().min(15).max(120).default(30),
   notes: z.string().optional(),
+  patient_id: z.string().optional(),
 });
 
 export const updateAppointmentStatusSchema = z.object({
@@ -190,6 +191,14 @@ export const createSaleSchema = z.object({
   delivery_lat: z.number().optional(),
   delivery_lng: z.number().optional(),
   notes: z.string().optional(),
+  payments: z.array(z.object({
+    amount: z.number().min(0, 'El monto debe ser positivo'),
+    method: z.enum(['cash', 'card', 'bank_transfer', 'wallet'], {
+      error: 'Método de pago inválido',
+    }),
+    currency: z.string().optional(),
+    transaction_id: z.string().optional(),
+  })).min(1, 'Al menos un método de pago requerido'),
 });
 
 // ============================

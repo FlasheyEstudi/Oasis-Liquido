@@ -5,8 +5,12 @@ import {
   useAppointments,
   usePrescriptions,
   useDeliveryOrders,
+  useFamily,
   getHookErrorMessage,
 } from '@/hooks/use-api';
+import { useMutation } from '@tanstack/react-query';
+import { post } from '@/api/client';
+import { toast } from 'sonner';
 import { formatDate, formatDuration, getInitials } from '@/utils/helpers';
 import { APP_NAME, APPOINTMENT_STATUS_CONFIG, PRESCRIPTION_STATUS_CONFIG } from '@/utils/constants';
 import { GlassCard } from '@/components/oasis/glass-card';
@@ -42,27 +46,45 @@ function getGreeting(): { text: string; icon: React.ReactNode } {
 }
 
 export function PatientHome() {
-  const { user, navigate } = useAuthStore();
+  const { user, representedUser, setRepresentedUser, isElderlyMode, toggleElderlyMode, navigate } = useAuthStore();
 
-  const appointmentsQuery = useAppointments({ limit: 5 });
-  const prescriptionsQuery = usePrescriptions({ limit: 5 });
+  const activePatientId = representedUser?.id || user?.id;
+
+  const appointmentsQuery = useAppointments({ limit: 5, patient_id: activePatientId });
+  const prescriptionsQuery = usePrescriptions({ limit: 5, patient_id: activePatientId });
   const deliveriesQuery = useDeliveryOrders({ status: 'pending' });
+  const familyQuery = useFamily(user?.role === 'patient');
+
+  const emergencyMutation = useMutation({
+    mutationFn: async (coords: { lat: number; lng: number }) => {
+      const response = await post<{ message: string }>('/patient/emergency', coords);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Alerta enviada correctamente');
+    },
+    onError: () => {
+      toast.error('Error al enviar la alerta de emergencia');
+    }
+  });
 
   const appointments = appointmentsQuery.data?.data ?? [];
   const prescriptions = prescriptionsQuery.data?.data ?? [];
   const pendingDeliveries = deliveriesQuery.data?.data ?? [];
+  const caregiverFor = familyQuery.data?.caregiverFor ?? [];
 
   const isLoading =
     appointmentsQuery.isLoading ||
     prescriptionsQuery.isLoading ||
-    deliveriesQuery.isLoading;
+    deliveriesQuery.isLoading ||
+    familyQuery.isLoading;
 
   const hasError =
     appointmentsQuery.isError ||
     prescriptionsQuery.isError ||
     deliveriesQuery.isError;
 
-  const firstName = user?.name?.split(' ')[0] || 'Paciente';
+  const firstName = representedUser?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'Paciente';
   const greeting = getGreeting();
 
   const upcomingCount = appointments.filter(
@@ -127,6 +149,30 @@ export function PatientHome() {
   const today = new Date();
   const dateStr = formatDate(today.toISOString(), "EEEE d 'de' MMMM, yyyy");
 
+  const handleEmergency = () => {
+    if (!navigator.geolocation) {
+      toast.error('La geolocalización no está disponible');
+      return;
+    }
+
+    toast.loading('Enviando alerta...', { id: 'emergency-alert' });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        emergencyMutation.mutate({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        }, {
+          onSettled: () => toast.dismiss('emergency-alert')
+        });
+      },
+      (error) => {
+        toast.dismiss('emergency-alert');
+        toast.error('No se pudo obtener tu ubicación');
+      }
+    );
+  };
+
   return (
     <div className="bento-grid">
       {/* Welcome Card - col-span-8 */}
@@ -140,6 +186,61 @@ export function PatientHome() {
               </h2>
             </div>
             <p className="text-base text-muted-foreground font-semibold">{dateStr}</p>
+            
+            {/* Controles Modo Mayor y Selector de Familiares */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button
+                onClick={toggleElderlyMode}
+                className={cn(
+                  "flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-black transition-all duration-300 shadow-md",
+                  isElderlyMode
+                    ? "bg-amber-500/25 border-amber-500/50 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20"
+                    : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground"
+                )}
+              >
+                <Activity className="size-3.5 text-amber-500 animate-pulse" />
+                <span>{isElderlyMode ? 'Modo Mayor Activo' : 'Modo Mayor'}</span>
+              </button>
+
+              {caregiverFor.length > 0 && (
+                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-xs shadow-md">
+                  <span className="text-muted-foreground font-semibold">👤 Datos de:</span>
+                  <select
+                    value={representedUser?.id || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (!val) {
+                        setRepresentedUser(null);
+                        toast.success("Mostrando tus datos personales");
+                      } else {
+                        const rel = caregiverFor.find(r => r.patient?.id === val);
+                        if (rel && rel.patient) {
+                          setRepresentedUser({
+                            id: rel.patient.id,
+                            name: rel.patient.name,
+                            email: rel.patient.email,
+                            phone: rel.patient.phone ?? undefined,
+                            role: 'patient',
+                            is_active: true,
+                            created_at: rel.createdAt,
+                            updated_at: rel.createdAt,
+                          });
+                          toast.success(`Actuando en representación de: ${rel.patient.name}`);
+                        }
+                      }
+                    }}
+                    className="bg-transparent border-none text-foreground font-bold focus:outline-none cursor-pointer text-xs"
+                  >
+                    <option value="" className="bg-slate-900 text-foreground">A mí mismo</option>
+                    {caregiverFor.map((rel) => rel.patient && (
+                      <option key={rel.patient.id} value={rel.patient.id} className="bg-slate-900 text-foreground animate-none">
+                        {rel.patient.name} ({rel.relationship})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
             
             {/* Urgent Task for Seniors */}
             {nextAppointment && (
@@ -398,6 +499,22 @@ export function PatientHome() {
           </motion.div>
         </div>
       </GlassCard>
+
+      {/* Floating Emergency Button */}
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={handleEmergency}
+        disabled={emergencyMutation.isPending}
+        className="fixed bottom-24 left-6 z-[40] size-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl shadow-red-500/50 border-4 border-white/20 overflow-hidden"
+      >
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute inset-0 bg-red-500/50"
+        />
+        <AlertCircle className="size-8 relative z-10" />
+      </motion.button>
     </div>
   );
 }

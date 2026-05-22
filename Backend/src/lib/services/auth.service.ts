@@ -11,72 +11,82 @@ import crypto from 'crypto';
  * Login with email/password, returns JWT pair + user
  */
 export async function login(email: string, password: string, ipAddress?: string, userAgent?: string) {
-  // Find user by email with profiles
-  const user = await db.user.findUnique({ 
-    where: { email },
-    include: {
-      doctorProfile: true,
-      receptionistProfile: true,
-      pharmacyManagerProfile: true,
+  try {
+    // Find user by email with profiles
+    const user = await db.user.findUnique({ 
+      where: { email },
+      include: {
+        doctorProfile: true,
+        receptionistProfile: true,
+        pharmacyManagerProfile: true,
+      }
+    });
+    if (!user) {
+      throw new Error('INVALID_CREDENTIALS');
     }
-  });
-  if (!user) {
-    throw new Error('INVALID_CREDENTIALS');
-  }
 
-  // Verify password
-  const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid) {
-    throw new Error('INVALID_CREDENTIALS');
-  }
+    // Verify password
+    const valid = await verifyPassword(password, user.passwordHash);
+    if (!valid) {
+      throw new Error('INVALID_CREDENTIALS');
+    }
 
-  // Check if user is active
-  if (!user.isActive) {
-    throw new Error('USER_INACTIVE');
-  }
+    // Check if user is active
+    if (!user.isActive) {
+      throw new Error('USER_INACTIVE');
+    }
 
-  // Generate tokens
-  const payload: AccessTokenPayload = {
-    userId: user.id,
-    email: user.email,
-    role: user.role,
-    clinicId: user.doctorProfile?.clinicId || user.receptionistProfile?.clinicId || undefined,
-    pharmacyId: user.pharmacyManagerProfile?.pharmacyId || undefined,
-  };
-
-  const access_token = signAccessToken(payload);
-  const refresh_token = signRefreshToken(payload);
-
-  // Store refresh token hash
-  const tokenHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
-
-  await db.refreshToken.create({
-    data: {
+    // Generate tokens
+    const payload: AccessTokenPayload = {
       userId: user.id,
-      tokenHash,
-      expiresAt,
-    },
-  });
+      email: user.email,
+      role: user.role,
+      clinicId: user.doctorProfile?.clinicId || user.receptionistProfile?.clinicId || undefined,
+      pharmacyId: user.pharmacyManagerProfile?.pharmacyId || undefined,
+    };
 
-  // Audit log
-  await createAuditLog({
-    userId: user.id,
-    action: 'login',
-    entityType: 'user',
-    entityId: user.id,
-    ipAddress,
-    userAgent,
-  });
+    const access_token = signAccessToken(payload);
+    const refresh_token = signRefreshToken(payload);
 
-  // Return user without password hash
-  const { passwordHash: _, ...userWithoutPassword } = user;
-  return {
-    user: userWithoutPassword,
-    access_token,
-    refresh_token,
-  };
+    // Store refresh token hash
+    const tokenHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+    await db.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    // Audit log
+    try {
+      await createAuditLog({
+        userId: user.id,
+        action: 'login',
+        entityType: 'user',
+        entityId: user.id,
+        ipAddress,
+        userAgent,
+      });
+    } catch (auditError) {
+      console.error('Audit log failed during login:', auditError);
+      // Continue anyway as login was successful
+    }
+
+    // Return user without password hash
+    const { passwordHash: _, ...userWithoutPassword } = user;
+    return {
+      user: userWithoutPassword,
+      access_token,
+      refresh_token,
+    };
+  } catch (error: any) {
+    console.error('CRITICAL LOGIN ERROR:', error);
+    throw error;
+  }
 }
 
 /**
@@ -286,6 +296,7 @@ export async function resetPassword(token: string, newPassword: string) {
       action: 'update',
       entityType: 'user',
       details: { contains: 'forgot_password' },
+      createdAt: { gte: new Date(Date.now() - 3600000) } // Token valid for 1 hour
     },
     orderBy: { createdAt: 'desc' },
   });

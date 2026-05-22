@@ -89,13 +89,14 @@ export async function getPharmacies(filters: {
     });
 
     // Add distance to each pharmacy
-    pharmacies = pharmacies.map((p) => ({
+    const pharmaciesWithDistance = pharmacies.map((p) => ({
       ...p,
       distance: haversineDistance(filters.lat!, filters.lng!, p.latitude, p.longitude),
     }));
 
     // Sort by distance
-    pharmacies.sort((a, b) => (a.distance as number) - (b.distance as number));
+    pharmaciesWithDistance.sort((a, b) => a.distance - b.distance);
+    return pharmaciesWithDistance;
   }
 
   return pharmacies;

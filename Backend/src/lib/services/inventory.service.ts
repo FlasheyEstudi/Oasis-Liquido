@@ -31,7 +31,13 @@ export async function getInventory(filters: {
   const [items, total] = await Promise.all([
     db.inventory.findMany({
       where,
-      include: { medicine: true },
+      include: { 
+        medicine: true,
+        batches: {
+          orderBy: { expirationDate: 'asc' },
+          where: { quantity: { gt: 0 } }
+        }
+      },
       orderBy: { medicine: { name: 'asc' } },
       skip: filters.skip,
       take: filters.limit,
@@ -188,4 +194,115 @@ export async function seedInventory(
   }
 
   return results;
+}
+/**
+ * Create a new inventory batch
+ */
+export async function createBatch(data: {
+  inventoryId: string;
+  batchNumber: string;
+  quantity: number;
+  costPrice?: number;
+  sellingPrice?: number;
+  expirationDate?: Date;
+  supplier?: string;
+}) {
+  return await db.$transaction(async (tx) => {
+    const batch = await tx.inventoryBatch.create({
+      data: {
+        inventoryId: data.inventoryId,
+        batchNumber: data.batchNumber,
+        quantity: data.quantity,
+        costPrice: data.costPrice,
+        sellingPrice: data.sellingPrice,
+        expirationDate: data.expirationDate,
+        supplier: data.supplier,
+      },
+    });
+
+    // Update total inventory quantity
+    await tx.inventory.update({
+      where: { id: data.inventoryId },
+      data: { 
+        quantity: { increment: data.quantity },
+        // Update price if sellingPrice provided
+        ...(data.sellingPrice ? { unitPrice: data.sellingPrice } : {})
+      },
+    });
+
+    return batch;
+  });
+}
+
+/**
+ * Update an existing batch
+ */
+export async function updateBatch(id: string, data: {
+  quantity?: number;
+  batchNumber?: string;
+  costPrice?: number;
+  sellingPrice?: number;
+  expirationDate?: Date;
+}) {
+  return await db.$transaction(async (tx) => {
+    const oldBatch = await tx.inventoryBatch.findUnique({ where: { id } });
+    if (!oldBatch) throw new Error('NOT_FOUND');
+
+    const updated = await tx.inventoryBatch.update({
+      where: { id },
+      data,
+    });
+
+    // If quantity changed, sync total inventory
+    if (data.quantity !== undefined) {
+      const diff = data.quantity - oldBatch.quantity;
+      await tx.inventory.update({
+        where: { id: oldBatch.inventoryId },
+        data: { quantity: { increment: diff } },
+      });
+    }
+
+    return updated;
+  });
+}
+
+/**
+ * Get Kardex movements for a specific medicine across pharmacies, or a single pharmacy
+ */
+export async function getKardex(medicineId: string, pharmacyId?: string) {
+  const where: any = {
+    inventory: {
+      medicineId,
+    },
+  };
+
+  if (pharmacyId) {
+    where.inventory.pharmacyId = pharmacyId;
+  }
+
+  const movements = await db.inventoryMovement.findMany({
+    where,
+    include: {
+      inventory: {
+        include: {
+          pharmacy: true,
+          medicine: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  return movements.map((m) => ({
+    id: m.id,
+    inventory_id: m.inventoryId,
+    type: m.type,
+    quantity_change: m.quantityChange,
+    reason: m.reason,
+    created_at: m.createdAt,
+    pharmacy_name: m.inventory.pharmacy.name,
+    medicine_name: m.inventory.medicine.name,
+  }));
 }

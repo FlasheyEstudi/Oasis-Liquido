@@ -11,6 +11,7 @@ import { OrganicBlobs } from '@/components/oasis/organic-blobs';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { ChatOverlay } from '@/components/oasis/chat-overlay';
 import { useTheme } from 'next-themes';
@@ -110,10 +111,18 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
   const [sidebarPinned, setSidebarPinned] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+
+  // Clear query client cache on logout to avoid leaking context/data to another logged-in user
+  useEffect(() => {
+    if (!isAuthenticated) {
+      queryClient.clear();
+    }
+  }, [isAuthenticated, queryClient]);
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);

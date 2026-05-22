@@ -4,7 +4,7 @@
 // ============================================
 
 // --- Enums / Union Types ---
-export type UserRole = 'admin' | 'doctor' | 'receptionist' | 'patient' | 'pharmacy_manager' | 'delivery_driver';
+export type UserRole = 'admin' | 'doctor' | 'receptionist' | 'patient' | 'pharmacy_manager' | 'delivery_driver' | 'clinic_admin' | 'pharmacy_admin' | 'clinic_owner' | 'pharmacy_owner';
 
 export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 
@@ -138,6 +138,8 @@ export interface Clinic {
   phone?: string;
   is_active: boolean;
   admin_id?: string;
+  owner_id?: string;
+  ownerId?: string;
   created_at: string;
   updated_at: string;
   distance_in_meters?: number;
@@ -164,10 +166,14 @@ export interface Pharmacy {
   phone?: string;
   is_active: boolean;
   manager_id?: string;
+  owner_id?: string;
+  ownerId?: string;
   created_at: string;
   updated_at: string;
   distance_in_meters?: number;
   available_medicines?: AvailableMedicine[];
+  matchedMedicinesCount?: number;
+  matchedMedicines?: string[];
 }
 
 export interface AvailableMedicine {
@@ -249,6 +255,8 @@ export interface CreateAppointmentRequest {
   clinic_id: string;
   date_time: string;
   duration_minutes?: number;
+  patient_id?: string;
+  notes?: string;
 }
 
 export interface UpdateAppointmentRequest {
@@ -360,6 +368,11 @@ export interface CreateSaleRequest {
   delivery_lat?: number;
   delivery_lng?: number;
   notes?: string;
+  payments?: Array<{
+    method: string;
+    amount: number;
+    transaction_id?: string;
+  }>;
 }
 
 export interface SaleItemRequest {
@@ -410,6 +423,8 @@ export interface AdminStats {
   deliveries_by_status: Record<DeliveryStatus, number>;
   recent_sales: number;
   monthly_revenue: number;
+  peak_hours: Array<{ hour: string; count: number }>;
+  revenue_chart: Array<{ date: string; amount: number }>;
 }
 
 export interface AuditLog {
@@ -449,6 +464,7 @@ export interface ApiError {
 
 // --- UI Navigation Types ---
 export type AppPage =
+  | 'aceptar-invitacion'
   | 'bienvenida'
   | 'entrar'
   | 'registro'

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import {
   useDeliveryOrder,
@@ -13,7 +14,8 @@ import { StatusBadge } from '@/components/common/status-badge';
 import { MapView } from '@/components/common/map-view';
 import type { MapMarker } from '@/components/common/map-view';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
   MapPin,
@@ -47,6 +49,12 @@ function getStatusStepIndex(status: string): number {
 export function DeliveryDetail() {
   const { selectedItemId, setNotification, navigate } = useAuthStore();
 
+  // Verification states
+  const [confirmDeliveryOpen, setConfirmDeliveryOpen] = useState(false);
+  const [receiverName, setReceiverName] = useState('');
+  const [patientQrCode, setPatientQrCode] = useState('');
+  const [verificationError, setVerificationError] = useState('');
+
   // React Query hooks
   const {
     data: order,
@@ -78,6 +86,41 @@ export function DeliveryDetail() {
         },
         onError: () => {
           setNotification({ type: 'error', message: 'Error al actualizar estado' });
+        },
+      }
+    );
+  };
+
+  const handleConfirmDelivery = () => {
+    if (!order) return;
+    
+    // Verify QR digital ID matches patient's digital ID
+    const expectedId = `patient-id-${order.patient?.id}`;
+    if (patientQrCode.trim() !== expectedId) {
+      setVerificationError('Código QR incorrecto. No coincide con el ID digital de este paciente.');
+      return;
+    }
+
+    setVerificationError('');
+    updateDeliveryStatus.mutate(
+      { 
+        id: order.id, 
+        data: { 
+          status: 'delivered',
+        } 
+      },
+      {
+        onSuccess: () => {
+          setNotification({ 
+            type: 'success', 
+            message: `Pedido entregado exitosamente a: ${receiverName || order.patient?.name}` 
+          });
+          setConfirmDeliveryOpen(false);
+          setReceiverName('');
+          setPatientQrCode('');
+        },
+        onError: () => {
+          setNotification({ type: 'error', message: 'Error al confirmar la entrega' });
         },
       }
     );
@@ -375,30 +418,116 @@ export function DeliveryDetail() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full glass rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center border border-teal-500/20 text-teal-600 dark:text-teal-400 hover:bg-teal-500/10"
-                onClick={() => {
-                  setNotification({ type: 'info', message: 'Simulando escaneo de QR de cliente...' });
-                  setTimeout(() => handleStatusUpdate('delivered'), 1500);
-                }}
+                onClick={() => setConfirmDeliveryOpen(true)}
                 disabled={isUpdating}
               >
-                <QrCode className="size-5" />
-                Escanear QR de entrega (Opcional)
+                <QrCode className="size-5 animate-pulse" />
+                Escanear QR de entrega
               </motion.button>
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="glass-btn-primary rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center disabled:opacity-50"
-                onClick={() => handleStatusUpdate('delivered')}
+                onClick={() => setConfirmDeliveryOpen(true)}
                 disabled={isUpdating}
               >
-                {isUpdating ? <Loader2 className="size-5 animate-spin" /> : <CheckCircle2 className="size-5" />}
-                {isUpdating ? 'Actualizando...' : 'Marcar como entregado'}
+                <CheckCircle2 className="size-5" />
+                Marcar como entregado
               </motion.button>
             </div>
           )}
         </div>
       )}
+
+      {/* Delivery Confirmation Modal */}
+      <AnimatePresence>
+        {confirmDeliveryOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 max-w-sm w-full shadow-2xl relative overflow-hidden"
+            >
+              {/* Decorative Glow */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="text-center mb-6">
+                <div className="size-16 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400 mx-auto mb-4 animate-bounce">
+                  <QrCode className="size-10" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">Confirmar Entrega Segura</h3>
+                <p className="text-xs text-gray-400 mt-2">
+                  Escanea el ID Digital del paciente <span className="font-bold text-teal-400">{order.patient?.name}</span> para verificar la entrega.
+                </p>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">¿Quién recibe?</label>
+                  <input
+                    placeholder="Ej. El propio paciente, madre, conyuge"
+                    value={receiverName}
+                    onChange={(e) => setReceiverName(e.target.value)}
+                    className="w-full h-10 px-3 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Código QR o ID Digital de Paciente</label>
+                  <div className="flex gap-2">
+                    <input
+                      placeholder="patient-id-xxxx"
+                      value={patientQrCode}
+                      onChange={(e) => {
+                        setPatientQrCode(e.target.value);
+                        if (verificationError) setVerificationError('');
+                      }}
+                      className="flex-1 h-10 px-3 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs font-mono focus:outline-none focus:border-teal-500"
+                    />
+                    <Button
+                      size="sm"
+                      className="bg-teal-600/20 hover:bg-teal-600/30 text-teal-400 text-[10px] font-bold rounded-xl"
+                      onClick={() => {
+                        setPatientQrCode(`patient-id-${order.patient?.id}`);
+                        setReceiverName(order.patient?.name || '');
+                        setVerificationError('');
+                      }}
+                    >
+                      Autollenar
+                    </Button>
+                  </div>
+                  {verificationError && (
+                    <p className="text-[10px] text-red-400 font-bold mt-1">{verificationError}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button 
+                  variant="ghost" 
+                  className="flex-1 text-gray-400 hover:text-white" 
+                  onClick={() => {
+                    setConfirmDeliveryOpen(false);
+                    setVerificationError('');
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  className="flex-1 bg-teal-600 hover:bg-teal-700 font-bold"
+                  disabled={!receiverName.trim() || !patientQrCode.trim() || isUpdating}
+                  onClick={handleConfirmDelivery}
+                >
+                  {isUpdating ? <Loader2 className="size-4 animate-spin mr-1" /> : null}
+                  Confirmar
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

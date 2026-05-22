@@ -35,6 +35,16 @@ export async function login(data: LoginRequest): Promise<AuthResponse['data']> {
   throw new Error('Login failed');
 }
 
+/** Demo Login */
+export async function demoLogin(role: string): Promise<AuthResponse['data']> {
+  const result = await post<AuthResponse['data']>('/auth/demo', { role });
+  if (result.success && result.data) {
+    setAccessToken(result.data.access_token);
+    return result.data;
+  }
+  throw new Error('Demo login failed');
+}
+
 /** Refresh token - Uses httpOnly cookie, no body needed */
 export async function refreshToken(): Promise<{ access_token: string }> {
   const result = await post<{ access_token: string }>('/auth/refresh', {});

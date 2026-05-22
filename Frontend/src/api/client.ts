@@ -15,8 +15,8 @@ import axios, {
 } from 'axios';
 
 // Config values (fallback to defaults if constants are missing)
-// Use the server IP directly to avoid proxy issues in static/mobile mode
-const API_BASE_URL = 'http://192.168.0.100:8000';
+// Use the environment variable, falling back to localhost
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 const API_PREFIX = '/api/v1';
 
 /**

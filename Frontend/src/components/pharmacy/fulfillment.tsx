@@ -99,7 +99,7 @@ export function Fulfillment() {
           // Build inventory map from cached data
           const invMap: Record<string, number> = {};
           inventory.forEach((item: InventoryItem) => {
-            invMap[item.medicine.id] = item.stock_quantity;
+            invMap[item.medicine.id] = item.quantity;
           });
 
           // Build fulfill lines

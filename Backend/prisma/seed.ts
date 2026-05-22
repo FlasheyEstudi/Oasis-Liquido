@@ -60,7 +60,7 @@ async function main() {
   ]);
 
   // 4. Users
-  console.log('👥 Creating users...');
+  console.log('👥 Creating core users...');
   const admin = await prisma.user.create({ data: { name: 'Admin', email: 'admin@oasis.com', passwordHash, role: 'admin' } });
   
   const doctor = await prisma.user.create({ 
@@ -84,15 +84,96 @@ async function main() {
     } 
   });
 
-  // 5. Inventory
-  console.log('📦 Creating inventory...');
-  for (const ph of pharmacies) {
-    for (const med of medicines) {
-      await prisma.inventory.create({
-        data: { pharmacyId: ph.id, medicineId: med.id, quantity: 100, unitPrice: 25.50 }
-      });
+  console.log('👥 Generating 25+ additional demo users...');
+  const roles = ['patient', 'doctor', 'receptionist', 'delivery_driver'];
+  for (let i = 1; i <= 25; i++) {
+    const role = roles[i % roles.length];
+    const user = await prisma.user.create({
+      data: {
+        name: `Demo User ${i}`,
+        email: `demo${i}@oasis.com`,
+        passwordHash,
+        role,
+        isActive: true,
+      }
+    });
+
+    // Create profile based on role
+    if (role === 'patient') {
+      await prisma.patientProfile.create({ data: { userId: user.id, dateOfBirth: '1985-05-15', bloodType: 'A+' } });
+    } else if (role === 'doctor') {
+      await prisma.doctorProfile.create({ data: { userId: user.id, clinicId: clinics[i % 2].id, specialty: 'Cardiología', licenseNumber: `LIC-DEMO-${i}` } });
+    } else if (role === 'receptionist') {
+      await prisma.receptionistProfile.create({ data: { userId: user.id, clinicId: clinics[i % 2].id } });
+    } else if (role === 'delivery_driver') {
+      await prisma.deliveryDriverProfile.create({ data: { userId: user.id, vehicleType: 'Motorcycle', licensePlate: `ABC-${i}23` } });
     }
   }
+
+  // 5. Inventory and Batches
+  console.log('📦 Creating inventory and batches...');
+  const paracetamol = medicines[1];
+  const amoxicilina = medicines[0];
+
+  for (const ph of pharmacies) {
+    for (const med of medicines) {
+      const inventory = await prisma.inventory.create({
+        data: { 
+          pharmacyId: ph.id, 
+          medicineId: med.id, 
+          quantity: med.id === paracetamol.id ? 150 : 100, 
+          unitPrice: 25.50,
+          minStock: 20 
+        }
+      });
+
+      // Add batches for Paracetamol (FEFO test)
+      if (med.id === paracetamol.id) {
+        await prisma.inventoryBatch.createMany({
+          data: [
+            {
+              inventoryId: inventory.id,
+              batchNumber: 'BATCH-JUN-2026',
+              quantity: 50,
+              expirationDate: new Date('2026-06-30'),
+              costPrice: 10.0,
+              sellingPrice: 25.5,
+            },
+            {
+              inventoryId: inventory.id,
+              batchNumber: 'BATCH-DEC-2026',
+              quantity: 100,
+              expirationDate: new Date('2026-12-31'),
+              costPrice: 10.0,
+              sellingPrice: 25.5,
+            }
+          ]
+        });
+      }
+    }
+  }
+
+  // 6. Demo Prescription with Digital Signature
+  console.log('📜 Creating demo prescription with digital signature...');
+  await prisma.prescription.create({
+    data: {
+      patientId: patient.id,
+      doctorId: doctor.id,
+      clinicId: clinics[0].id,
+      status: 'active',
+      verificationCode: 'DEMO-VERIFY-001',
+      digitalSignature: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6',
+      notes: 'Demo prescription for FEFO and Signature testing',
+      expirationDate: '2026-12-31',
+      prescriptionLines: {
+        create: {
+          medicineId: paracetamol.id,
+          quantity: 5,
+          dosageInstructions: 'Take 1 tablet every 8 hours'
+        }
+      }
+    }
+  });
 
   console.log('🏝️  Seed Complete!');
 }

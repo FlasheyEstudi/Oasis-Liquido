@@ -116,7 +116,7 @@ export function DeliveryRequest() {
           medicine_id: inventoryItem.medicine.id,
           name: inventoryItem.medicine.name,
           quantity: 1,
-          unit_price: inventoryItem.price,
+          unit_price: inventoryItem.unitPrice,
         },
       ]);
     }
@@ -140,7 +140,7 @@ export function DeliveryRequest() {
           medicine_id: med.id,
           name: med.name,
           quantity: 1,
-          unit_price: invItem?.price ?? 0,
+          unit_price: invItem?.unitPrice ?? 0,
         },
       ]);
     }
@@ -404,15 +404,15 @@ export function DeliveryRequest() {
                         name: med.name,
                         dosage_form: med.dosage_form,
                         strength: med.strength,
-                        price: inventoryItems.find((inv) => inv.medicine.id === med.id)?.price ?? 0,
-                        stock: inventoryItems.find((inv) => inv.medicine.id === med.id)?.stock_quantity ?? 0,
+                        price: inventoryItems.find((inv) => inv.medicine.id === med.id)?.unitPrice ?? 0,
+                        stock: inventoryItems.find((inv) => inv.medicine.id === med.id)?.quantity ?? 0,
                       })) : inventoryItems.map((inv) => ({
                         id: inv.medicine.id,
                         name: inv.medicine.name,
                         dosage_form: inv.medicine.dosage_form,
                         strength: inv.medicine.strength,
-                        price: inv.price,
-                        stock: inv.stock_quantity,
+                        price: inv.unitPrice,
+                        stock: inv.quantity,
                       }))).slice(0, 10).map((item) => {
                         const alreadyAdded = orderItems.some((i) => i.medicine_id === item.id);
                         return (

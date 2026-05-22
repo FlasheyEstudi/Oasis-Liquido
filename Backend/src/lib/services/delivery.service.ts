@@ -3,6 +3,8 @@
 
 import { db } from '@/lib/db';
 import { createAuditLog } from './audit.service';
+import { emitDeliveryLocation } from '@/lib/socket';
+import { sendPushNotification } from '@/lib/fcm';
 
 /**
  * Get delivery orders with role-based filtering
@@ -138,7 +140,7 @@ export async function updateDeliveryStatus(
     include: {
       sale: { include: { saleItems: true } },
       pharmacy: true,
-      deliveryDriver: { select: { id: true, name: true, phone: true } },
+      deliveryDriver: { select: { id: true, name: true, phone: true, deliveryDriverProfile: true } },
       patient: { select: { id: true, name: true } },
     },
   });
@@ -160,6 +162,37 @@ export async function updateDeliveryStatus(
     ipAddress,
     userAgent,
   });
+
+  // REAL-TIME: Emit update via Socket.IO if in transit
+  if (newStatus === 'in_transit' && updated.deliveryDriver?.deliveryDriverProfile) {
+    const profile = updated.deliveryDriver.deliveryDriverProfile as any;
+    emitDeliveryLocation(id, profile.currentLat || 0, profile.currentLng || 0);
+  }
+
+  // PUSH NOTIFICATIONS: Notify patient of status change
+  const statusLabels: Record<string, string> = {
+    assigned: 'ha sido asignado a un repartidor',
+    picked_up: 'ha sido recolectado en la farmacia',
+    in_transit: 'está en camino a tu ubicación',
+    delivered: 'ha sido entregado con éxito',
+  };
+
+  if (updated.patientId && statusLabels[newStatus]) {
+    sendPushNotification(
+      updated.patientId,
+      'Actualización de tu pedido',
+      `Tu pedido ${statusLabels[newStatus]}.`
+    );
+  }
+
+  if (newStatus === 'assigned' && deliveryDriverId) {
+    sendPushNotification(
+      deliveryDriverId,
+      '🛒 Nuevo pedido asignado',
+      `Se te ha asignado el pedido de entrega #${id.slice(-6)} para ${updated.patient?.name || 'un paciente'}.`,
+      { type: 'delivery_assigned', orderId: id }
+    );
+  }
 
   return updated;
 }

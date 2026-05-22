@@ -148,7 +148,11 @@ export function PrescriptionList() {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="bento-grid"
+            className={cn(
+              "bento-grid",
+              prescriptions.length === 1 && "flex justify-center",
+              prescriptions.length === 2 && "flex justify-center flex-wrap gap-4"
+            )}
           >
             {prescriptions.map((presc, index) => {
               const medCount = presc.lines?.length || 0;
@@ -158,7 +162,10 @@ export function PrescriptionList() {
                   key={presc.id}
                   variants={fadeInUp}
                   transition={{ delay: index * 0.04 }}
-                  className="col-span-6 lg:col-span-4"
+                  className={cn(
+                    "col-span-6 lg:col-span-4 w-full",
+                    prescriptions.length <= 2 ? "max-w-md" : ""
+                  )}
                 >
                   <GlassCard
                     hover
@@ -241,31 +248,36 @@ export function PrescriptionList() {
 
       {/* QR Dialog */}
       <Dialog open={!!qrDialog} onOpenChange={(open) => !open && setQrDialog(null)}>
-        <DialogContent className="rounded-3xl glass-strong border-border sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Código QR de Receta</DialogTitle>
+        <DialogContent className="rounded-3xl glass-strong border-border sm:max-w-sm max-h-[90vh] overflow-y-auto custom-scrollbar p-5">
+          <DialogHeader className="flex flex-col items-center justify-center text-center">
+            <DialogTitle className="flex items-center justify-center gap-2 text-center w-full">
+              <span className="size-2 rounded-full bg-teal-500 animate-pulse" />
+              Código QR de Receta
+            </DialogTitle>
           </DialogHeader>
           {qrDialog && (
-            <div className="flex flex-col items-center py-4">
+            <div className="flex flex-col items-center py-2">
               <QrCode 
                 value={qrDialog.qr_code_data} 
-                size={200} 
+                size={160} 
                 label="Receta Médica"
               />
-              <div className="mt-4 text-center space-y-1">
-                <p className="text-sm font-medium text-foreground">
+              <div className="mt-2 text-center space-y-1 bg-white/5 dark:bg-black/20 p-3 rounded-2xl border border-white/5 w-full">
+                <p className="text-sm font-semibold text-foreground">
                   {qrDialog.doctor?.name || 'Médico'}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Emitida: {formatDate(qrDialog.issue_date, 'dd/MM/yyyy')}
                 </p>
-                <span className={cn(
-                  'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium',
-                  PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.bgColor,
-                  PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.color
-                )}>
-                  {PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.label || qrDialog.status}
-                </span>
+                <div className="pt-1">
+                  <span className={cn(
+                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase',
+                    PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.bgColor,
+                    PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.color
+                  )}>
+                    {PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.label || qrDialog.status}
+                  </span>
+                </div>
               </div>
             </div>
           )}

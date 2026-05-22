@@ -12,6 +12,7 @@ import { LoginForm } from '@/components/auth/login-form';
 import { RegisterForm } from '@/components/auth/register-form';
 import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
 import { ResetPasswordForm } from '@/components/auth/reset-password-form';
+import { AcceptInvitationForm } from '@/components/auth/accept-invitation-form';
 import dynamic from 'next/dynamic';
 
 // Heavy roles (Dynamic imports to reduce APK size)
@@ -104,6 +105,7 @@ export default function Home() {
   if (currentPage === 'registro') return <RegisterForm />;
   if (currentPage === 'recuperar-cuenta') return <ForgotPasswordForm />;
   if (currentPage === 'cambiar-clave') return <ResetPasswordForm />;
+  if (currentPage === 'aceptar-invitacion') return <AcceptInvitationForm />;
 
   // App pages
   const renderPage = () => {

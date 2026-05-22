@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
-import { useGetMe, useUpdateMe, useUpdatePatientProfile, getHookErrorMessage } from '@/hooks/use-api';
+import { useGetMe, useUpdateMe, useUpdatePatientProfile, useFamily, useCreateFamily, useDeleteFamily, getHookErrorMessage } from '@/hooks/use-api';
 import { getInitials } from '@/utils/helpers';
 import { ROLE_LABELS, ROLE_COLORS } from '@/utils/constants';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode } from '@/components/common/qr-code';
+import { toast } from 'sonner';
 import {
   User as UserIcon,
   Phone,
@@ -29,6 +30,7 @@ import {
   Pencil,
   X,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function ProfileScreen() {
   const { user: authUser, setUser, setNotification, logout } = useAuthStore();
@@ -54,6 +56,15 @@ export function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswordSection, setShowPasswordSection] = useState(false);
+
+  // Family states
+  const [familyEmail, setFamilyEmail] = useState('');
+  const [familyRelation, setFamilyRelation] = useState<'padre' | 'madre' | 'hijo' | 'conyuge' | 'tutor' | 'otro'>('padre');
+  const [isLinking, setIsLinking] = useState(false);
+
+  const familyQuery = useFamily(authUser?.role === 'patient');
+  const createFamilyMutation = useCreateFamily();
+  const deleteFamilyMutation = useDeleteFamily();
 
   // Edit mode
   const [isEditing, setIsEditing] = useState(false);
@@ -125,6 +136,36 @@ export function ProfileScreen() {
     }
     setIsEditing(false);
     setNameError('');
+  };
+
+  const handleLinkFamily = async () => {
+    if (!familyEmail.trim()) {
+      toast.error('Ingresa un correo electrónico');
+      return;
+    }
+    setIsLinking(true);
+    try {
+      await createFamilyMutation.mutateAsync({
+        patient_email: familyEmail.trim(),
+        relationship: familyRelation,
+      });
+      toast.success('Familiar vinculado exitosamente');
+      setFamilyEmail('');
+    } catch (err) {
+      toast.error(getHookErrorMessage(err) || 'Error al vincular familiar');
+    } finally {
+      setIsLinking(false);
+    }
+  };
+
+  const handleUnlinkFamily = async (id: string) => {
+    try {
+      toast.loading('Desvinculando familiar...', { id: 'unlink-family' });
+      await deleteFamilyMutation.mutateAsync(id);
+      toast.success('Familiar desvinculado con éxito', { id: 'unlink-family' });
+    } catch (err) {
+      toast.error(getHookErrorMessage(err) || 'Error al desvincular familiar', { id: 'unlink-family' });
+    }
   };
 
   if (isLoading) {
@@ -433,6 +474,125 @@ export function ProfileScreen() {
                     </div>
                   </div>
                 )}
+              </div>
+            </GlassCard>
+          )}
+
+          {/* Family Hub Card */}
+          {role === 'patient' && (
+            <GlassCard>
+              <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <UserIcon className="size-4 text-teal-600 dark:text-teal-400" />
+                  Núcleo Familiar y Cuidadores
+                </h3>
+              </div>
+
+              {/* Link New Family Member Form */}
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-4 mb-6">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Vincular Nuevo Familiar</h4>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="email"
+                    placeholder="Correo del familiar (ej: mama@email.com)"
+                    value={familyEmail}
+                    onChange={(e) => setFamilyEmail(e.target.value)}
+                    disabled={isLinking}
+                    className="glass-input rounded-xl flex-1 px-3 py-2 text-xs"
+                  />
+                  <select
+                    value={familyRelation}
+                    onChange={(e: any) => setFamilyRelation(e.target.value)}
+                    disabled={isLinking}
+                    className="bg-background border border-white/10 text-foreground rounded-xl text-xs px-3 py-2 font-semibold cursor-pointer"
+                  >
+                    <option value="padre">Padre</option>
+                    <option value="madre">Madre</option>
+                    <option value="hijo">Hijo/a</option>
+                    <option value="conyuge">Cónyuge</option>
+                    <option value="tutor">Tutor Legal</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                  <Button 
+                    className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold px-4 py-2 shrink-0 animate-pulse"
+                    disabled={isLinking}
+                    onClick={handleLinkFamily}
+                  >
+                    {isLinking ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
+                    Vincular
+                  </Button>
+                </div>
+              </div>
+
+              {/* Lists */}
+              <div className="space-y-6">
+                {/* Persons I Care For (caregiverFor) */}
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <Shield className="size-3 text-teal-500" />
+                    Familiares a quienes cuido (Representados)
+                  </h4>
+                  {familyQuery.isLoading ? (
+                    <div className="h-10 shimmer rounded-xl" />
+                  ) : (familyQuery.data?.caregiverFor?.length ?? 0) > 0 ? (
+                    <div className="space-y-2">
+                      {familyQuery.data?.caregiverFor?.map((rel: any) => (
+                        <div key={rel.id} className="flex items-center justify-between p-3 rounded-2xl glass hover:border-teal-500/30 transition-colors">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{rel.patient?.name}</p>
+                            <p className="text-[10px] text-muted-foreground capitalize">Relación: {rel.relationship}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-xl"
+                            onClick={() => handleUnlinkFamily(rel.id)}
+                          >
+                            Desvincular
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground bg-white/5 border border-dashed border-white/5 rounded-xl p-3 text-center">
+                      No tienes familiares asignados para cuidado representativo.
+                    </p>
+                  )}
+                </div>
+
+                {/* Authorised Caregivers (patientOf) */}
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <UserIcon className="size-3 text-sky-500" />
+                    Cuidadores Autorizados (Tienen acceso a mis datos)
+                  </h4>
+                  {familyQuery.isLoading ? (
+                    <div className="h-10 shimmer rounded-xl" />
+                  ) : (familyQuery.data?.patientOf?.length ?? 0) > 0 ? (
+                    <div className="space-y-2">
+                      {familyQuery.data?.patientOf?.map((rel: any) => (
+                        <div key={rel.id} className="flex items-center justify-between p-3 rounded-2xl glass hover:border-sky-500/30 transition-colors">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{rel.caregiver?.name}</p>
+                            <p className="text-[10px] text-muted-foreground capitalize">Relación: {rel.relationship}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-xl"
+                            onClick={() => handleUnlinkFamily(rel.id)}
+                          >
+                            Revocar
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground bg-white/5 border border-dashed border-white/5 rounded-xl p-3 text-center">
+                      No has autorizado a ningún familiar como cuidador de tu perfil.
+                    </p>
+                  )}
+                </div>
               </div>
             </GlassCard>
           )}

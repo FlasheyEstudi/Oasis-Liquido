@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { getSocket, joinChatRoom } from '@/lib/socket';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   useAppointments, 
   useDeliveryOrders, 
@@ -19,18 +21,42 @@ import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/helpers';
 
 export function ChatOverlay() {
-  const { user } = useAuthStore();
+  const { user, representedUser } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
-  // Poll for context-based chat opportunities
-  const appointmentsQuery = useAppointments({ status: 'scheduled' });
-  const deliveriesQuery = useDeliveryOrders({ status: 'in_transit' });
+  const isChatAllowed = user && ['patient', 'doctor', 'delivery_driver'].includes(user.role);
+  const activePatientId = representedUser?.id || user?.id;
 
-  const activeAppointments = appointmentsQuery.data?.data || [];
-  const activeDeliveries = deliveriesQuery.data?.data || [];
+  // Poll for context-based chat opportunities matching the active profile
+  const appointmentsQuery = useAppointments({ 
+    status: 'scheduled',
+    patient_id: user?.role === 'patient' ? activePatientId : undefined,
+    doctor_id: user?.role === 'doctor' ? user?.id : undefined,
+  }, isChatAllowed === true);
+
+  const deliveriesQuery = useDeliveryOrders({ 
+    status: 'in_transit',
+    patient_id: user?.role === 'patient' ? activePatientId : undefined,
+    delivery_driver_id: user?.role === 'delivery_driver' ? user?.id : undefined,
+  }, isChatAllowed === true);
+
+  const activeAppointments = (appointmentsQuery.data?.data || []).filter((appt: any) => {
+    if (!user) return false;
+    if (user.role === 'patient') return appt.patient_id === activePatientId;
+    if (user.role === 'doctor') return appt.doctor_id === user.id;
+    return false;
+  });
+
+  const activeDeliveries = (deliveriesQuery.data?.data || []).filter((del: any) => {
+    if (!user) return false;
+    if (user.role === 'patient') return del.patient_id === activePatientId;
+    if (user.role === 'delivery_driver') return del.delivery_driver_id === user.id;
+    return false;
+  });
 
   const hasContext = activeAppointments.length > 0 || activeDeliveries.length > 0;
 
@@ -51,6 +77,13 @@ export function ChatOverlay() {
   const sendMessageMutation = useSendMessage();
   const { data: sessionsData } = useChatSessions();
   const createSessionMutation = useCreateChatSession();
+
+  // Reset state when user context changes (logout, switch of user, etc.)
+  useEffect(() => {
+    setIsOpen(false);
+    setActiveSessionId(null);
+    setMessage('');
+  }, [user?.id, representedUser?.id]);
 
   // Manage session lifecycle
   useEffect(() => {
@@ -81,13 +114,43 @@ export function ChatOverlay() {
     }
   }, [messagesQuery.data, isOpen]);
 
+  // Real-time Chat Socket listener
+  useEffect(() => {
+    if (activeSessionId) {
+      joinChatRoom(activeSessionId);
+      const socket = getSocket();
+
+      const handleNewMessage = (newMessage: any) => {
+        // Update React Query cache immediately
+        queryClient.setQueryData(['chats', 'messages', activeSessionId], (old: any) => {
+          if (!old) return { data: [newMessage] };
+          
+          // Avoid duplicates
+          const exists = old.data.some((m: any) => m.id === newMessage.id);
+          if (exists) return old;
+
+          return {
+            ...old,
+            data: [...old.data, newMessage]
+          };
+        });
+      };
+
+      socket.on('chat:message', handleNewMessage);
+      
+      return () => {
+        socket.off('chat:message', handleNewMessage);
+      };
+    }
+  }, [activeSessionId, queryClient]);
+
   const handleSend = async () => {
     if (!message.trim() || !activeSessionId) return;
     await sendMessageMutation.mutateAsync({ sessionId: activeSessionId, content: message });
     setMessage('');
   };
 
-  if (!user || !hasContext) return null;
+  if (!user || !isChatAllowed || !hasContext) return null;
 
   return (
     <div className="fixed bottom-24 right-6 z-[50] flex flex-col items-end gap-4 pointer-events-none">

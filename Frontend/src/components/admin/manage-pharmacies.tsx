@@ -10,6 +10,7 @@ import {
 } from '@/hooks/use-api';
 import type { Pharmacy } from '@/types';
 import { GlassCard } from '@/components/oasis/glass-card';
+import { PharmacyStaffManagement } from '../common/staff-management';
 import {
   Table,
   TableBody,
@@ -44,6 +45,7 @@ import {
   MapPin,
   Loader2,
   Activity,
+  Store,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -65,7 +67,7 @@ const emptyForm: PharmacyFormData = {
 };
 
 export function ManagePharmacies() {
-  const { setNotification } = useAuthStore();
+  const { user, setNotification } = useAuthStore();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPharmacy, setEditingPharmacy] = useState<Pharmacy | null>(null);
@@ -165,6 +167,91 @@ export function ManagePharmacies() {
         <button onClick={() => refetch()} className="glass-btn-secondary rounded-full px-6 py-2 text-sm">
           Reintentar
         </button>
+      </div>
+    );
+  }
+
+  const isPharmacyOwner = user?.role === 'pharmacy_admin' || user?.role === 'pharmacy_owner';
+  const ownedPharmacy = pharmacies.find(
+    (p) => p.ownerId === user?.id || p.owner_id === user?.id
+  );
+
+  if (isPharmacyOwner) {
+    if (!ownedPharmacy) {
+      return (
+        <div className="space-y-6 p-4 md:p-6">
+          <GlassCard className="text-center py-16">
+            <Store className="size-16 text-sky-500/40 mx-auto mb-4 animate-pulse" />
+            <h2 className="text-xl font-bold text-foreground mb-2">Sin Farmacia Asignada</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Actualmente no tienes ninguna farmacia asociada a tu cuenta. Contacta con el equipo de soporte de OASIS para vincular tu farmacia.
+            </p>
+          </GlassCard>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6 p-4 md:p-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-2"
+        >
+          <h1 className="text-2xl font-bold text-foreground">Gestión de Farmacia y Personal</h1>
+          <p className="text-sm text-muted-foreground">Administra el personal, cajeros, repartidores y la información de tu sede</p>
+        </motion.div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Sede details card */}
+          <div className="lg:col-span-1 space-y-6">
+            <GlassCard className="border border-sky-500/10 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
+              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2 border-b pb-2 border-border/20">
+                <Store className="size-5 text-sky-500" />
+                Información de Sede
+              </h3>
+              
+              <div className="space-y-4 text-sm">
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium">Nombre de la Farmacia</span>
+                  <span className="text-foreground font-semibold text-base">{ownedPharmacy.name}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium">Dirección Física</span>
+                  <span className="text-foreground flex items-start gap-1.5 mt-0.5">
+                    <MapPin className="size-4 text-sky-500 shrink-0 mt-0.5" />
+                    {ownedPharmacy.address}
+                  </span>
+                </div>
+                {ownedPharmacy.phone && (
+                  <div>
+                    <span className="text-xs text-muted-foreground block font-medium">Teléfono de Contacto</span>
+                    <span className="text-foreground flex items-center gap-1.5 mt-0.5">
+                      <Phone className="size-4 text-sky-500 shrink-0" />
+                      {ownedPharmacy.phone}
+                    </span>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/10">
+                  <div>
+                    <span className="text-xs text-muted-foreground block">Latitud</span>
+                    <span className="text-foreground font-mono text-xs">{ownedPharmacy.latitude}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground block">Longitud</span>
+                    <span className="text-foreground font-mono text-xs">{ownedPharmacy.longitude}</span>
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+
+          {/* Workers list & invitations */}
+          <div className="lg:col-span-2">
+            <PharmacyStaffManagement pharmacyId={ownedPharmacy.id} />
+          </div>
+        </div>
       </div>
     );
   }

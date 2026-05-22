@@ -186,8 +186,71 @@ export function LoginForm() {
             </p>
           </motion.div>
 
+          {/* Demo Logins */}
+          <DemoLoginSection isSubmitting={isSubmitting} />
+
         </div>
       </motion.div>
     </div>
   );
 }
+
+function DemoLoginSection({ isSubmitting }: { isSubmitting: boolean }) {
+  const { login } = useAuthStore();
+  const [isDemoLoading, setIsDemoLoading] = useState<string | null>(null);
+
+  async function handleDemoLogin(role: string) {
+    if (isSubmitting || isDemoLoading) return;
+    setIsDemoLoading(role);
+    try {
+      const { demoLogin } = await import('@/api/auth');
+      const data = await demoLogin(role);
+      login(data.user, data.access_token);
+    } catch (err) {
+      console.error('Demo login failed', err);
+    } finally {
+      setIsDemoLoading(null);
+    }
+  }
+
+  const roles = [
+    { id: 'patient', label: 'Soy Paciente', icon: <Heart className="size-3.5" />, color: 'bg-teal-500/10 text-teal-600' },
+    { id: 'doctor', label: 'Soy Doctor', icon: <Stethoscope className="size-3.5" />, color: 'bg-sky-500/10 text-sky-600' },
+    { id: 'pharmacy_manager', label: 'Soy Farmacia', icon: <Store className="size-3.5" />, color: 'bg-emerald-500/10 text-emerald-600' },
+    { id: 'delivery_driver', label: 'Soy Repartidor', icon: <Truck className="size-3.5" />, color: 'bg-amber-500/10 text-amber-600' },
+  ];
+
+  return (
+    <div className="mt-8 pt-6 border-t border-border/50">
+      <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground text-center mb-4">
+        Acceso rápido Demo
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {roles.map((role) => (
+          <button
+            key={role.id}
+            type="button"
+            disabled={isSubmitting || !!isDemoLoading}
+            onClick={() => handleDemoLogin(role.id)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50",
+              role.color
+            )}
+          >
+            {isDemoLoading === role.id ? (
+              <Loader2 className="size-3.5 animate-spin mx-auto" />
+            ) : (
+              <>
+                {role.icon}
+                {role.label}
+              </>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+import { Heart, Stethoscope, Store, Truck } from 'lucide-react';
+import { cn } from '@/lib/utils';

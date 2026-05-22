@@ -41,5 +41,5 @@ export const GET = withAuth(
       return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
     }
   },
-  { roles: ['pharmacy_manager', 'admin'] }
+  { roles: ['pharmacy_manager', 'admin', 'patient', 'doctor'] }
 );

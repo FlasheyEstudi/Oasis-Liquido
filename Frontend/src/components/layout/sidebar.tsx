@@ -21,6 +21,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Store,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -51,6 +52,18 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { page: 'gestionar-farmacias', label: 'Farmacias', icon: Pill },
     { page: 'gestionar-usuarios', label: 'Usuarios', icon: Users },
     { page: 'auditoria', label: 'Auditoría', icon: FileText },
+  ],
+  clinic_admin: [
+    { page: 'gestionar-clinicas', label: 'Mi Clínica', icon: Building2 },
+  ],
+  clinic_owner: [
+    { page: 'gestionar-clinicas', label: 'Mi Clínica', icon: Building2 },
+  ],
+  pharmacy_admin: [
+    { page: 'gestionar-farmacias', label: 'Mi Farmacia', icon: Store },
+  ],
+  pharmacy_owner: [
+    { page: 'gestionar-farmacias', label: 'Mi Farmacia', icon: Store },
   ],
   doctor: [
     { page: 'inicio', label: 'Dashboard', icon: LayoutDashboard },

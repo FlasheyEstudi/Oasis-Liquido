@@ -27,6 +27,16 @@ import { cn } from '@/lib/utils';
 // Navigation items per role
 function getNavItems(role: UserRole): { page: AppPage; label: string; icon: React.ReactNode }[] {
   switch (role) {
+    case 'clinic_admin':
+    case 'clinic_owner':
+      return [
+        { page: 'manage-clinics', label: 'Mi Clínica', icon: <MapPin className="size-[18px]" /> },
+      ];
+    case 'pharmacy_admin':
+    case 'pharmacy_owner':
+      return [
+        { page: 'manage-pharmacies', label: 'Mi Farmacia', icon: <Pill className="size-[18px]" /> },
+      ];
     case 'patient':
       return [
         { page: 'home', label: 'Inicio', icon: <Home className="size-[18px]" /> },

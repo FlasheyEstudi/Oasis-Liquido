@@ -27,6 +27,7 @@ import {
   BarChart3,
   RefreshCw,
 } from 'lucide-react';
+import { AnalyticsCard } from '@/components/common/analytics-card';
 
 function ShimmerBlock({ className }: { className?: string }) {
   return <div className={cn('shimmer rounded-3xl', className)} />;
@@ -83,7 +84,7 @@ export function AdminHome() {
     { title: 'Médicos', value: stats?.total_doctors ?? 0, icon: Stethoscope, bg: 'bg-emerald-500/10', color: 'text-emerald-600 dark:text-emerald-400' },
     { title: 'Pacientes', value: stats?.total_patients ?? 0, icon: Users, bg: 'bg-violet-500/10', color: 'text-violet-600 dark:text-violet-400' },
     { title: 'Citas', value: stats?.total_appointments ?? 0, icon: Calendar, bg: 'bg-amber-500/10', color: 'text-amber-600 dark:text-amber-400' },
-    { title: 'Ingresos', value: formatCurrency(stats?.monthly_revenue ?? 0), icon: DollarSign, bg: 'bg-emerald-500/10', color: 'text-emerald-600 dark:text-emerald-400' },
+    { title: 'Ingresos Mensuales', value: formatCurrency(stats?.monthly_revenue ?? 0), icon: DollarSign, bg: 'bg-emerald-500/10', color: 'text-emerald-600 dark:text-emerald-400' },
   ];
 
   return (
@@ -156,6 +157,33 @@ export function AdminHome() {
           </GlassCard>
         </motion.div>
       ))}
+
+      {/* Revenue Trend Chart */}
+      <motion.div className="col-span-12 lg:col-span-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <AnalyticsCard
+          title="Tendencia de Ingresos"
+          subtitle="Ventas proyectadas de los últimos 7 días"
+          data={stats?.revenue_chart || []}
+          dataKey="amount"
+          xAxisKey="date"
+          color="#10b981"
+          currentValue={formatCurrency(stats?.monthly_revenue ?? 0)}
+          percentageChange={8.4}
+        />
+      </motion.div>
+
+      {/* Peak Hours Analysis */}
+      <motion.div className="col-span-12 lg:col-span-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <AnalyticsCard
+          title="Análisis de Horas Punta"
+          subtitle="Distribución de citas por hora"
+          type="bar"
+          data={stats?.peak_hours || []}
+          dataKey="count"
+          xAxisKey="hour"
+          color="#0ea5e9"
+        />
+      </motion.div>
 
       {/* Appointments by Status Chart */}
       <GlassCard className="col-span-12 md:col-span-6">

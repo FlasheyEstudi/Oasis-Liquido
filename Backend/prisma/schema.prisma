@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,6 +16,7 @@ model User {
   role                    String
   isActive                Boolean                 @default(true)
   emailVerified           Boolean                 @default(false)
+  fcmToken                String?
   createdAt               DateTime                @default(now())
   updatedAt               DateTime                @updatedAt
   appointmentsAsDoctor    Appointment[]           @relation("DoctorAppointments")
@@ -35,6 +36,9 @@ model User {
   chatParticipants        ChatParticipant[]
   chatMessages            ChatMessage[]
   reviews                 Review[]
+  caregiverRelations      FamilyRelationship[]    @relation("CaregiverRelations")
+  patientRelations        FamilyRelationship[]    @relation("PatientRelations")
+  sentInvitations         Invitation[]            @relation("SentInvitations")
 
   @@index([email])
   @@index([role])
@@ -60,10 +64,12 @@ model DoctorProfile {
   clinicId      String?  @map("clinic_id")
   specialty     String   @default("Medicina General")
   licenseNumber String   @unique
+  signaturePin  String?  @map("signature_pin")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   clinic        Clinic?  @relation(fields: [clinicId], references: [id])
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialties   DoctorProfileSpecialty[]
 
   @@index([clinicId])
   @@map("doctor_profiles")
@@ -81,15 +87,17 @@ model PharmacyManagerProfile {
 }
 
 model DeliveryDriverProfile {
-  userId       String   @id @map("user_id")
-  vehicleType  String   @default("motocicleta")
-  licensePlate String?
-  isAvailable  Boolean  @default(true)
-  currentLat   Float?
-  currentLng   Float?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String   @id @map("user_id")
+  vehicleType    String   @default("motocicleta")
+  licensePlate   String?
+  isAvailable    Boolean  @default(true)
+  currentLat     Float?
+  currentLng     Float?
+  employmentType String   @default("contractor") @map("employment_type")
+  baseSalary     Float?   @map("base_salary")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("delivery_driver_profiles")
 }
@@ -113,6 +121,7 @@ model Clinic {
   longitude            Float                 @default(-99.1332)
   phone                String?
   isActive             Boolean               @default(true)
+  ownerId              String?               @map("owner_id")
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   appointments         Appointment[]
@@ -120,6 +129,7 @@ model Clinic {
   prescriptions        Prescription[]
   receptionistProfiles ReceptionistProfile[]
   sales                Sale[]
+  invitations          Invitation[]
 
   @@index([isActive])
   @@map("clinics")
@@ -134,6 +144,7 @@ model Pharmacy {
   phone                   String?
   isActive                Boolean                  @default(true)
   deliveryFee             Float                    @default(29.90)
+  ownerId                 String?                  @map("owner_id")
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   deliveryOrders          DeliveryOrder[]
@@ -141,6 +152,7 @@ model Pharmacy {
   pharmacyManagerProfiles PharmacyManagerProfile[]
   fulfilledPrescriptions  Prescription[]           @relation("FulfilledPharmacy")
   sales                   Sale[]
+  invitations             Invitation[]
 
   @@index([isActive])
   @@map("pharmacies")
@@ -170,21 +182,38 @@ model Inventory {
   id             String   @id @default(cuid())
   pharmacyId     String
   medicineId     String
-  quantity       Int      @default(0)
+  quantity       Int      @default(0) // Total quantity (aggregated from batches)
   minStock       Int      @default(10)
-  unitPrice      Float
-  batchNumber    String?
-  expirationDate String?
+  unitPrice      Float    @default(0) // Default/Last price
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   medicine       Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
   pharmacy       Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
   movements      InventoryMovement[]
+  batches        InventoryBatch[]
 
   @@unique([pharmacyId, medicineId])
   @@index([pharmacyId])
   @@index([medicineId])
   @@map("inventory")
+}
+
+model InventoryBatch {
+  id             String    @id @default(cuid())
+  inventoryId    String
+  batchNumber    String
+  quantity       Int
+  costPrice      Float?    @map("cost_price")
+  sellingPrice   Float?    @map("selling_price")
+  expirationDate DateTime? @map("expiration_date")
+  supplier       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  inventory      Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId])
+  @@index([expirationDate])
+  @@map("inventory_batches")
 }
 
 model Appointment {
@@ -221,6 +250,8 @@ model Prescription {
   appointmentId       String?
   status              String             @default("active")
   qrCode              String?            @unique
+  verificationCode    String?            @unique @map("verification_code")
+  digitalSignature    String?            @map("digital_signature")
   notes               String?
   issuedAt            DateTime           @default(now())
   expirationDate      String
@@ -284,6 +315,7 @@ model Sale {
   pharmacy        Pharmacy?      @relation(fields: [pharmacyId], references: [id])
   clinic          Clinic?        @relation(fields: [clinicId], references: [id])
   appointment     Appointment?   @relation(fields: [appointmentId], references: [id])
+  payments        Payment[]
 
   @@index([pharmacyId])
   @@index([clinicId])
@@ -448,4 +480,82 @@ model Review {
   user       User     @relation(fields: [userId], references: [id])
 
   @@map("reviews")
+}
+
+model FamilyRelationship {
+  id           String   @id @default(cuid())
+  caregiverId  String   @map("caregiver_id")
+  patientId    String   @map("patient_id")
+  relationship String   // "padre", "madre", "hijo", "conyuge", "tutor", "otro"
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  caregiver    User     @relation("CaregiverRelations", fields: [caregiverId], references: [id], onDelete: Cascade)
+  patient      User     @relation("PatientRelations", fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([caregiverId, patientId])
+  @@map("family_relationships")
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  saleId        String?  @map("sale_id")
+  amount        Float
+  currency      String   // "NIO", "USD"
+  method        String   // "cash", "card", "bank_transfer"
+  status        String   // "pending", "completed", "failed", "refunded"
+  transactionId String?  @map("transaction_id")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  sale          Sale?    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model DoctorSpecialty {
+  id          String                   @id @default(cuid())
+  name        String                   @unique
+  description String?
+  createdAt   DateTime                 @default(now()) @map("created_at")
+  updatedAt   DateTime                 @updatedAt @map("updated_at")
+  doctors     DoctorProfileSpecialty[]
+
+  @@map("doctor_specialties")
+}
+
+model DoctorProfileSpecialty {
+  doctorId    String          @map("doctor_id")
+  specialtyId String          @map("specialty_id")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  doctor      DoctorProfile   @relation(fields: [doctorId], references: [userId], onDelete: Cascade)
+  specialty   DoctorSpecialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
+
+  @@id([doctorId, specialtyId])
+  @@map("doctor_profile_specialties")
+}
+
+model Invitation {
+  id          String    @id @default(cuid())
+  email       String
+  role        String    // "doctor", "receptionist", "cashier", "delivery_driver"
+  token       String    @unique
+  expiresAt   DateTime  @map("expires_at")
+  isAccepted  Boolean   @default(false) @map("is_accepted")
+  
+  senderId    String    @map("sender_id")
+  sender      User      @relation("SentInvitations", fields: [senderId], references: [id], onDelete: Cascade)
+
+  clinicId    String?   @map("clinic_id")
+  clinic      Clinic?   @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+
+  pharmacyId  String?   @map("pharmacy_id")
+  pharmacy    Pharmacy? @relation(fields: [pharmacyId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([token])
+  @@index([email])
+  @@map("invitations")
 }

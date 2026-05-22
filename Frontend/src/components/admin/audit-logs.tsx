@@ -60,6 +60,7 @@ export function AuditLogs() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<any>(null);
   const limit = 10;
 
   const {
@@ -232,6 +233,99 @@ export function AuditLogs() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Log Details Modal */}
+      <AnimatePresence>
+        {selectedLog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedLog(null)}
+              className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col glass-strong rounded-[2.5rem] border border-white/20 shadow-2xl"
+            >
+              <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Detalles del Registro</h3>
+                  <p className="text-xs text-white/50 font-mono mt-1">ID: {selectedLog.id}</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setSelectedLog(null)}
+                  className="rounded-full text-white/70 hover:text-white hover:bg-white/10"
+                >
+                  <X className="size-5" />
+                </Button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Acción</p>
+                    <p className="text-sm font-semibold text-white">{ACTION_LABELS[selectedLog.action] || selectedLog.action}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-sky-500">Recurso</p>
+                    <p className="text-sm font-semibold text-white">{RESOURCE_LABELS[selectedLog.resource_type] || selectedLog.resource_type}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Usuario</p>
+                    <p className="text-sm font-semibold text-white">{selectedLog.user_name || 'Sistema'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-purple-500">Fecha</p>
+                    <p className="text-sm font-semibold text-white">{formatDateTime(selectedLog.created_at)}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Datos Cambiados (JSON)</p>
+                  <pre className="p-4 rounded-2xl bg-black/40 border border-white/5 text-[11px] font-mono text-emerald-400 overflow-x-auto">
+                    {(() => {
+                      try {
+                        const parsed = JSON.parse(selectedLog.details || '{}');
+                        return JSON.stringify(parsed, null, 2);
+                      } catch {
+                        return selectedLog.details || 'Sin detalles adicionales';
+                      }
+                    })()}
+                  </pre>
+                </div>
+
+                {(selectedLog.ip_address || selectedLog.user_agent) && (
+                  <div className="pt-4 border-t border-white/10 grid grid-cols-1 gap-4">
+                    <div className="flex items-center gap-2 text-xs text-white/40">
+                      <Activity className="size-3" />
+                      <span>IP: {selectedLog.ip_address || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-[10px] text-white/30 font-mono">
+                      <span className="shrink-0">User Agent:</span>
+                      <span className="break-all">{selectedLog.user_agent || 'N/A'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 border-t border-white/10 flex justify-end bg-white/5">
+                <Button 
+                  onClick={() => setSelectedLog(null)}
+                  className="glass-btn-primary rounded-full px-8"
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Logs Table */}
       <AnimatePresence mode="wait">
@@ -275,7 +369,8 @@ export function AuditLogs() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.03 }}
-                      className="border-border/30 hover:bg-muted/50 transition-colors"
+                      className="border-border/30 hover:bg-teal-500/5 transition-colors cursor-pointer"
+                      onClick={() => setSelectedLog(log)}
                     >
                       <TableCell>
                         <div className="flex items-center gap-2">

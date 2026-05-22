@@ -157,8 +157,12 @@ export function MapViewInner({
       });
 
       map.on('error', (e) => {
-        console.error('MapLibre error:', e);
-        setMapError('Error al cargar el mapa');
+        // Ignore normal tile or source loading errors so they don't crash the UI map container
+        const isFatal = e.error?.message?.includes('style') || e.error?.message?.includes('initialize');
+        if (isFatal) {
+          setMapError('Error al cargar el estilo del mapa');
+        }
+        console.warn('MapLibre tile/style warning:', e);
       });
 
       mapRef.current = map;

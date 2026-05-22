@@ -350,7 +350,7 @@ export function Consultation() {
                 variant="outline"
                 className="w-full rounded-xl gap-2 mt-2 bg-green-500/10 hover:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/20"
                 onClick={() => {
-                  const phone = patient?.phone || patientProfile?.emergency_phone;
+                  const phone = patient?.phone;
                   if (!phone) {
                     setNotification({ type: 'error', message: 'El paciente no tiene número de teléfono registrado' });
                     return;

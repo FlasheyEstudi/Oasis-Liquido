@@ -34,6 +34,9 @@ export const POST = withAuth(async (req: AuthenticatedRequest, context: any) => 
     if (error.message?.startsWith('INSUFFICIENT_STOCK')) {
       return errorResponse(ErrorCodes.INSUFFICIENT_STOCK, 'Stock insuficiente', 400);
     }
+    if (error.message === 'INSUFFICIENT_PAYMENT') {
+      return errorResponse(ErrorCodes.VALIDATION_ERROR, 'El monto total de los pagos no cubre el total de la venta', 400);
+    }
     if (error.message === 'NOT_FOUND') {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Farmacia no encontrada', 404);
     }

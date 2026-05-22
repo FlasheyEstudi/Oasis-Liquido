@@ -608,3 +608,257 @@
   50% { transform: scale(1); opacity: 0.5; }
   100% { transform: scale(1.5); opacity: 0; }
 }
+
+/* ============================================
+   OASIS — Technical Document V3.0 CSS Layer
+   Clean, responsive, flat classes backed by Liquid Glass 2.0
+   ============================================ */
+
+.card {
+  background: var(--card);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .card::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0D9488, #06B6D4);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25);
+  transition: all 0.2s ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+  background: linear-gradient(135deg, #0F766E, #0891B2);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+}
+
+.dark .btn-primary {
+  background: linear-gradient(135deg, #14B8A6, #22D3EE);
+  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.2);
+  color: #050505;
+}
+
+.dark .btn-primary:hover {
+  background: linear-gradient(135deg, #0D9488, #06B6D4);
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(13, 148, 136, 0.08);
+  color: #0D9488;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  border: 1px solid rgba(13, 148, 136, 0.15);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-secondary:hover {
+  background: rgba(13, 148, 136, 0.12);
+  transform: translateY(-1px);
+}
+
+.dark .btn-secondary {
+  background: rgba(20, 184, 166, 0.08);
+  color: #14B8A6;
+  border-color: rgba(20, 184, 166, 0.12);
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: var(--foreground);
+  transition: all 0.2s ease-out;
+}
+
+.input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.55);
+  border-color: #0D9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08);
+}
+
+.dark .input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #14B8A6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--muted);
+  border-radius: 8px;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    95deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+  animation: shimmer-diagonal 1.8s ease-in-out infinite;
+}
+
+.dark .skeleton::after {
+  background: linear-gradient(
+    95deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 70%
+  );
+}
+
+.notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 16px;
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-left: 4px solid #0D9488;
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.08),
+    0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 9999;
+}
+
+.dark .notification {
+  border-left-color: #14B8A6;
+}
+
+.map-container {
+  height: 400px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+/* ============================================
+   OASIS — Elderly Mode (Modo Mayor) Styling
+   Reactively increases UI scale and font hierarchy globally
+   ============================================ */
+
+html.elderly-mode {
+  font-size: 118% !important;
+}
+
+html.elderly-mode p,
+html.elderly-mode span,
+html.elderly-mode li,
+html.elderly-mode td,
+html.elderly-mode th,
+html.elderly-mode label {
+  font-size: 1.05rem !important;
+  line-height: 1.6 !important;
+}
+
+html.elderly-mode h1,
+html.elderly-mode .h1 {
+  font-size: 2.5rem !important;
+  font-weight: 800 !important;
+}
+
+html.elderly-mode h2,
+html.elderly-mode .h2 {
+  font-size: 2rem !important;
+  font-weight: 750 !important;
+}
+
+html.elderly-mode h3,
+html.elderly-mode .h3 {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+html.elderly-mode button,
+html.elderly-mode .btn,
+html.elderly-mode input,
+html.elderly-mode textarea,
+html.elderly-mode select {
+  font-size: 1.1rem !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  min-height: 48px !important;
+}
+
+html.elderly-mode svg {
+  transform: scale(1.2);
+  transition: transform 0.2s ease;
+}

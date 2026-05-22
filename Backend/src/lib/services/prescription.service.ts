@@ -1,9 +1,33 @@
-// OASIS - Prescription Service
-// Create, validate, fulfill prescriptions
-
 import { db } from '@/lib/db';
 import { createAuditLog } from './audit.service';
 import crypto from 'crypto';
+
+function mapPrescription(presc: any) {
+  if (!presc) return null;
+  return {
+    ...presc,
+    patient_id: presc.patientId,
+    doctor_id: presc.doctorId,
+    clinic_id: presc.clinicId,
+    appointment_id: presc.appointmentId,
+    qr_code_data: presc.qrCode,
+    issue_date: presc.issuedAt ? presc.issuedAt.toISOString() : undefined,
+    expiration_date: presc.expirationDate,
+    updated_at: presc.updatedAt ? presc.updatedAt.toISOString() : undefined,
+    lines: presc.prescriptionLines ? presc.prescriptionLines.map((line: any) => ({
+      ...line,
+      id: line.id,
+      prescription_id: line.prescriptionId,
+      medicine_id: line.medicineId,
+      quantity: line.quantity,
+      quantity_fulfilled: line.quantityFulfilled,
+      dosage_instructions: line.dosageInstructions,
+      createdAt: line.createdAt,
+      updatedAt: line.updatedAt,
+      medicine: line.medicine
+    })) : undefined
+  };
+}
 
 /**
  * Get prescriptions with role-based filtering
@@ -49,14 +73,14 @@ export async function getPrescriptions(filters: {
     db.prescription.count({ where }),
   ]);
 
-  return { data, total };
+  return { data: data.map(mapPrescription), total };
 }
 
 /**
  * Get single prescription with full details
  */
 export async function getPrescription(id: string) {
-  return db.prescription.findUnique({
+  const presc = await db.prescription.findUnique({
     where: { id },
     include: {
       patient: { select: { id: true, name: true, email: true, patientProfile: true } },
@@ -66,6 +90,7 @@ export async function getPrescription(id: string) {
       fulfilledPharmacy: { select: { id: true, name: true } },
     },
   });
+  return mapPrescription(presc);
 }
 
 /**
@@ -125,7 +150,55 @@ export async function createPrescription(
     userAgent,
   });
 
-  return prescription;
+  return mapPrescription(prescription);
+}
+/**
+ * Update a prescription (only if draft)
+ */
+export async function updatePrescription(
+  id: string,
+  data: {
+    expiration_date?: string;
+    notes?: string;
+    lines?: Array<{
+      medicine_id: string;
+      quantity: number;
+      dosage_instructions: string;
+    }>;
+  },
+  userId: string
+) {
+  const existing = await db.prescription.findUnique({
+    where: { id },
+  });
+
+  if (!existing) throw new Error('NOT_FOUND');
+  
+  // CRITICAL: Prevent editing signed prescriptions
+  if (existing.status !== 'draft') {
+    throw new Error('SIGNED_PRESCRIPTION_CANNOT_BE_EDITED');
+  }
+
+  const updated = await db.prescription.update({
+    where: { id },
+    data: {
+      expirationDate: data.expiration_date,
+      notes: data.notes,
+      prescriptionLines: data.lines ? {
+        deleteMany: {},
+        create: data.lines.map((line) => ({
+          medicineId: line.medicine_id,
+          quantity: line.quantity,
+          dosageInstructions: line.dosage_instructions,
+        })),
+      } : undefined,
+    },
+    include: {
+      prescriptionLines: { include: { medicine: true } },
+    },
+  });
+
+  return mapPrescription(updated);
 }
 
 /**
@@ -163,7 +236,7 @@ export async function validatePrescription(qrData: string) {
     throw new Error('PRESCRIPTION_FULFILLED');
   }
 
-  return prescription;
+  return mapPrescription(prescription);
 }
 
 /**
@@ -275,6 +348,6 @@ export async function fulfillPrescription(
       userAgent,
     });
 
-    return updated;
+    return mapPrescription(updated);
   });
 }

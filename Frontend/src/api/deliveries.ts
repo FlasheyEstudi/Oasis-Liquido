@@ -21,6 +21,8 @@ import type {
 export interface DeliveryListParams {
   status?: string;
   driver_id?: string;
+  delivery_driver_id?: string;
+  patient_id?: string;
   pharmacy_id?: string;
   date_from?: string;
   page?: number;

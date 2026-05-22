@@ -357,3 +357,38 @@ export async function changePassword(
 
   return { message: 'Contraseña actualizada' };
 }
+
+/**
+ * Update FCM token
+ */
+export async function updateFcmToken(
+  userId: string,
+  token: string | null,
+  ipAddress?: string,
+  userAgent?: string
+) {
+  const user = await db.user.update({
+    where: { id: userId },
+    data: { fcmToken: token },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      fcmToken: true,
+    },
+  });
+
+  // Audit log
+  await createAuditLog({
+    userId,
+    action: 'update',
+    entityType: 'user',
+    entityId: userId,
+    details: JSON.stringify({ updated: 'fcm_token', hasToken: !!token }),
+    ipAddress,
+    userAgent,
+  });
+
+  return user;
+}

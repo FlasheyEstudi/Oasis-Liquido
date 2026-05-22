@@ -54,7 +54,7 @@ const fadeInUp = {
 };
 
 export function NewAppointment() {
-  const { navigate, setNotification } = useAuthStore();
+  const { representedUser, navigate, setNotification } = useAuthStore();
   const [step, setStep] = useState(1);
 
   // Step 1: Clinic
@@ -128,12 +128,18 @@ export function NewAppointment() {
       const dateTime = new Date(selectedDate);
       dateTime.setHours(hours, minutes, 0, 0);
 
-      await createMutation.mutateAsync({
+      const payload: any = {
         doctor_id: selectedDoctorId,
         clinic_id: selectedClinicId,
         date_time: dateTime.toISOString(),
         duration_minutes: 30,
-      });
+      };
+
+      if (representedUser) {
+        payload.patient_id = representedUser.id;
+      }
+
+      await createMutation.mutateAsync(payload);
 
       setNotification({ type: 'success', message: 'Cita agendada correctamente' });
       navigate('appointments');

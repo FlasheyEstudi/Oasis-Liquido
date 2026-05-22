@@ -267,7 +267,47 @@ export function PharmacyMap() {
                             </p>
                           )}
 
-                          {/* Available medicines */}
+                          {/* Available medicines & Smart Stock Indicators */}
+                          {prescription && (
+                            <div className="mt-2 space-y-2">
+                              {(() => {
+                                const matchedCount = pharmacy.matchedMedicinesCount || 0;
+                                const totalNeeded = medicineIds?.length || 0;
+                                const isFullMatch = matchedCount === totalNeeded && totalNeeded > 0;
+                                
+                                return (
+                                  <>
+                                    <div className={cn(
+                                      "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider",
+                                      isFullMatch 
+                                        ? "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/30"
+                                        : matchedCount > 0
+                                          ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                                          : "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30"
+                                    )}>
+                                      {isFullMatch ? (
+                                        <CheckCircle2 className="size-3.5" />
+                                      ) : (
+                                        <AlertCircle className="size-3.5" />
+                                      )}
+                                      {isFullMatch 
+                                        ? "STOCK COMPLETO DISPONIBLE" 
+                                        : matchedCount > 0 
+                                          ? `STOCK PARCIAL: ${matchedCount} de ${totalNeeded} medicamentos`
+                                          : "SIN STOCK DE MEDICAMENTOS"}
+                                    </div>
+                                    
+                                    {matchedCount > 0 && matchedCount < totalNeeded && (
+                                      <p className="text-[10px] text-amber-600 dark:text-amber-400 italic">
+                                        Tip: Puedes dividir tu receta en dos pedidos si ninguna farmacia tiene todo.
+                                      </p>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          )}
+
                           {pharmacy.available_medicines && pharmacy.available_medicines.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
                               {pharmacy.available_medicines.map((med) => (
@@ -275,7 +315,7 @@ export function PharmacyMap() {
                                   key={med.medicine_id}
                                   className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20"
                                 >
-                                  {getMedicineName(med.medicine_id)} · Stock: {med.stock} · {formatCurrency(med.price)}
+                                  {getMedicineName(med.medicine_id)} · {formatCurrency(med.price)}
                                 </span>
                               ))}
                             </div>

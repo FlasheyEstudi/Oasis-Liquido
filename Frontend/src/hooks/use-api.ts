@@ -24,6 +24,8 @@ import * as usersApi from '@/api/users';
 import * as adminApi from '@/api/admin';
 import * as chatsApi from '@/api/chats';
 import * as reviewsApi from '@/api/reviews';
+import * as familyApi from '@/api/family';
+import * as invitationsApi from '@/api/invitations';
 
 // --- Type Imports ---
 import type {
@@ -70,6 +72,18 @@ export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+}
+
+/** Demo login mutation */
+export function useDemoLogin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (role: string) => authApi.demoLogin(role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
@@ -136,6 +150,41 @@ export function useUpdatePatientProfile() {
     mutationFn: (data: UpdatePatientProfileRequest) => authApi.updatePatientProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+}
+
+// ============================================
+// FAMILY / CAREGIVER HOOKS
+// ============================================
+
+/** Get family list */
+export function useFamily(enabled = true) {
+  return useQuery({
+    queryKey: ['family'],
+    queryFn: () => familyApi.getFamily(),
+    enabled,
+  });
+}
+
+/** Create family relationship */
+export function useCreateFamily() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: familyApi.CreateFamilyRequest) => familyApi.createFamily(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['family'] });
+    },
+  });
+}
+
+/** Delete family relationship */
+export function useDeleteFamily() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => familyApi.deleteFamily(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['family'] });
     },
   });
 }
@@ -461,11 +510,11 @@ export function useInventoryMovements(pharmacyId: string, params?: any) {
 // DELIVERY HOOKS
 // ============================================
 
-/** List delivery orders */
-export function useDeliveryOrders(params?: DeliveryListParams) {
+export function useDeliveryOrders(params?: DeliveryListParams, enabled = true) {
   return useQuery({
     queryKey: ['delivery-orders', params],
     queryFn: () => deliveriesApi.list(params),
+    enabled,
   });
 }
 
@@ -530,7 +579,6 @@ export function useDeliveryOrderTracking(id: string) {
   return useQuery({
     queryKey: ['delivery-orders', id, 'tracking'],
     queryFn: () => deliveriesApi.getById(id),
-    refetchInterval: DELIVERY_POLLING_INTERVAL,
     enabled: !!id,
   });
 }
@@ -617,7 +665,6 @@ export function useChatMessages(sessionId: string) {
     queryKey: ['chats', 'messages', sessionId],
     queryFn: () => chatsApi.getSessionMessages(sessionId),
     enabled: !!sessionId,
-    refetchInterval: 3000, // Poll for new messages every 3s
   });
 }
 
@@ -673,6 +720,107 @@ export function useReviewStats(params?: any) {
   return useQuery({
     queryKey: ['reviews', 'stats', params],
     queryFn: () => reviewsApi.getStats(params),
+  });
+}
+
+// ============================================
+// INVITATION & WORKER HOOKS
+// ============================================
+
+/** Get clinic workers */
+export function useClinicWorkers(clinicId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['clinics', clinicId, 'workers'],
+    queryFn: () => invitationsApi.listClinicWorkers(clinicId),
+    enabled: !!clinicId && enabled,
+  });
+}
+
+/** Get pharmacy workers */
+export function usePharmacyWorkers(pharmacyId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['pharmacies', pharmacyId, 'workers'],
+    queryFn: () => invitationsApi.listPharmacyWorkers(pharmacyId),
+    enabled: !!pharmacyId && enabled,
+  });
+}
+
+/** Invite a doctor */
+export function useInviteDoctor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ clinicId, email }: { clinicId: string; email: string }) =>
+      invitationsApi.inviteDoctor(clinicId, email),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['clinics', variables.clinicId, 'workers'] });
+    },
+  });
+}
+
+/** Invite a receptionist */
+export function useInviteReceptionist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ clinicId, email }: { clinicId: string; email: string }) =>
+      invitationsApi.inviteReceptionist(clinicId, email),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['clinics', variables.clinicId, 'workers'] });
+    },
+  });
+}
+
+/** Invite a cashier */
+export function useInviteCashier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pharmacyId, email }: { pharmacyId: string; email: string }) =>
+      invitationsApi.inviteCashier(pharmacyId, email),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['pharmacies', variables.pharmacyId, 'workers'] });
+    },
+  });
+}
+
+/** Invite a delivery driver */
+export function useInviteDriver() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pharmacyId, email }: { pharmacyId: string; email: string }) =>
+      invitationsApi.inviteDriver(pharmacyId, email),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['pharmacies', variables.pharmacyId, 'workers'] });
+    },
+  });
+}
+
+/** Change worker active status */
+export function useChangeWorkerStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ workerId, isActive }: { workerId: string; isActive: boolean }) =>
+      invitationsApi.changeWorkerStatus(workerId, isActive),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['pharmacies'] });
+    },
+  });
+}
+
+/** Get invitation by token */
+export function useInvitation(token: string, enabled = true) {
+  return useQuery({
+    queryKey: ['invitations', token],
+    queryFn: () => invitationsApi.getInvitation(token),
+    enabled: !!token && enabled,
+    retry: false,
+  });
+}
+
+/** Accept invitation */
+export function useAcceptInvitation() {
+  return useMutation({
+    mutationFn: ({ token, name, password }: { token: string; name: string; password?: string }) =>
+      invitationsApi.acceptInvitation(token, { name, password }),
   });
 }
 

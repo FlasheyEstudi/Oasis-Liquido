@@ -33,3 +33,23 @@ export const GET = withAuth(
     }
   }
 );
+export const PATCH = withAuth(
+  async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+    try {
+      const { id } = await context.params;
+      const body = await req.json();
+
+      const updated = await prescriptionService.updatePrescription(id, body, req.user.userId);
+      return successResponse(updated, 'Receta actualizada exitosamente');
+    } catch (error: any) {
+      if (error.message === 'SIGNED_PRESCRIPTION_CANNOT_BE_EDITED') {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'No se puede editar una receta que ya ha sido firmada', 403);
+      }
+      if (error.message === 'NOT_FOUND') {
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Receta no encontrada', 404);
+      }
+      return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error al actualizar la receta', 500);
+    }
+  },
+  { roles: ['doctor', 'admin'] }
+);

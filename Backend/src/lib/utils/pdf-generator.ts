@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import QRCode from 'qrcode';
 
 export interface PDFReceiptData {
   id: string;
@@ -74,13 +75,18 @@ export async function generateReceiptPDF(data: PDFReceiptData): Promise<Buffer> 
   try {
     // Point to the verification page
     const verifyUrl = `https://oasis-aura.com/%23verify-sale-${data.id}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`;
-    const qrResponse = await fetch(qrUrl);
-    if (qrResponse.ok) {
-      const qrArrayBuffer = await qrResponse.arrayBuffer();
-      const qrUint8 = new Uint8Array(qrArrayBuffer);
-      doc.addImage(qrUint8, 'PNG', 30, finalTableY + 12, 20, 20);
-    }
+    
+    // Use local qrcode library instead of external API
+    const qrBase64 = await QRCode.toDataURL(verifyUrl, {
+      margin: 1,
+      width: 150,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      }
+    });
+    
+    doc.addImage(qrBase64, 'PNG', 30, finalTableY + 12, 20, 20);
   } catch (err) {
     console.error("QR Code generation failed:", err);
   }

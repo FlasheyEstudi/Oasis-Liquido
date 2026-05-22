@@ -38,7 +38,7 @@ const fadeUp = {
 };
 
 export function PharmacyDashboard() {
-  const { user, navigate } = useAuthStore();
+  const { user, navigate, setNotification } = useAuthStore();
   const pharmacyId = 
     user?.pharmacy_manager_profile?.pharmacy_id || 
     (user as any)?.pharmacyManagerProfile?.pharmacyId || 

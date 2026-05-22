@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { getSocket, joinOrderRoom } from '@/lib/socket';
+import { useEffect } from 'react';
 import {
   useDeliveryOrders,
   useDeliveryOrderTracking,
@@ -125,6 +127,28 @@ function OrderDetail({ order }: { order: DeliveryOrder }) {
   const currentOrder = trackingQuery.data ?? order;
   const route = routeQuery.data;
 
+  // Real-time driver location state
+  const [driverLocation, setDriverLocation] = useState<{ lat: number, lng: number } | null>(null);
+
+  useEffect(() => {
+    if (isActive) {
+      joinOrderRoom(order.id);
+      const socket = getSocket();
+
+      const handleLocationUpdate = (data: { orderId: string, lat: number, lng: number }) => {
+        if (data.orderId === order.id) {
+          setDriverLocation({ lat: data.lat, lng: data.lng });
+        }
+      };
+
+      socket.on('delivery:locationUpdate', handleLocationUpdate);
+      
+      return () => {
+        socket.off('delivery:locationUpdate', handleLocationUpdate);
+      };
+    }
+  }, [order.id, isActive]);
+
   // Build map markers
   const mapMarkers = useMemo(() => {
     const markers: MapMarker[] = [];
@@ -148,11 +172,14 @@ function OrderDetail({ order }: { order: DeliveryOrder }) {
     }
     // Add driver marker if in transit
     const driverProfile = currentOrder.driver?.delivery_driver_profile || (currentOrder.driver as any)?.deliveryDriverProfile;
-    if (isActive && driverProfile?.current_lat && driverProfile?.current_lng) {
+    const lat = driverLocation?.lat || driverProfile?.current_lat;
+    const lng = driverLocation?.lng || driverProfile?.current_lng;
+
+    if (isActive && lat && lng) {
       markers.push({
         id: `driver-${currentOrder.id}`,
-        lat: driverProfile.current_lat,
-        lng: driverProfile.current_lng,
+        lat,
+        lng,
         type: 'driver',
         label: currentOrder.driver?.name || 'Repartidor',
       });

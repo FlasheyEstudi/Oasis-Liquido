@@ -3,6 +3,7 @@
 
 import { db } from '@/lib/db';
 import { createAuditLog } from './audit.service';
+import { sendPushNotification } from '@/lib/fcm';
 
 /**
  * Create a sale - decrements inventory and optionally creates delivery order
@@ -19,6 +20,7 @@ export async function createSale(
     notes?: string;
     appointment_id?: string;
     clinic_id?: string;
+    payments?: Array<{ amount: number; method: string; currency?: string; transaction_id?: string }>;
   },
   patientId?: string,
   creatorId?: string,
@@ -61,6 +63,16 @@ export async function createSale(
     }
   }
 
+  // Validate split payments cover the total and calculate change (vuelto)
+  let changeAmount = 0;
+  if (data.payments && data.payments.length > 0) {
+    const paidTotal = data.payments.reduce((sum, p) => sum + p.amount, 0);
+    if (paidTotal < totalAmount) {
+      throw new Error('INSUFFICIENT_PAYMENT');
+    }
+    changeAmount = paidTotal - totalAmount;
+  }
+
   // Create sale in transaction
   const sale = await db.sale.create({
     data: {
@@ -82,6 +94,26 @@ export async function createSale(
           unitPrice: item.unit_price,
         })),
       },
+      payments: {
+        create: data.payments && data.payments.length > 0
+          ? data.payments.map((p) => ({
+              amount: p.amount,
+              method: p.method,
+              currency: p.currency || 'NIO',
+              status: 'completed',
+              transactionId: p.transaction_id || null,
+              notes: p.method === 'cash' && changeAmount > 0 ? `Vuelto/Cambio: C$${changeAmount.toFixed(2)}` : null,
+            }))
+          : [
+              {
+                amount: totalAmount,
+                method: 'cash',
+                currency: 'NIO',
+                status: 'completed',
+                notes: null,
+              },
+            ],
+      },
     },
     include: {
       saleItems: { include: { medicine: true } },
@@ -89,14 +121,37 @@ export async function createSale(
     },
   });
 
-  // Decrement inventory only for pharmacy sales
+  // Decrement inventory only for pharmacy sales using FEFO
   if (pharmacyId && !data.clinic_id) {
     for (const item of data.items) {
       const inventoryItem = await db.inventory.findFirst({
         where: { pharmacyId, medicineId: item.medicine_id },
+        include: {
+          batches: {
+            where: { quantity: { gt: 0 } },
+            orderBy: { expirationDate: 'asc' },
+          }
+        }
       });
 
       if (inventoryItem) {
+        let remainingToDiscount = item.quantity;
+
+        // FEFO: Discount from batches
+        for (const batch of inventoryItem.batches) {
+          if (remainingToDiscount <= 0) break;
+
+          const discountFromBatch = Math.min(batch.quantity, remainingToDiscount);
+          
+          await db.inventoryBatch.update({
+            where: { id: batch.id },
+            data: { quantity: batch.quantity - discountFromBatch }
+          });
+
+          remainingToDiscount -= discountFromBatch;
+        }
+
+        // Update total inventory quantity
         await db.inventory.update({
           where: { id: inventoryItem.id },
           data: { quantity: inventoryItem.quantity - item.quantity },
@@ -109,7 +164,7 @@ export async function createSale(
             userId: creatorId || patientId || 'system',
             quantityChange: -item.quantity,
             type: 'sale',
-            reason: `Venta #${sale.id.slice(-6)}`,
+            reason: `Venta #${sale.id.slice(-6)} (FEFO applied)`,
           }
         });
       }
@@ -143,6 +198,7 @@ export async function createSale(
       saleItems: { include: { medicine: true } },
       pharmacy: true,
       deliveryOrder: true,
+      payments: true,
     },
   });
 
@@ -153,7 +209,27 @@ export async function createSale(
     entityId: sale.id,
     ipAddress,
     userAgent,
+    details: JSON.stringify({
+      totalAmount,
+      paidAmount: data.payments ? data.payments.reduce((sum, p) => sum + p.amount, 0) : totalAmount,
+      change: changeAmount,
+      payments: data.payments || [{ amount: totalAmount, method: 'cash' }],
+    }),
   });
+
+  // PUSH NOTIFICATIONS: Notify patient of delivery confirmation
+  if (data.is_delivery && patientId) {
+    try {
+      await sendPushNotification(
+        patientId,
+        '🛒 Pedido Confirmado',
+        `Tu pedido por C$${totalAmount.toFixed(2)} ha sido registrado y está siendo preparado.`,
+        { type: 'sale_created', saleId: sale.id }
+      );
+    } catch (error) {
+      console.error('❌ Error sending sale confirmation push notification:', error);
+    }
+  }
 
   return result;
 }

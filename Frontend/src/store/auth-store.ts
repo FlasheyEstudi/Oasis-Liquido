@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import type { User, AppPage, UserRole } from '@/types';
-import { setAccessToken, clearAuthTokens } from '@/api/client';
+import { setAccessToken, getAccessToken, clearAuthTokens } from '@/api/client';
 import { getMe, refreshToken } from '@/api/auth';
 
 interface AuthState {
@@ -18,6 +18,10 @@ interface AuthState {
   selectedItemId: string | null;
   notification: { type: 'success' | 'error' | 'warning' | 'info'; message: string } | null;
 
+  representedUser: User | null;
+  originalAccessToken: string | null;
+  isElderlyMode: boolean;
+
   // Acciones
   setUser: (user: User | null) => void;
   login: (user: User, accessToken: string) => void;
@@ -26,6 +30,8 @@ interface AuthState {
   navigate: (page: AppPage, itemId?: string | null) => void;
   setNotification: (notification: { type: 'success' | 'error' | 'warning' | 'info'; message: string } | null) => void;
   hydrate: () => Promise<void>;
+  setRepresentedUser: (user: User | null) => void;
+  toggleElderlyMode: () => void;
 
   // Helpers
   getRoleHome: () => AppPage;
@@ -35,6 +41,10 @@ interface AuthState {
 function getHomeForRole(role: UserRole): AppPage {
   switch (role) {
     case 'admin': return 'inicio';
+    case 'clinic_admin':
+    case 'clinic_owner': return 'gestionar-clinicas';
+    case 'pharmacy_admin':
+    case 'pharmacy_owner': return 'gestionar-farmacias';
     case 'doctor': return 'inicio';
     case 'receptionist': return 'inicio';
     case 'patient': return 'inicio';
@@ -53,6 +63,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   currentPage: 'bienvenida',
   selectedItemId: null,
   notification: null,
+  representedUser: null,
+  originalAccessToken: null,
+  isElderlyMode: false,
 
   setUser: (user) => set({ user, isAuthenticated: !!user }),
 
@@ -77,7 +90,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       currentPage: 'bienvenida',
       selectedItemId: null,
       notification: null,
+      representedUser: null,
     });
+    if (typeof window !== 'undefined') {
+      document.documentElement.classList.remove('elderly-mode');
+    }
   },
 
   setLoading: (isLoading) => set({ isLoading }),
@@ -92,6 +109,58 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       setTimeout(() => {
         set({ notification: null });
       }, 4000);
+    }
+  },
+
+  setRepresentedUser: async (representedUser) => {
+    const { originalAccessToken } = get();
+
+    if (!representedUser) {
+      // Restore original caregiver user token
+      if (originalAccessToken) {
+        setAccessToken(originalAccessToken);
+      }
+      set({ representedUser: null, originalAccessToken: null });
+      return;
+    }
+
+    try {
+      set({ isLoading: true });
+
+      // Dynamically load family api to avoid circular dependency
+      const { actAsFamily } = await import('@/api/family');
+      const res = await actAsFamily(representedUser.id);
+
+      // Save current caregiver token if not already in memory
+      const currentToken = getAccessToken();
+      const savedToken = originalAccessToken || currentToken;
+
+      setAccessToken(res.token);
+      set({
+        representedUser: {
+          ...representedUser,
+          id: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+        },
+        originalAccessToken: savedToken,
+        isLoading: false,
+      });
+    } catch (err) {
+      console.error('Error switching representation context:', err);
+      set({ isLoading: false });
+    }
+  },
+
+  toggleElderlyMode: () => {
+    const next = !get().isElderlyMode;
+    set({ isElderlyMode: next });
+    if (typeof window !== 'undefined') {
+      if (next) {
+        document.documentElement.classList.add('elderly-mode');
+      } else {
+        document.documentElement.classList.remove('elderly-mode');
+      }
     }
   },
 

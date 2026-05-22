@@ -1,5 +1,6 @@
 'use client';
 
+import { QRCodeSVG } from 'qrcode.react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -12,8 +13,6 @@ interface QrCodeProps {
 }
 
 export function QrCode({ value, size = 150, label = 'Código QR', className, showValue = true }: QrCodeProps) {
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}&bgcolor=ffffff`;
-
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -36,15 +35,14 @@ export function QrCode({ value, size = 150, label = 'Código QR', className, sho
           />
           
           <div 
-            className="relative flex items-center justify-center bg-white rounded-xl overflow-hidden"
+            className="relative flex items-center justify-center bg-white rounded-xl overflow-hidden p-2"
             style={{ width: size, height: size }}
           >
-            <img 
-              src={qrUrl} 
-              alt="QR Code" 
-              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal"
-              onLoad={(e) => (e.currentTarget.style.opacity = '1')}
-              style={{ opacity: 0, transition: 'opacity 0.5s ease-in-out' }}
+            <QRCodeSVG 
+              value={value}
+              size={size - 16}
+              level="H"
+              includeMargin={false}
             />
             
             {/* Corner Accents */}
