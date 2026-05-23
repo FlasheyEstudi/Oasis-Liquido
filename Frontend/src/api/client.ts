@@ -14,9 +14,13 @@ import axios, {
   type InternalAxiosRequestConfig 
 } from 'axios';
 
+import { getDynamicUrl } from '@/utils/constants';
+
 // Config values (fallback to defaults if constants are missing)
 // Use the environment variable, falling back to localhost
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = typeof window !== 'undefined'
+  ? getDynamicUrl(process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000')
+  : (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000');
 const API_PREFIX = '/api/v1';
 
 /**
@@ -77,6 +81,14 @@ const apiClient = axios.create({
 // --- Request Interceptor: Inject Bearer token ---
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Dynamic URL rewrite for other local network devices
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const isLocalIP = hostname.match(/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/) || hostname.includes('127.0.0.1');
+      if (isLocalIP && config.baseURL && config.baseURL.includes('localhost')) {
+        config.baseURL = config.baseURL.replace('localhost', hostname);
+      }
+    }
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }

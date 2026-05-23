@@ -90,20 +90,20 @@ export function DriverDashboard() {
     >
       {/* Driver Status Card */}
       <motion.div variants={fadeUp}>
-        <GlassCard className="bg-zinc-900 border-zinc-800 shadow-2xl relative overflow-hidden">
+        <GlassCard className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 shadow-2xl relative overflow-hidden transition-colors duration-300">
           <div className="absolute top-0 right-0 p-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/30">
-              <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/30">
+              <div className="size-1.5 rounded-full bg-emerald-600 dark:bg-emerald-500 animate-pulse" />
               En Línea
             </div>
           </div>
           
           <div className="flex items-center justify-between mt-4">
             <div>
-              <h1 className="text-3xl font-black text-white tracking-tight">Hola, {firstName}</h1>
-              <p className="text-zinc-400 text-sm font-medium mt-1">Tu oasis de hoy: <span className="text-teal-400">{orders.length} entregas</span></p>
+              <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Hola, {firstName}</h1>
+              <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mt-1">Tu oasis de hoy: <span className="text-teal-600 dark:text-teal-400">{orders.length} entregas</span></p>
             </div>
-            <button className="size-14 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-500 border border-red-500/30 active:scale-95 transition-transform">
+            <button className="size-14 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-500 border border-red-500/30 active:scale-95 transition-transform">
               <Phone className="size-7" />
             </button>
           </div>
@@ -121,8 +121,8 @@ export function DriverDashboard() {
 
         {orders.length === 0 ? (
           <GlassCard className="py-20 text-center opacity-60">
-            <PackageCheck className="size-12 mx-auto mb-4 text-zinc-300" />
-            <p className="font-medium">No hay entregas pendientes</p>
+            <PackageCheck className="size-12 mx-auto mb-4 text-slate-400 dark:text-zinc-300" />
+            <p className="font-medium text-slate-800 dark:text-white">No hay entregas pendientes</p>
             <p className="text-xs text-muted-foreground mt-1">¡Buen trabajo! Disfruta tu descanso.</p>
           </GlassCard>
         ) : (
@@ -193,32 +193,32 @@ export function DriverDashboard() {
       </div>
 
       {/* Recent Reviews */}
-      <GlassCard className="mt-4 bg-zinc-900 border-zinc-800">
+      <GlassCard className="mt-4 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 transition-colors duration-300">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-zinc-100 flex items-center gap-2 uppercase tracking-widest">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-100 flex items-center gap-2 uppercase tracking-widest">
             <Star className="size-4 text-amber-500" />
             Calificaciones del Cliente
           </h3>
-          <span className="text-[10px] text-zinc-500 font-bold">Últimas 5</span>
+          <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-bold">Últimas 5</span>
         </div>
 
         <div className="space-y-3">
           {reviewsLoading ? (
-            <div className="py-8 text-center text-xs text-zinc-500">Cargando reseñas...</div>
+            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-500">Cargando reseñas...</div>
           ) : reviews.length === 0 ? (
-            <div className="py-8 text-center text-xs text-zinc-500 italic">No hay calificaciones aún</div>
+            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-500 italic">No hay calificaciones aún</div>
           ) : (
             reviews.map((review: any) => (
-              <div key={review.id} className="p-4 rounded-2xl border border-zinc-800 bg-white/5 space-y-2">
+              <div key={review.id} className="p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-white/5 space-y-2 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map(s => (
-                      <Star key={s} className={cn("size-3", s <= review.rating ? "fill-amber-400 text-amber-400" : "text-zinc-700")} />
+                      <Star key={s} className={cn("size-3", s <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-300 dark:text-zinc-700")} />
                     ))}
                   </div>
-                  <span className="text-[10px] text-zinc-500">{timeAgo(review.createdAt)}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-500">{timeAgo(review.createdAt)}</span>
                 </div>
-                <p className="text-xs font-bold text-zinc-100 italic">"{review.comment}"</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-zinc-100 italic">"{review.comment}"</p>
               </div>
             ))
           )}

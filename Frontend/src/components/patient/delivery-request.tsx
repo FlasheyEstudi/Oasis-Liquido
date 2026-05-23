@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { useUserLocation } from '@/hooks/use-user-location';
 import {
   usePharmacy,
   useInventory,
   useMedicines,
   useCreateSale,
+  usePrescription,
   getHookErrorMessage,
 } from '@/hooks/use-api';
 import { formatCurrency } from '@/utils/helpers';
@@ -48,8 +50,11 @@ const fadeInUp = {
 };
 
 export function DeliveryRequest() {
-  const { selectedItemId, navigate, user, setNotification } = useAuthStore();
+  const { selectedItemId, prescriptionId, navigate, user, setNotification } = useAuthStore();
   const pharmacyId = selectedItemId;
+
+  // Fetch user location for auto-filling address
+  const userLoc = useUserLocation();
 
   // Fetch pharmacy data
   const pharmacyQuery = usePharmacy(pharmacyId ?? '', !!pharmacyId);
@@ -57,6 +62,9 @@ export function DeliveryRequest() {
   // Fetch inventory for the pharmacy
   const inventoryQuery = useInventory(pharmacyId ?? '', undefined, !!pharmacyId);
   const inventoryItems = inventoryQuery.data?.data ?? [];
+
+  // Fetch prescription context if available
+  const prescriptionQuery = usePrescription(prescriptionId ?? '', !!prescriptionId);
 
   // Fetch medicines catalog for search
   const [medicineSearch, setMedicineSearch] = useState('');
@@ -75,6 +83,33 @@ export function DeliveryRequest() {
 
   // Create sale mutation
   const createSaleMutation = useCreateSale();
+
+  // Auto-fill delivery address from user location when loaded
+  useEffect(() => {
+    if (!userLoc.loading && userLoc.address && !deliveryAddress) {
+      setDeliveryAddress(userLoc.address);
+      setDeliveryLat(userLoc.lat);
+      setDeliveryLng(userLoc.lng);
+    }
+  }, [userLoc.loading, userLoc.address, userLoc.lat, userLoc.lng, deliveryAddress]);
+
+  // Auto-populate prescribed items if prescriptionId context exists
+  useEffect(() => {
+    if (prescriptionQuery.data && orderItems.length === 0 && inventoryItems.length > 0) {
+      const items: OrderItem[] = (prescriptionQuery.data.lines ?? [])
+        .filter((line) => line.quantity > line.quantity_fulfilled)
+        .map((line) => {
+          const invItem = inventoryItems.find((inv) => inv.medicine.id === line.medicine_id);
+          return {
+            medicine_id: line.medicine_id,
+            name: line.medicine?.name || 'Medicamento',
+            quantity: line.quantity - line.quantity_fulfilled,
+            unit_price: invItem?.unitPrice ?? 0,
+          };
+        });
+      setOrderItems(items);
+    }
+  }, [prescriptionQuery.data, inventoryItems, orderItems.length]);
 
   if (!pharmacyId) {
     return (
@@ -166,6 +201,8 @@ export function DeliveryRequest() {
 
   const totalPrice = orderItems.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
 
+  const deliveryFee = (pharmacy as any)?.deliveryFee ?? 29.90;
+
   const handleSubmit = async () => {
     if (orderItems.length === 0) {
       setNotification({ type: 'warning', message: 'Agrega al menos un medicamento al pedido' });
@@ -186,14 +223,22 @@ export function DeliveryRequest() {
             unit_price: i.unit_price,
           })),
           patient_id: user?.id,
+          prescription_id: prescriptionId || undefined,
           is_delivery: true,
           delivery_address: deliveryAddress,
           delivery_lat: deliveryLat,
           delivery_lng: deliveryLng,
           notes: notes || undefined,
+          payments: [
+            {
+              amount: totalPrice + deliveryFee,
+              method: 'cash',
+            },
+          ],
         },
       });
       setNotification({ type: 'success', message: 'Pedido realizado con éxito' });
+      useAuthStore.getState().setPrescriptionId(null);
       setOrderConfirmed(true);
     } catch {
       setNotification({ type: 'error', message: 'No se pudo realizar el pedido. Intenta de nuevo.' });
@@ -201,15 +246,42 @@ export function DeliveryRequest() {
   };
 
   // Map markers for delivery address selection
-  const mapMarkers: MapMarker[] = deliveryAddress.trim()
-    ? [{ id: 'destination', lat: deliveryLat, lng: deliveryLng, type: 'destination' as const, label: 'Dirección de entrega' }]
-    : [];
+  const mapMarkers: MapMarker[] = [];
+  if (deliveryAddress.trim()) {
+    mapMarkers.push({
+      id: 'destination',
+      lat: deliveryLat,
+      lng: deliveryLng,
+      type: 'destination' as const,
+      label: 'Dirección de entrega',
+    });
+  }
+  if (pharmacy) {
+    mapMarkers.push({
+      id: 'pharmacy',
+      lat: pharmacy.latitude,
+      lng: pharmacy.longitude,
+      type: 'pharmacy' as const,
+      label: pharmacy.name,
+    });
+  }
+
+  const mapRoute = pharmacy && deliveryAddress.trim()
+    ? {
+        origin: `${deliveryLng},${deliveryLat}`,
+        destination: `${pharmacy.longitude},${pharmacy.latitude}`,
+      }
+    : null;
 
   if (pharmacyQuery.isLoading) {
     return (
       <div className="bento-grid">
-        <div className="col-span-8"><div className="shimmer rounded-3xl h-48" /></div>
-        <div className="col-span-4"><div className="shimmer rounded-3xl h-48" /></div>
+        <div className="col-span-12 lg:col-span-8">
+          <div className="shimmer rounded-3xl h-48" />
+        </div>
+        <div className="col-span-12 lg:col-span-4">
+          <div className="shimmer rounded-3xl h-48" />
+        </div>
         <div className="col-span-12"><div className="shimmer rounded-3xl h-32" /></div>
       </div>
     );
@@ -286,7 +358,7 @@ export function DeliveryRequest() {
     : searchMedicines;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-28">
       {/* Back button */}
       <div className="flex items-center gap-3">
         <Button
@@ -308,7 +380,7 @@ export function DeliveryRequest() {
 
       <div className="bento-grid">
         {/* Pharmacy info + Delivery Address + Map */}
-        <div className="col-span-6 space-y-4">
+        <div className="col-span-12 lg:col-span-6 space-y-4">
           {/* Pharmacy info */}
           <GlassCard>
             <div className="flex items-center gap-3">
@@ -340,6 +412,7 @@ export function DeliveryRequest() {
                 center={[deliveryLat, deliveryLng]}
                 height="180px"
                 showUserLocation
+                route={mapRoute}
               />
             </div>
           </GlassCard>
@@ -361,7 +434,7 @@ export function DeliveryRequest() {
         </div>
 
         {/* Product list + Summary */}
-        <div className="col-span-6 space-y-4">
+        <div className="col-span-12 lg:col-span-6 space-y-4">
           {/* Product List */}
           <GlassCard>
             <div className="flex items-center justify-between mb-3">
@@ -496,7 +569,7 @@ export function DeliveryRequest() {
                         </button>
                       </div>
                     </div>
-                    <p className="mt-1 text-right text-sm font-semibold text-teal-700 dark:text-teal-400">
+                    <p className="mt-1 text-right text-sm font-bold text-teal-600 dark:text-teal-400">
                       {formatCurrency(item.quantity * item.unit_price)}
                     </p>
                   </motion.div>
@@ -518,12 +591,12 @@ export function DeliveryRequest() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Envío a domicilio</span>
-                <span className="font-medium text-foreground">{formatCurrency(29.90)}</span>
+                <span className="font-medium text-foreground">{formatCurrency(deliveryFee)}</span>
               </div>
               <div className="border-t border-border pt-2">
                 <div className="flex justify-between text-base font-bold">
                   <span className="text-foreground">Total</span>
-                  <span className="text-teal-600 dark:text-teal-400">{formatCurrency(totalPrice + 29.90)}</span>
+                  <span className="text-teal-600 dark:text-teal-400">{formatCurrency(totalPrice + deliveryFee)}</span>
                 </div>
               </div>
             </div>

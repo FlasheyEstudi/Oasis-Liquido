@@ -12,9 +12,10 @@ import crypto from 'crypto';
  */
 export async function login(email: string, password: string, ipAddress?: string, userAgent?: string) {
   try {
+    const normalizedEmail = email.trim().toLowerCase();
     // Find user by email with profiles
     const user = await db.user.findUnique({ 
-      where: { email },
+      where: { email: normalizedEmail },
       include: {
         doctorProfile: true,
         receptionistProfile: true,

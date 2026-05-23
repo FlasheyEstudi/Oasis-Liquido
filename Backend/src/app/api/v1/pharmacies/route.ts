@@ -19,7 +19,11 @@ export async function GET(req: NextRequest) {
     // Parse optional numeric parameters
     const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : undefined;
     const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : undefined;
-    const radiusKm = searchParams.get('radius_km') ? parseFloat(searchParams.get('radius_km')!) : undefined;
+    const radiusKm = searchParams.get('radius_km') 
+      ? parseFloat(searchParams.get('radius_km')!) 
+      : searchParams.get('radius')
+      ? parseFloat(searchParams.get('radius')!)
+      : undefined;
 
     // Parse comma-separated medicine_ids into an array
     const medicineIdsParam = searchParams.get('medicine_ids');

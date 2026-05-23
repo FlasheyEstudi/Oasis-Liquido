@@ -4,7 +4,7 @@
 // ============================================
 
 // --- Enums / Union Types ---
-export type UserRole = 'admin' | 'doctor' | 'receptionist' | 'patient' | 'pharmacy_manager' | 'delivery_driver' | 'clinic_admin' | 'pharmacy_admin' | 'clinic_owner' | 'pharmacy_owner';
+export type UserRole = 'admin' | 'doctor' | 'receptionist' | 'patient' | 'pharmacy_manager' | 'delivery_driver' | 'clinic_admin' | 'pharmacy_admin';
 
 export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 
@@ -69,6 +69,9 @@ export interface User {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  verification_status?: 'pending' | 'submitted' | 'approved' | 'rejected';
+  verification_deadline?: string | null;
+  legal_documents?: string | null;
   // Perfiles anidados según rol
   doctor_profile?: DoctorProfile;
   patient_profile?: PatientProfile;
@@ -494,3 +497,47 @@ export type AppPage =
   | 'auditoria'
   | 'venta'
   | string; // Keep string for dynamic routes like verify-
+
+export interface DoctorDocument {
+  id: string;
+  doctorId: string;
+  type: string;
+  documentUrl: string;
+  expiryDate?: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  doctor?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+  };
+}
+
+export interface ClinicDocument {
+  id: string;
+  clinicId: string;
+  type: string;
+  documentUrl: string;
+  expiryDate?: string | null;
+  status: 'pending' | 'approved' | 'rejected' | 'expired';
+  rejectionReason?: string | null;
+  notes?: string | null;
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  clinic?: {
+    id: string;
+    name: string;
+    address: string;
+    phone?: string | null;
+  };
+  uploader?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}

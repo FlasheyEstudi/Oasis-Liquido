@@ -16,9 +16,10 @@ export async function POST(req: NextRequest) {
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Role is required', 400);
     }
 
-    // Find the first active user with this role
+    // Find the first active user with this role (oldest = seed user has data)
     const user = await db.user.findFirst({
       where: { role, isActive: true },
+      orderBy: { createdAt: 'asc' },
       include: {
         doctorProfile: true,
         receptionistProfile: true,

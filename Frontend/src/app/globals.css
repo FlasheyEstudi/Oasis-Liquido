@@ -525,6 +525,9 @@
   .bento-grid {
     grid-template-columns: 1fr;
   }
+  .bento-grid > * {
+    grid-column: span 1 / span 1 !important;
+  }
 }
 
 /* ============================================

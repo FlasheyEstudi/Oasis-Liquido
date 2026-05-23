@@ -21,6 +21,10 @@ import {
   User,
   Droplets,
   MessageSquare,
+  Users,
+  Activity,
+  DollarSign,
+  Store,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -29,14 +33,18 @@ import { cn } from '@/lib/utils';
 function getNavItems(role: UserRole): { page: AppPage; label: string; icon: React.ReactNode }[] {
   switch (role) {
     case 'clinic_admin':
-    case 'clinic_owner':
       return [
         { page: 'manage-clinics', label: 'Mi Clínica', icon: <MapPin className="size-[18px]" /> },
+        { page: 'clinic-staff', label: 'Mi Personal', icon: <Users className="size-[18px]" /> },
+        { page: 'clinic-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-[18px]" /> },
+        { page: 'clinic-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-[18px]" /> },
       ];
     case 'pharmacy_admin':
-    case 'pharmacy_owner':
       return [
-        { page: 'manage-pharmacies', label: 'Mi Farmacia', icon: <Pill className="size-[18px]" /> },
+        { page: 'manage-pharmacies', label: 'Mi Farmacia', icon: <Store className="size-[18px]" /> },
+        { page: 'pharmacy-staff', label: 'Mi Personal', icon: <Users className="size-[18px]" /> },
+        { page: 'pharmacy-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-[18px]" /> },
+        { page: 'pharmacy-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-[18px]" /> },
       ];
     case 'patient':
       return [

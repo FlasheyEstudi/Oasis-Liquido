@@ -16,6 +16,7 @@ interface AuthState {
   isHydrated: boolean;
   currentPage: AppPage;
   selectedItemId: string | null;
+  prescriptionId: string | null;
   notification: { type: 'success' | 'error' | 'warning' | 'info'; message: string } | null;
 
   representedUser: User | null;
@@ -28,6 +29,7 @@ interface AuthState {
   logout: () => void;
   setLoading: (loading: boolean) => void;
   navigate: (page: AppPage, itemId?: string | null) => void;
+  setPrescriptionId: (id: string | null) => void;
   setNotification: (notification: { type: 'success' | 'error' | 'warning' | 'info'; message: string } | null) => void;
   hydrate: () => Promise<void>;
   setRepresentedUser: (user: User | null) => void;
@@ -41,10 +43,8 @@ interface AuthState {
 function getHomeForRole(role: UserRole): AppPage {
   switch (role) {
     case 'admin': return 'inicio';
-    case 'clinic_admin':
-    case 'clinic_owner': return 'gestionar-clinicas';
-    case 'pharmacy_admin':
-    case 'pharmacy_owner': return 'gestionar-farmacias';
+    case 'clinic_admin': return 'gestionar-clinicas';
+    case 'pharmacy_admin': return 'gestionar-farmacias';
     case 'doctor': return 'inicio';
     case 'receptionist': return 'inicio';
     case 'patient': return 'inicio';
@@ -52,6 +52,11 @@ function getHomeForRole(role: UserRole): AppPage {
     case 'delivery_driver': return 'inicio-repartidor';
     default: return 'inicio';
   }
+}
+
+/** Normalizes user details */
+function normalizeUser(user: User | null): User | null {
+  return user;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -62,18 +67,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isHydrated: false,
   currentPage: 'bienvenida',
   selectedItemId: null,
+  prescriptionId: null,
   notification: null,
   representedUser: null,
   originalAccessToken: null,
   isElderlyMode: false,
 
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setUser: (user) => {
+    const normalized = normalizeUser(user);
+    set({ user: normalized, isAuthenticated: !!normalized });
+  },
 
   login: (user, accessToken) => {
     setAccessToken(accessToken);
-    const homePage = getHomeForRole(user.role);
+    const normalized = normalizeUser(user);
+    const homePage = getHomeForRole(normalized?.role || user.role);
     set({
-      user,
+      user: normalized,
       isAuthenticated: true,
       isLoading: false,
       currentPage: homePage,
@@ -83,12 +93,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     clearAuthTokens();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('oasis_selected_item_id');
+      localStorage.removeItem('oasis_prescription_id');
+    }
     set({
       user: null,
       isAuthenticated: false,
       isLoading: false,
       currentPage: 'bienvenida',
       selectedItemId: null,
+      prescriptionId: null,
       notification: null,
       representedUser: null,
     });
@@ -100,7 +115,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setLoading: (isLoading) => set({ isLoading }),
 
   navigate: (currentPage, selectedItemId = null) => {
-    set({ currentPage, selectedItemId });
+    if (typeof window !== 'undefined') {
+      if (selectedItemId) {
+        localStorage.setItem('oasis_selected_item_id', selectedItemId);
+      } else {
+        const isDetailPage = [
+          'prescription-detail', 'detalle-receta',
+          'delivery-request', 'solicitud-envio',
+          'delivery-detail', 'detalle-envio',
+          'appointment-detail', 'detalle-cita',
+          'consultation', 'consulta'
+        ].includes(currentPage);
+        if (!isDetailPage) {
+          localStorage.removeItem('oasis_selected_item_id');
+        }
+      }
+    }
+    set({ 
+      currentPage, 
+      selectedItemId: selectedItemId || (typeof window !== 'undefined' ? localStorage.getItem('oasis_selected_item_id') : null) 
+    });
+  },
+
+  setPrescriptionId: (prescriptionId) => {
+    if (typeof window !== 'undefined') {
+      if (prescriptionId) {
+        localStorage.setItem('oasis_prescription_id', prescriptionId);
+      } else {
+        localStorage.removeItem('oasis_prescription_id');
+      }
+    }
+    set({ prescriptionId });
   },
 
   setNotification: (notification) => {
@@ -175,14 +220,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       // If refresh succeeded, get the user profile
       const user = await getMe();
-      const homePage = getHomeForRole(user.role);
+      const normalized = normalizeUser(user);
+      const homePage = getHomeForRole(normalized?.role || user.role);
+      
+      const savedItemId = localStorage.getItem('oasis_selected_item_id');
+      const savedPrescriptionId = localStorage.getItem('oasis_prescription_id');
       
       set({
-        user,
+        user: normalized,
         isAuthenticated: true,
         isHydrated: true,
         isLoading: false,
         currentPage: homePage,
+        selectedItemId: savedItemId,
+        prescriptionId: savedPrescriptionId,
       });
     } catch (error) {
       // No active session or refresh failed

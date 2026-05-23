@@ -29,34 +29,66 @@ export interface PharmacyWorkersResponse {
 }
 
 /**
- * Invite a doctor to a clinic
+ * Invite a doctor to a clinic (supports direct employee creation)
  */
-export async function inviteDoctor(clinicId: string, email: string): Promise<Invitation> {
-  const result = await post<Invitation>(`/clinics/${clinicId}/doctors/invite`, { email });
+export interface InviteDoctorData {
+  email: string;
+  name?: string;
+  phone?: string;
+  password?: string;
+  specialty?: string;
+  licenseNumber?: string;
+}
+
+export async function inviteDoctor(clinicId: string, data: InviteDoctorData): Promise<Invitation> {
+  const result = await post<Invitation>(`/clinics/${clinicId}/doctors/invite`, data);
   return result.data;
 }
 
 /**
- * Invite a receptionist to a clinic
+ * Invite a receptionist to a clinic (supports direct employee creation)
  */
-export async function inviteReceptionist(clinicId: string, email: string): Promise<Invitation> {
-  const result = await post<Invitation>(`/clinics/${clinicId}/receptionists/invite`, { email });
+export interface InviteReceptionistData {
+  email: string;
+  name?: string;
+  phone?: string;
+  password?: string;
+}
+
+export async function inviteReceptionist(clinicId: string, data: InviteReceptionistData): Promise<Invitation> {
+  const result = await post<Invitation>(`/clinics/${clinicId}/receptionists/invite`, data);
   return result.data;
 }
 
 /**
- * Invite a cashier to a pharmacy
+ * Invite a cashier to a pharmacy (supports direct employee creation)
  */
-export async function inviteCashier(pharmacyId: string, email: string): Promise<Invitation> {
-  const result = await post<Invitation>(`/pharmacies/${pharmacyId}/cashiers/invite`, { email });
+export interface InviteCashierData {
+  email: string;
+  name?: string;
+  phone?: string;
+  password?: string;
+}
+
+export async function inviteCashier(pharmacyId: string, data: InviteCashierData): Promise<Invitation> {
+  const result = await post<Invitation>(`/pharmacies/${pharmacyId}/cashiers/invite`, data);
   return result.data;
 }
 
 /**
- * Invite a delivery driver to a pharmacy
+ * Invite a delivery driver to a pharmacy (supports direct employee creation)
  */
-export async function inviteDriver(pharmacyId: string, email: string): Promise<Invitation> {
-  const result = await post<Invitation>(`/pharmacies/${pharmacyId}/drivers/invite`, { email });
+export interface InviteDriverData {
+  email: string;
+  name?: string;
+  phone?: string;
+  password?: string;
+  vehicleType?: string;
+  licensePlate?: string;
+}
+
+export async function inviteDriver(pharmacyId: string, data: InviteDriverData): Promise<Invitation> {
+  const result = await post<Invitation>(`/pharmacies/${pharmacyId}/drivers/invite`, data);
   return result.data;
 }
 

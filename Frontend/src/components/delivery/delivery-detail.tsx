@@ -13,6 +13,7 @@ import { DELIVERY_STATUS_CONFIG, DEFAULT_LAT, DEFAULT_LNG } from '@/utils/consta
 import { GlassCard } from '@/components/oasis/glass-card';
 import { StatusBadge } from '@/components/common/status-badge';
 import { MapView } from '@/components/common/map-view';
+import { DriverMap } from './DriverMap';
 import type { MapMarker } from '@/components/common/map-view';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -275,24 +276,7 @@ export function DeliveryDetail() {
 
       {/* Map */}
       <GlassCard>
-        <MapView
-          markers={markers}
-          center={mapCenter}
-          height="250px"
-          route={route ? { geometry: route.geometry } : null}
-        />
-        {route && (
-          <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Route className="size-4" />
-              <span>{formatDistance(route.distance_meters)}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="size-4" />
-              <span>{Math.round(route.duration_seconds / 60)} min</span>
-            </div>
-          </div>
-        )}
+        <DriverMap order={order} height="280px" />
       </GlassCard>
 
       {/* Pickup & Delivery Details */}

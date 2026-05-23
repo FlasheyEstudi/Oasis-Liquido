@@ -26,7 +26,7 @@ export function isPushSupported(): boolean {
  * Get current browser notification permission status
  */
 export function getNotificationPermission(): NotificationPermission {
-  if (typeof window === 'undefined') return 'default';
+  if (typeof window === 'undefined' || !('Notification' in window)) return 'default';
   return Notification.permission;
 }
 

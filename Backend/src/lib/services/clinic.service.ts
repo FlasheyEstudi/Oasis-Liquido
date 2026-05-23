@@ -5,9 +5,31 @@ import { db } from '@/lib/db';
 import { createAuditLog } from './audit.service';
 
 /**
+ * Calculate distance between two coordinates using Haversine formula
+ */
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
  * Get clinics with optional filters
  */
-export async function getClinics(filters: { search?: string; isActive?: string; userRole?: string }) {
+export async function getClinics(filters: {
+  search?: string;
+  isActive?: string;
+  userRole?: string;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
+}) {
   const where: Record<string, unknown> = {};
 
   // Non-admin users only see active clinics
@@ -24,13 +46,35 @@ export async function getClinics(filters: { search?: string; isActive?: string; 
     ];
   }
 
-  return db.clinic.findMany({
+  let clinics = await db.clinic.findMany({
     where,
     include: {
       _count: { select: { doctorProfiles: true, appointments: true } },
     },
     orderBy: { name: 'asc' },
   });
+
+  // Filter by radius if lat/lng provided
+  if (filters.lat !== undefined && filters.lng !== undefined) {
+    const radiusKm = filters.radiusKm || 10;
+    clinics = clinics.filter((c) => {
+      if (c.latitude == null || c.longitude == null) return false;
+      const distance = haversineDistance(filters.lat!, filters.lng!, c.latitude, c.longitude);
+      return distance <= radiusKm;
+    });
+
+    // Add distance to each clinic
+    const clinicsWithDistance = clinics.map((c) => ({
+      ...c,
+      distance: haversineDistance(filters.lat!, filters.lng!, c.latitude!, c.longitude!),
+    }));
+
+    // Sort by distance
+    clinicsWithDistance.sort((a, b) => a.distance - b.distance);
+    return clinicsWithDistance;
+  }
+
+  return clinics;
 }
 
 /**

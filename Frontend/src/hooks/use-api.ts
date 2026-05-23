@@ -26,6 +26,7 @@ import * as chatsApi from '@/api/chats';
 import * as reviewsApi from '@/api/reviews';
 import * as familyApi from '@/api/family';
 import * as invitationsApi from '@/api/invitations';
+import * as reconciliationsApi from '@/api/reconciliations';
 
 // --- Type Imports ---
 import type {
@@ -758,8 +759,8 @@ export function usePharmacyWorkers(pharmacyId: string, enabled = true) {
 export function useInviteDoctor() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ clinicId, email }: { clinicId: string; email: string }) =>
-      invitationsApi.inviteDoctor(clinicId, email),
+    mutationFn: ({ clinicId, ...data }: { clinicId: string } & invitationsApi.InviteDoctorData) =>
+      invitationsApi.inviteDoctor(clinicId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['clinics', variables.clinicId, 'workers'] });
     },
@@ -770,8 +771,8 @@ export function useInviteDoctor() {
 export function useInviteReceptionist() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ clinicId, email }: { clinicId: string; email: string }) =>
-      invitationsApi.inviteReceptionist(clinicId, email),
+    mutationFn: ({ clinicId, ...data }: { clinicId: string } & invitationsApi.InviteReceptionistData) =>
+      invitationsApi.inviteReceptionist(clinicId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['clinics', variables.clinicId, 'workers'] });
     },
@@ -782,8 +783,8 @@ export function useInviteReceptionist() {
 export function useInviteCashier() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ pharmacyId, email }: { pharmacyId: string; email: string }) =>
-      invitationsApi.inviteCashier(pharmacyId, email),
+    mutationFn: ({ pharmacyId, ...data }: { pharmacyId: string } & invitationsApi.InviteCashierData) =>
+      invitationsApi.inviteCashier(pharmacyId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pharmacies', variables.pharmacyId, 'workers'] });
     },
@@ -794,8 +795,8 @@ export function useInviteCashier() {
 export function useInviteDriver() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ pharmacyId, email }: { pharmacyId: string; email: string }) =>
-      invitationsApi.inviteDriver(pharmacyId, email),
+    mutationFn: ({ pharmacyId, ...data }: { pharmacyId: string } & invitationsApi.InviteDriverData) =>
+      invitationsApi.inviteDriver(pharmacyId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pharmacies', variables.pharmacyId, 'workers'] });
     },
@@ -1007,6 +1008,43 @@ export function useDriverEarnings(enabled = true) {
     queryKey: ['deliveries', 'earnings'],
     queryFn: () => deliveriesApi.getDriverEarnings(),
     enabled,
+  });
+}
+
+/** Hook for getting cash drawer reconciliation summary */
+export function useReconciliationSummary(entityId: string, type: 'clinics' | 'pharmacies', enabled = true) {
+  return useQuery({
+    queryKey: ['reconciliations', entityId, 'summary'],
+    queryFn: () => reconciliationsApi.getReconciliationSummary(entityId, type),
+    enabled: !!entityId && enabled,
+  });
+}
+
+/** Hook for creating a cash reconciliation settle sheet */
+export function useCreateReconciliation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      entityId,
+      type,
+      data,
+    }: {
+      entityId: string;
+      type: 'clinics' | 'pharmacies';
+      data: { openingBalance: number; actualCash: number; actualCard: number; notes?: string };
+    }) => reconciliationsApi.createReconciliation(entityId, type, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['reconciliations', variables.entityId] });
+    },
+  });
+}
+
+/** Hook for getting cash reconciliation history */
+export function useReconciliationHistory(entityId: string, type: 'clinics' | 'pharmacies', enabled = true) {
+  return useQuery({
+    queryKey: ['reconciliations', entityId, 'history'],
+    queryFn: () => reconciliationsApi.getReconciliationHistory(entityId, type),
+    enabled: !!entityId && enabled,
   });
 }
 

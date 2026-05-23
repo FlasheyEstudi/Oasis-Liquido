@@ -4,11 +4,22 @@
 import { NextRequest } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
+import { getInMemoryDeliveries } from '@/lib/db/mock-deliveries';
 import * as deliveryService from '@/lib/services/delivery.service';
 
 export const GET = withAuth(async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await context.params;
+
+    // Support mock orders from the shared global memory store
+    if (id.startsWith('del-mock-')) {
+      const mockDeliveries = getInMemoryDeliveries();
+      const mockOrder = mockDeliveries.find((d: any) => d.id === id);
+      if (mockOrder) {
+        return successResponse(mockOrder);
+      }
+      return errorResponse(ErrorCodes.NOT_FOUND, 'Orden de entrega no encontrada', 404);
+    }
 
     const order = await deliveryService.getDeliveryOrder(id);
 

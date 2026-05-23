@@ -211,7 +211,7 @@ export function NewAppointment() {
         {step === 1 && (
           <motion.div key="step1" {...fadeInUp} transition={{ duration: 0.25 }}>
             <div className="bento-grid">
-              <div className="col-span-8">
+              <div className="col-span-12 lg:col-span-8">
                 <GlassCard className="min-h-[300px]">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Selecciona una clínica</h3>
                   {clinicsQuery.isLoading ? (
@@ -244,7 +244,7 @@ export function NewAppointment() {
                   )}
                 </GlassCard>
               </div>
-              <div className="col-span-4">
+              <div className="col-span-12 lg:col-span-4">
                 <GlassCard className="!p-3">
                   <MapView
                     markers={selectedClinic ? [{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }] : clinics.map(c => ({ id: c.id, lat: c.latitude, lng: c.longitude, type: 'clinic', label: c.name }))}
@@ -295,7 +295,7 @@ export function NewAppointment() {
         {step === 3 && (
           <motion.div key="step3" {...fadeInUp} transition={{ duration: 0.25 }}>
             <div className="bento-grid">
-              <div className="col-span-6">
+              <div className="col-span-12 lg:col-span-6">
                 <GlassCard>
                   <h3 className="text-lg font-semibold text-foreground mb-4">Fecha</h3>
                   <Calendar
@@ -307,7 +307,7 @@ export function NewAppointment() {
                   />
                 </GlassCard>
               </div>
-              <div className="col-span-6">
+              <div className="col-span-12 lg:col-span-6">
                 <GlassCard className="min-h-[300px] flex flex-col">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Hora disponible</h3>
                   {!selectedDate ? (

@@ -16,4 +16,4 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error interno del servidor', 500);
   }
-}, { roles: ['clinic_owner', 'clinic_admin', 'admin'] });
+}, { roles: ['clinic_admin', 'admin'] });

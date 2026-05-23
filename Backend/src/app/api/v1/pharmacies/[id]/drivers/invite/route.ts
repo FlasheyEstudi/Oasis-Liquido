@@ -9,6 +9,11 @@ import * as invitationService from '@/lib/services/invitation.service';
 
 const inviteDriverSchema = z.object({
   email: z.string().email('Email inválido'),
+  name: z.string().optional(),
+  phone: z.string().optional(),
+  password: z.string().optional(),
+  vehicleType: z.string().optional(),
+  licensePlate: z.string().optional(),
 });
 
 export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -18,6 +23,27 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
     const validation = validateBody(inviteDriverSchema, body);
     if (!validation.success) return validation.error;
 
+    if (body.name) {
+      // Direct Employee Creation
+      const employee = await invitationService.createEmployeeDirectly(
+        req.user.userId,
+        {
+          name: body.name,
+          email: body.email,
+          phone: body.phone,
+          password: body.password,
+          role: 'delivery_driver',
+          pharmacyId: id,
+          vehicleType: body.vehicleType,
+          licensePlate: body.licensePlate,
+        },
+        req.headers.get('x-forwarded-for') || undefined,
+        req.headers.get('user-agent') || undefined
+      );
+      return successResponse(employee, 'Repartidor creado y vinculado exitosamente', 201);
+    }
+
+    // Classic Invitation Flow
     const invitation = await invitationService.inviteWorker(
       req.user.userId,
       body.email,
@@ -30,7 +56,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
 
     return successResponse(invitation, 'Invitación para repartidor creada exitosamente', 201);
   } catch (error: any) {
-    if (error.message === 'EMAIL_ALREADY_REGISTERED') {
+    if (error.message === 'EMAIL_ALREADY_REGISTERED' || error.message === 'EMAIL_EXISTS') {
       return errorResponse(ErrorCodes.CONFLICT, 'El correo ya está registrado en el sistema', 409);
     }
     if (error.message === 'FORBIDDEN_PHARMACY') {

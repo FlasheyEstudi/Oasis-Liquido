@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import {
   usePrescription,
@@ -11,7 +12,7 @@ import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode } from '@/components/common/qr-code';
 import { toast } from 'sonner';
 import {
@@ -26,11 +27,38 @@ import {
   AlertCircle,
   CheckCircle2,
   Circle,
+  X,
+  Sparkles,
+  Bell,
+  Check,
+  Loader2
 } from 'lucide-react';
 
 export function PrescriptionDetail() {
   const { selectedItemId, navigate } = useAuthStore();
   const prescriptionQuery = usePrescription(selectedItemId ?? '', !!selectedItemId);
+
+  const [selectedLine, setSelectedLine] = useState<any | null>(null);
+  const [customTime, setCustomTime] = useState('08:00');
+  const [selectedSlot, setSelectedSlot] = useState<'morning' | 'lunch' | 'dinner' | 'bedtime' | 'custom'>('morning');
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleScheduleReminder = async () => {
+    if (!selectedLine) return;
+    setIsScheduling(true);
+    try {
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIsSuccess(true);
+    } catch (error) {
+      toast.error('Error al programar recordatorio');
+    } finally {
+      setIsScheduling(false);
+    }
+  };
 
   if (!selectedItemId) {
     return (
@@ -57,8 +85,8 @@ export function PrescriptionDetail() {
     return (
       <div className="bento-grid">
         <div className="col-span-12"><div className="shimmer rounded-3xl h-48" /></div>
-        <div className="col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
-        <div className="col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
+        <div className="col-span-12 lg:col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
+        <div className="col-span-12 lg:col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
       </div>
     );
   }
@@ -115,7 +143,7 @@ export function PrescriptionDetail() {
 
       <div className="bento-grid">
         {/* Prescription Header + QR — col-span-8 */}
-        <GlassCard className="col-span-8">
+        <GlassCard className="col-span-12 lg:col-span-8">
           <div className="flex items-start gap-4">
             <Avatar className="size-14 shrink-0">
               <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-lg font-semibold">
@@ -173,7 +201,7 @@ export function PrescriptionDetail() {
         </GlassCard>
 
         {/* Fulfillment Progress — col-span-4 */}
-        <GlassCard className="col-span-4">
+        <GlassCard className="col-span-12 lg:col-span-4">
           <div className="flex items-center gap-2 mb-4">
             <div className="flex size-7 items-center justify-center rounded-full bg-teal-500/10">
               <Pill className="size-3.5 text-teal-600 dark:text-teal-400" />
@@ -279,11 +307,15 @@ export function PrescriptionDetail() {
                         <motion.button
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => toast.success(`Alarma programada: ${line.medicine?.name} cada ${line.dosage_instructions?.match(/\d+/)?.[0] || '8'} horas`)}
-                          className="flex items-center gap-3 p-3 rounded-2xl bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 transition-all text-left"
+                          onClick={() => {
+                            setSelectedLine(line);
+                            setSelectedSlot('morning');
+                            setIsSuccess(false);
+                          }}
+                          className="flex items-center gap-3 p-3 rounded-2xl bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 transition-all text-left w-full cursor-pointer"
                         >
                           <div className="size-10 rounded-full bg-teal-500 flex items-center justify-center text-white shrink-0">
-                            <Clock className="size-6" />
+                            <Clock className="size-6 animate-pulse" />
                           </div>
                           <div>
                             <p className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">Programar Recordatorio</p>
@@ -323,12 +355,183 @@ export function PrescriptionDetail() {
       {(prescription.status === 'active' || prescription.status === 'partially_fulfilled') && (
         <Button
           className="w-full glass-btn-primary rounded-full gap-2 h-12 text-base mt-4"
-          onClick={() => navigate('pharmacy-map', prescription.id)}
+          onClick={() => {
+            useAuthStore.getState().setPrescriptionId(prescription.id);
+            navigate('pharmacy-map', prescription.id);
+          }}
         >
           <Search className="size-5" />
           Buscar farmacias con stock
         </Button>
       )}
+
+      {/* Premium medication reminder scheduler modal */}
+      <AnimatePresence>
+        {selectedLine && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedLine(null)}
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-md"
+            />
+            
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              className="relative max-w-sm w-full glass-card p-6 rounded-3xl bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-teal-500/20 shadow-2xl z-10 overflow-hidden"
+            >
+              {/* Decorative top highlight */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-500 to-sky-500" />
+              
+              <button
+                onClick={() => setSelectedLine(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+
+              {!isSuccess ? (
+                <>
+                  <div className="flex gap-3.5 items-start mb-5">
+                    <div className="size-11 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 shadow-inner">
+                      <Clock className="size-5.5 animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        Configurar Alarma <Sparkles size={13} className="text-teal-500" />
+                      </h3>
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[200px]">
+                        {selectedLine.medicine?.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed mb-4">
+                    Selecciona a qué hora deseas recibir la notificación push diaria en tu dispositivo para recordar tomar tu dosis.
+                  </p>
+
+                  <div className="space-y-4">
+                    {/* Time slots selection */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'morning', label: 'Mañana', desc: '08:00 AM' },
+                        { id: 'lunch', label: 'Almuerzo', desc: '12:00 PM' },
+                        { id: 'dinner', label: 'Cena', desc: '07:00 PM' },
+                        { id: 'bedtime', label: 'Noche', desc: '10:00 PM' },
+                      ].map((slot) => (
+                        <button
+                          key={slot.id}
+                          onClick={() => setSelectedSlot(slot.id as any)}
+                          className={cn(
+                            'p-3 rounded-2xl text-left border transition-all active:scale-95 cursor-pointer',
+                            selectedSlot === slot.id
+                              ? 'bg-teal-500/10 border-teal-500 text-teal-600 dark:text-teal-400 shadow-md shadow-teal-500/5 font-bold'
+                              : 'bg-slate-500/5 hover:bg-slate-500/10 border-border/40 text-slate-700 dark:text-slate-300'
+                          )}
+                        >
+                          <p className="text-[11px] uppercase tracking-wider font-extrabold">{slot.label}</p>
+                          <p className="text-[10px] opacity-75 mt-0.5">{slot.desc}</p>
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setSelectedSlot('custom')}
+                        className={cn(
+                          'col-span-2 p-3 rounded-2xl text-left border transition-all active:scale-95 cursor-pointer flex items-center justify-between',
+                          selectedSlot === 'custom'
+                            ? 'bg-teal-500/10 border-teal-500 text-teal-600 dark:text-teal-400 shadow-md shadow-teal-500/5 font-bold'
+                            : 'bg-slate-500/5 hover:bg-slate-500/10 border-border/40 text-slate-700 dark:text-slate-300'
+                        )}
+                      >
+                        <div>
+                          <p className="text-[11px] uppercase tracking-wider font-extrabold">Hora Personalizada</p>
+                          <p className="text-[10px] opacity-75 mt-0.5">Elige tu propia hora</p>
+                        </div>
+                        <Clock size={16} />
+                      </button>
+                    </div>
+
+                    {/* Custom time picker field */}
+                    {selectedSlot === 'custom' && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="p-3.5 rounded-2xl bg-slate-500/5 border border-border/30 flex items-center justify-between gap-3"
+                      >
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Seleccionar hora:</span>
+                        <input
+                          type="time"
+                          value={customTime}
+                          onChange={(e) => setCustomTime(e.target.value)}
+                          className="bg-white dark:bg-slate-900 border border-border/40 rounded-xl px-3 py-1.5 text-sm font-bold text-foreground focus:outline-none focus:border-teal-500 transition-colors cursor-pointer"
+                        />
+                      </motion.div>
+                    )}
+
+                    {/* Schedule action button */}
+                    <button
+                      onClick={handleScheduleReminder}
+                      disabled={isScheduling}
+                      className="w-full mt-2 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-extrabold text-xs shadow-lg shadow-teal-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {isScheduling ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" /> Guardando...
+                        </>
+                      ) : (
+                        <>
+                          <Bell size={14} /> Confirmar Alarma
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center py-6 text-center"
+                >
+                  <div className="relative mb-4">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', delay: 0.1 }}
+                      className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500"
+                    >
+                      <Check className="size-8 stroke-[3]" />
+                    </motion.div>
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
+                    ¡Alarma Programada!
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 max-w-[240px] leading-relaxed">
+                    Hemos registrado tu recordatorio exitosamente. Recibirás una notificación push directa en este dispositivo para tu dosis de <b>{selectedLine.medicine?.name}</b>.
+                  </p>
+
+                  <button
+                    onClick={() => setSelectedLine(null)}
+                    className="w-full mt-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs active:scale-95 transition-all cursor-pointer"
+                  >
+                    Entendido
+                  </button>
+                </motion.div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

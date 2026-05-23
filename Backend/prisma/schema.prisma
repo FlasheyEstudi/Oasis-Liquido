@@ -17,6 +17,9 @@ model User {
   isActive                Boolean                 @default(true)
   emailVerified           Boolean                 @default(false)
   fcmToken                String?
+  verificationStatus      String                  @default("pending") @map("verification_status") // "pending", "submitted", "approved", "rejected"
+  verificationDeadline    DateTime?               @map("verification_deadline") // 14-day limit
+  legalDocuments          String?                 @map("legal_documents") // JSON list of document paths
   createdAt               DateTime                @default(now())
   updatedAt               DateTime                @updatedAt
   appointmentsAsDoctor    Appointment[]           @relation("DoctorAppointments")
@@ -40,6 +43,11 @@ model User {
   patientRelations        FamilyRelationship[]    @relation("PatientRelations")
   sentInvitations         Invitation[]            @relation("SentInvitations")
   betaFeedbacks           BetaFeedback[]
+  pushTokens              PushToken[]
+  doctorDocumentsUploaded DoctorDocument[]        @relation("DoctorDocumentUploader")
+  doctorDocumentsVerified DoctorDocument[]        @relation("DoctorDocumentVerifier")
+  clinicDocumentsUploaded ClinicDocument[]        @relation("ClinicDocumentUploader")
+  clinicDocumentsVerified ClinicDocument[]        @relation("ClinicDocumentVerifier")
 
   @@index([email])
   @@index([role])
@@ -62,13 +70,13 @@ model PatientProfile {
 
 model DoctorProfile {
   userId        String   @id @map("user_id")
-  clinicId      String?  @map("clinic_id")
+  clinicId      String   @map("clinic_id")
   specialty     String   @default("Medicina General")
   licenseNumber String   @unique
   signaturePin  String?  @map("signature_pin")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  clinic        Clinic?  @relation(fields: [clinicId], references: [id])
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   specialties   DoctorProfileSpecialty[]
 
@@ -131,6 +139,7 @@ model Clinic {
   receptionistProfiles ReceptionistProfile[]
   sales                Sale[]
   invitations          Invitation[]
+  clinicDocuments      ClinicDocument[]
 
   @@index([isActive])
   @@map("clinics")
@@ -574,5 +583,66 @@ model BetaFeedback {
   @@index([type])
   @@index([status])
   @@map("beta_feedbacks")
+}
+
+model PushToken {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  token      String   @unique
+  deviceInfo String?  @map("device_info")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_tokens")
+}
+
+model DoctorDocument {
+  id              String    @id @default(cuid())
+  doctorId        String    @map("doctor_id")
+  type            String    // "id_card_front", "id_card_back", "degree", "license", "specialty", "conduct"
+  documentUrl     String    @map("document_url")
+  expiryDate      DateTime? @map("expiry_date")
+  verifiedBy      String?   @map("verified_by")
+  verifiedAt      DateTime? @map("verified_at")
+  status          String    @default("pending") // pending, approved, rejected
+  rejectionReason String?   @map("rejection_reason")
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  doctor          User      @relation("DoctorDocumentUploader", fields: [doctorId], references: [id], onDelete: Cascade)
+  verifier        User?     @relation("DoctorDocumentVerifier", fields: [verifiedBy], references: [id])
+
+  @@index([doctorId])
+  @@index([status])
+  @@map("doctor_documents")
+}
+
+model ClinicDocument {
+  id              String    @id @default(cuid())
+  clinicId        String    @map("clinic_id")
+  type            String    // "ruc", "sanitary_permit", "municipal_license", "minsa_certificate", "lease", "fire_certificate", "insurance", "staff_list", "biosecurity"
+  documentUrl     String    @map("document_url")
+  expiryDate      DateTime? @map("expiry_date")
+  status          String    @default("pending") // pending, approved, rejected, expired
+  rejectionReason String?   @map("rejection_reason")
+  verifiedBy      String?   @map("verified_by")
+  verifiedAt      DateTime? @map("verified_at")
+  notes           String?
+  uploadedBy      String    @map("uploaded_by")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  clinic          Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  verifier        User?     @relation("ClinicDocumentVerifier", fields: [verifiedBy], references: [id])
+  uploader        User      @relation("ClinicDocumentUploader", fields: [uploadedBy], references: [id])
+
+  @@index([clinicId])
+  @@index([status])
+  @@index([expiryDate])
+  @@map("clinic_documents")
 }
 

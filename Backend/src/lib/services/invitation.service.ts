@@ -7,6 +7,142 @@ import { createAuditLog } from './audit.service';
 import crypto from 'crypto';
 
 /**
+ * Create an employee directly (Doctor, Receptionist, Cashier, Driver) without invitation flow
+ */
+export async function createEmployeeDirectly(
+  senderId: string,
+  data: {
+    name: string;
+    email: string;
+    phone?: string;
+    password?: string;
+    role: 'doctor' | 'receptionist' | 'cashier' | 'delivery_driver';
+    clinicId?: string;
+    pharmacyId?: string;
+    specialty?: string;
+    licenseNumber?: string;
+    vehicleType?: string;
+    licensePlate?: string;
+  },
+  ipAddress?: string,
+  userAgent?: string
+) {
+  // Validate sender role and permissions
+  const sender = await db.user.findUnique({ where: { id: senderId } });
+  if (!sender) {
+    throw new Error('SENDER_NOT_FOUND');
+  }
+
+  const { name, email, phone, password, role, clinicId, pharmacyId, specialty, licenseNumber, vehicleType, licensePlate } = data;
+
+  if (sender.role === 'clinic_admin') {
+    if (role !== 'doctor' && role !== 'receptionist') {
+      throw new Error('INVALID_ROLE_FOR_CLINIC');
+    }
+    if (!clinicId) {
+      throw new Error('CLINIC_ID_REQUIRED');
+    }
+    const clinic = await db.clinic.findUnique({ where: { id: clinicId } });
+    if (!clinic || clinic.ownerId !== senderId) {
+      throw new Error('FORBIDDEN_CLINIC');
+    }
+  } else if (sender.role === 'pharmacy_admin') {
+    if (role !== 'cashier' && role !== 'delivery_driver') {
+      throw new Error('INVALID_ROLE_FOR_PHARMACY');
+    }
+    if (!pharmacyId) {
+      throw new Error('PHARMACY_ID_REQUIRED');
+    }
+    const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
+    if (!pharmacy || pharmacy.ownerId !== senderId) {
+      throw new Error('FORBIDDEN_PHARMACY');
+    }
+  } else {
+    throw new Error('UNAUTHORIZED_SENDER');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Check if user already exists
+  const existingUser = await db.user.findUnique({ where: { email: normalizedEmail } });
+  if (existingUser) {
+    throw new Error('EMAIL_ALREADY_REGISTERED');
+  }
+
+  // Hash default or supplied password
+  const pass = password || 'OasisNicaragua2026.';
+  const passwordHash = await hashPassword(pass);
+
+  // 14 days compliance deadline for employee documents submission
+  const deadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
+  const result = await db.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name,
+        email: normalizedEmail,
+        phone,
+        passwordHash,
+        role,
+        emailVerified: true,
+        verificationStatus: 'pending', // Starts pending to upload documents
+        verificationDeadline: deadline,
+      }
+    });
+
+    if (role === 'doctor') {
+      await tx.doctorProfile.create({
+        data: {
+          userId: user.id,
+          clinicId: clinicId || null,
+          specialty: specialty || 'Medicina General',
+          licenseNumber: licenseNumber || `MINSA-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+        }
+      });
+    } else if (role === 'receptionist') {
+      await tx.receptionistProfile.create({
+        data: {
+          userId: user.id,
+          clinicId: clinicId || null,
+        }
+      });
+    } else if (role === 'cashier') {
+      await tx.pharmacyManagerProfile.create({
+        data: {
+          userId: user.id,
+          pharmacyId: pharmacyId || null,
+        }
+      });
+    } else if (role === 'delivery_driver') {
+      await tx.deliveryDriverProfile.create({
+        data: {
+          userId: user.id,
+          vehicleType: vehicleType || 'motocicleta',
+          licensePlate: licensePlate || null,
+          isAvailable: true,
+          employmentType: 'contractor',
+        }
+      });
+    }
+
+    // Create Audit Log
+    await createAuditLog({
+      userId: senderId,
+      action: 'CREATE_EMPLOYEE',
+      entityType: 'User',
+      entityId: user.id,
+      details: `Created employee ${name} with role ${role} directly`,
+      ipAddress,
+      userAgent
+    }, tx);
+
+    return user;
+  });
+
+  return result;
+}
+
+/**
  * Send an invitation to a worker
  */
 export async function inviteWorker(
@@ -24,7 +160,7 @@ export async function inviteWorker(
     throw new Error('SENDER_NOT_FOUND');
   }
 
-  if (sender.role === 'clinic_owner' || sender.role === 'clinic_admin') {
+  if (sender.role === 'clinic_admin') {
     if (role !== 'doctor' && role !== 'receptionist') {
       throw new Error('INVALID_ROLE_FOR_CLINIC');
     }
@@ -36,7 +172,7 @@ export async function inviteWorker(
     if (!clinic || clinic.ownerId !== senderId) {
       throw new Error('FORBIDDEN_CLINIC');
     }
-  } else if (sender.role === 'pharmacy_owner' || sender.role === 'pharmacy_admin') {
+  } else if (sender.role === 'pharmacy_admin') {
     if (role !== 'cashier' && role !== 'delivery_driver') {
       throw new Error('INVALID_ROLE_FOR_PHARMACY');
     }
@@ -52,8 +188,10 @@ export async function inviteWorker(
     throw new Error('UNAUTHORIZED_SENDER');
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+
   // Check if user already exists
-  const existingUser = await db.user.findUnique({ where: { email } });
+  const existingUser = await db.user.findUnique({ where: { email: normalizedEmail } });
   if (existingUser) {
     throw new Error('EMAIL_ALREADY_REGISTERED');
   }
@@ -65,7 +203,7 @@ export async function inviteWorker(
   // Create invitation record in transaction
   const invitation = await db.invitation.create({
     data: {
-      email,
+      email: normalizedEmail,
       role,
       token,
       expiresAt,
@@ -81,7 +219,7 @@ export async function inviteWorker(
     action: 'create',
     entityType: 'invitation',
     entityId: invitation.id,
-    details: JSON.stringify({ email, role, clinicId, pharmacyId }),
+    details: JSON.stringify({ email: normalizedEmail, role, clinicId, pharmacyId }),
     ipAddress,
     userAgent,
   });
@@ -181,6 +319,29 @@ export async function acceptInvitation(
           employmentType: 'employee',
         },
       });
+    } else if (invitation.role === 'clinic_admin') {
+      // Update clinic ownership if needed
+      if (invitation.clinicId) {
+        await tx.clinic.update({
+          where: { id: invitation.clinicId },
+          data: { ownerId: user.id }
+        });
+      }
+    } else if (invitation.role === 'pharmacy_admin') {
+      // Create Pharmacy Manager profile
+      await tx.pharmacyManagerProfile.create({
+        data: {
+          userId: user.id,
+          pharmacyId: invitation.pharmacyId!,
+        },
+      });
+      // Update pharmacy ownership if needed
+      if (invitation.pharmacyId) {
+        await tx.pharmacy.update({
+          where: { id: invitation.pharmacyId },
+          data: { ownerId: user.id }
+        });
+      }
     }
 
     // 3. Mark the invitation as accepted
@@ -340,7 +501,7 @@ export async function changeWorkerStatus(
     // Deliver drivers can be managed by pharmacy owner or admin.
     // Verify owner role
     const owner = await db.user.findUnique({ where: { id: ownerId } });
-    if (!owner || (owner.role !== 'pharmacy_owner' && owner.role !== 'pharmacy_admin' && owner.role !== 'admin')) {
+    if (!owner || (owner.role !== 'pharmacy_admin' && owner.role !== 'admin')) {
       throw new Error('FORBIDDEN');
     }
   } else {

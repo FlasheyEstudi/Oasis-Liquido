@@ -38,16 +38,33 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch events strategy: Network-First with Cache Fallback for assets, bypass API
+// Fetch events strategy: Network-First with Cache Fallback for assets, bypass API/WebSockets
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // Bypass API and Auth calls so they always talk to the server in real-time
-  if (url.pathname.includes('/api/') || url.pathname.includes('/auth/')) {
+  // 1. Only intercept GET requests (Service Worker cannot handle stateful POST, PUT, DELETE, etc.)
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  // Network-First, fallback to cache
+  const url = new URL(event.request.url);
+
+  // 2. ABSOLUTE BYPASS: Ignore Socket.io, backend API routes, local IP / remote backend hosts, and all cross-origin requests
+  if (
+    url.pathname.includes('/socket.io/') ||
+    url.pathname.includes('/api/') ||
+    url.pathname.includes('/auth/') ||
+    url.port === '8000' ||
+    url.host.includes('localhost:8000') ||
+    url.hostname !== self.location.hostname // Bypasses all cross-origin requests (like backend APIs or OSRM maps)
+  ) {
+    return; // Pass through to the browser network layer
+  }
+
+  // 3. Only handle HTTP/HTTPS protocols (avoid chrome-extension:// etc.)
+  if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // 4. Network-First Strategy with Cache Fallback, and a guaranteed fallback response (NEVER return undefined)
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -60,16 +77,24 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => {
-        // Offline mode: match in cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // If it's a page navigation request, return index.html shell
-          if (event.request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('/');
-          }
+      .catch(async () => {
+        // Offline Fallback
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        // Page navigation fallback to '/' shell
+        if (event.request.headers.get('accept')?.includes('text/html')) {
+          const appShell = await caches.match('/');
+          if (appShell) return appShell;
+        }
+
+        // Return a valid standard offline response instead of resolving to undefined
+        return new Response('Network error occurred. Resource not cached offline.', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: new Headers({ 'Content-Type': 'text/plain' })
         });
       })
   );

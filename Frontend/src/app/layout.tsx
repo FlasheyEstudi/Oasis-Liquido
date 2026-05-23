@@ -39,6 +39,7 @@ export const metadata: Metadata = {
 
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { BetaFeedback } from "@/components/common/BetaFeedback";
+import { NotificationBanner } from "@/components/NotificationBanner";
 
 export default function RootLayout({
   children,
@@ -63,6 +64,7 @@ export default function RootLayout({
             <Toaster />
             <BetaFeedback />
             <PWAInitializer />
+            <NotificationBanner />
           </QueryProvider>
         </ThemeProvider>
 
@@ -75,6 +77,10 @@ export default function RootLayout({
                   navigator.serviceWorker.register('/sw.js').then(
                     function(registration) {
                       console.log('OASIS: ServiceWorker registered successfully:', registration.scope);
+                      // Force checking for updates immediately on every reload
+                      registration.update().catch(function(e) {
+                        console.debug('OASIS: ServiceWorker update check deferred:', e.message);
+                      });
                     },
                     function(err) {
                       console.log('OASIS: ServiceWorker registration failed:', err);

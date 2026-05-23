@@ -9,6 +9,7 @@ import {
   useAcceptDelivery,
   useRejectDelivery,
   useDriverEarnings,
+  useAssignedDeliveries,
   getHookErrorMessage,
 } from '@/hooks/use-api';
 import { formatDate, formatCurrency } from '@/utils/helpers';
@@ -33,6 +34,7 @@ import {
   Check,
   X,
   Star,
+  Sparkles,
 } from 'lucide-react';
 import type { DeliveryStatus } from '@/types';
 
@@ -61,47 +63,15 @@ export function DriverHome() {
   const { mutateAsync: acceptOrder } = useAcceptDelivery();
   const { mutateAsync: rejectOrder } = useRejectDelivery();
 
+  // Active assigned deliveries (accepted, picked_up, in_transit)
   const {
-    data: assignedResult,
-    isLoading: assignedLoading,
-  } = useDeliveryOrders({
-    driver_id: driverId || undefined,
-    status: 'assigned',
-  });
-
-  const {
-    data: pickedUpResult,
-    isLoading: pickedUpLoading,
-  } = useDeliveryOrders({
-    driver_id: driverId || undefined,
-    status: 'picked_up',
-  });
-
-  const {
-    data: inTransitResult,
-    isLoading: inTransitLoading,
-  } = useDeliveryOrders({
-    driver_id: driverId || undefined,
-    status: 'in_transit',
-  });
-
-  const {
-    data: deliveredResult,
-    isLoading: deliveredLoading,
-  } = useDeliveryOrders({
-    driver_id: driverId || undefined,
-    status: 'delivered',
-  });
+    data: activeOrders = [],
+    isLoading: activeLoading,
+  } = useAssignedDeliveries(!!driverId);
 
   const updateDeliveryStatus = useUpdateDeliveryStatus();
 
-  const assignedOrders = assignedResult?.data ?? [];
-  const pickedUpOrders = pickedUpResult?.data ?? [];
-  const inTransitOrders = inTransitResult?.data ?? [];
-  const deliveredOrders = deliveredResult?.data ?? [];
-
-  const activeOrders = [...assignedOrders, ...pickedUpOrders, ...inTransitOrders];
-  const isLoading = assignedLoading || pickedUpLoading || inTransitLoading || deliveredLoading;
+  const isLoading = activeLoading || availableLoading;
 
   const handleStatusUpdate = (orderId: string, newStatus: 'picked_up' | 'in_transit' | 'delivered') => {
     setUpdatingId(orderId);
@@ -148,6 +118,7 @@ export function DriverHome() {
 
   const getActionForOrder = (orderStatus: string) => {
     switch (orderStatus) {
+      case 'accepted':
       case 'assigned':
         return {
           label: 'Recoger pedido',
@@ -189,9 +160,43 @@ export function DriverHome() {
   return (
     <motion.div className="bento-grid p-4 md:p-6" variants={stagger} initial="initial" animate="animate">
       
+      {/* Premium Welcome Header Card */}
+      <motion.div className="col-span-12" variants={fadeUp}>
+        <div className="relative overflow-hidden rounded-3xl p-6 bg-gradient-to-r from-teal-500 via-emerald-500 to-sky-500 text-white shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Abstract light leak overlay */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+          <div className="absolute bottom-0 left-10 w-40 h-40 bg-teal-300/20 rounded-full blur-2xl translate-y-1/2 pointer-events-none" />
+          
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="size-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0 shadow-lg">
+              <Bike className="size-9 animate-bounce" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                ¡Hola, {firstName}! <Sparkles className="size-6 text-yellow-300 animate-pulse fill-yellow-300/20" />
+              </h2>
+              <p className="text-xs text-white/80 font-medium mt-1">
+                {activeOrders.length > 0 
+                  ? `Tienes ${activeOrders.length} entrega${activeOrders.length > 1 ? 's' : ''} activa${activeOrders.length > 1 ? 's' : ''} en curso. ¡Que tengas una gran ruta!`
+                  : 'No tienes entregas asignadas actualmente. ¡Conéctate para recibir pedidos!'}
+              </p>
+            </div>
+          </div>
+          
+          {/* Live system state tag */}
+          <div className="relative z-10 shrink-0 self-start md:self-center flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 text-xs font-black shadow-md">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+            </span>
+            <span>Sistema en línea Managua</span>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Availability Status Toggle Card */}
       <GlassCard className="col-span-12 md:col-span-4" variants={fadeUp}>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className={cn(
               'flex size-14 items-center justify-center rounded-full',
@@ -214,7 +219,7 @@ export function DriverHome() {
           <button
             onClick={() => setLocalAvailable(!localAvailable)}
             className={cn(
-              'px-4 py-2 rounded-full text-xs font-bold transition-all shadow-md',
+              'w-full sm:w-auto px-4 py-2 rounded-full text-xs font-bold transition-all shadow-md cursor-pointer text-center',
               localAvailable 
                 ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/20' 
                 : 'bg-emerald-500 text-white hover:bg-emerald-600'
@@ -226,31 +231,31 @@ export function DriverHome() {
       </GlassCard>
 
       {/* Stats Card: Earnings */}
-      <GlassCard className="col-span-6 md:col-span-4" variants={fadeUp}>
+      <GlassCard className="col-span-12 sm:col-span-6 md:col-span-4" variants={fadeUp}>
         <div className="flex items-center gap-3">
           <div className="flex size-14 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
             <DollarSign className="size-6" />
           </div>
           <div>
             <p className="text-2xl font-black text-foreground">
-              {formatCurrency(stats?.totalEarnings ?? 980.50)}
+              {formatCurrency(stats?.totalEarnings ?? 0)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {stats?.totalDeliveries ?? 14} Entregas Completadas
+              {stats?.totalDeliveries ?? 0} Entregas Completadas
             </p>
           </div>
         </div>
       </GlassCard>
 
       {/* Stats Card: Rating */}
-      <GlassCard className="col-span-6 md:col-span-4" variants={fadeUp}>
+      <GlassCard className="col-span-12 sm:col-span-6 md:col-span-4" variants={fadeUp}>
         <div className="flex items-center gap-3">
           <div className="flex size-14 items-center justify-center rounded-full bg-teal-500/10 text-teal-500">
             <Star className="size-6 fill-teal-500/30" />
           </div>
           <div>
             <p className="text-2xl font-black text-foreground">
-              {stats?.rating ?? 4.92} / 5.0
+              {stats?.rating ?? 5.0} / 5.0
             </p>
             <p className="text-xs text-muted-foreground">Reputación Excelente ⭐</p>
           </div>

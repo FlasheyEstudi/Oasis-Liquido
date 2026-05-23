@@ -26,6 +26,7 @@ import {
 import {
   UserPlus,
   Users,
+  User,
   Mail,
   Loader2,
   ToggleLeft,
@@ -45,8 +46,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 // --- CLINIC STAFF MANAGEMENT COMPONENT ---
 export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
   const { setNotification } = useAuthStore();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState<'doctor' | 'receptionist'>('doctor');
+  const [specialty, setSpecialty] = useState('Medicina General');
+  const [licenseNumber, setLicenseNumber] = useState('');
 
   const { data, isLoading, error, refetch } = useClinicWorkers(clinicId);
   const inviteDoctor = useInviteDoctor();
@@ -55,41 +61,68 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
 
   const doctors = data?.doctors || [];
   const receptionists = data?.receptionists || [];
-  const isInviting = inviteDoctor.isPending || inviteReceptionist.isPending;
+  const isCreating = inviteDoctor.isPending || inviteReceptionist.isPending;
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setNotification({ type: 'warning', message: 'Por favor, introduce un correo electrónico válido' });
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setNotification({ type: 'warning', message: 'Por favor, completa Nombre, Email y Contraseña' });
       return;
     }
 
     try {
       if (role === 'doctor') {
         await inviteDoctor.mutateAsync(
-          { clinicId, email: email.trim() },
+          {
+            clinicId,
+            email: email.trim(),
+            name: name.trim(),
+            phone: phone.trim() || undefined,
+            password: password.trim(),
+            specialty: specialty.trim(),
+            licenseNumber: licenseNumber.trim() || undefined,
+          } as any,
           {
             onSuccess: () => {
-              setNotification({ type: 'success', message: 'Invitación enviada al Doctor con éxito' });
+              setNotification({
+                type: 'success',
+                message: 'Doctor creado y vinculado con éxito. 14 días para que el empleado suba sus documentos.',
+              });
+              setName('');
               setEmail('');
+              setPhone('');
+              setPassword('');
+              setLicenseNumber('');
               refetch();
             },
             onError: (err) => {
-              setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al enviar invitación' });
+              setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al crear doctor' });
             },
           }
         );
       } else {
         await inviteReceptionist.mutateAsync(
-          { clinicId, email: email.trim() },
+          {
+            clinicId,
+            email: email.trim(),
+            name: name.trim(),
+            phone: phone.trim() || undefined,
+            password: password.trim(),
+          } as any,
           {
             onSuccess: () => {
-              setNotification({ type: 'success', message: 'Invitación enviada al Recepcionista con éxito' });
+              setNotification({
+                type: 'success',
+                message: 'Recepcionista creado y vinculado con éxito. 14 días para subir documentos legales.',
+              });
+              setName('');
               setEmail('');
+              setPhone('');
+              setPassword('');
               refetch();
             },
             onError: (err) => {
-              setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al enviar invitación' });
+              setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al crear recepcionista' });
             },
           }
         );
@@ -123,7 +156,7 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
 
   return (
     <div className="space-y-8">
-      {/* Invite form */}
+      {/* Employee creation form */}
       <GlassCard className="overflow-hidden border border-teal-500/10 shadow-lg relative">
         <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="flex items-center gap-3 mb-6">
@@ -131,63 +164,158 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
             <UserPlus className="size-5 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-foreground">Contratar y Reclutar Personal</h3>
-            <p className="text-xs text-muted-foreground">Envía un enlace de invitación para registrarse en el sistema</p>
+            <h3 className="text-lg font-bold text-foreground">Crear y Contratar Empleado</h3>
+            <p className="text-xs text-muted-foreground">Registra inmediatamente al personal y vincúlalo a tu clínica</p>
           </div>
         </div>
 
-        <form onSubmit={handleInvite} className="grid gap-4 sm:grid-cols-3 items-end">
-          <div className="space-y-1.5 sm:col-span-1">
-            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Shield className="size-3.5 text-teal-500" />
-              Rol de Negocio
-            </label>
-            <div className="relative">
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as any)}
-                className="glass-input w-full h-11 px-4 rounded-xl text-sm text-foreground focus:outline-none appearance-none bg-transparent pr-8"
-              >
-                <option value="doctor" className="bg-slate-800 text-white">Médico / Doctor</option>
-                <option value="receptionist" className="bg-slate-800 text-white">Recepcionista</option>
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                ▼
+        <form onSubmit={handleCreateEmployee} className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Shield className="size-3.5 text-teal-500" />
+                Rol de Negocio *
+              </label>
+              <div className="relative">
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as any)}
+                  className="glass-input w-full h-11 px-4 rounded-xl text-sm text-foreground focus:outline-none appearance-none bg-transparent pr-8"
+                >
+                  <option value="doctor" className="bg-slate-800 text-white">Médico / Doctor</option>
+                  <option value="receptionist" className="bg-slate-800 text-white">Recepcionista</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                  ▼
+                </div>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <User className="size-3.5 text-teal-500" />
+                Nombre Completo *
+              </label>
+              <Input
+                type="text"
+                placeholder="Dr. Juan Pérez"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Mail className="size-3.5 text-teal-500" />
+                Correo Electrónico *
+              </label>
+              <Input
+                type="email"
+                placeholder="doctor@oasis.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <KeyRound className="size-3.5 text-teal-500" />
+                Contraseña Inicial *
+              </label>
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                required
+              />
             </div>
           </div>
 
-          <div className="space-y-1.5 sm:col-span-1">
-            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Mail className="size-3.5 text-teal-500" />
-              Correo Electrónico
-            </label>
-            <Input
-              type="email"
-              placeholder="doctor@oasis.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
-            />
-          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Mail className="size-3.5 text-teal-500" />
+                Celular / Teléfono
+              </label>
+              <Input
+                type="text"
+                placeholder="+505 8888-8888"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+              />
+            </div>
 
-          <Button
-            type="submit"
-            disabled={isInviting}
-            className="glass-btn-primary rounded-xl h-11 font-semibold flex items-center justify-center gap-2"
-          >
-            {isInviting ? (
+            {role === 'doctor' && (
               <>
-                <Loader2 className="size-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              <>
-                <Plus className="size-4" />
-                Enviar Invitación
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Stethoscope className="size-3.5 text-teal-500" />
+                    Especialidad *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Pediatría, Cardiología..."
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                    className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Building className="size-3.5 text-teal-500" />
+                    Código / Licencia MINSA *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="MINSA-12345"
+                    value={licenseNumber}
+                    onChange={(e) => setLicenseNumber(e.target.value)}
+                    className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                    required
+                  />
+                </div>
               </>
             )}
-          </Button>
+          </div>
+
+          <div className="p-4 rounded-xl bg-teal-500/5 border border-teal-500/10 text-xs text-teal-600 dark:text-teal-400 flex items-start gap-2.5">
+            <UserCheck className="size-4 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Política de Cumplimiento Legal (Cumplimiento de 14 días)</p>
+              <p className="mt-0.5 opacity-90">
+                Al crear la cuenta del personal, el sistema le otorgará automáticamente un plazo de 14 días para cargar sus documentos médicos y legales (Cédula, RUC, Título de especialidad, etc.) en su propio perfil. De lo contrario, su cuenta quedará suspendida temporalmente por auditoría.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button
+              type="submit"
+              disabled={isCreating}
+              className="glass-btn-primary rounded-xl h-11 px-8 font-semibold flex items-center gap-2"
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Creando Empleado...
+                </>
+              ) : (
+                <>
+                  <Plus className="size-4" />
+                  Contratar y Crear Cuenta
+                </>
+              )}
+            </Button>
+          </div>
         </form>
       </GlassCard>
 
@@ -358,8 +486,13 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
 // --- PHARMACY STAFF MANAGEMENT COMPONENT ---
 export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) {
   const { setNotification } = useAuthStore();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState<'cashier' | 'delivery_driver'>('cashier');
+  const [vehicleType, setVehicleType] = useState('motocicleta');
+  const [licensePlate, setLicensePlate] = useState('');
 
   const { data, isLoading, error, refetch } = usePharmacyWorkers(pharmacyId);
   const inviteCashier = useInviteCashier();
@@ -368,41 +501,68 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
 
   const cashiers = data?.cashiers || [];
   const drivers = data?.drivers || [];
-  const isInviting = inviteCashier.isPending || inviteDriver.isPending;
+  const isCreating = inviteCashier.isPending || inviteDriver.isPending;
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setNotification({ type: 'warning', message: 'Por favor, introduce un correo electrónico válido' });
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setNotification({ type: 'warning', message: 'Por favor, completa Nombre, Email y Contraseña' });
       return;
     }
 
     try {
       if (role === 'cashier') {
         await inviteCashier.mutateAsync(
-          { pharmacyId, email: email.trim() },
+          {
+            pharmacyId,
+            email: email.trim(),
+            name: name.trim(),
+            phone: phone.trim() || undefined,
+            password: password.trim(),
+          } as any,
           {
             onSuccess: () => {
-              setNotification({ type: 'success', message: 'Invitación enviada al Cajero con éxito' });
+              setNotification({
+                type: 'success',
+                message: 'Cajero creado y vinculado con éxito. 14 días para completar perfil.',
+              });
+              setName('');
               setEmail('');
+              setPhone('');
+              setPassword('');
               refetch();
             },
             onError: (err) => {
-              setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al enviar invitación' });
+              setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al crear cajero' });
             },
           }
         );
       } else {
         await inviteDriver.mutateAsync(
-          { pharmacyId, email: email.trim() },
+          {
+            pharmacyId,
+            email: email.trim(),
+            name: name.trim(),
+            phone: phone.trim() || undefined,
+            password: password.trim(),
+            vehicleType,
+            licensePlate: licensePlate.trim() || undefined,
+          } as any,
           {
             onSuccess: () => {
-              setNotification({ type: 'success', message: 'Invitación enviada al Repartidor con éxito' });
+              setNotification({
+                type: 'success',
+                message: 'Repartidor creado y vinculado con éxito. Plazo de 14 días para documentos.',
+              });
+              setName('');
               setEmail('');
+              setPhone('');
+              setPassword('');
+              setLicensePlate('');
               refetch();
             },
             onError: (err) => {
-              setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al enviar invitación' });
+              setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al crear repartidor' });
             },
           }
         );
@@ -436,7 +596,7 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
 
   return (
     <div className="space-y-8">
-      {/* Invite form */}
+      {/* Employee creation form */}
       <GlassCard className="overflow-hidden border border-sky-500/10 shadow-lg relative">
         <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="flex items-center gap-3 mb-6">
@@ -444,63 +604,163 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
             <UserPlus className="size-5 text-sky-600 dark:text-sky-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-foreground">Contratar y Reclutar Personal</h3>
-            <p className="text-xs text-muted-foreground">Envía un enlace de invitación para registrarse en el sistema de farmacia</p>
+            <h3 className="text-lg font-bold text-foreground">Crear y Contratar Personal</h3>
+            <p className="text-xs text-muted-foreground">Registra inmediatamente al personal y vincúlalo a tu farmacia</p>
           </div>
         </div>
 
-        <form onSubmit={handleInvite} className="grid gap-4 sm:grid-cols-3 items-end">
-          <div className="space-y-1.5 sm:col-span-1">
-            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Shield className="size-3.5 text-sky-500" />
-              Rol de Negocio
-            </label>
-            <div className="relative">
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as any)}
-                className="glass-input w-full h-11 px-4 rounded-xl text-sm text-foreground focus:outline-none appearance-none bg-transparent pr-8"
-              >
-                <option value="cashier" className="bg-slate-800 text-white">Cajero</option>
-                <option value="delivery_driver" className="bg-slate-800 text-white">Repartidor (Delivery)</option>
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                ▼
+        <form onSubmit={handleCreateEmployee} className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Shield className="size-3.5 text-sky-500" />
+                Rol de Negocio *
+              </label>
+              <div className="relative">
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as any)}
+                  className="glass-input w-full h-11 px-4 rounded-xl text-sm text-foreground focus:outline-none appearance-none bg-transparent pr-8"
+                >
+                  <option value="cashier" className="bg-slate-800 text-white">Cajero</option>
+                  <option value="delivery_driver" className="bg-slate-800 text-white">Repartidor (Delivery)</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                  ▼
+                </div>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <User className="size-3.5 text-sky-500" />
+                Nombre Completo *
+              </label>
+              <Input
+                type="text"
+                placeholder="Juan Pérez"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Mail className="size-3.5 text-sky-500" />
+                Correo Electrónico *
+              </label>
+              <Input
+                type="email"
+                placeholder="empleado@oasis.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <KeyRound className="size-3.5 text-sky-500" />
+                Contraseña Inicial *
+              </label>
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                required
+              />
             </div>
           </div>
 
-          <div className="space-y-1.5 sm:col-span-1">
-            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Mail className="size-3.5 text-sky-500" />
-              Correo Electrónico
-            </label>
-            <Input
-              type="email"
-              placeholder="empleado@oasis.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
-            />
-          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Mail className="size-3.5 text-sky-500" />
+                Celular / Teléfono
+              </label>
+              <Input
+                type="text"
+                placeholder="+505 8888-8888"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+              />
+            </div>
 
-          <Button
-            type="submit"
-            disabled={isInviting}
-            className="glass-btn-primary rounded-xl h-11 font-semibold flex items-center justify-center gap-2"
-          >
-            {isInviting ? (
+            {role === 'delivery_driver' && (
               <>
-                <Loader2 className="size-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              <>
-                <Plus className="size-4" />
-                Enviar Invitación
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Truck className="size-3.5 text-sky-500" />
+                    Tipo de Vehículo
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={vehicleType}
+                      onChange={(e) => setVehicleType(e.target.value)}
+                      className="glass-input w-full h-11 px-4 rounded-xl text-sm text-foreground focus:outline-none appearance-none bg-transparent pr-8"
+                    >
+                      <option value="motocicleta" className="bg-slate-800 text-white">Motocicleta</option>
+                      <option value="automovil" className="bg-slate-800 text-white">Automóvil</option>
+                      <option value="bicicleta" className="bg-slate-800 text-white">Bicicleta / A pie</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                      ▼
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Building className="size-3.5 text-sky-500" />
+                    Placa del Vehículo
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="M 12345"
+                    value={licensePlate}
+                    onChange={(e) => setLicensePlate(e.target.value)}
+                    className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm placeholder:text-muted-foreground/50"
+                  />
+                </div>
               </>
             )}
-          </Button>
+          </div>
+
+          <div className="p-4 rounded-xl bg-sky-500/5 border border-sky-500/10 text-xs text-sky-600 dark:text-sky-400 flex items-start gap-2.5">
+            <UserCheck className="size-4 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Cumplimiento Técnico (Período de Documentos)</p>
+              <p className="mt-0.5 opacity-90">
+                Al dar de alta a este personal de farmacia, el sistema lo vinculará directamente a tu inventario y roles de entrega. Cuentan con un período de gracia legal de 14 días para adjuntar su identificación fiscal y licencia de conducir.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button
+              type="submit"
+              disabled={isCreating}
+              className="glass-btn-primary rounded-xl h-11 px-8 font-semibold flex items-center gap-2"
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Creando Personal...
+                </>
+              ) : (
+                <>
+                  <Plus className="size-4" />
+                  Dar de Alta y Crear Cuenta
+                </>
+              )}
+            </Button>
+          </div>
         </form>
       </GlassCard>
 

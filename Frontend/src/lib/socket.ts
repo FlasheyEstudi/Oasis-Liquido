@@ -1,10 +1,12 @@
 import { io, Socket } from 'socket.io-client';
+import { getDynamicUrl } from '@/utils/constants';
 
 let socket: Socket | null = null;
 
 export const getSocket = () => {
   if (!socket) {
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:8000';
+    const rawUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:8000';
+    const socketUrl = getDynamicUrl(rawUrl);
     socket = io(socketUrl, {
       autoConnect: true,
       reconnection: true,

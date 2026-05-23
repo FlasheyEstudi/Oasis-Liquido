@@ -26,10 +26,22 @@ export async function GET(req: NextRequest) {
       if (payload) userRole = payload.role;
     }
 
+    // Parse optional numeric parameters
+    const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : undefined;
+    const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : undefined;
+    const radiusKm = searchParams.get('radius_km') 
+      ? parseFloat(searchParams.get('radius_km')!) 
+      : searchParams.get('radius')
+      ? parseFloat(searchParams.get('radius')!)
+      : undefined;
+
     const clinics = await clinicService.getClinics({
       search: searchParams.get('search') || undefined,
       isActive: searchParams.get('is_active') || undefined,
       userRole,
+      lat,
+      lng,
+      radiusKm,
     });
 
     return successResponse(clinics);

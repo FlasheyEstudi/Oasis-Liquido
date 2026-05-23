@@ -25,7 +25,7 @@ export interface MapViewProps {
   theme?: 'light' | 'dark';
 }
 
-// --- Dynamic import with SSR disabled (maplibre-gl needs browser) ---
+// --- Dynamic import with SSR disabled (Leaflet needs window object) ---
 const MapViewInner = dynamic(
   () => import('./map-view-inner').then((mod) => mod.MapViewInner),
   {

@@ -15,7 +15,17 @@ export const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  role: z.enum(['patient', 'clinic_owner', 'pharmacy_owner', 'delivery_driver']).default('patient'),
+  role: z.enum(['patient', 'clinic_admin', 'pharmacy_admin', 'pharmacy_manager', 'delivery_driver', 'admin']).default('patient'),
+  pharmacyId: z.string().optional(),
+  clinicId: z.string().optional(),
+  vehicleType: z.string().optional(),
+  licensePlate: z.string().optional(),
+  invitationToken: z.string().optional(),
+  entityName: z.string().optional(),
+  entityAddress: z.string().optional(),
+  entityPhone: z.string().optional(),
+  entityLatitude: z.number().optional(),
+  entityLongitude: z.number().optional(),
 });
 
 export const forgotPasswordSchema = z.object({

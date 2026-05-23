@@ -4,8 +4,27 @@
 // Todas las integraciones son reales, sin mocks
 // ============================================
 
-// URL base del API real
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.medired-dev.com';
+// URL utility helper to resolve localhost to local network IP dynamically on external devices
+export function getDynamicUrl(url: string): string {
+  if (typeof window === 'undefined') return url;
+  const hostname = window.location.hostname;
+  // localhost or 127.0.0.1: use as-is (dev on same machine)
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return url;
+  // Local network IP: replace localhost with the device's IP so phones on same WiFi can reach
+  const isLocalIP = hostname.match(/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/)
+    || hostname.includes('127.0.0.1');
+  if (isLocalIP && url.includes('localhost')) {
+    return url.replace('localhost', hostname);
+  }
+  // External domain (tunnel, deployed, etc.): return '' so Axios uses relative URLs
+  // Next.js rewrites will proxy /api/v1/* → localhost:8000/api/v1/* server-side
+  return '';
+}
+
+// URL base del API real (dynamic check to allow local network IP connections on other devices)
+export const API_BASE_URL = typeof window !== 'undefined'
+  ? getDynamicUrl(process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000')
+  : (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000');
 
 // Estilo de mapa OpenFreeMap (sin API key)
 export const MAP_STYLE_URL = process.env.NEXT_PUBLIC_MAP_STYLE || 'https://openfreemap.org/styles/liberty.json';
@@ -77,6 +96,8 @@ export const ROLE_COLORS: Record<string, { bg: string; text: string; border: str
   patient: { bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/20' },
   pharmacy_manager: { bg: 'bg-violet-500/10', text: 'text-violet-600 dark:text-violet-400', border: 'border-violet-500/20' },
   delivery_driver: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-500/20' },
+  clinic_admin: { bg: 'bg-indigo-500/10', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-500/20' },
+  pharmacy_admin: { bg: 'bg-fuchsia-500/10', text: 'text-fuchsia-600 dark:text-fuchsia-400', border: 'border-fuchsia-500/20' },
 };
 
 // Colores de estado para citas
@@ -99,6 +120,7 @@ export const PRESCRIPTION_STATUS_CONFIG: Record<string, { label: string; color: 
 // Colores de estado para entregas
 export const DELIVERY_STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
   pending: { label: 'Pendiente', color: 'text-slate-700 dark:text-slate-400', bgColor: 'bg-slate-500/10' },
+  accepted: { label: 'Asignada', color: 'text-sky-700 dark:text-sky-400', bgColor: 'bg-sky-500/10' },
   assigned: { label: 'Asignada', color: 'text-sky-700 dark:text-sky-400', bgColor: 'bg-sky-500/10' },
   picked_up: { label: 'Recogido', color: 'text-teal-700 dark:text-teal-400', bgColor: 'bg-teal-500/10' },
   in_transit: { label: 'En tránsito', color: 'text-amber-700 dark:text-amber-400', bgColor: 'bg-amber-500/10' },

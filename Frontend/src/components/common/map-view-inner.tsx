@@ -139,11 +139,31 @@ export function MapViewInner({
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const routeLineRef = useRef<L.Polyline | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Dynamic theme detection checking Tailwind class changes on html element
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const checkDark = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    checkDark();
+
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Default coordinate center (Leaflet expects [lat, lng])
   const mapCenter: [number, number] = center || [DEFAULT_LAT, DEFAULT_LNG];
@@ -166,14 +186,15 @@ export function MapViewInner({
       }).addTo(map);
 
       // CartoDB Voyager (light) and Dark Matter (dark) tiles feel extremely premium
-      const tileUrl = theme === 'dark'
+      const tileUrl = document.documentElement.classList.contains('dark')
         ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
-      L.tileLayer(tileUrl, {
+      const tileLayer = L.tileLayer(tileUrl, {
         maxZoom: 19,
       }).addTo(map);
 
+      tileLayerRef.current = tileLayer;
       mapRef.current = map;
       setMapLoaded(true);
     } catch (err) {
@@ -200,94 +221,153 @@ export function MapViewInner({
     };
   }, []);
 
+  // Update tile layer url dynamically when isDarkMode changes
+  useEffect(() => {
+    if (!mapRef.current || !tileLayerRef.current) return;
+    const newUrl = isDarkMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    tileLayerRef.current.setUrl(newUrl);
+  }, [isDarkMode]);
+
   // Update Markers when prop changes
   useEffect(() => {
-    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    if (typeof map.getPanes !== 'function' || !map.getPanes()) return;
 
-    // Remove existing markers
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
+    try {
+      // Remove existing markers
+      markersRef.current.forEach((m) => {
+        try {
+          m.remove();
+        } catch (e) {}
+      });
+      markersRef.current = [];
 
-    // Add new markers
-    markers.forEach((marker) => {
-      const color = marker.color || MARKER_COLORS[marker.type || ''] || DEFAULT_MARKER_COLOR;
-      const icon = createMarkerIcon(color);
+      // Add new markers
+      markers.forEach((marker) => {
+        try {
+          const color = marker.color || MARKER_COLORS[marker.type || ''] || DEFAULT_MARKER_COLOR;
+          const icon = createMarkerIcon(color);
 
-      const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
-        .addTo(mapRef.current!);
+          const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
+            .addTo(map);
 
-      if (marker.label) {
-        leafletMarker.bindPopup(`
-          <div style="padding: 4px 8px; font-size: 13px; font-weight: 500; color: #1e293b; font-family: sans-serif;">
-            ${marker.label}
-          </div>
-        `);
-      }
+          if (marker.label) {
+            leafletMarker.bindPopup(`
+              <div class="map-popup-text" style="padding: 4px 8px; font-size: 13px; font-weight: 700; font-family: sans-serif;">
+                ${marker.label}
+              </div>
+            `);
+          }
 
-      if (onMarkerClick) {
-        leafletMarker.on('click', () => {
-          onMarkerClick(marker);
-        });
-      }
+          if (onMarkerClick) {
+            leafletMarker.on('click', () => {
+              onMarkerClick(marker);
+            });
+          }
 
-      markersRef.current.push(leafletMarker);
-    });
+          markersRef.current.push(leafletMarker);
+        } catch (markerErr) {
+          console.warn('⚠️ MapViewInner: Failed to add marker:', markerErr);
+        }
+      });
+    } catch (err) {
+      console.warn('⚠️ MapViewInner: Error updating markers:', err);
+    }
   }, [markers, mapLoaded, onMarkerClick]);
 
   // Update Route Polyline
   useEffect(() => {
-    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    if (typeof map.getPanes !== 'function' || !map.getPanes()) return;
 
     const drawRoute = async () => {
-      const map = mapRef.current!;
-
-      // Remove existing polyline
-      if (routeLineRef.current) {
-        routeLineRef.current.remove();
-        routeLineRef.current = null;
-      }
-
-      if (!route) return;
-
-      let geometry = route.geometry;
-
-      if (!geometry && route.origin && route.destination) {
-        try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/routes/driving?origin=${route.origin}&destination=${route.destination}`
-          );
-          const result = await res.json();
-          if (result.success) {
-            geometry = result.data.geometry;
-          }
-        } catch (err) {
-          console.error('Failed to fetch OSRM route:', err);
+      try {
+        // Remove existing polyline
+        if (routeLineRef.current) {
+          try {
+            routeLineRef.current.remove();
+          } catch (e) {}
+          routeLineRef.current = null;
         }
+
+        if (!route && markers.length < 2) return;
+
+        let geometry = route?.geometry;
+
+        if (!geometry && route?.origin && route?.destination) {
+          try {
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/routes/driving?origin=${route.origin}&destination=${route.destination}`
+            );
+            const result = await res.json();
+            if (result.success) {
+              geometry = result.data.geometry;
+            }
+          } catch (err) {
+            console.error('Failed to fetch OSRM route:', err);
+          }
+        }
+
+        // Try to parse the coordinates
+        let coords = geometry ? parseRouteGeometry(geometry) : null;
+        const isStraightLine = coords && coords.length <= 2;
+
+        // CLIENT-SIDE BROWSER ROUTING FALLBACK:
+        if ((!coords || isStraightLine) && markers.length >= 2) {
+          const originMarker = markers.find(m => m.type === 'driver') || markers.find(m => m.type === 'pharmacy') || markers[0];
+          const destMarker = markers.find(m => m.type === 'destination') || markers[markers.length - 1];
+
+          if (originMarker && destMarker) {
+            try {
+              console.log("📡 Frontend: Fetching street route directly from browser network...");
+              const publicUrl = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${originMarker.lng},${originMarker.lat};${destMarker.lng},${destMarker.lat}?overview=full&geometries=polyline`;
+              const res = await fetch(publicUrl);
+              const data = await res.json();
+              if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                const publicCoords = parseRouteGeometry(data.routes[0].geometry);
+                if (publicCoords && publicCoords.length > 2) {
+                  console.log("✅ Frontend: Street-aware route loaded successfully in browser!");
+                  coords = publicCoords;
+                }
+              }
+            } catch (err) {
+              console.warn("⚠️ Frontend failed to fetch route directly:", err);
+            }
+          }
+        }
+
+        if (!coords || coords.length < 2) return;
+        if (!map || typeof map.getPanes !== 'function' || !map.getPanes()) return;
+
+        // Draw beautiful, logical street-aware polyline following roads
+        const polyline = L.polyline(coords, {
+          color: '#0d9488', // Teal-600
+          weight: 5,
+          opacity: 0.85,
+          lineJoin: 'round',
+          lineCap: 'round',
+        }).addTo(map);
+
+        routeLineRef.current = polyline;
+
+        // Adjust map view bounding box to fit the route perfectly
+        try {
+          const bounds = L.latLngBounds(coords);
+          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+        } catch (err) {
+          console.warn('⚠️ MapViewInner: fitBounds failed:', err);
+        }
+      } catch (err) {
+        console.warn('⚠️ MapViewInner: Error drawing route:', err);
       }
-
-      if (!geometry) return;
-
-      const coords = parseRouteGeometry(geometry);
-      if (!coords || coords.length < 2) return;
-
-      // Draw beautiful, logical street-aware polyline following roads
-      const polyline = L.polyline(coords, {
-        color: '#0d9488', // Teal-600
-        weight: 5,
-        opacity: 0.85,
-        lineJoin: 'round',
-        lineCap: 'round',
-      }).addTo(map);
-
-      routeLineRef.current = polyline;
-
-      // Adjust map view bounding box to fit the route perfectly
-      const bounds = L.latLngBounds(coords);
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
     };
 
     drawRoute();
-  }, [route, mapLoaded]);
+  }, [route, mapLoaded, markers]);
 
   // Handle Geolocation for user marker
   useEffect(() => {
@@ -310,10 +390,14 @@ export function MapViewInner({
 
         userMarkerRef.current = marker;
 
-        mapRef.current.flyTo([latitude, longitude], zoom, {
-          animate: true,
-          duration: 1.5,
-        });
+        try {
+          mapRef.current.flyTo([latitude, longitude], zoom, {
+            animate: true,
+            duration: 1.5,
+          });
+        } catch (err) {
+          console.warn('⚠️ MapViewInner: flyTo failed (map might be unmounted):', err);
+        }
       },
       (err) => {
         console.warn('Geolocation error:', err);
@@ -331,8 +415,15 @@ export function MapViewInner({
 
   // Handle Center coordinate updates
   useEffect(() => {
-    if (!mapRef.current || !mapLoaded || !center) return;
-    mapRef.current.panTo(center, { animate: true, duration: 1.0 });
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !center) return;
+    if (typeof map.getPanes !== 'function' || !map.getPanes()) return;
+
+    try {
+      map.panTo(center, { animate: true, duration: 1.0 });
+    } catch (err) {
+      console.warn('⚠️ MapViewInner: panTo failed:', err);
+    }
   }, [center?.[0], center?.[1], mapLoaded]);
 
   // Error overlay
@@ -355,7 +446,8 @@ export function MapViewInner({
   return (
     <div
       className={cn(
-        'relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl glass',
+        'relative rounded-2xl overflow-hidden border shadow-2xl transition-all duration-300',
+        isDarkMode ? 'map-theme-dark border-white/5 bg-zinc-950 shadow-black/50' : 'map-theme-light border-slate-200 bg-white shadow-slate-100',
         className
       )}
       style={{ height }}
@@ -373,11 +465,15 @@ export function MapViewInner({
           }
         }
         /* Override default leaflet styling for clean UI */
-        .leaflet-container {
+        .map-theme-dark .leaflet-container {
           background: #09090b !important; /* zinc-950 background */
           font-family: inherit;
         }
-        .leaflet-bar {
+        .map-theme-light .leaflet-container {
+          background: #f8fafc !important; /* slate-50 background */
+          font-family: inherit;
+        }
+        .map-theme-dark .leaflet-bar {
           border: 1px solid rgba(255, 255, 255, 0.08) !important;
           border-radius: 12px !important;
           box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
@@ -385,45 +481,97 @@ export function MapViewInner({
           backdrop-filter: blur(12px) !important;
           overflow: hidden;
         }
-        .leaflet-bar a {
+        .map-theme-light .leaflet-bar {
+          border: 1px solid rgba(0, 0, 0, 0.08) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+          background: rgba(255, 255, 255, 0.85) !important;
+          backdrop-filter: blur(12px) !important;
+          overflow: hidden;
+        }
+        .map-theme-dark .leaflet-bar a {
           background: transparent !important;
           color: rgba(255, 255, 255, 0.7) !important;
           border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
           font-weight: bold;
           transition: all 0.2s;
         }
-        .leaflet-bar a:hover {
+        .map-theme-light .leaflet-bar a {
+          background: transparent !important;
+          color: rgba(15, 23, 42, 0.7) !important;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+          font-weight: bold;
+          transition: all 0.2s;
+        }
+        .map-theme-dark .leaflet-bar a:hover {
           color: #ffffff !important;
           background: rgba(255, 255, 255, 0.1) !important;
         }
-        .leaflet-bar a:last-child {
+        .map-theme-light .leaflet-bar a:hover {
+          color: #0f172a !important;
+          background: rgba(0, 0, 0, 0.05) !important;
+        }
+        .map-theme-dark .leaflet-bar a:last-child {
           border-bottom: none !important;
         }
-        .leaflet-popup-content-wrapper {
-          background: rgba(15, 23, 42, 0.85) !important;
+        .map-theme-light .leaflet-bar a:last-child {
+          border-bottom: none !important;
+        }
+        .map-theme-dark .leaflet-popup-content-wrapper {
+          background: rgba(15, 23, 42, 0.9) !important;
           backdrop-filter: blur(12px) !important;
           border: 1px solid rgba(255, 255, 255, 0.08) !important;
           border-radius: 16px !important;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
         }
-        .leaflet-popup-tip {
-          background: rgba(15, 23, 42, 0.85) !important;
+        .map-theme-light .leaflet-popup-content-wrapper {
+          background: rgba(255, 255, 255, 0.98) !important;
+          backdrop-filter: blur(12px) !important;
+          border: 1px solid rgba(0, 0, 0, 0.08) !important;
+          border-radius: 16px !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+        }
+        .map-theme-dark .leaflet-popup-content {
+          color: #ffffff !important;
+          font-family: sans-serif;
+        }
+        .map-theme-light .leaflet-popup-content {
+          color: #0f172a !important;
+          font-family: sans-serif;
+        }
+        .map-theme-dark .leaflet-popup-tip {
+          background: rgba(15, 23, 42, 0.9) !important;
           border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        .map-theme-light .leaflet-popup-tip {
+          background: rgba(255, 255, 255, 0.98) !important;
+          border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        }
+        /* Popup text classes */
+        .map-theme-dark .map-popup-text {
+          color: #ffffff !important;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        .map-theme-light .map-popup-text {
+          color: #0f172a !important;
         }
       `}</style>
 
       {/* Premium Cinematic Loading overlay */}
       {!mapLoaded && (
-        <div className="absolute inset-0 z-[1000] flex flex-col items-center justify-center bg-zinc-950/60 backdrop-blur-md">
+        <div className={cn(
+          "absolute inset-0 z-[1000] flex flex-col items-center justify-center backdrop-blur-md transition-all duration-300",
+          isDarkMode ? "bg-zinc-950/60" : "bg-white/60"
+        )}>
           <div className="relative">
             <div className="size-16 rounded-full border-b-2 border-t-2 border-emerald-500 animate-spin" />
             <div className="absolute inset-0 size-16 rounded-full border-r-2 border-l-2 border-sky-500 animate-spin-slow" />
-            <MapPin className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-6 text-white animate-pulse" />
+            <MapPin className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-6 animate-pulse", isDarkMode ? "text-white" : "text-zinc-800")} />
           </div>
-          <p className="mt-6 text-sm font-black text-white uppercase tracking-[0.3em] animate-pulse">
+          <p className={cn("mt-6 text-sm font-black uppercase tracking-[0.3em] animate-pulse", isDarkMode ? "text-white" : "text-zinc-800")}>
             Localizando Oasis...
           </p>
-          <div className="mt-2 w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+          <div className="mt-2 w-32 h-1 bg-neutral-500/10 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 animate-shimmer" style={{ width: '100%' }} />
           </div>
         </div>

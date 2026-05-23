@@ -62,7 +62,7 @@ export function ContextualTopBar({ onMenuClick }: ContextualTopBarProps) {
 
   if (!user) return null;
 
-  const roleColors = ROLE_COLORS[user.role];
+  const roleColors = ROLE_COLORS[user.role] || { bg: 'bg-teal-500/10', text: 'text-teal-600 dark:text-teal-400', border: 'border-teal-500/20' };
   const pageTitle = PAGE_TITLES[currentPage] || currentPage;
   const parentPage = PAGE_PARENTS[currentPage];
   const parentTitle = parentPage ? PAGE_TITLES[parentPage] : null;

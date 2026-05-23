@@ -11,6 +11,7 @@ import {
 import type { Clinic } from '@/types';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { ClinicStaffManagement } from '../common/staff-management';
+import { CashReconciliation } from '../common/cash-reconciliation';
 import {
   CircularPerformanceRadar,
   AppointmentWaveform,
@@ -65,7 +66,7 @@ const emptyForm: ClinicFormData = {
 };
 
 export function ManageClinics() {
-  const { user, setNotification } = useAuthStore();
+  const { user, setNotification, currentPage } = useAuthStore();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<Clinic | null>(null);
@@ -189,74 +190,53 @@ export function ManageClinics() {
       );
     }
 
-    return (
-      <div className="space-y-6 p-4 md:p-6">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-2"
-        >
-          <h1 className="text-2xl font-bold text-foreground">Gestión de Clínica y Personal</h1>
-          <p className="text-sm text-muted-foreground">Administra el personal, doctores y la información de tu sede</p>
-        </motion.div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Sede details card */}
-          <div className="lg:col-span-1 space-y-6">
-            <GlassCard className="border border-teal-500/10 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
-              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2 border-b pb-2 border-border/20">
-                <Building2 className="size-5 text-teal-500" />
-                Información de Sede
-              </h3>
-              
-              <div className="space-y-4 text-sm">
-                <div>
-                  <span className="text-xs text-muted-foreground block font-medium">Nombre de la Clínica</span>
-                  <span className="text-foreground font-semibold text-base">{ownedClinic.name}</span>
-                </div>
-                <div>
-                  <span className="text-xs text-muted-foreground block font-medium">Dirección Física</span>
-                  <span className="text-foreground flex items-start gap-1.5 mt-0.5">
-                    <MapPin className="size-4 text-teal-500 shrink-0 mt-0.5" />
-                    {ownedClinic.address}
-                  </span>
-                </div>
-                {ownedClinic.phone && (
-                  <div>
-                    <span className="text-xs text-muted-foreground block font-medium">Teléfono de Contacto</span>
-                    <span className="text-foreground flex items-center gap-1.5 mt-0.5">
-                      <Phone className="size-4 text-teal-500 shrink-0" />
-                      {ownedClinic.phone}
-                    </span>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/10">
-                  <div>
-                    <span className="text-xs text-muted-foreground block">Latitud</span>
-                    <span className="text-foreground font-mono text-xs">{ownedClinic.latitude}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground block">Longitud</span>
-                    <span className="text-foreground font-mono text-xs">{ownedClinic.longitude}</span>
-                  </div>
-                </div>
-              </div>
-            </GlassCard>
-          </div>
-
-          {/* Workers list & invitations */}
-          <div className="lg:col-span-2">
+    if (currentPage === 'clinic-staff') {
+      return (
+        <div className="space-y-6 p-4 md:p-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-2"
+          >
+            <h1 className="text-2xl font-bold text-foreground">Gestión de Personal</h1>
+            <p className="text-sm text-muted-foreground">Invita y administra doctores, recepcionistas y personal de la clínica</p>
+          </motion.div>
+          <div>
             <ClinicStaffManagement clinicId={ownedClinic.id} />
           </div>
         </div>
+      );
+    }
 
-        {/* 2026 Premium Analíticas de Clínica */}
-        <div className="mt-8">
-          <div className="flex flex-col gap-1 mb-6">
-            <h3 className="text-lg font-bold text-foreground">Analíticas y KPIs de Clínica</h3>
-            <p className="text-xs text-muted-foreground">Métricas en tiempo real y predictivas para optimización de sede</p>
+    if (currentPage === 'clinic-finances') {
+      return (
+        <div className="space-y-6 p-4 md:p-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-2"
+          >
+            <h1 className="text-2xl font-bold text-foreground">Arqueo y Conciliación de Caja</h1>
+            <p className="text-sm text-muted-foreground">Monitoreo de ingresos de caja física vs digital en tiempo real y bitácora de auditoría</p>
+          </motion.div>
+          <div>
+            <CashReconciliation entityId={ownedClinic.id} type="clinics" />
           </div>
+        </div>
+      );
+    }
+
+    if (currentPage === 'clinic-analytics') {
+      return (
+        <div className="space-y-6 p-4 md:p-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-2"
+          >
+            <h1 className="text-2xl font-bold text-foreground">Analíticas y KPIs de Clínica</h1>
+            <p className="text-sm text-muted-foreground">Métricas en tiempo real y predictivas para optimización de sede</p>
+          </motion.div>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -272,6 +252,73 @@ export function ManageClinics() {
               <NoShowPredictionGauge />
             </motion.div>
           </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6 p-4 md:p-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-2"
+        >
+          <h1 className="text-2xl font-bold text-foreground">Información de Sede</h1>
+          <p className="text-sm text-muted-foreground">Detalles de ubicación, contacto y estado físico de tu clínica</p>
+        </motion.div>
+
+        <div className="max-w-3xl">
+          <GlassCard className="border border-teal-500/10 shadow-lg relative overflow-hidden p-6 md:p-8">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+            <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3 border-b pb-3 border-border/20">
+              <Building2 className="size-6 text-teal-500" />
+              Sede Registrada
+            </h3>
+            
+            <div className="space-y-6 text-sm">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium mb-1">Nombre de la Clínica</span>
+                  <span className="text-foreground font-bold text-lg">{ownedClinic.name}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium mb-1">Estado de Sede</span>
+                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    Activo y Operando
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-xs text-muted-foreground block font-medium mb-1">Dirección Física</span>
+                <span className="text-foreground flex items-start gap-2 text-base">
+                  <MapPin className="size-5 text-teal-500 shrink-0 mt-0.5" />
+                  {ownedClinic.address}
+                </span>
+              </div>
+
+              {ownedClinic.phone && (
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium mb-1">Teléfono de Contacto</span>
+                  <span className="text-foreground flex items-center gap-2 text-base">
+                    <Phone className="size-5 text-teal-500 shrink-0" />
+                    {ownedClinic.phone}
+                  </span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/10">
+                <div>
+                  <span className="text-xs text-muted-foreground block mb-1">Coordenada de Latitud</span>
+                  <span className="text-foreground font-mono text-sm">{ownedClinic.latitude}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block mb-1">Coordenada de Longitud</span>
+                  <span className="text-foreground font-mono text-sm">{ownedClinic.longitude}</span>
+                </div>
+              </div>
+            </div>
+          </GlassCard>
         </div>
       </div>
     );

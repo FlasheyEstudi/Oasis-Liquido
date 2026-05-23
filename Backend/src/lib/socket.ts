@@ -6,8 +6,9 @@ let io: SocketServer;
 export function initSocket(server: HTTPServer) {
   io = new SocketServer(server, {
     cors: {
-      origin: process.env.NEXT_PUBLIC_APP_URL || '*',
+      origin: '*', // Allow all client connections (localhost:3000, etc.)
       methods: ['GET', 'POST'],
+      credentials: true
     },
   });
 
@@ -29,22 +30,32 @@ export function initSocket(server: HTTPServer) {
     });
   });
 
+  // Bind to global variable to be accessed safely by Next.js API Routes
+  (global as any).io = io;
   return io;
 }
 
 export function getIO() {
-  if (!io) {
-    throw new Error('Socket.io not initialized');
-  }
-  return io;
+  const globalIo = (global as any).io;
+  if (globalIo) return globalIo;
+  if (io) return io;
+  return null;
 }
 
 /**
  * Emit delivery location update to specific order room
  */
 export function emitDeliveryLocation(orderId: string, lat: number, lng: number) {
-  if (io) {
-    io.to(`order:${orderId}`).emit('delivery:locationUpdate', { orderId, lat, lng });
+  try {
+    const ioInstance = getIO();
+    if (ioInstance) {
+      ioInstance.to(`order:${orderId}`).emit('delivery:locationUpdate', { orderId, lat, lng });
+      console.log(`📡 [Socket.io] Emitted location update for order ${orderId}: (${lat}, ${lng})`);
+    } else {
+      console.log(`ℹ️ [Socket.io] Server not active, skipped location update for order ${orderId}.`);
+    }
+  } catch (err: any) {
+    console.warn('⚠️ Could not emit delivery location via socket:', err.message);
   }
 }
 
@@ -52,7 +63,15 @@ export function emitDeliveryLocation(orderId: string, lat: number, lng: number) 
  * Emit new chat message to specific session room
  */
 export function emitChatMessage(sessionId: string, message: any) {
-  if (io) {
-    io.to(`chat:${sessionId}`).emit('chat:message', message);
+  try {
+    const ioInstance = getIO();
+    if (ioInstance) {
+      ioInstance.to(`chat:${sessionId}`).emit('chat:message', message);
+      console.log(`💬 [Socket.io] Emitted chat message to session ${sessionId}`);
+    } else {
+      console.log(`ℹ️ [Socket.io] Server not active, skipped chat message to session ${sessionId}.`);
+    }
+  } catch (err: any) {
+    console.warn('⚠️ Could not emit chat message via socket:', err.message);
   }
 }

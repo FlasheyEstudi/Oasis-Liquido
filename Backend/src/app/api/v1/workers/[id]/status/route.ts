@@ -36,4 +36,4 @@ export const PUT = withAuth(async (req: AuthenticatedRequest, { params }: { para
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error del servidor', 500);
   }
-}, { roles: ['clinic_owner', 'clinic_admin', 'pharmacy_owner', 'pharmacy_admin', 'admin'] });
+}, { roles: ['clinic_admin', 'pharmacy_admin', 'admin'] });

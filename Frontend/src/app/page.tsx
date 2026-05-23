@@ -166,12 +166,18 @@ export default function Home() {
       case 'consulta':
         return <Consultation />;
 
-      // Admin
+      // Admin & Owners
       case 'manage-clinics':
       case 'gestionar-clinicas':
+      case 'clinic-staff':
+      case 'clinic-finances':
+      case 'clinic-analytics':
         return <ManageClinics />;
       case 'manage-pharmacies':
       case 'gestionar-farmacias':
+      case 'pharmacy-staff':
+      case 'pharmacy-finances':
+      case 'pharmacy-analytics':
         return <ManagePharmacies />;
       case 'manage-users':
       case 'gestionar-usuarios':

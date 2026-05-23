@@ -27,7 +27,11 @@ export interface PharmacyListParams {
 
 /** List pharmacies with optional geo/stock filters */
 export async function list(params?: PharmacyListParams): Promise<PaginatedResponse<Pharmacy>> {
-  return get<Pharmacy[]>('/pharmacies', params as Record<string, unknown>) as Promise<PaginatedResponse<Pharmacy>>;
+  const queryParams: Record<string, any> = { ...params };
+  if (params?.medicine_ids && Array.isArray(params.medicine_ids)) {
+    queryParams.medicine_ids = params.medicine_ids.join(',');
+  }
+  return get<Pharmacy[]>('/pharmacies', queryParams) as Promise<PaginatedResponse<Pharmacy>>;
 }
 
 /** Get pharmacy by ID */

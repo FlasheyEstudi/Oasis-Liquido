@@ -3,16 +3,20 @@
 
 import { db } from '@/lib/db';
 
-export async function createAuditLog(data: {
-  userId?: string;
-  action: string;
-  entityType: string;
-  entityId?: string;
-  details?: string;
-  ipAddress?: string;
-  userAgent?: string;
-}) {
-  return db.auditLog.create({
+export async function createAuditLog(
+  data: {
+    userId?: string;
+    action: string;
+    entityType: string;
+    entityId?: string;
+    details?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  },
+  tx?: any
+) {
+  const client = tx || db;
+  return client.auditLog.create({
     data: {
       userId: data.userId,
       action: data.action,

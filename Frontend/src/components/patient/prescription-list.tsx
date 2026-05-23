@@ -170,7 +170,10 @@ export function PrescriptionList() {
                   <GlassCard
                     hover
                     className="!p-4"
-                    onClick={() => navigate('prescription-detail', presc.id)}
+                    onClick={() => {
+                      useAuthStore.getState().setPrescriptionId(presc.id);
+                      navigate('prescription-detail', presc.id);
+                    }}
                   >
                     <div className="flex items-start gap-3">
                       {/* QR Icon */}
@@ -222,7 +225,10 @@ export function PrescriptionList() {
                           {isActive(presc.status) && (
                             <button
                               className="glass-btn-primary rounded-full h-7 text-xs gap-1.5 px-3 flex items-center"
-                              onClick={() => navigate('pharmacy-map', presc.id)}
+                              onClick={() => {
+                                useAuthStore.getState().setPrescriptionId(presc.id);
+                                navigate('pharmacy-map', presc.id);
+                              }}
                             >
                               <Search className="size-3" />
                               Buscar farmacias

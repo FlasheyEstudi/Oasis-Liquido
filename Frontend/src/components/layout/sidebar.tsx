@@ -21,7 +21,9 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  DollarSign,
   Store,
+  Activity,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -45,7 +47,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const NAV_ITEMS: Record<UserRole, NavItem[]> = {
+const NAV_ITEMS: Record<string, NavItem[]> = {
   admin: [
     { page: 'inicio', label: 'Dashboard', icon: LayoutDashboard },
     { page: 'gestionar-clinicas', label: 'Clínicas', icon: Building2 },
@@ -54,16 +56,16 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { page: 'auditoria', label: 'Auditoría', icon: FileText },
   ],
   clinic_admin: [
-    { page: 'gestionar-clinicas', label: 'Mi Clínica', icon: Building2 },
-  ],
-  clinic_owner: [
-    { page: 'gestionar-clinicas', label: 'Mi Clínica', icon: Building2 },
+    { page: 'manage-clinics', label: 'Mi Clínica', icon: Building2 },
+    { page: 'clinic-staff', label: 'Mi Personal', icon: Users },
+    { page: 'clinic-finances', label: 'Arqueo de Caja', icon: DollarSign },
+    { page: 'clinic-analytics', label: 'Métricas & KPIs', icon: Activity },
   ],
   pharmacy_admin: [
-    { page: 'gestionar-farmacias', label: 'Mi Farmacia', icon: Store },
-  ],
-  pharmacy_owner: [
-    { page: 'gestionar-farmacias', label: 'Mi Farmacia', icon: Store },
+    { page: 'manage-pharmacies', label: 'Mi Farmacia', icon: Store },
+    { page: 'pharmacy-staff', label: 'Mi Personal', icon: Users },
+    { page: 'pharmacy-finances', label: 'Arqueo de Caja', icon: DollarSign },
+    { page: 'pharmacy-analytics', label: 'Métricas & KPIs', icon: Activity },
   ],
   doctor: [
     { page: 'inicio', label: 'Dashboard', icon: LayoutDashboard },
@@ -87,7 +89,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { page: 'gestion-pedidos', label: 'Pedidos', icon: ClipboardList },
   ],
   delivery_driver: [
-    { page: 'inicio-repartidor', label: 'Mis Entregas', icon: Truck },
+    { page: 'inicio-repartidor', label: 'Inicio', icon: Home },
   ],
 };
 
@@ -307,13 +309,19 @@ export const PAGE_TITLES: Record<AppPage, string> = {
   'solicitud-envio': 'Solicitar Entrega',
   seguimiento: 'Seguimiento de Pedido',
   consulta: 'Consulta',
-  'gestionar-clinicas': 'Clínicas',
-  'gestionar-farmacias': 'Farmacias',
+  'gestionar-clinicas': 'Mi Clínica',
+  'gestionar-farmacias': 'Mi Farmacia',
   'gestionar-usuarios': 'Usuarios',
+  'manage-clinics': 'Mi Clínica',
+  'manage-pharmacies': 'Mi Farmacia',
+  'clinic-staff': 'Mi Personal',
+  'clinic-analytics': 'Métricas & KPIs',
+  'pharmacy-staff': 'Mi Personal',
+  'pharmacy-analytics': 'Métricas & KPIs',
   inventario: 'Inventario',
   surtimiento: 'Surtir Recetas',
   'gestion-pedidos': 'Pedidos',
-  'inicio-repartidor': 'Mis Entregas',
+  'inicio-repartidor': 'Inicio',
   'detalle-envio': 'Detalle de Entrega',
   perfil: 'Mi Perfil',
   auditoria: 'Auditoría',
