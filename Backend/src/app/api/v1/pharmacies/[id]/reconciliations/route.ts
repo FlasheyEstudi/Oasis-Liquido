@@ -11,9 +11,9 @@ import * as cashReconciliationService from '@/lib/services/cash-reconciliation.s
  * GET /api/v1/pharmacies/[id]/reconciliations
  * Returns historical settlements for the pharmacy
  */
-export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { params: { id: string } }) => {
+export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
-    const pharmacyId = params.id;
+    const { id: pharmacyId } = await params;
     if (!pharmacyId) {
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de farmacia requerido', 400);
     }
@@ -29,9 +29,9 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
  * POST /api/v1/pharmacies/[id]/reconciliations
  * Saves a new daily settle / cash reconciliation record
  */
-export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { params: { id: string } }) => {
+export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
-    const pharmacyId = params.id;
+    const { id: pharmacyId } = await params;
     if (!pharmacyId) {
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de farmacia requerido', 400);
     }

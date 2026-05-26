@@ -155,6 +155,7 @@ export async function registerUser(
         await tx.deliveryDriverProfile.create({
           data: {
             userId: user.id,
+            pharmacyId: pharmacyId!,
             vehicleType: vehicleType || 'motocicleta',
             licensePlate: licensePlate || null,
             isAvailable: true,

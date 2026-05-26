@@ -59,6 +59,9 @@ export function AuditLogs() {
   const [actionFilter, setActionFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [userQuery, setUserQuery] = useState('');
+  const [ipQuery, setIpQuery] = useState('');
+  const [resourceFilter, setResourceFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedLog, setSelectedLog] = useState<any>(null);
   const limit = 10;
@@ -78,13 +81,72 @@ export function AuditLogs() {
   const allLogs = logsResult?.data ?? [];
   const totalPages = logsResult?.pagination?.totalPages ?? 1;
 
-  const hasActiveFilters = actionFilter !== 'all' || dateFrom !== '' || dateTo !== '';
+  const filteredLogs = allLogs.filter((log) => {
+    // User search (matches name or ID)
+    if (userQuery.trim() !== '') {
+      const uQuery = userQuery.toLowerCase();
+      const matchesName = log.user_name?.toLowerCase().includes(uQuery);
+      const matchesId = log.user_id?.toLowerCase().includes(uQuery);
+      if (!matchesName && !matchesId) return false;
+    }
+
+    // IP search
+    if (ipQuery.trim() !== '') {
+      const ipVal = ((log as any).ipAddress || (log as any).ip_address || '').toLowerCase();
+      if (!ipVal.includes(ipQuery.toLowerCase())) return false;
+    }
+
+    // Resource selection
+    if (resourceFilter !== 'all') {
+      if (log.resource_type !== resourceFilter && (log as any).entityType !== resourceFilter) return false;
+    }
+
+    return true;
+  });
+
+  const hasActiveFilters = actionFilter !== 'all' || dateFrom !== '' || dateTo !== '' || userQuery !== '' || ipQuery !== '' || resourceFilter !== 'all';
 
   const clearFilters = () => {
     setActionFilter('all');
     setDateFrom('');
     setDateTo('');
+    setUserQuery('');
+    setIpQuery('');
+    setResourceFilter('all');
     setPage(1);
+  };
+
+  const handleExportCSV = () => {
+    if (allLogs.length === 0) {
+      alert('No hay registros para exportar');
+      return;
+    }
+    
+    const headers = ['ID', 'Usuario', 'Accion', 'Recurso', 'Detalles', 'IP Address', 'Fecha'];
+    const rows = allLogs.map((log) => [
+      log.id,
+      log.user_name || 'Sistema',
+      ACTION_LABELS[log.action] || log.action,
+      RESOURCE_LABELS[log.resource_type] || log.resource_type || (log as any).entityType || '',
+      log.details || '',
+      (log as any).ipAddress || (log as any).ip_address || 'N/A',
+      formatDateTime(log.created_at)
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `audit-logs-${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // --- Loading ---
@@ -125,24 +187,35 @@ export function AuditLogs() {
           <h1 className="text-2xl font-bold text-foreground">Logs de Auditoría</h1>
           <p className="text-sm text-muted-foreground">Registro de actividad del sistema</p>
         </motion.div>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowFilters((prev) => !prev)}
-          className={cn(
-            'rounded-full px-4 py-2 text-sm font-medium flex items-center gap-2 transition-all',
-            showFilters || hasActiveFilters
-              ? 'bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-500/30'
-              : 'glass-btn-secondary',
-          )}
-        >
-          <Filter className="size-4" />
-          Filtros
-          {hasActiveFilters && (
-            <span className="flex size-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-bold text-white">
-              {(actionFilter !== 'all' ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0)}
-            </span>
-          )}
-        </motion.button>
+        <div className="flex items-center gap-3">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleExportCSV}
+            className="rounded-full px-4 py-2 text-sm font-medium flex items-center gap-2 bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all shadow-sm"
+          >
+            <FileText className="size-4" />
+            Exportar CSV
+          </motion.button>
+          
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowFilters((prev) => !prev)}
+            className={cn(
+              'rounded-full px-4 py-2 text-sm font-medium flex items-center gap-2 transition-all',
+              showFilters || hasActiveFilters
+                ? 'bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-500/30'
+                : 'glass-btn-secondary',
+            )}
+          >
+            <Filter className="size-4" />
+            Filtros
+            {hasActiveFilters && (
+              <span className="flex size-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-bold text-white">
+                {(actionFilter !== 'all' ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (userQuery ? 1 : 0) + (ipQuery ? 1 : 0) + (resourceFilter !== 'all' ? 1 : 0)}
+              </span>
+            )}
+          </motion.button>
+        </div>
       </div>
 
       {/* Filter Panel */}
@@ -227,6 +300,46 @@ export function AuditLogs() {
                       Limpiar
                     </motion.button>
                   )}
+                </div>
+              </div>
+
+              {/* Row 2: Advanced Search Filters */}
+              <div className="grid gap-4 sm:grid-cols-3 mt-4 pt-4 border-t border-border/30">
+                {/* User query */}
+                <div className="space-y-1.5 flex-1">
+                  <label className="text-xs font-medium text-muted-foreground">Usuario (ID o Nombre)</label>
+                  <Input
+                    placeholder="Buscar por nombre o ID..."
+                    value={userQuery}
+                    onChange={(e) => { setUserQuery(e.target.value); setPage(1); }}
+                    className="glass-input rounded-xl px-3 py-2 h-10 text-xs w-full"
+                  />
+                </div>
+
+                {/* IP address query */}
+                <div className="space-y-1.5 flex-1">
+                  <label className="text-xs font-medium text-muted-foreground">Dirección IP</label>
+                  <Input
+                    placeholder="Filtrar por IP (ej. 192.168.1.1)..."
+                    value={ipQuery}
+                    onChange={(e) => { setIpQuery(e.target.value); setPage(1); }}
+                    className="glass-input rounded-xl px-3 py-2 h-10 text-xs w-full"
+                  />
+                </div>
+
+                {/* Entity / Resource filter */}
+                <div className="space-y-1.5 flex-1">
+                  <label className="text-xs font-medium text-muted-foreground">Recurso / Entidad</label>
+                  <select
+                    value={resourceFilter}
+                    onChange={(e) => { setResourceFilter(e.target.value); setPage(1); }}
+                    className="glass-input rounded-xl px-3 py-2 h-10 text-xs w-full bg-background border border-border/50 text-foreground font-medium outline-none cursor-pointer"
+                  >
+                    <option value="all">Todos los recursos</option>
+                    {Object.entries(RESOURCE_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </GlassCard>
@@ -329,7 +442,7 @@ export function AuditLogs() {
 
       {/* Logs Table */}
       <AnimatePresence mode="wait">
-        {allLogs.length === 0 ? (
+        {filteredLogs.length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0, y: 16 }}
@@ -363,7 +476,7 @@ export function AuditLogs() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {allLogs.map((log, i) => (
+                  {filteredLogs.map((log, i) => (
                     <motion.tr
                       key={log.id}
                       initial={{ opacity: 0, x: -10 }}

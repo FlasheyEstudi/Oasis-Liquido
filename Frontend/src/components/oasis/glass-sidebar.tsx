@@ -25,6 +25,7 @@ import {
   Activity,
   DollarSign,
   Store,
+  Settings,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -35,16 +36,24 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
     case 'clinic_admin':
       return [
         { page: 'manage-clinics', label: 'Mi Clínica', icon: <MapPin className="size-[18px]" /> },
+        { page: 'appointments', label: 'Agenda & Citas', icon: <Calendar className="size-[18px]" /> },
+        { page: 'consultation', label: 'Consulta / ECE', icon: <Stethoscope className="size-[18px]" /> },
         { page: 'clinic-staff', label: 'Mi Personal', icon: <Users className="size-[18px]" /> },
         { page: 'clinic-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-[18px]" /> },
         { page: 'clinic-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'pharmacy_admin':
       return [
         { page: 'manage-pharmacies', label: 'Mi Farmacia', icon: <Store className="size-[18px]" /> },
+        { page: 'inventory', label: 'Inventario FEFO', icon: <Package className="size-[18px]" /> },
+        { page: 'fulfillment', label: 'Surtir Receta', icon: <Pill className="size-[18px]" /> },
+        { page: 'pos', label: 'Punto de Venta (POS)', icon: <DollarSign className="size-[18px]" /> },
+        { page: 'order-management', label: 'Pedidos Delivery', icon: <Truck className="size-[18px]" /> },
         { page: 'pharmacy-staff', label: 'Mi Personal', icon: <Users className="size-[18px]" /> },
         { page: 'pharmacy-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-[18px]" /> },
         { page: 'pharmacy-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'patient':
       return [
@@ -54,12 +63,14 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'prescriptions', label: 'Recetas', icon: <FileText className="size-[18px]" /> },
         { page: 'pharmacy-map', label: 'Farmacias', icon: <MapPin className="size-[18px]" /> },
         { page: 'order-tracking', label: 'Mis Pedidos', icon: <Truck className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'doctor':
       return [
         { page: 'home', label: 'Inicio', icon: <Home className="size-[18px]" /> },
         { page: 'consultation', label: 'Consulta', icon: <Stethoscope className="size-[18px]" /> },
         { page: 'prescriptions', label: 'Recetas', icon: <FileText className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'pharmacy_manager':
       return [
@@ -67,11 +78,13 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'fulfillment', label: 'Surtir Receta', icon: <Pill className="size-[18px]" /> },
         { page: 'inventory', label: 'Inventario', icon: <Package className="size-[18px]" /> },
         { page: 'order-management', label: 'Pedidos', icon: <FileText className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'delivery_driver':
       return [
         { page: 'driver-home', label: 'Inicio', icon: <Home className="size-[18px]" /> },
         { page: 'delivery-detail', label: 'Entregas', icon: <Truck className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'admin':
       return [
@@ -79,13 +92,16 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'manage-clinics', label: 'Clínicas', icon: <MapPin className="size-[18px]" /> },
         { page: 'manage-pharmacies', label: 'Farmacias', icon: <Pill className="size-[18px]" /> },
         { page: 'manage-users', label: 'Usuarios', icon: <Shield className="size-[18px]" /> },
+        { page: 'manage-documents', label: 'Acreditaciones', icon: <FileText className="size-[18px]" /> },
         { page: 'audit-logs', label: 'Auditoría', icon: <FileText className="size-[18px]" /> },
         { page: 'manage-feedback', label: 'Beta Feedback', icon: <MessageSquare className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'receptionist':
       return [
         { page: 'home', label: 'Inicio', icon: <Home className="size-[18px]" /> },
         { page: 'appointments', label: 'Citas', icon: <Calendar className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     default:
       return [];

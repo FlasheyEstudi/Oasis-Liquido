@@ -22,6 +22,12 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
     }
 
     const body = await req.json();
+    
+    // Normalize is_active to isActive for frontend compatibility
+    if (body.is_active !== undefined && body.isActive === undefined) {
+      body.isActive = body.is_active;
+    }
+
     const validation = validateBody(updateUserSchema, body);
     if (!validation.success) return validation.error;
 

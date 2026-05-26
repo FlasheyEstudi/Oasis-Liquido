@@ -10,6 +10,7 @@ import {
   useInviteCashier,
   useInviteDriver,
   useChangeWorkerStatus,
+  useUpdateWorker,
   getHookErrorMessage,
 } from '@/hooks/use-api';
 import { GlassCard } from '@/components/oasis/glass-card';
@@ -23,6 +24,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   UserPlus,
   Users,
@@ -39,7 +48,8 @@ import {
   Building,
   Store,
   RefreshCw,
-  Plus
+  Plus,
+  Pencil
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -53,6 +63,7 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
   const [role, setRole] = useState<'doctor' | 'receptionist'>('doctor');
   const [specialty, setSpecialty] = useState('Medicina General');
   const [licenseNumber, setLicenseNumber] = useState('');
+  const [editingWorker, setEditingWorker] = useState<any | null>(null);
 
   const { data, isLoading, error, refetch } = useClinicWorkers(clinicId);
   const inviteDoctor = useInviteDoctor();
@@ -403,22 +414,29 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
                   <TableCell>
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        worker.is_active
+                        (worker.isActive ?? worker.is_active)
                           ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                           : 'bg-red-500/10 text-red-600 dark:text-red-400'
                       }`}
                     >
-                      {worker.is_active ? 'Activo' : 'Desactivado'}
+                      {(worker.isActive ?? worker.is_active) ? 'Activo' : 'Desactivado'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-1">
                     <button
-                      onClick={() => handleToggleStatus(worker.id, worker.is_active)}
+                      onClick={() => setEditingWorker(worker)}
+                      className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-sky-500 transition-colors"
+                      title="Editar Datos"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(worker.id, !!(worker.isActive ?? worker.is_active))}
                       disabled={changeWorkerStatus.isPending}
                       className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-teal-500 transition-colors"
-                      title={worker.is_active ? 'Desactivar Cuenta' : 'Activar Cuenta'}
+                      title={(worker.isActive ?? worker.is_active) ? 'Desactivar Cuenta' : 'Activar Cuenta'}
                     >
-                      {worker.is_active ? (
+                      {(worker.isActive ?? worker.is_active) ? (
                         <ToggleRight className="size-6 text-emerald-500" />
                       ) : (
                         <ToggleLeft className="size-6" />
@@ -451,22 +469,29 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
                   <TableCell>
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        worker.is_active
+                        (worker.isActive ?? worker.is_active)
                           ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                           : 'bg-red-500/10 text-red-600 dark:text-red-400'
                       }`}
                     >
-                      {worker.is_active ? 'Activo' : 'Desactivado'}
+                      {(worker.isActive ?? worker.is_active) ? 'Activo' : 'Desactivado'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-1">
                     <button
-                      onClick={() => handleToggleStatus(worker.id, worker.is_active)}
+                      onClick={() => setEditingWorker(worker)}
+                      className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-sky-500 transition-colors"
+                      title="Editar Datos"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(worker.id, !!(worker.isActive ?? worker.is_active))}
                       disabled={changeWorkerStatus.isPending}
                       className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-teal-500 transition-colors"
-                      title={worker.is_active ? 'Desactivar Cuenta' : 'Activar Cuenta'}
+                      title={(worker.isActive ?? worker.is_active) ? 'Desactivar Cuenta' : 'Activar Cuenta'}
                     >
-                      {worker.is_active ? (
+                      {(worker.isActive ?? worker.is_active) ? (
                         <ToggleRight className="size-6 text-emerald-500" />
                       ) : (
                         <ToggleLeft className="size-6" />
@@ -479,6 +504,15 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
           </Table>
         )}
       </GlassCard>
+
+      {editingWorker && (
+        <EditStaffModal
+          isOpen={!!editingWorker}
+          onClose={() => setEditingWorker(null)}
+          worker={editingWorker}
+          onSuccess={() => refetch()}
+        />
+      )}
     </div>
   );
 }
@@ -493,6 +527,7 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
   const [role, setRole] = useState<'cashier' | 'delivery_driver'>('cashier');
   const [vehicleType, setVehicleType] = useState('motocicleta');
   const [licensePlate, setLicensePlate] = useState('');
+  const [editingWorker, setEditingWorker] = useState<any | null>(null);
 
   const { data, isLoading, error, refetch } = usePharmacyWorkers(pharmacyId);
   const inviteCashier = useInviteCashier();
@@ -839,22 +874,29 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
                   <TableCell>
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        worker.is_active
+                        (worker.isActive ?? worker.is_active)
                           ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                           : 'bg-red-500/10 text-red-600 dark:text-red-400'
                       }`}
                     >
-                      {worker.is_active ? 'Activo' : 'Desactivado'}
+                      {(worker.isActive ?? worker.is_active) ? 'Activo' : 'Desactivado'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-1">
                     <button
-                      onClick={() => handleToggleStatus(worker.id, worker.is_active)}
+                      onClick={() => setEditingWorker(worker)}
+                      className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-sky-500 transition-colors"
+                      title="Editar Datos"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(worker.id, !!(worker.isActive ?? worker.is_active))}
                       disabled={changeWorkerStatus.isPending}
                       className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-sky-500 transition-colors"
-                      title={worker.is_active ? 'Desactivar Cuenta' : 'Activar Cuenta'}
+                      title={(worker.isActive ?? worker.is_active) ? 'Desactivar Cuenta' : 'Activar Cuenta'}
                     >
-                      {worker.is_active ? (
+                      {(worker.isActive ?? worker.is_active) ? (
                         <ToggleRight className="size-6 text-emerald-500" />
                       ) : (
                         <ToggleLeft className="size-6" />
@@ -889,22 +931,29 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
                   <TableCell>
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        worker.is_active
+                        (worker.isActive ?? worker.is_active)
                           ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                           : 'bg-red-500/10 text-red-600 dark:text-red-400'
                       }`}
                     >
-                      {worker.is_active ? 'Activo' : 'Desactivado'}
+                      {(worker.isActive ?? worker.is_active) ? 'Activo' : 'Desactivado'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-1">
                     <button
-                      onClick={() => handleToggleStatus(worker.id, worker.is_active)}
+                      onClick={() => setEditingWorker(worker)}
+                      className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-sky-500 transition-colors"
+                      title="Editar Datos"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(worker.id, !!(worker.isActive ?? worker.is_active))}
                       disabled={changeWorkerStatus.isPending}
                       className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-sky-500 transition-colors"
-                      title={worker.is_active ? 'Desactivar Cuenta' : 'Activar Cuenta'}
+                      title={(worker.isActive ?? worker.is_active) ? 'Desactivar Cuenta' : 'Activar Cuenta'}
                     >
-                      {worker.is_active ? (
+                      {(worker.isActive ?? worker.is_active) ? (
                         <ToggleRight className="size-6 text-emerald-500" />
                       ) : (
                         <ToggleLeft className="size-6" />
@@ -917,6 +966,199 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
           </Table>
         )}
       </GlassCard>
+
+      {editingWorker && (
+        <EditStaffModal
+          isOpen={!!editingWorker}
+          onClose={() => setEditingWorker(null)}
+          worker={editingWorker}
+          onSuccess={() => refetch()}
+        />
+      )}
     </div>
+  );
+}
+
+import { useEffect } from 'react';
+
+interface EditStaffModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  worker: any;
+  onSuccess: () => void;
+}
+
+export function EditStaffModal({ isOpen, onClose, worker, onSuccess }: EditStaffModalProps) {
+  const { setNotification } = useAuthStore();
+  const [name, setName] = useState(worker?.name || '');
+  const [phone, setPhone] = useState(worker?.phone || '');
+  const [specialty, setSpecialty] = useState(worker?.doctorProfile?.specialty || worker?.doctor_profile?.specialty || '');
+  const [licenseNumber, setLicenseNumber] = useState(worker?.doctorProfile?.licenseNumber || worker?.doctor_profile?.license_number || '');
+  const [vehicleType, setVehicleType] = useState(worker?.deliveryDriverProfile?.vehicleType || worker?.delivery_driver_profile?.vehicle_type || 'motocicleta');
+  const [licensePlate, setLicensePlate] = useState(worker?.deliveryDriverProfile?.licensePlate || worker?.delivery_driver_profile?.license_plate || '');
+
+  const updateWorker = useUpdateWorker();
+
+  // Reset fields when worker changes
+  useEffect(() => {
+    if (worker) {
+      setName(worker.name || '');
+      setPhone(worker.phone || '');
+      setSpecialty(worker.doctorProfile?.specialty || worker.doctor_profile?.specialty || '');
+      setLicenseNumber(worker.doctorProfile?.licenseNumber || worker.doctor_profile?.license_number || '');
+      setVehicleType(worker.deliveryDriverProfile?.vehicleType || worker.delivery_driver_profile?.vehicle_type || 'motocicleta');
+      setLicensePlate(worker.deliveryDriverProfile?.licensePlate || worker.delivery_driver_profile?.license_plate || '');
+    }
+  }, [worker]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setNotification({ type: 'warning', message: 'El nombre es requerido' });
+      return;
+    }
+
+    try {
+      await updateWorker.mutateAsync({
+        workerId: worker.id,
+        data: {
+          name: name.trim(),
+          phone: phone.trim() || undefined,
+          specialty: worker.role === 'doctor' ? specialty.trim() : undefined,
+          licenseNumber: worker.role === 'doctor' ? licenseNumber.trim() : undefined,
+          vehicleType: worker.role === 'delivery_driver' ? vehicleType : undefined,
+          licensePlate: worker.role === 'delivery_driver' ? licensePlate.trim() : undefined,
+        }
+      });
+      setNotification({ type: 'success', message: 'Trabajador actualizado exitosamente' });
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setNotification({ type: 'error', message: getHookErrorMessage(err) || 'Error al actualizar trabajador' });
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'doctor': return 'Médico';
+      case 'receptionist': return 'Recepcionista';
+      case 'cashier': return 'Cajero';
+      case 'delivery_driver': return 'Repartidor';
+      default: return role;
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="glass-strong border border-white/20 rounded-3xl max-w-md w-full shadow-2xl p-6">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Pencil className="size-5 text-sky-500" />
+            Editar {getRoleLabel(worker?.role)}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Modifica los datos del empleado y guarda los cambios en tiempo real.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Nombre Completo *</label>
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="glass-input rounded-xl h-11 text-sm"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Teléfono</label>
+            <Input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="glass-input rounded-xl h-11 text-sm"
+              placeholder="+505 8888-8888"
+            />
+          </div>
+
+          {worker?.role === 'doctor' && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Especialidad</label>
+                <Input
+                  type="text"
+                  value={specialty}
+                  onChange={(e) => setSpecialty(e.target.value)}
+                  className="glass-input rounded-xl h-11 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Cédula MINSA</label>
+                <Input
+                  type="text"
+                  value={licenseNumber}
+                  onChange={(e) => setLicenseNumber(e.target.value)}
+                  className="glass-input rounded-xl h-11 text-sm"
+                />
+              </div>
+            </>
+          )}
+
+          {worker?.role === 'delivery_driver' && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Vehículo</label>
+                <div className="relative">
+                  <select
+                    value={vehicleType}
+                    onChange={(e) => setVehicleType(e.target.value)}
+                    className="glass-input w-full h-11 px-4 rounded-xl text-sm text-foreground focus:outline-none appearance-none bg-transparent pr-8"
+                  >
+                    <option value="motocicleta" className="bg-slate-800 text-white">Motocicleta</option>
+                    <option value="bicicleta" className="bg-slate-800 text-white">Bicicleta</option>
+                    <option value="automovil" className="bg-slate-800 text-white">Automóvil</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                    ▼
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Placa del Vehículo</label>
+                <Input
+                  type="text"
+                  value={licensePlate}
+                  onChange={(e) => setLicensePlate(e.target.value)}
+                  className="glass-input rounded-xl h-11 text-sm"
+                  placeholder="M 12345"
+                />
+              </div>
+            </>
+          )}
+
+          <DialogFooter className="mt-6 flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="rounded-xl px-4 py-2 text-sm"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={updateWorker.isPending}
+              className="glass-btn-primary rounded-xl px-6 py-2 text-sm font-semibold flex items-center gap-2"
+            >
+              {updateWorker.isPending && <Loader2 className="size-4 animate-spin" />}
+              Guardar Cambios
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

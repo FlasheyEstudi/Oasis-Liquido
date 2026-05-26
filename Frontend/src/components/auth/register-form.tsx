@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Droplets, Loader2, Check, X, Shield, Truck, Compass, Award, Building, Phone, MapPin } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Droplets, Loader2, Check, X, Shield, Truck, Compass, Award, Building, Phone, MapPin, ArrowLeft, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { APP_NAME } from '@/utils/constants';
 import { post, get, getErrorMessage } from '@/api/client';
 import { OrganicBlobs } from '@/components/oasis/organic-blobs';
 import type { Variants } from 'framer-motion';
 
+import { AnimatedLogo } from '@/components/ui/animated-logo';
+import { cn } from '@/lib/utils';
 import type { AuthResponse } from '@/types';
 
 const fadeInUp: any = {
@@ -53,6 +55,39 @@ function PasswordRequirements({ password }: { password: string }) {
   );
 }
 
+const roleAdvantages: Record<string, Array<{ title: string; desc: string; icon: any }>> = {
+  patient: [
+    { title: 'Teleconsulta Inmediata', desc: 'Conéctate con médicos colegiados autorizados al instante.', icon: <Award className="size-4 text-teal-600 dark:text-teal-400" /> },
+    { title: 'Entrega en Minutos', desc: 'Repartidores geolocalizados llevan tus medicinas seguras.', icon: <Truck className="size-4 text-emerald-600 dark:text-emerald-400" /> },
+    { title: 'Gestión Familiar', desc: 'Asocia dependientes fácilmente con tu código privado.', icon: <Compass className="size-4 text-cyan-600 dark:text-cyan-400" /> },
+    { title: 'Seguridad Militar', desc: 'Tus datos clínicos encriptados de extremo a extremo.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
+  ],
+  pharmacy_admin: [
+    { title: 'Aumento de Ventas', desc: 'Llega a miles de pacientes que buscan medicamentos en tu zona.', icon: <Building className="size-4 text-teal-600 dark:text-teal-400" /> },
+    { title: 'Control de Inventario', desc: 'Sincronización en tiempo real de stock y ventas automáticas.', icon: <Award className="size-4 text-emerald-600 dark:text-emerald-400" /> },
+    { title: 'Dispensación QR', desc: 'Escanea y despacha recetas digitalmente sin errores de papel.', icon: <Check className="size-4 text-cyan-600 dark:text-cyan-400" /> },
+    { title: 'Firma HMAC Segura', desc: 'Validación instantánea de autenticidad en cada transacción.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
+  ],
+  pharmacy_manager: [
+    { title: 'Aumento de Ventas', desc: 'Llega a miles de pacientes que buscan medicamentos en tu zona.', icon: <Building className="size-4 text-teal-600 dark:text-teal-400" /> },
+    { title: 'Control de Inventario', desc: 'Sincronización en tiempo real de stock y ventas automáticas.', icon: <Award className="size-4 text-emerald-600 dark:text-emerald-400" /> },
+    { title: 'Dispensación QR', desc: 'Escanea y despacha recetas digitalmente sin errores de papel.', icon: <Check className="size-4 text-cyan-600 dark:text-cyan-400" /> },
+    { title: 'Firma HMAC Segura', desc: 'Validación instantánea de autenticidad en cada transacción.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
+  ],
+  clinic_admin: [
+    { title: 'Gestión de Médicos', desc: 'Administra turnos, horarios y especialidades médicas con facilidad.', icon: <Building className="size-4 text-teal-600 dark:text-teal-400" /> },
+    { title: 'Firma Digital Colegiada', desc: 'Recetas seguras firmadas por médicos con clave PIN de seguridad.', icon: <Award className="size-4 text-emerald-600 dark:text-emerald-400" /> },
+    { title: 'Historiales Clínicos Unidos', desc: 'Acceso inmediato a la historia clínica compartida del paciente.', icon: <Compass className="size-4 text-cyan-600 dark:text-cyan-400" /> },
+    { title: 'Menos Carga Administrativa', desc: 'Reportes e integraciones automáticas listas para el MINSA.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
+  ],
+  delivery_driver: [
+    { title: 'Entregas Inteligentes', desc: 'Ruta óptima por geolocalización satelital por GPS en vivo.', icon: <Truck className="size-4 text-teal-600 dark:text-teal-400" /> },
+    { title: 'Ingresos por Comisión', desc: 'Gana más dinero completando entregas de forma eficiente.', icon: <Award className="size-4 text-emerald-600 dark:text-emerald-400" /> },
+    { title: 'Horarios a tu Medida', desc: 'Trabaja con flexibilidad total y gestiona tus propios viajes.', icon: <Compass className="size-4 text-cyan-600 dark:text-cyan-400" /> },
+    { title: 'Soporte Directo', desc: 'Asistencia y comunicación directa con la farmacia y paciente.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
+  ]
+};
+
 export function RegisterForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -80,10 +115,64 @@ export function RegisterForm() {
 
   const { navigate, login, setNotification } = useAuthStore();
 
+  const [step, setStep] = useState(1);
+
+  function handleNextStep() {
+    setApiError(null);
+    if (step === 1) {
+      if (!name.trim()) {
+        setApiError('Por favor ingresa tu nombre completo.');
+        return;
+      }
+      if (name.trim().split(' ').length < 2) {
+        setApiError('Por favor ingresa tu nombre y apellido.');
+        return;
+      }
+      if (!email.trim() || !email.includes('@')) {
+        setApiError('Por favor ingresa un correo electrónico válido.');
+        return;
+      }
+      if (role === 'patient') {
+        setStep(3); // Skip step 2 for patients
+      } else {
+        setStep(2);
+      }
+    } else if (step === 2) {
+      if (role === 'pharmacy_admin' || role === 'clinic_admin') {
+        if (!entityName.trim()) {
+          setApiError('Por favor ingresa el nombre de la entidad.');
+          return;
+        }
+        if (!entityAddress.trim()) {
+          setApiError('Por favor ingresa la dirección.');
+          return;
+        }
+      }
+      if (role === 'pharmacy_manager' && !pharmacyId) {
+        setApiError('Por favor selecciona una farmacia.');
+        return;
+      }
+      setStep(3);
+    }
+  }
+
+  function handlePrevStep() {
+    setApiError(null);
+    if (step === 3) {
+      if (role === 'patient') {
+        setStep(1);
+      } else {
+        setStep(2);
+      }
+    } else if (step === 2) {
+      setStep(1);
+    }
+  }
+
   // Load pharmacies and clinics lists dynamically based on role
   useEffect(() => {
     async function fetchLists() {
-      if (role === 'pharmacy_owner' || role === 'pharmacy_manager') {
+      if (role === 'pharmacy_manager') {
         if (pharmacies.length > 0) return;
         setIsLoadingLists(true);
         try {
@@ -97,7 +186,7 @@ export function RegisterForm() {
         } finally {
           setIsLoadingLists(false);
         }
-      } else if (role === 'clinic_owner' || role === 'clinic_admin') {
+      } else if (role === 'clinic_admin') {
         if (clinics.length > 0) return;
         setIsLoadingLists(true);
         try {
@@ -137,7 +226,7 @@ export function RegisterForm() {
     }
 
     // Role specific form validations
-    if ((role === 'pharmacy_owner' || role === 'pharmacy_admin') && (!entityName.trim() || !entityAddress.trim())) {
+    if (role === 'pharmacy_admin' && (!entityName.trim() || !entityAddress.trim())) {
       setApiError('Por favor ingresa el nombre y la dirección de tu farmacia.');
       return;
     }
@@ -147,7 +236,7 @@ export function RegisterForm() {
       return;
     }
 
-    if ((role === 'clinic_owner' || role === 'clinic_admin') && (!entityName.trim() || !entityAddress.trim())) {
+    if (role === 'clinic_admin' && (!entityName.trim() || !entityAddress.trim())) {
       setApiError('Por favor ingresa el nombre y la dirección de tu clínica.');
       return;
     }
@@ -159,17 +248,17 @@ export function RegisterForm() {
         name,
         email,
         password,
-        role: role === 'clinic_admin' ? 'clinic_owner' : (role === 'pharmacy_admin' ? 'pharmacy_owner' : role),
+        role,
       };
 
       // Inject dynamic fields
-      if (role === 'pharmacy_owner' || role === 'pharmacy_admin') {
+      if (role === 'pharmacy_admin') {
         payload.entityName = entityName;
         payload.entityAddress = entityAddress;
         payload.entityPhone = entityPhone || undefined;
       } else if (role === 'pharmacy_manager') {
         payload.pharmacyId = pharmacyId;
-      } else if (role === 'clinic_owner' || role === 'clinic_admin') {
+      } else if (role === 'clinic_admin') {
         payload.entityName = entityName;
         payload.entityAddress = entityAddress;
         payload.entityPhone = entityPhone || undefined;
@@ -198,441 +287,526 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 py-8 overflow-hidden">
+    <div className="relative flex h-screen max-h-screen overflow-hidden items-center justify-center px-4 py-0 bg-gradient-to-tr from-slate-50 via-zinc-100 to-teal-50/20 dark:from-[#030606] dark:via-[#010203] dark:to-[#020507] transition-colors duration-500">
       <OrganicBlobs />
+
+      {/* Futuristic Floating Lights */}
+      <div className="absolute top-10 right-10 w-96 h-96 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-10 left-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
 
       <motion.div
         initial="hidden"
         animate="visible"
-        className="relative z-10 w-full max-w-md"
+        className="relative z-10 w-full max-w-md md:max-w-4xl"
       >
-        <div className="glass-strong rounded-3xl p-8 md:p-10">
-          {/* Logo */}
-          <motion.div custom={0} variants={fadeInUp} className="flex flex-col items-center mb-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 shadow-lg shadow-teal-500/25 mb-4">
-              <Droplets className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-foreground">Crea tu cuenta</h1>
-            <p className="text-sm text-muted-foreground mt-1">Tu oasis de salud te espera</p>
-          </motion.div>
-
-          {/* API Error */}
-          {apiError && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-red-200 dark:border-red-500/20 bg-red-50/80 dark:bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-400 mb-6"
-            >
-              {apiError}
-            </motion.div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name */}
-            <motion.div custom={1} variants={fadeInUp}>
-              <label htmlFor="register-name" className="block text-sm font-medium text-foreground mb-1.5">
-                Nombre completo
-              </label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                <input
-                  id="register-name"
-                  type="text"
-                  placeholder="Juan Pérez"
-                  autoComplete="name"
-                  disabled={isSubmitting}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-                />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
+          {/* Left Panel: App Advantages - Displayed on medium screens and up */}
+          <div className="hidden md:flex md:col-span-5 flex-col justify-between p-8 rounded-[2.5rem] backdrop-blur-3xl bg-teal-950/10 dark:bg-zinc-950/60 border border-white/20 dark:border-zinc-800/30 text-slate-900 dark:text-white shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
+            
+            <div>
+              <div className="flex items-center gap-2 mb-6">
+                <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/20 uppercase">
+                  Oasis v0.2-RC1
+                </span>
               </div>
-            </motion.div>
+              <h2 className="text-2xl font-black tracking-tight leading-tight mb-4 bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-700 dark:from-teal-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                Eleva tu Salud Digital
+              </h2>
+              <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed font-light mb-8">
+                Únete a Oasis Nicaragua hoy. Obtén tu historial clínico inmediato, firma digital y entregas farmacéuticas directas.
+              </p>
 
-            {/* Email */}
-            <motion.div custom={2} variants={fadeInUp}>
-              <label htmlFor="register-email" className="block text-sm font-medium text-foreground mb-1.5">
-                Correo electrónico
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                <input
-                  id="register-email"
-                  type="email"
-                  placeholder="tu@correo.com"
-                  autoComplete="email"
-                  disabled={isSubmitting}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-                />
-              </div>
-            </motion.div>
-
-            {/* Role Selector */}
-            <motion.div custom={3} variants={fadeInUp}>
-              <label htmlFor="register-role" className="block text-sm font-medium text-foreground mb-1.5">
-                Tipo de cuenta (Rol)
-              </label>
-              <div className="relative">
-                <Shield className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                <select
-                  id="register-role"
-                  disabled={isSubmitting}
-                  value={role}
-                  onChange={(e) => {
-                    setRole(e.target.value);
-                    setApiError(null);
-                  }}
-                  className="glass-input w-full h-11 pl-11 pr-10 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50 appearance-none bg-transparent"
-                >
-                  <option value="patient" className="bg-slate-800 text-white">Paciente</option>
-                  <option value="clinic_admin" className="bg-slate-800 text-white">Administrador de Clínica</option>
-                  <option value="pharmacy_admin" className="bg-slate-800 text-white">Administrador de Farmacia</option>
-                  <option value="delivery_driver" className="bg-slate-800 text-white">Repartidor / Delivery</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ArrowRight className="h-4 w-4 text-muted-foreground rotate-90" />
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Dynamic Fields Section */}
-            <AnimatePresence mode="wait">
-              {/* Pharmacy Linkage */}
-              {/* Pharmacy Creation (for Pharmacy Owner) */}
-              {(role === 'pharmacy_owner' || role === 'pharmacy_admin') && (
-                <motion.div
-                  key="pharmacy-create"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300"
-                >
-                  <div className="space-y-1.5">
-                    <label htmlFor="register-pharmacy-name" className="block text-sm font-medium text-foreground">
-                      Nombre de la Farmacia
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                      <input
-                        id="register-pharmacy-name"
-                        type="text"
-                        required
-                        disabled={isSubmitting}
-                        value={entityName}
-                        onChange={(e) => setEntityName(e.target.value)}
-                        placeholder="Ej. Farmacia Oasis Central Nicaragua"
-                        className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="register-pharmacy-address" className="block text-sm font-medium text-foreground">
-                      Dirección de la Farmacia
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                      <input
-                        id="register-pharmacy-address"
-                        type="text"
-                        required
-                        disabled={isSubmitting}
-                        value={entityAddress}
-                        onChange={(e) => setEntityAddress(e.target.value)}
-                        placeholder="Ej. Del Parque Central 2 cuadras al norte, Masaya"
-                        className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="register-pharmacy-phone" className="block text-sm font-medium text-foreground">
-                      Teléfono de Contacto (Opcional)
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                      <input
-                        id="register-pharmacy-phone"
-                        type="tel"
-                        disabled={isSubmitting}
-                        value={entityPhone}
-                        onChange={(e) => setEntityPhone(e.target.value)}
-                        placeholder="Ej. +505 8888-8888"
-                        className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Pharmacy Linkage (for Pharmacy Manager) */}
-              {role === 'pharmacy_manager' && (
-                <motion.div
-                  key="pharmacy-select"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-1.5"
-                >
-                  <label htmlFor="register-pharmacy" className="block text-sm font-medium text-foreground">
-                    Asociar con Farmacia
-                  </label>
-                  <div className="relative">
-                    <Compass className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                    {isLoadingLists ? (
-                      <div className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-muted-foreground flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
-                        <span>Cargando farmacias...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <select
-                          id="register-pharmacy"
-                          disabled={isSubmitting}
-                          value={pharmacyId}
-                          onChange={(e) => setPharmacyId(e.target.value)}
-                          className="glass-input w-full h-11 pl-11 pr-10 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50 appearance-none bg-transparent"
-                        >
-                          {pharmacies.length === 0 ? (
-                            <option value="" className="bg-slate-800 text-white">No hay farmacias activas</option>
-                          ) : (
-                            pharmacies.map((pharmacy) => (
-                              <option key={pharmacy.id} value={pharmacy.id} className="bg-slate-800 text-white">
-                                {pharmacy.name} ({pharmacy.address})
-                              </option>
-                            ))
-                          )}
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                          <ArrowRight className="h-4 w-4 text-muted-foreground rotate-90" />
+              {/* Dynamic Bullet Advantages list based on role */}
+              <div className="relative min-h-[220px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={role}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className="space-y-4"
+                  >
+                    {(roleAdvantages[role] || roleAdvantages.patient).map((item, idx) => (
+                      <div key={idx} className="flex gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-white/40 dark:bg-zinc-900/40 flex items-center justify-center border border-slate-200/50 dark:border-zinc-800/50 shadow-sm">
+                          {item.icon}
                         </div>
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Clinic Creation (for Clinic Owner) */}
-              {(role === 'clinic_owner' || role === 'clinic_admin') && (
-                <motion.div
-                  key="clinic-create"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300"
-                >
-                  <div className="space-y-1.5">
-                    <label htmlFor="register-clinic-name" className="block text-sm font-medium text-foreground">
-                      Nombre de la Clínica
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                      <input
-                        id="register-clinic-name"
-                        type="text"
-                        required
-                        disabled={isSubmitting}
-                        value={entityName}
-                        onChange={(e) => setEntityName(e.target.value)}
-                        placeholder="Ej. Clínica Médica San Rafael"
-                        className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="register-clinic-address" className="block text-sm font-medium text-foreground">
-                      Dirección de la Clínica
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                      <input
-                        id="register-clinic-address"
-                        type="text"
-                        required
-                        disabled={isSubmitting}
-                        value={entityAddress}
-                        onChange={(e) => setEntityAddress(e.target.value)}
-                        placeholder="Ej. Frente a Iglesia El Calvario, León"
-                        className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="register-clinic-phone" className="block text-sm font-medium text-foreground">
-                      Teléfono de Contacto (Opcional)
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                      <input
-                        id="register-clinic-phone"
-                        type="tel"
-                        disabled={isSubmitting}
-                        value={entityPhone}
-                        onChange={(e) => setEntityPhone(e.target.value)}
-                        placeholder="Ej. +505 2222-2222"
-                        className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Delivery Extra Fields */}
-              {role === 'delivery_driver' && (
-                <motion.div
-                  key="delivery-fields"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
-                >
-                  <div className="space-y-1.5">
-                    <label htmlFor="register-vehicle" className="block text-sm font-medium text-foreground">
-                      Tipo de Vehículo
-                    </label>
-                    <div className="relative">
-                      <Truck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                      <select
-                        id="register-vehicle"
-                        disabled={isSubmitting}
-                        value={vehicleType}
-                        onChange={(e) => setVehicleType(e.target.value)}
-                        className="glass-input w-full h-11 pl-11 pr-10 rounded-full text-sm text-foreground focus:outline-none disabled:opacity-50 appearance-none bg-transparent"
-                      >
-                        <option value="motocicleta" className="bg-slate-800 text-white">Motocicleta</option>
-                        <option value="bicicleta" className="bg-slate-800 text-white">Bicicleta / E-bike</option>
-                        <option value="automovil" className="bg-slate-800 text-white">Automóvil</option>
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <ArrowRight className="h-4 w-4 text-muted-foreground rotate-90" />
+                        <div>
+                          <h4 className="text-[11px] font-bold text-slate-800 dark:text-zinc-200">{item.title}</h4>
+                          <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-light mt-0.5 leading-snug">{item.desc}</p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="register-plate" className="block text-sm font-medium text-foreground">
-                      Placa de Licencia (Patente)
-                    </label>
-                    <div className="relative">
-                      <Award className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                      <input
-                        id="register-plate"
-                        type="text"
-                        placeholder="M-123456 (Opcional)"
-                        disabled={isSubmitting}
-                        value={licensePlate}
-                        onChange={(e) => setLicensePlate(e.target.value)}
-                        className="glass-input w-full h-11 pl-11 pr-4 rounded-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Password */}
-            <motion.div custom={4} variants={fadeInUp}>
-              <label htmlFor="register-password" className="block text-sm font-medium text-foreground mb-1.5">
-                Contraseña
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                <input
-                  id="register-password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                  disabled={isSubmitting}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="glass-input w-full h-11 pl-11 pr-11 rounded-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  tabIndex={-1}
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
               </div>
-              <PasswordRequirements password={password} />
-            </motion.div>
+            </div>
 
-            {/* Confirm Password */}
-            <motion.div custom={5} variants={fadeInUp}>
-              <label htmlFor="register-confirm" className="block text-sm font-medium text-foreground mb-1.5">
-                Confirmar contraseña
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-                <input
-                  id="register-confirm"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                  disabled={isSubmitting}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="glass-input w-full h-11 pl-11 pr-11 rounded-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  tabIndex={-1}
-                  aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </motion.div>
+            <div className="mt-8 pt-4 border-t border-slate-200/50 dark:border-zinc-800/30 flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
+              <span>© {new Date().getFullYear()} Oasis Nicaragua</span>
+              <span className="flex items-center gap-1">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Seguro & En Línea
+              </span>
+            </div>
+          </div>
 
-            {/* Submit */}
-            <motion.div custom={5} variants={fadeInUp}>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="glass-btn-primary w-full h-11 rounded-full text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Creando cuenta...
-                  </>
-                ) : (
-                  <>
-                    Crear cuenta
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </motion.div>
-          </form>
-
-          {/* Login link */}
-          <motion.div custom={6} variants={fadeInUp} className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              ¿Ya tienes cuenta?{' '}
+          {/* Right Panel: The Register Form */}
+          <div className="col-span-1 md:col-span-7 flex flex-col justify-between backdrop-blur-3xl bg-white/40 dark:bg-zinc-950/40 border border-white/20 dark:border-zinc-800/30 shadow-[inset_1px_1px_4px_rgba(255,255,255,0.1),_0_24px_64px_rgba(0,0,0,0.5)] rounded-[2.5rem] p-6 md:p-8 transition-all duration-300">
+            <div>
+              {/* Go Back button */}
               <button
                 type="button"
-                onClick={() => navigate('entrar')}
-                disabled={isSubmitting}
-                className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold transition-colors disabled:opacity-50"
+                onClick={() => navigate('bienvenida')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white bg-slate-100/50 dark:bg-zinc-800/30 hover:bg-slate-200/50 dark:hover:bg-zinc-800/50 border border-slate-200/50 dark:border-zinc-800/30 transition-all mb-4 self-start group"
               >
-                Iniciar sesión
+                <ArrowLeft className="size-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                Volver al inicio
               </button>
-            </p>
-          </motion.div>
+
+              {/* Logo */}
+              <motion.div custom={0} variants={fadeInUp} className="flex flex-col items-center mb-4">
+                <div className="relative group flex flex-col items-center">
+                  <AnimatedLogo className="scale-[1.15] mb-2" showLabel={false} />
+                </div>
+                <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mt-1">Crea tu cuenta</h1>
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">Tu oasis de salud te espera</p>
+              </motion.div>
+
+              {/* API Error */}
+              {apiError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50/80 dark:bg-red-500/10 px-3.5 py-2.5 text-[11px] text-red-700 dark:text-red-400 mb-4 font-medium"
+                >
+                  {apiError}
+                </motion.div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (step < 3) {
+                  handleNextStep();
+                } else {
+                  handleSubmit(e);
+                }
+              }} className="space-y-4">
+                
+                <AnimatePresence mode="wait">
+                  {step === 1 && (
+                    <motion.div
+                      key="step-1"
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 12 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-3.5"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-teal-600 dark:text-teal-400">Paso 1: Información Personal</span>
+                        <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500">{role === 'patient' ? '1 / 2' : '1 / 3'}</span>
+                      </div>
+
+                      {/* Name */}
+                      <div>
+                        <label htmlFor="register-name" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                          Nombre completo
+                        </label>
+                        <div className="relative group/input">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors" />
+                          <input
+                            id="register-name"
+                            type="text"
+                            placeholder="Juan Pérez"
+                            autoComplete="name"
+                            disabled={isSubmitting}
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 dark:focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 dark:focus:ring-teal-500/10 focus:outline-none transition-all duration-300 disabled:opacity-50"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label htmlFor="register-email" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                          Correo electrónico
+                        </label>
+                        <div className="relative group/input">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors" />
+                          <input
+                            id="register-email"
+                            type="email"
+                            placeholder="tu@correo.com"
+                            autoComplete="email"
+                            disabled={isSubmitting}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 dark:focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 dark:focus:ring-teal-500/10 focus:outline-none transition-all duration-300 disabled:opacity-50"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Role */}
+                      <div>
+                        <label htmlFor="register-role" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                          Tipo de cuenta (Rol)
+                        </label>
+                        <div className="relative group/input">
+                          <Shield className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors pointer-events-none" />
+                          <select
+                            id="register-role"
+                            disabled={isSubmitting}
+                            value={role}
+                            onChange={(e) => {
+                              setRole(e.target.value);
+                              setApiError(null);
+                            }}
+                            className="w-full h-11 pl-11 pr-10 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:border-teal-500/50 dark:focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 dark:focus:ring-teal-500/10 focus:outline-none transition-all duration-300 disabled:opacity-50 appearance-none bg-transparent"
+                          >
+                            <option value="patient" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Paciente</option>
+                            <option value="clinic_admin" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Administrador de Clínica</option>
+                            <option value="pharmacy_admin" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Administrador de Farmacia</option>
+                            <option value="pharmacy_manager" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Gestor de Farmacia</option>
+                            <option value="delivery_driver" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Repartidor / Delivery</option>
+                          </select>
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <ChevronDown className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {step === 2 && role !== 'patient' && (
+                    <motion.div
+                      key="step-2"
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 12 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-3.5"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-teal-600 dark:text-teal-400">Paso 2: Detalles de Entidad</span>
+                        <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500">2 / 3</span>
+                      </div>
+
+                      {/* Pharmacy Creation */}
+                      {role === 'pharmacy_admin' && (
+                        <div className="space-y-3.5">
+                          <div>
+                            <label htmlFor="register-pharmacy-name" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                              Nombre de la Farmacia
+                            </label>
+                            <div className="relative">
+                              <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                              <input
+                                id="register-pharmacy-name"
+                                type="text"
+                                disabled={isSubmitting}
+                                value={entityName}
+                                onChange={(e) => setEntityName(e.target.value)}
+                                placeholder="Ej. Farmacia Oasis Central"
+                                className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 focus:outline-none disabled:opacity-50"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor="register-pharmacy-address" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                              Dirección completa
+                            </label>
+                            <div className="relative">
+                              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                              <input
+                                id="register-pharmacy-address"
+                                type="text"
+                                disabled={isSubmitting}
+                                value={entityAddress}
+                                onChange={(e) => setEntityAddress(e.target.value)}
+                                placeholder="Ej. Del Parque Central 2 c. al norte, Masaya"
+                                className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 focus:outline-none disabled:opacity-50"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pharmacy Linkage */}
+                      {role === 'pharmacy_manager' && (
+                        <div>
+                          <label htmlFor="register-pharmacy" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                            Seleccionar Farmacia
+                          </label>
+                          <div className="relative">
+                            <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
+                            {isLoadingLists ? (
+                              <div className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                                <span>Cargando farmacias...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <select
+                                  id="register-pharmacy"
+                                  disabled={isSubmitting}
+                                  value={pharmacyId}
+                                  onChange={(e) => setPharmacyId(e.target.value)}
+                                  className="w-full h-11 pl-11 pr-10 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:border-teal-500/50 focus:outline-none disabled:opacity-50 appearance-none bg-transparent"
+                                >
+                                  {pharmacies.length === 0 ? (
+                                    <option value="">No hay farmacias activas</option>
+                                  ) : (
+                                    pharmacies.map((pharmacy) => (
+                                      <option key={pharmacy.id} value={pharmacy.id} className="bg-slate-800 text-white">
+                                        {pharmacy.name} ({pharmacy.address})
+                                      </option>
+                                    ))
+                                  )}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                  <ChevronDown className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Clinic Creation */}
+                      {role === 'clinic_admin' && (
+                        <div className="space-y-3.5">
+                          <div>
+                            <label htmlFor="register-clinic-name" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                              Nombre de la Clínica
+                            </label>
+                            <div className="relative">
+                              <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                              <input
+                                id="register-clinic-name"
+                                type="text"
+                                disabled={isSubmitting}
+                                value={entityName}
+                                onChange={(e) => setEntityName(e.target.value)}
+                                placeholder="Ej. Clínica San Rafael"
+                                className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 focus:outline-none disabled:opacity-50"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor="register-clinic-address" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                              Dirección completa
+                            </label>
+                            <div className="relative">
+                              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                              <input
+                                id="register-clinic-address"
+                                type="text"
+                                disabled={isSubmitting}
+                                value={entityAddress}
+                                onChange={(e) => setEntityAddress(e.target.value)}
+                                placeholder="Ej. Frente a Iglesia El Calvario, León"
+                                className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 focus:outline-none disabled:opacity-50"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Delivery Driver */}
+                      {role === 'delivery_driver' && (
+                        <div className="space-y-3.5">
+                          <div>
+                            <label htmlFor="register-vehicle" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                              Tipo de Vehículo
+                            </label>
+                            <div className="relative">
+                              <Truck className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
+                              <select
+                                id="register-vehicle"
+                                disabled={isSubmitting}
+                                value={vehicleType}
+                                onChange={(e) => setVehicleType(e.target.value)}
+                                className="w-full h-11 pl-11 pr-10 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:border-teal-500/50 focus:outline-none disabled:opacity-50 appearance-none bg-transparent"
+                              >
+                                <option value="motocicleta" className="bg-slate-800 text-white">Motocicleta</option>
+                                <option value="bicicleta" className="bg-slate-800 text-white">Bicicleta / E-bike</option>
+                                <option value="automovil" className="bg-slate-800 text-white">Automóvil</option>
+                              </select>
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <ChevronDown className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor="register-plate" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                              Placa de Vehículo
+                            </label>
+                            <div className="relative">
+                              <Award className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                              <input
+                                id="register-plate"
+                                type="text"
+                                disabled={isSubmitting}
+                                value={licensePlate}
+                                onChange={(e) => setLicensePlate(e.target.value)}
+                                placeholder="Ej. M-123456"
+                                className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 focus:outline-none disabled:opacity-50"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {step === 3 && (
+                    <motion.div
+                      key="step-3"
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 12 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-3.5"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-teal-600 dark:text-teal-400">Paso {role === 'patient' ? '2: Credenciales' : '3: Credenciales'}</span>
+                        <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500">{role === 'patient' ? '2 / 2' : '3 / 3'}</span>
+                      </div>
+
+                      {/* Password */}
+                      <div>
+                        <label htmlFor="register-password" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                          Contraseña
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                          <input
+                            id="register-password"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                            disabled={isSubmitting}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full h-11 pl-11 pr-11 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 focus:outline-none disabled:opacity-50"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300"
+                            tabIndex={-1}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        <PasswordRequirements password={password} />
+                      </div>
+
+                      {/* Confirm Password */}
+                      <div>
+                        <label htmlFor="register-confirm" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                          Confirmar contraseña
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                          <input
+                            id="register-confirm"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                            disabled={isSubmitting}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full h-11 pl-11 pr-11 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 focus:outline-none disabled:opacity-50"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300"
+                            tabIndex={-1}
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Bottom Action buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  {step > 1 && (
+                    <button
+                      type="button"
+                      onClick={handlePrevStep}
+                      disabled={isSubmitting}
+                      className="w-1/3 h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all disabled:opacity-50"
+                    >
+                      <ArrowLeft className="size-3.5" />
+                      Atrás
+                    </button>
+                  )}
+                  
+                  {step < 3 ? (
+                    <button
+                      type="button"
+                      onClick={handleNextStep}
+                      className={cn(
+                        "h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/10 hover:shadow-teal-500/25 active:scale-[0.98] transition-all duration-300",
+                        step > 1 ? "w-2/3" : "w-full"
+                      )}
+                    >
+                      Siguiente
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className={cn(
+                        "h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 text-white shadow-lg shadow-teal-500/20 hover:shadow-teal-500/35 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed",
+                        step > 1 ? "w-2/3" : "w-full"
+                      )}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Registrando...
+                        </>
+                      ) : (
+                        <>
+                          Crear cuenta
+                          <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              {/* Login link */}
+              <motion.div custom={6} variants={fadeInUp} className="mt-4 text-center">
+                <p className="text-sm text-slate-500 dark:text-zinc-400">
+                  ¿Ya tienes cuenta?{' '}
+                  <button
+                    type="button"
+                    onClick={() => navigate('entrar')}
+                    disabled={isSubmitting}
+                    className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-bold transition-colors disabled:opacity-50"
+                  >
+                    Iniciar sesión
+                  </button>
+                </p>
+              </motion.div>
+
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>

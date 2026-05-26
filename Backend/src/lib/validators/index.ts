@@ -48,7 +48,7 @@ export const createUserSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  role: z.enum(['patient', 'doctor', 'pharmacy_manager', 'delivery_driver', 'receptionist', 'admin']),
+  role: z.enum(['patient', 'doctor', 'pharmacy_manager', 'delivery_driver', 'receptionist', 'admin', 'clinic_admin', 'pharmacy_admin', 'cashier']),
   phone: z.string().optional(),
 });
 
@@ -56,7 +56,7 @@ export const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
   email: z.email().optional(),
   phone: z.string().optional(),
-  role: z.enum(['patient', 'doctor', 'pharmacy_manager', 'delivery_driver', 'receptionist', 'admin']).optional(),
+  role: z.enum(['patient', 'doctor', 'pharmacy_manager', 'delivery_driver', 'receptionist', 'admin', 'clinic_admin', 'pharmacy_admin', 'cashier']).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -103,6 +103,8 @@ export const createClinicSchema = z.object({
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   phone: z.string().optional(),
+  ownerId: z.string().optional(),
+  owner_id: z.string().optional(),
 });
 
 export const updateClinicSchema = z.object({
@@ -112,6 +114,8 @@ export const updateClinicSchema = z.object({
   longitude: z.number().optional(),
   phone: z.string().optional(),
   isActive: z.boolean().optional(),
+  ownerId: z.string().optional(),
+  owner_id: z.string().optional(),
 });
 
 // ============================
@@ -124,6 +128,8 @@ export const createPharmacySchema = z.object({
   longitude: z.number().optional(),
   phone: z.string().optional(),
   delivery_fee: z.number().min(0).optional(),
+  ownerId: z.string().optional(),
+  owner_id: z.string().optional(),
 });
 
 export const updatePharmacySchema = z.object({
@@ -134,6 +140,8 @@ export const updatePharmacySchema = z.object({
   phone: z.string().optional(),
   isActive: z.boolean().optional(),
   delivery_fee: z.number().min(0).optional(),
+  ownerId: z.string().optional(),
+  owner_id: z.string().optional(),
 });
 
 // ============================

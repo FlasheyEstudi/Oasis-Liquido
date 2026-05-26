@@ -134,3 +134,20 @@ export async function changeWorkerStatus(workerId: string, isActive: boolean): P
   const result = await put<User>(`/workers/${workerId}/status`, { isActive });
   return result.data;
 }
+
+export interface UpdateWorkerData {
+  name?: string;
+  phone?: string;
+  specialty?: string;
+  licenseNumber?: string;
+  vehicleType?: string;
+  licensePlate?: string;
+}
+
+/**
+ * Update worker details
+ */
+export async function updateWorker(workerId: string, data: UpdateWorkerData): Promise<User> {
+  const result = await put<User>(`/workers/${workerId}`, data);
+  return result.data;
+}

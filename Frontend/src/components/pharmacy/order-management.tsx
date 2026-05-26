@@ -8,6 +8,7 @@ import {
   useUsers,
   getHookErrorMessage,
 } from '@/hooks/use-api';
+import { useActivePharmacyId } from '@/hooks/use-active-pharmacy';
 import { formatDate, formatCurrency } from '@/utils/helpers';
 import { DELIVERY_STATUS_CONFIG } from '@/utils/constants';
 import { GlassCard } from '@/components/oasis/glass-card';
@@ -46,10 +47,7 @@ const TABS: { value: TabValue; label: string; statuses: DeliveryStatus[] }[] = [
 
 export function OrderManagement() {
   const { user, setNotification, navigate } = useAuthStore();
-  const pharmacyId = 
-    user?.pharmacy_manager_profile?.pharmacy_id || 
-    (user as any)?.pharmacyManagerProfile?.pharmacyId || 
-    'demo-pharmacy-1';
+  const pharmacyId = useActivePharmacyId();
   const [activeTab, setActiveTab] = useState<TabValue>('pending');
 
   // Assign driver dialog

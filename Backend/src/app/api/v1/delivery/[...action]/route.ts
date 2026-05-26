@@ -18,8 +18,23 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
     // GET available orders
     if (actionPath === 'orders/available') {
       try {
+        const userRole = req.user.role;
+        const driverId = req.user.userId;
+
+        const driverProfile = await db.deliveryDriverProfile.findUnique({
+          where: { userId: driverId }
+        });
+
+        const whereClause: any = { status: 'pending' };
+        if (userRole === 'delivery_driver') {
+          if (!driverProfile?.pharmacyId) {
+            return successResponse([]);
+          }
+          whereClause.pharmacyId = driverProfile.pharmacyId;
+        }
+
         const available = await db.deliveryOrder.findMany({
-          where: { status: 'pending' },
+          where: whereClause,
           include: {
             pharmacy: true,
             patient: true,
@@ -167,7 +182,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
           const updated = await db.deliveryOrder.update({
             where: { id: orderId },
             data: {
-              status: 'in_transit',
+              status: 'picked_up',
               pickedUpAt: new Date(),
             },
           });
@@ -176,7 +191,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
           console.warn('Database offline, picking up in memory:', dbError);
           const item = inMemoryDeliveries.find(d => d.id === orderId);
           if (item) {
-            item.status = 'in_transit';
+            item.status = 'picked_up';
             return successResponse(item);
           }
           return errorResponse(ErrorCodes.NOT_FOUND, 'Pedido no encontrado en fallback', 404);
@@ -193,7 +208,13 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
               deliveredAt: new Date(),
             },
           });
-          // Reward driver is calculated dynamically from completed orders
+          
+          if (updated.saleId) {
+            await db.sale.update({
+              where: { id: updated.saleId },
+              data: { status: 'delivered' },
+            }).catch(e => console.error('Failed to update sale status in delivery catch-all:', e));
+          }
 
           return successResponse(updated);
         } catch (dbError) {

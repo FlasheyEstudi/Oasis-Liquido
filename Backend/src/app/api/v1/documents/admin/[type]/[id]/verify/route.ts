@@ -46,8 +46,17 @@ export const PUT = withAuth(async (req: AuthenticatedRequest, { params }: { para
         req.headers.get('x-forwarded-for') || undefined,
         req.headers.get('user-agent') || undefined
       );
+    } else if (type === 'pharmacy') {
+      result = await DocumentService.verifyPharmacyDocument(
+        id,
+        req.user.userId,
+        status,
+        rejectionReason,
+        req.headers.get('x-forwarded-for') || undefined,
+        req.headers.get('user-agent') || undefined
+      );
     } else {
-      return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Tipo de documento inválido en la URL. Debe ser "doctor" o "clinic"', 400);
+      return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Tipo de documento inválido en la URL. Debe ser "doctor", "clinic" o "pharmacy"', 400);
     }
 
     return successResponse(result, `Documento legal verificado exitosamente y guardado como ${status === 'approved' ? 'Aprobado' : 'Rechazado'}`);

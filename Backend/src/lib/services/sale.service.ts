@@ -4,6 +4,7 @@
 import { db } from '@/lib/db';
 import { createAuditLog } from './audit.service';
 import { sendPushNotification } from '@/lib/fcm';
+import { notifyNewOrderReceived, notifyDeliveryStatusChanged } from './event-notifications';
 
 /**
  * Create a sale - decrements inventory and optionally creates delivery order
@@ -152,10 +153,26 @@ export async function createSale(
         }
 
         // Update total inventory quantity
+        const newQty = inventoryItem.quantity - item.quantity;
         await db.inventory.update({
           where: { id: inventoryItem.id },
-          data: { quantity: inventoryItem.quantity - item.quantity },
+          data: { quantity: newQty },
         });
+
+        // Trigger low stock warning if applicable
+        try {
+          const pharmacySettings = await db.pharmacySettings.findUnique({
+            where: { pharmacyId }
+          });
+          const threshold = pharmacySettings?.minStockAlertThreshold ?? 10;
+          if (newQty <= threshold) {
+            const { notifyLowStockAlert } = require('./event-notifications');
+            const medicine = await db.medicine.findUnique({ where: { id: item.medicine_id } });
+            notifyLowStockAlert(pharmacyId, medicine?.name || 'Medicamento', newQty).catch((err: any) => console.error(err));
+          }
+        } catch (stockErr) {
+          console.error('Error triggering low stock warning:', stockErr);
+        }
 
         // Record movement for Kardex
         await (db as any).inventoryMovement.create({
@@ -229,6 +246,19 @@ export async function createSale(
     } catch (error) {
       console.error('❌ Error sending sale confirmation push notification:', error);
     }
+  }
+
+  // Trigger local notifications
+  try {
+    const orderNumber = sale.id.slice(-6);
+    if (pharmacyId && !data.clinic_id) {
+      notifyNewOrderReceived(pharmacyId, orderNumber, totalAmount).catch(err => console.error(err));
+    }
+    if (patientId) {
+      notifyDeliveryStatusChanged(patientId, orderNumber, 'pending').catch(err => console.error(err));
+    }
+  } catch (err) {
+    console.error('Failed to dispatch sale/order notifications:', err);
   }
 
   return result;

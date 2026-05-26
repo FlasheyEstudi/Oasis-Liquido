@@ -22,6 +22,11 @@ import {
   HeadphonesIcon,
   Droplets,
   ChevronRight,
+  Users,
+  DollarSign,
+  Activity,
+  Store,
+  Settings,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -32,10 +37,22 @@ function getAllNavItems(role: UserRole): { page: AppPage; label: string; icon: R
     case 'clinic_admin':
       return [
         { page: 'manage-clinics', label: 'Mi Clínica', icon: <MapPin className="size-5" /> },
+        { page: 'appointments', label: 'Agenda & Citas', icon: <Calendar className="size-5" /> },
+        { page: 'consultation', label: 'Consulta / ECE', icon: <Stethoscope className="size-5" /> },
+        { page: 'clinic-staff', label: 'Mi Personal', icon: <Users className="size-5" /> },
+        { page: 'clinic-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-5" /> },
+        { page: 'clinic-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-5" /> },
       ];
     case 'pharmacy_admin':
       return [
-        { page: 'manage-pharmacies', label: 'Mi Farmacia', icon: <Pill className="size-5" /> },
+        { page: 'manage-pharmacies', label: 'Mi Farmacia', icon: <Store className="size-5" /> },
+        { page: 'inventory', label: 'Inventario FEFO', icon: <Package className="size-5" /> },
+        { page: 'fulfillment', label: 'Surtir Receta', icon: <Pill className="size-5" /> },
+        { page: 'pos', label: 'Punto de Venta (POS)', icon: <DollarSign className="size-5" /> },
+        { page: 'order-management', label: 'Pedidos Delivery', icon: <Truck className="size-5" /> },
+        { page: 'pharmacy-staff', label: 'Mi Personal', icon: <Users className="size-5" /> },
+        { page: 'pharmacy-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-5" /> },
+        { page: 'pharmacy-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-5" /> },
       ];
     case 'patient':
       return [
@@ -171,6 +188,19 @@ export function BottomSheetNav({ open, onOpenChange }: BottomSheetNavProps) {
             >
               <User className="size-5 shrink-0" />
               <span className="text-sm font-medium">Mi Perfil</span>
+            </button>
+
+            <button
+              onClick={() => { handleNavigate('manage-settings'); }}
+              className={cn(
+                'flex items-center gap-3 w-full rounded-xl px-3 py-2.5 transition-colors',
+                currentPage === 'manage-settings'
+                  ? 'bg-teal-500/10 text-teal-700 dark:text-teal-400'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-muted/50'
+              )}
+            >
+              <Settings className="size-5 shrink-0" />
+              <span className="text-sm font-medium">Configuración</span>
             </button>
 
             <button

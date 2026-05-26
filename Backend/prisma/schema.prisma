@@ -48,6 +48,10 @@ model User {
   doctorDocumentsVerified DoctorDocument[]        @relation("DoctorDocumentVerifier")
   clinicDocumentsUploaded ClinicDocument[]        @relation("ClinicDocumentUploader")
   clinicDocumentsVerified ClinicDocument[]        @relation("ClinicDocumentVerifier")
+  pharmacyDocumentsUploaded PharmacyDocument[]    @relation("PharmacyDocumentUploader")
+  pharmacyDocumentsVerified PharmacyDocument[]    @relation("PharmacyDocumentVerifier")
+  notifications             Notification[]        @relation("UserNotifications")
+  settings                  UserSettings?
 
   @@index([email])
   @@index([role])
@@ -97,6 +101,7 @@ model PharmacyManagerProfile {
 
 model DeliveryDriverProfile {
   userId         String   @id @map("user_id")
+  pharmacyId     String   @map("pharmacy_id")
   vehicleType    String   @default("motocicleta")
   licensePlate   String?
   isAvailable    Boolean  @default(true)
@@ -106,8 +111,10 @@ model DeliveryDriverProfile {
   baseSalary     Float?   @map("base_salary")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  pharmacy       Pharmacy @relation(fields: [pharmacyId], references: [id])
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([pharmacyId])
   @@map("delivery_driver_profiles")
 }
 
@@ -119,6 +126,7 @@ model ReceptionistProfile {
   clinic    Clinic?  @relation(fields: [clinicId], references: [id])
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([clinicId])
   @@map("receptionist_profiles")
 }
 
@@ -140,6 +148,7 @@ model Clinic {
   sales                Sale[]
   invitations          Invitation[]
   clinicDocuments      ClinicDocument[]
+  settings             ClinicSettings?
 
   @@index([isActive])
   @@map("clinics")
@@ -160,9 +169,12 @@ model Pharmacy {
   deliveryOrders          DeliveryOrder[]
   inventory               Inventory[]
   pharmacyManagerProfiles PharmacyManagerProfile[]
+  deliveryDriverProfiles  DeliveryDriverProfile[]
   fulfilledPrescriptions  Prescription[]           @relation("FulfilledPharmacy")
   sales                   Sale[]
   invitations             Invitation[]
+  pharmacyDocuments       PharmacyDocument[]
+  settings                PharmacySettings?
 
   @@index([isActive])
   @@map("pharmacies")
@@ -407,6 +419,7 @@ model AuditLog {
   user       User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
+  @@index([userId, createdAt])
   @@index([action])
   @@index([entityType, entityId])
   @@index([createdAt])
@@ -439,6 +452,7 @@ model InventoryMovement {
   inventory      Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
 
   @@index([inventoryId])
+  @@index([inventoryId, createdAt])
   @@map("inventory_movements")
 }
 
@@ -493,17 +507,22 @@ model Review {
 }
 
 model FamilyRelationship {
-  id           String   @id @default(cuid())
-  caregiverId  String   @map("caregiver_id")
-  patientId    String   @map("patient_id")
-  relationship String   // "padre", "madre", "hijo", "conyuge", "tutor", "otro"
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  caregiver    User     @relation("CaregiverRelations", fields: [caregiverId], references: [id], onDelete: Cascade)
-  patient      User     @relation("PatientRelations", fields: [patientId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  caregiverId      String    @map("caregiver_id")
+  patientId        String    @map("patient_id")
+  relationship     String    // "padre", "madre", "hijo", "conyuge", "tutor", "otro"
+  isActive         Boolean   @default(true) @map("is_active")
+  status           String    @default("active")  // "pending", "active", "rejected"
+  verificationCode String?   @map("verification_code")
+  codeExpiresAt    DateTime? @map("code_expires_at")
+  permissions      String[]  @default(["view_health_data", "buy_medicines", "schedule_appointments"])
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  caregiver        User      @relation("CaregiverRelations", fields: [caregiverId], references: [id], onDelete: Cascade)
+  patient          User      @relation("PatientRelations", fields: [patientId], references: [id], onDelete: Cascade)
 
   @@unique([caregiverId, patientId])
+  @@index([verificationCode])
   @@map("family_relationships")
 }
 
@@ -645,4 +664,110 @@ model ClinicDocument {
   @@index([expiryDate])
   @@map("clinic_documents")
 }
+
+model PharmacyDocument {
+  id              String    @id @default(cuid())
+  pharmacyId      String    @map("pharmacy_id")
+  type            String    // "ruc", "sanitary_permit", "municipal_license", "minsa_certificate", "lease", "fire_certificate", "insurance", "staff_list", "biosecurity"
+  documentUrl     String    @map("document_url")
+  expiryDate      DateTime? @map("expiry_date")
+  status          String    @default("pending") // pending, approved, rejected, expired
+  rejectionReason String?   @map("rejection_reason")
+  verifiedBy      String?   @map("verified_by")
+  verifiedAt      DateTime? @map("verified_at")
+  notes           String?
+  uploadedBy      String    @map("uploaded_by")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  pharmacy        Pharmacy  @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  verifier        User?     @relation("PharmacyDocumentVerifier", fields: [verifiedBy], references: [id])
+  uploader        User      @relation("PharmacyDocumentUploader", fields: [uploadedBy], references: [id])
+
+  @@index([pharmacyId])
+  @@index([status])
+  @@index([expiryDate])
+  @@map("pharmacy_documents")
+}
+
+model GlobalSetting {
+  key         String   @id
+  value       String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("global_settings")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  title     String
+  body      String
+  type      String   // e.g. "document_pending", "invitation_accepted", "new_appointment", etc.
+  link      String?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model UserSettings {
+  id                      String   @id @default(cuid())
+  userId                  String   @unique @map("user_id")
+  theme                   String   @default("system")
+  notificationsEnabled    Boolean  @default(true) @map("notifications_enabled")
+  notificationPreferences Json     @default("{}") @map("notification_preferences")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model ClinicSettings {
+  id                   String   @id @default(cuid())
+  clinicId             String   @unique @map("clinic_id")
+  baseConsultationFee  Float    @default(0.0) @map("base_consultation_fee")
+  taxRate              Float    @default(0.15) @map("tax_rate")
+  defaultPermissions   String[] @default(["view_health_data", "buy_medicines", "schedule_appointments"]) @map("default_permissions")
+  notificationPrefs    Json     @default("{}") @map("notification_prefs")
+  insurancePartners    String[] @default([]) @map("insurance_partners")
+  hoursOfOperation     Json     @default("{}") @map("hours_of_operation")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  clinic               Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@map("clinic_settings")
+}
+
+model PharmacySettings {
+  id                        String   @id @default(cuid())
+  pharmacyId                String   @unique @map("pharmacy_id")
+  defaultVatRate            Float    @default(0.15) @map("default_vat_rate")
+  ticketFooter              String?  @default("¡Gracias por su compra!") @map("ticket_footer")
+  invoiceSeries             String   @default("A") @map("invoice_series")
+  minStockAlertThreshold    Int      @default(10) @map("min_stock_alert_threshold")
+  expirationAlertDays       Int      @default(90) @map("expiration_alert_days")
+  deliveryFeePerKm          Float    @default(15.0) @map("delivery_fee_per_km")
+  deliveryCoverageRadiusKm  Float    @default(10.0) @map("delivery_coverage_radius_km")
+  defaultCashierRole        String   @default("cashier") @map("default_cashier_role")
+  defaultDriverRole         String   @default("delivery_driver") @map("default_driver_role")
+  notificationPrefs         Json     @default("{}") @map("notification_prefs")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  pharmacy                  Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+
+  @@map("pharmacy_settings")
+}
+
+
 

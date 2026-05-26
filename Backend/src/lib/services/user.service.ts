@@ -95,7 +95,7 @@ export async function createUser(data: {
       doctorProfile: (data.role === 'doctor') ? { 
         create: { 
           licenseNumber: `LIC-${Date.now()}`,
-          clinicId: data.clinicId 
+          clinicId: data.clinicId!
         } 
       } : undefined,
       pharmacyManagerProfile: (data.role === 'pharmacy_manager' || data.role === 'pharmacy_admin') ? { 
@@ -103,7 +103,11 @@ export async function createUser(data: {
           pharmacyId: data.pharmacyId 
         } 
       } : undefined,
-      deliveryDriverProfile: data.role === 'delivery_driver' ? { create: {} } : undefined,
+      deliveryDriverProfile: data.role === 'delivery_driver' ? { 
+        create: { 
+          pharmacyId: data.pharmacyId!
+        } 
+      } : undefined,
       receptionistProfile: data.role === 'receptionist' ? { 
         create: { 
           clinicId: data.clinicId 
@@ -166,26 +170,128 @@ export async function updateUser(
     }
   }
 
-  const user = await db.user.update({
-    where: { id: userId },
-    data: {
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      role: data.role,
-      isActive: data.isActive,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      phone: true,
-      role: true,
-      isActive: true,
-      emailVerified: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+  // Run update and profile checks in a safe transaction
+  const user = await db.$transaction(async (tx) => {
+    // 1. Perform User table update
+    const updatedUser = await tx.user.update({
+      where: { id: userId },
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        isActive: data.isActive,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // 2. Manage role-specific profiles on role change
+    if (data.role && data.role !== existing.role) {
+      // a) Deprovision old profile based on existing.role
+      if (existing.role === 'patient') {
+        await tx.patientProfile.deleteMany({ where: { userId } });
+      } else if (existing.role === 'doctor') {
+        await tx.doctorProfileSpecialty.deleteMany({ where: { doctorId: userId } });
+        await tx.doctorProfile.deleteMany({ where: { userId } });
+      } else if (existing.role === 'delivery_driver') {
+        await tx.deliveryDriverProfile.deleteMany({ where: { userId } });
+      } else if (existing.role === 'receptionist') {
+        await tx.receptionistProfile.deleteMany({ where: { userId } });
+      } else if (existing.role === 'cashier' || existing.role === 'pharmacy_manager' || existing.role === 'pharmacy_admin') {
+        await tx.pharmacyManagerProfile.deleteMany({ where: { userId } });
+      }
+
+      // b) Provision new profile based on data.role
+      if (data.role === 'patient') {
+        const patientProfile = await tx.patientProfile.findUnique({ where: { userId } });
+        if (!patientProfile) {
+          await tx.patientProfile.create({
+            data: { userId },
+          });
+        }
+      } else if (data.role === 'doctor') {
+        const docProfile = await tx.doctorProfile.findUnique({ where: { userId } });
+        if (!docProfile) {
+          let clinic = await tx.clinic.findFirst();
+          if (!clinic) {
+            clinic = await tx.clinic.create({
+              data: {
+                name: 'Clínica Oasis Principal',
+                address: 'Managua, Nicaragua',
+                latitude: 12.1364,
+                longitude: -86.2514,
+              }
+            });
+          }
+          await tx.doctorProfile.create({
+            data: {
+              userId,
+              clinicId: clinic.id,
+              specialty: 'Medicina General',
+              licenseNumber: `MINSA-${userId.substring(0, 8).toUpperCase()}`,
+            },
+          });
+        }
+      } else if (data.role === 'delivery_driver') {
+        const driverProfile = await tx.deliveryDriverProfile.findUnique({ where: { userId } });
+        if (!driverProfile) {
+          let pharmacy = await tx.pharmacy.findFirst();
+          if (!pharmacy) {
+            pharmacy = await tx.pharmacy.create({
+              data: {
+                name: 'Farmacia Oasis Principal',
+                address: 'Managua, Nicaragua',
+                latitude: 12.1364,
+                longitude: -86.2514,
+                deliveryFee: 29.90,
+              }
+            });
+          }
+          await tx.deliveryDriverProfile.create({
+            data: {
+              userId,
+              pharmacyId: pharmacy.id,
+              vehicleType: 'motocicleta',
+              isAvailable: true,
+            },
+          });
+        }
+      } else if (data.role === 'receptionist') {
+        const recProfile = await tx.receptionistProfile.findUnique({ where: { userId } });
+        if (!recProfile) {
+          const clinic = await tx.clinic.findFirst();
+          await tx.receptionistProfile.create({
+            data: {
+              userId,
+              clinicId: clinic?.id || null,
+            },
+          });
+        }
+      } else if (data.role === 'cashier' || data.role === 'pharmacy_manager' || data.role === 'pharmacy_admin') {
+        const mgrProfile = await tx.pharmacyManagerProfile.findUnique({ where: { userId } });
+        if (!mgrProfile) {
+          const pharmacy = await tx.pharmacy.findFirst();
+          await tx.pharmacyManagerProfile.create({
+            data: {
+              userId,
+              pharmacyId: pharmacy?.id || null,
+            },
+          });
+        }
+      }
+    }
+
+    return updatedUser;
   });
 
   // Audit log

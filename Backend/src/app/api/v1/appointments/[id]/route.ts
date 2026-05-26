@@ -27,3 +27,39 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
 });
+
+/**
+ * PATCH /api/appointments/:id
+ * Update/Reschedule an appointment
+ */
+export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+  try {
+    const { id } = await context.params;
+    const body = await req.json();
+
+    const updated = await appointmentService.updateAppointment(
+      id,
+      {
+        date_time: body.date_time,
+        duration_minutes: body.duration_minutes,
+        notes: body.notes,
+      },
+      req.user.userId,
+      req.user.role,
+      req.headers.get('x-forwarded-for') || undefined,
+      req.headers.get('user-agent') || undefined
+    );
+
+    return successResponse(updated);
+  } catch (error: any) {
+    if (error.message === 'NOT_FOUND') {
+      return errorResponse(ErrorCodes.NOT_FOUND, 'Cita no encontrada', 404);
+    }
+    if (error.message === 'UNAUTHORIZED') {
+      return errorResponse(ErrorCodes.UNAUTHORIZED, 'No tienes permiso para actualizar esta cita', 403);
+    }
+    console.error('[PATCH APPOINTMENT ERROR]', error);
+    return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error al actualizar la cita', 500);
+  }
+});
+

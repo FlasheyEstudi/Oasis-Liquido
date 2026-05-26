@@ -45,4 +45,4 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
-}, { roles: ['pharmacy_manager', 'delivery_driver'] });
+}, { roles: ['pharmacy_manager', 'delivery_driver', 'pharmacy_admin', 'admin'] });

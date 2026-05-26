@@ -28,11 +28,25 @@ import {
   CheckCircle2,
   PlayCircle,
   XCircle,
-  UserCheck
+  UserCheck,
+  QrCode,
+  Camera,
+  Check,
+  Loader2
 } from 'lucide-react';
 import { ClinicBillingModal } from './billing-modal';
 import { PatientRegistrationModal } from './registration-modal';
+import { RescheduleModal } from './reschedule-modal';
 import { AnalyticsCard } from '@/components/common/analytics-card';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.06 } },
@@ -49,8 +63,35 @@ export function ReceptionistDashboard() {
   const clinicId = user?.receptionist_profile?.clinic_id || '';
   const firstName = user?.name?.split(' ')[0] || 'Recepcionista';
 
+  // QR Check-in states
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
+  const [scannedApt, setScannedApt] = useState<any>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanSuccess, setScanSuccess] = useState(false);
+
+  const handleSimulateScan = (appointment: any) => {
+    setIsScanning(true);
+    setScannedApt(appointment);
+    setScanSuccess(false);
+
+    // Simulate scanning for 2 seconds
+    setTimeout(() => {
+      setIsScanning(false);
+      setScanSuccess(true);
+
+      // Settle and confirm in database
+      setTimeout(() => {
+        handleStatusUpdate(appointment.id, 'confirmed');
+        setIsQrScannerOpen(false);
+        setScannedApt(null);
+        setScanSuccess(false);
+      }, 1500);
+    }, 2000);
+  };
+
   const [billingOpen, setBillingOpen] = useState(false);
   const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [selectedApt, setSelectedApt] = useState<any>(null);
 
   const {
@@ -216,9 +257,16 @@ export function ReceptionistDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-foreground">Citas de Hoy</h3>
             <div className="flex items-center gap-2">
-              <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400')}>
+              <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium mr-2', 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400')}>
                 {confirmed} confirmadas
               </span>
+              <Button
+                onClick={() => setIsQrScannerOpen(true)}
+                className="glass-btn-primary rounded-full h-8 px-4 text-xs font-semibold flex items-center gap-1.5"
+              >
+                <QrCode className="size-4" />
+                Escanear QR de Cita
+              </Button>
             </div>
           </div>
           {appointments.length === 0 ? (
@@ -299,15 +347,27 @@ export function ReceptionistDashboard() {
                         )}
 
                         {(apt.status === 'scheduled' || apt.status === 'confirmed') && (
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleStatusUpdate(apt.id, 'cancelled')}
-                            disabled={isUpdatingThis}
-                            className="rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/15 hover:bg-red-500/15 transition-all disabled:opacity-50"
-                          >
-                            <XCircle className="size-3" />
-                            Cancelar
-                          </motion.button>
+                          <div className="flex items-center gap-1.5">
+                            <motion.button
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => { setSelectedApt(apt); setRescheduleOpen(true); }}
+                              disabled={isUpdatingThis}
+                              className="rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/15 hover:bg-sky-500/15 transition-all disabled:opacity-50"
+                            >
+                              <Calendar className="size-3" />
+                              Reagendar
+                            </motion.button>
+
+                            <motion.button
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleStatusUpdate(apt.id, 'cancelled')}
+                              disabled={isUpdatingThis}
+                              className="rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/15 hover:bg-red-500/15 transition-all disabled:opacity-50"
+                            >
+                              <XCircle className="size-3" />
+                              Cancelar
+                            </motion.button>
+                          </div>
                         )}
                         {apt.status === 'completed' && !apt.sale && (
                           <motion.button
@@ -347,6 +407,114 @@ export function ReceptionistDashboard() {
         isOpen={registrationOpen}
         onClose={() => setRegistrationOpen(false)}
       />
+
+      <RescheduleModal
+        isOpen={rescheduleOpen}
+        onClose={() => setRescheduleOpen(false)}
+        appointment={selectedApt}
+        onSuccess={() => { refetch(); refetchReport(); }}
+      />
+
+      {/* Modal de Escáner QR de Citas */}
+      <Dialog open={isQrScannerOpen} onOpenChange={setIsQrScannerOpen}>
+        <DialogContent className="glass border border-white/10 rounded-3xl max-w-md shadow-2xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <QrCode className="size-6 text-teal-500 animate-pulse" />
+              Escáner QR - Check-in
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Apunta el código QR del paciente al lector para confirmar su asistencia instantáneamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="my-6 flex flex-col items-center justify-center">
+            {/* Ventana de Escaneo de Cámara */}
+            <div className="relative size-60 rounded-3xl bg-slate-950/80 border-2 border-teal-500/30 overflow-hidden flex flex-col items-center justify-center shadow-inner">
+              {isScanning ? (
+                <>
+                  {/* Animación del Rayo Láser */}
+                  <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-bounce" />
+                  <Camera className="size-10 text-teal-400/30 animate-pulse" />
+                  <span className="text-[10px] text-teal-400 font-bold uppercase tracking-widest mt-3">Escaneando...</span>
+                </>
+              ) : scanSuccess ? (
+                <motion.div 
+                  initial={{ scale: 0.5, opacity: 0 }} 
+                  animate={{ scale: 1, opacity: 1 }} 
+                  className="flex flex-col items-center justify-center text-center p-4"
+                >
+                  <div className="size-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mb-3">
+                    <Check className="size-8 text-emerald-400" />
+                  </div>
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">¡Código QR Validado!</span>
+                  <span className="text-[11px] text-muted-foreground mt-1 truncate max-w-[200px]">
+                    {scannedApt?.patient?.name || 'Paciente'}
+                  </span>
+                </motion.div>
+              ) : (
+                <>
+                  <Camera className="size-12 text-muted-foreground/30 mb-2" />
+                  <span className="text-xs text-muted-foreground font-semibold">Cámara Inactiva</span>
+                  <span className="text-[10px] text-muted-foreground/60 text-center max-w-[160px] mt-1">
+                    Selecciona un paciente abajo para simular la lectura del código QR
+                  </span>
+                </>
+              )}
+
+              {/* Esquinas de Mira del Escáner */}
+              <div className="absolute top-3 left-3 size-4 border-t-2 border-l-2 border-teal-500 rounded-tl-lg" />
+              <div className="absolute top-3 right-3 size-4 border-t-2 border-r-2 border-teal-500 rounded-tr-lg" />
+              <div className="absolute bottom-3 left-3 size-4 border-b-2 border-l-2 border-teal-500 rounded-bl-lg" />
+              <div className="absolute bottom-3 right-3 size-4 border-b-2 border-r-2 border-teal-500 rounded-br-lg" />
+            </div>
+
+            {/* Selector para Simular Escaneo */}
+            {!isScanning && !scanSuccess && (
+              <div className="w-full mt-6 space-y-2">
+                <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block">
+                  Simular Escaneo para Paciente de Hoy:
+                </label>
+                <div className="max-h-40 overflow-y-auto divide-y divide-border/20 border border-border/40 rounded-2xl bg-white/[0.01] overflow-hidden">
+                  {appointments.filter(a => a.status === 'scheduled').length === 0 ? (
+                    <div className="p-4 text-center text-xs text-muted-foreground">
+                      No hay citas pendientes de confirmación hoy
+                    </div>
+                  ) : (
+                    appointments
+                      .filter(a => a.status === 'scheduled')
+                      .map((apt) => (
+                        <button
+                          key={apt.id}
+                          onClick={() => handleSimulateScan(apt)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-teal-500/5 transition-colors text-xs flex justify-between items-center group"
+                        >
+                          <span className="font-semibold text-foreground group-hover:text-teal-500 transition-colors">
+                            {apt.patient?.name || 'Paciente sin nombre'}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                            {formatDate(apt.date_time, 'hh:mm a')}
+                          </span>
+                        </button>
+                      ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setIsQrScannerOpen(false)}
+              className="rounded-full text-xs font-bold w-full"
+              disabled={isScanning}
+            >
+              Cerrar Lector
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

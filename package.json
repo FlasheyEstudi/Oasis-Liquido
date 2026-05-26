@@ -1,0 +1,15 @@
+{
+  "name": "oasis-nicaragua-root",
+  "version": "1.0.0",
+  "description": "Orquestador central para el backend y frontend de Oasis Nicaragua",
+  "scripts": {
+    "dev": "npx concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,magenta\" \"npm run dev --prefix Backend\" \"npm run dev --prefix Frontend\"",
+    "build:backend": "npm run build --prefix Backend",
+    "build:frontend": "npm run build --prefix Frontend",
+    "build": "npm run build:backend && npm run build:frontend",
+    "start": "npx concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,magenta\" \"npm run start --prefix Backend\" \"npm run start --prefix Frontend\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

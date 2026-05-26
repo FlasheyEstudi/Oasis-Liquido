@@ -34,6 +34,9 @@ export const POST = withAuth(
       if (error.message.includes('FORBIDDEN')) {
         return errorResponse(ErrorCodes.FORBIDDEN, error.message, 403);
       }
+      if (error.message === 'PHARMACY_SUSPENDED') {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'La farmacia se encuentra suspendida temporalmente por cumplimiento legal (MINSA)', 403);
+      }
       if (error.message === 'NOT_FOUND') {
         return errorResponse(ErrorCodes.NOT_FOUND, 'Receta no encontrada', 404);
       }

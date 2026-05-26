@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { NotificationBell } from './notification-bell';
 
 // Page title map
 const PAGE_TITLES: Record<string, string> = {
@@ -124,10 +125,7 @@ export function ContextualTopBar({ onMenuClick }: ContextualTopBarProps) {
         </button>
 
         {/* Notifications */}
-        <button className="relative p-2 rounded-xl hover:bg-slate-500/5 transition-colors text-slate-500 dark:text-slate-400">
-          <Bell className="size-[18px]" />
-          <div className="absolute top-1.5 right-1.5 size-2 rounded-full bg-teal-500" />
-        </button>
+        <NotificationBell />
 
         {/* User Role Badge */}
         <div

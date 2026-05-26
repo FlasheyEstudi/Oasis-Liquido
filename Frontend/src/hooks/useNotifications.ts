@@ -9,11 +9,13 @@ import {
   messaging
 } from '@/lib/firebase-config';
 import { post } from '@/api/client';
+import { useAuthStore } from '@/store/auth-store';
 
 export function useNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(true);
   const [isEnabled, setIsEnabled] = useState(false);
+  const { isAuthenticated } = useAuthStore();
 
   // Detectar si las notificaciones están soportadas
   useEffect(() => {
@@ -30,7 +32,7 @@ export function useNotifications() {
 
   // Registrar SW y token al montar
   useEffect(() => {
-    if (!isSupported) return;
+    if (!isSupported || !isAuthenticated) return;
     // Guard directamente en caso de race condition donde isSupported aún no se actualizó
     if (typeof window === 'undefined' || typeof Notification === 'undefined') return;
     if (!hasValidConfig) {
@@ -62,7 +64,7 @@ export function useNotifications() {
     };
     
     init();
-  }, [isSupported]);
+  }, [isSupported, isAuthenticated]);
 
   // Escuchar mensajes en primer plano
   useEffect(() => {

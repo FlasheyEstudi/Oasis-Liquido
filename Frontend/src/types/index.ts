@@ -4,7 +4,7 @@
 // ============================================
 
 // --- Enums / Union Types ---
-export type UserRole = 'admin' | 'doctor' | 'receptionist' | 'patient' | 'pharmacy_manager' | 'delivery_driver' | 'clinic_admin' | 'pharmacy_admin';
+export type UserRole = 'admin' | 'doctor' | 'receptionist' | 'patient' | 'pharmacy_manager' | 'delivery_driver' | 'clinic_admin' | 'pharmacy_admin' | 'cashier';
 
 export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 
@@ -66,7 +66,8 @@ export interface User {
   role: UserRole;
   phone?: string;
   avatar_url?: string;
-  is_active: boolean;
+  is_active?: boolean;
+  isActive?: boolean;
   created_at: string;
   updated_at: string;
   verification_status?: 'pending' | 'submitted' | 'approved' | 'rejected';
@@ -140,6 +141,7 @@ export interface Clinic {
   longitude: number;
   phone?: string;
   is_active: boolean;
+  isActive?: boolean;
   admin_id?: string;
   owner_id?: string;
   ownerId?: string;
@@ -168,6 +170,7 @@ export interface Pharmacy {
   longitude: number;
   phone?: string;
   is_active: boolean;
+  isActive?: boolean;
   manager_id?: string;
   owner_id?: string;
   ownerId?: string;
@@ -496,6 +499,8 @@ export type AppPage =
   | 'perfil'
   | 'auditoria'
   | 'venta'
+  | 'manage-settings'
+  | 'gestionar-configuracion'
   | string; // Keep string for dynamic routes like verify-
 
 export interface DoctorDocument {

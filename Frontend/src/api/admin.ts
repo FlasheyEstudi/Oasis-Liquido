@@ -76,3 +76,17 @@ export async function updateBetaFeedbackStatus(id: string, status: string): Prom
   const result = await patch<any>('/feedback', { id, status });
   return result.data;
 }
+
+/** Get all global settings (admin) */
+export async function getGlobalSettings(): Promise<any> {
+  const result = await get<any>('/admin/settings');
+  return result.data;
+}
+
+/** Update a specific global setting (admin) */
+export async function updateGlobalSetting(key: string, value: string): Promise<any> {
+  const { put } = await import('./client');
+  const result = await put<any>(`/admin/settings/${key}`, { value });
+  return result.data;
+}
+

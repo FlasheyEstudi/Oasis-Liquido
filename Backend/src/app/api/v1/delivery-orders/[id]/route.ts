@@ -6,6 +6,7 @@ import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
 import { getInMemoryDeliveries } from '@/lib/db/mock-deliveries';
 import * as deliveryService from '@/lib/services/delivery.service';
+import { db } from '@/lib/db';
 
 export const GET = withAuth(async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
   try {
@@ -41,10 +42,28 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
       if (order.deliveryDriverId !== userId) {
         return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permisos para ver esta orden', 403);
       }
-    } else if (userRole === 'pharmacy_manager') {
-      // Pharmacy managers can see orders from their pharmacy
-      // The order already includes pharmacy data, but we need to check the pharmacyId
-      // Service already handles the filtering - but for a single record we check here
+    } else if (userRole === 'pharmacy_manager' || userRole === 'pharmacy_admin') {
+      // Validar aislamiento multi-tenant para personal y administradores de farmacia
+      let isAuthorized = false;
+      if (userRole === 'pharmacy_admin') {
+        const pharmacy = await db.pharmacy.findFirst({
+          where: { id: order.pharmacyId, ownerId: userId }
+        });
+        if (pharmacy) isAuthorized = true;
+      } else {
+        const profile = await db.pharmacyManagerProfile.findUnique({
+          where: { userId }
+        });
+        if (profile && profile.pharmacyId === order.pharmacyId) {
+          isAuthorized = true;
+        }
+      }
+      if (!isAuthorized) {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permisos para ver esta orden', 403);
+      }
+    } else {
+      // Cualquier otro rol sin especificar tiene prohibido el acceso
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permisos para realizar esta acción', 403);
     }
 
     return successResponse(order);

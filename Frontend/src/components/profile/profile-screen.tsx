@@ -29,6 +29,10 @@ import {
   Lock,
   Pencil,
   X,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -406,6 +410,92 @@ export function ProfileScreen() {
       {/* Read-only role-specific info */}
       {!isEditing && (
         <>
+          {/* Acreditación Legal y Cumplimiento MINSA */}
+          {(role === 'clinic_admin' || role === 'pharmacy_admin' || role === 'doctor') && (
+            <GlassCard className="relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-4">
+                <Shield className="size-4 text-teal-600 dark:text-teal-400" />
+                Acreditación Legal MINSA & RUC
+              </h3>
+
+              {profile.verification_status === 'pending' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
+                    <AlertTriangle className="size-5 shrink-0 mt-0.5 animate-pulse text-amber-500" />
+                    <div>
+                      <p className="text-xs font-bold">Acreditación Pendiente</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                        Debes subir tu Cédula RUC y Licencia Sanitaria del MINSA vigente para habilitar la operación completa de tu cuenta.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => window.dispatchEvent(new CustomEvent('open-compliance-modal'))}
+                    className="w-full h-11 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-full font-bold text-xs"
+                  >
+                    Subir Expediente Legal
+                  </Button>
+                </div>
+              )}
+
+              {profile.verification_status === 'submitted' && (
+                <div className="flex items-start gap-3 p-3 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-800 dark:text-sky-300">
+                  <Clock className="size-5 shrink-0 mt-0.5 text-sky-500 animate-pulse" />
+                  <div>
+                    <p className="text-xs font-bold">Expediente en Revisión</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                      Tus documentos de RUC y MINSA han sido cargados con éxito y están siendo evaluados por nuestro equipo legal en un plazo máximo de 24 horas.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {profile.verification_status === 'approved' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="size-5 shrink-0 mt-0.5 text-emerald-500" />
+                    <div>
+                      <p className="text-xs font-bold">Establecimiento Acreditado</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+                        ¡Tu cuenta y establecimiento están verificados legalmente bajo las normativas vigentes del MINSA en Nicaragua!
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent('open-compliance-modal'))}
+                      className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1.5"
+                    >
+                      Actualizar / Re-subir Expediente
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {profile.verification_status === 'rejected' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-800 dark:text-red-300">
+                    <XCircle className="size-5 shrink-0 mt-0.5 text-red-500" />
+                    <div>
+                      <p className="text-xs font-bold">Acreditación Rechazada</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                        Tu expediente legal no fue aprobado. Por favor revisa y vuelve a subir los documentos corregidos.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => window.dispatchEvent(new CustomEvent('open-compliance-modal'))}
+                    className="w-full h-11 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold text-xs"
+                  >
+                    Volver a Subir Expediente
+                  </Button>
+                </div>
+              )}
+            </GlassCard>
+          )}
+
           {/* Doctor info */}
           {role === 'doctor' && (
             <GlassCard>

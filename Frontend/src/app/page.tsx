@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { LoadingScreen } from '@/components/oasis/loading-screen';
+import { useActivePharmacyId } from '@/hooks/use-active-pharmacy';
 // Landing
 import { OasisLandingPage } from '@/components/oasis/landing-page';
 // Layout
@@ -22,6 +23,8 @@ const ManagePharmacies = dynamic(() => import('@/components/admin/manage-pharmac
 const ManageUsers = dynamic(() => import('@/components/admin/manage-users').then(m => m.ManageUsers));
 const AuditLogs = dynamic(() => import('@/components/admin/audit-logs').then(m => m.AuditLogs));
 const ManageFeedback = dynamic(() => import('@/components/admin/manage-feedback').then(m => m.ManageFeedback));
+const PendingDocumentsPanel = dynamic(() => import('@/components/admin/pending-documents').then(m => m.PendingDocumentsPanel));
+const GlobalSettingsPanel = dynamic(() => import('@/components/admin/global-settings').then(m => m.GlobalSettingsPanel));
 
 const DoctorDashboard = dynamic(() => import('@/components/doctor/doctor-dashboard').then(m => m.DoctorDashboard));
 const Consultation = dynamic(() => import('@/components/doctor/consultation').then(m => m.Consultation));
@@ -58,6 +61,7 @@ export default function Home() {
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const hydrate = useAuthStore((s) => s.hydrate);
   const navigate = useAuthStore((s) => s.navigate);
+  const activePharmacyId = useActivePharmacyId();
 
 
   // Sync URL pathname with currentPage
@@ -93,8 +97,8 @@ export default function Home() {
     hydrate();
   }, [hydrate]);
 
-  // Show loading screen during hydration
-  if (!isHydrated) {
+  // Show loading screen during hydration, except on landing page which has its own immersive splash
+  if (!isHydrated && currentPage !== 'bienvenida') {
     return <LoadingScreen isVisible={true} />;
   }
 
@@ -123,7 +127,12 @@ export default function Home() {
           case 'receptionist':
             return <ReceptionistDashboard />;
           case 'pharmacy_manager':
+          case 'cashier':
             return <PharmacyDashboard />;
+          case 'clinic_admin':
+            return <ManageClinics />;
+          case 'pharmacy_admin':
+            return <ManagePharmacies />;
           case 'delivery_driver':
             return <DriverHome />;
           case 'patient':
@@ -182,12 +191,18 @@ export default function Home() {
       case 'manage-users':
       case 'gestionar-usuarios':
         return <ManageUsers />;
+      case 'manage-documents':
+      case 'gestionar-documentos':
+        return <PendingDocumentsPanel />;
       case 'audit-logs':
       case 'auditoria':
         return <AuditLogs />;
       case 'manage-feedback':
       case 'gestionar-feedback':
         return <ManageFeedback />;
+      case 'manage-settings':
+      case 'gestionar-configuracion':
+        return <GlobalSettingsPanel />;
 
       // Pharmacy
       case 'inventory':
@@ -198,11 +213,10 @@ export default function Home() {
         return <Fulfillment />;
       case 'order-management':
       case 'gestion-pedidos':
-        return <OrderManagement />;
+        return user?.role === 'patient' ? <OrderTracking /> : <OrderManagement />;
       case 'pos':
       case 'venta':
-        const pId = user?.pharmacy_manager_profile?.pharmacy_id || (user as any)?.pharmacyManagerProfile?.pharmacyId || '';
-        return <PharmacyPOS pharmacyId={pId} />;
+        return <PharmacyPOS pharmacyId={activePharmacyId} />;
 
       // Driver
       case 'driver-home':

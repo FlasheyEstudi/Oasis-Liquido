@@ -94,7 +94,7 @@ export async function createEmployeeDirectly(
       await tx.doctorProfile.create({
         data: {
           userId: user.id,
-          clinicId: clinicId || null,
+          clinicId: clinicId!,
           specialty: specialty || 'Medicina General',
           licenseNumber: licenseNumber || `MINSA-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
         }
@@ -117,6 +117,7 @@ export async function createEmployeeDirectly(
       await tx.deliveryDriverProfile.create({
         data: {
           userId: user.id,
+          pharmacyId: pharmacyId!,
           vehicleType: vehicleType || 'motocicleta',
           licensePlate: licensePlate || null,
           isAvailable: true,
@@ -315,6 +316,7 @@ export async function acceptInvitation(
       await tx.deliveryDriverProfile.create({
         data: {
           userId: user.id,
+          pharmacyId: invitation.pharmacyId!,
           vehicleType: 'motocicleta',
           employmentType: 'employee',
         },
@@ -350,6 +352,19 @@ export async function acceptInvitation(
       data: { isAccepted: true },
     });
 
+    // 4. Trigger in-app notifications to admins
+    if (invitation.role === 'doctor' || invitation.role === 'receptionist') {
+      if (invitation.clinicId) {
+        const { notifyInvitationAccepted } = require('./event-notifications');
+        notifyInvitationAccepted(invitation.clinicId, name, invitation.role).catch((err: any) => console.error(err));
+      }
+    } else if (invitation.role === 'cashier' || invitation.role === 'delivery_driver') {
+      if (invitation.pharmacyId) {
+        const { notifyPharmacyInvitationAccepted } = require('./event-notifications');
+        notifyPharmacyInvitationAccepted(invitation.pharmacyId, name, invitation.role).catch((err: any) => console.error(err));
+      }
+    }
+
     return user;
   });
 
@@ -375,10 +390,10 @@ export async function acceptInvitation(
 /**
  * List workers for a clinic
  */
-export async function getClinicWorkers(clinicId: string, ownerId: string) {
-  // Verify clinic ownership
+export async function getClinicWorkers(clinicId: string, ownerId: string, callerRole: string = 'clinic_admin') {
+  // Verify clinic ownership (Superadmin bypasses)
   const clinic = await db.clinic.findUnique({ where: { id: clinicId } });
-  if (!clinic || clinic.ownerId !== ownerId) {
+  if (!clinic || (callerRole !== 'admin' && clinic.ownerId !== ownerId)) {
     throw new Error('FORBIDDEN');
   }
 
@@ -415,10 +430,10 @@ export async function getClinicWorkers(clinicId: string, ownerId: string) {
 /**
  * List workers for a pharmacy
  */
-export async function getPharmacyWorkers(pharmacyId: string, ownerId: string) {
-  // Verify pharmacy ownership
+export async function getPharmacyWorkers(pharmacyId: string, ownerId: string, callerRole: string = 'pharmacy_admin') {
+  // Verify pharmacy ownership (Superadmin bypasses)
   const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
-  if (!pharmacy || pharmacy.ownerId !== ownerId) {
+  if (!pharmacy || (callerRole !== 'admin' && pharmacy.ownerId !== ownerId)) {
     throw new Error('FORBIDDEN');
   }
 
@@ -441,6 +456,7 @@ export async function getPharmacyWorkers(pharmacyId: string, ownerId: string) {
   const drivers = await db.user.findMany({
     where: {
       role: 'delivery_driver',
+      deliveryDriverProfile: { pharmacyId },
     },
     include: {
       deliveryDriverProfile: true,
@@ -471,6 +487,7 @@ export async function changeWorkerStatus(
       doctorProfile: true,
       receptionistProfile: true,
       pharmacyManagerProfile: true,
+      deliveryDriverProfile: true,
     },
   });
 
@@ -478,34 +495,47 @@ export async function changeWorkerStatus(
     throw new Error('WORKER_NOT_FOUND');
   }
 
-  // Verify ownership permission
-  if (worker.role === 'doctor' || worker.role === 'receptionist') {
-    const clinicId = worker.doctorProfile?.clinicId || worker.receptionistProfile?.clinicId;
-    if (!clinicId) {
-      throw new Error('NO_CLINIC_ASSOCIATION');
+  // Fetch caller details
+  const caller = await db.user.findUnique({ where: { id: ownerId } });
+  if (!caller) {
+    throw new Error('CALLER_NOT_FOUND');
+  }
+  const isSuperAdmin = caller.role === 'admin';
+
+  if (!isSuperAdmin) {
+    // Verify ownership permission
+    if (worker.role === 'doctor' || worker.role === 'receptionist') {
+      const clinicId = worker.doctorProfile?.clinicId || worker.receptionistProfile?.clinicId;
+      if (!clinicId) {
+        throw new Error('NO_CLINIC_ASSOCIATION');
+      }
+      const clinic = await db.clinic.findUnique({ where: { id: clinicId } });
+      if (!clinic || clinic.ownerId !== ownerId) {
+        throw new Error('FORBIDDEN');
+      }
+    } else if (worker.role === 'cashier') {
+      const pharmacyId = worker.pharmacyManagerProfile?.pharmacyId;
+      if (!pharmacyId) {
+        throw new Error('NO_PHARMACY_ASSOCIATION');
+      }
+      const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
+      if (!pharmacy || pharmacy.ownerId !== ownerId) {
+        throw new Error('FORBIDDEN');
+      }
+    } else if (worker.role === 'delivery_driver') {
+      if (caller.role !== 'pharmacy_admin' && caller.role !== 'pharmacy_owner') {
+        throw new Error('FORBIDDEN');
+      }
+      const pharmacyId = worker.deliveryDriverProfile?.pharmacyId;
+      if (pharmacyId) {
+        const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
+        if (!pharmacy || pharmacy.ownerId !== ownerId) {
+          throw new Error('FORBIDDEN');
+        }
+      }
+    } else {
+      throw new Error('CANNOT_MODIFY_ROLE');
     }
-    const clinic = await db.clinic.findUnique({ where: { id: clinicId } });
-    if (!clinic || clinic.ownerId !== ownerId) {
-      throw new Error('FORBIDDEN');
-    }
-  } else if (worker.role === 'cashier') {
-    const pharmacyId = worker.pharmacyManagerProfile?.pharmacyId;
-    if (!pharmacyId) {
-      throw new Error('NO_PHARMACY_ASSOCIATION');
-    }
-    const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
-    if (!pharmacy || pharmacy.ownerId !== ownerId) {
-      throw new Error('FORBIDDEN');
-    }
-  } else if (worker.role === 'delivery_driver') {
-    // Deliver drivers can be managed by pharmacy owner or admin.
-    // Verify owner role
-    const owner = await db.user.findUnique({ where: { id: ownerId } });
-    if (!owner || (owner.role !== 'pharmacy_admin' && owner.role !== 'admin')) {
-      throw new Error('FORBIDDEN');
-    }
-  } else {
-    throw new Error('CANNOT_MODIFY_ROLE');
   }
 
   // Update status
@@ -526,5 +556,135 @@ export async function changeWorkerStatus(
   });
 
   const { passwordHash, ...rest } = updated;
+  return rest;
+}
+
+/**
+ * Update worker details with proper permission checks (anti-spoofing)
+ */
+export async function updateWorkerDetails(
+  workerId: string,
+  ownerId: string,
+  data: {
+    name?: string;
+    phone?: string;
+    specialty?: string;
+    licenseNumber?: string;
+    vehicleType?: string;
+    licensePlate?: string;
+  },
+  ipAddress?: string,
+  userAgent?: string
+) {
+  // Fetch worker user
+  const worker = await db.user.findUnique({
+    where: { id: workerId },
+    include: {
+      doctorProfile: true,
+      receptionistProfile: true,
+      pharmacyManagerProfile: true,
+      deliveryDriverProfile: true,
+    },
+  });
+
+  if (!worker) {
+    throw new Error('WORKER_NOT_FOUND');
+  }
+
+  // Fetch caller details
+  const caller = await db.user.findUnique({ where: { id: ownerId } });
+  if (!caller) {
+    throw new Error('CALLER_NOT_FOUND');
+  }
+  const isSuperAdmin = caller.role === 'admin';
+
+  if (!isSuperAdmin) {
+    // Verify ownership permission (anti-spoofing)
+    if (worker.role === 'doctor' || worker.role === 'receptionist') {
+      const clinicId = worker.doctorProfile?.clinicId || worker.receptionistProfile?.clinicId;
+      if (!clinicId) {
+        throw new Error('NO_CLINIC_ASSOCIATION');
+      }
+      const clinic = await db.clinic.findUnique({ where: { id: clinicId } });
+      if (!clinic || clinic.ownerId !== ownerId) {
+        throw new Error('FORBIDDEN');
+      }
+    } else if (worker.role === 'cashier') {
+      const pharmacyId = worker.pharmacyManagerProfile?.pharmacyId;
+      if (!pharmacyId) {
+        throw new Error('NO_PHARMACY_ASSOCIATION');
+      }
+      const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
+      if (!pharmacy || pharmacy.ownerId !== ownerId) {
+        throw new Error('FORBIDDEN');
+      }
+    } else if (worker.role === 'delivery_driver') {
+      if (caller.role !== 'pharmacy_admin' && caller.role !== 'pharmacy_owner') {
+        throw new Error('FORBIDDEN');
+      }
+      const pharmacyId = worker.deliveryDriverProfile?.pharmacyId;
+      if (pharmacyId) {
+        const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
+        if (!pharmacy || pharmacy.ownerId !== ownerId) {
+          throw new Error('FORBIDDEN');
+        }
+      }
+    } else {
+      throw new Error('CANNOT_MODIFY_ROLE');
+    }
+  }
+
+  // Perform updates in a transaction
+  const result = await db.$transaction(async (tx) => {
+    // 1. Update base User table
+    const userUpdates: any = {};
+    if (data.name !== undefined) userUpdates.name = data.name;
+    if (data.phone !== undefined) userUpdates.phone = data.phone;
+
+    const updatedUser = await tx.user.update({
+      where: { id: workerId },
+      data: userUpdates,
+    });
+
+    // 2. Update role-specific profile
+    if (worker.role === 'doctor' && worker.doctorProfile) {
+      const docUpdates: any = {};
+      if (data.specialty !== undefined) docUpdates.specialty = data.specialty;
+      if (data.licenseNumber !== undefined) docUpdates.licenseNumber = data.licenseNumber;
+
+      if (Object.keys(docUpdates).length > 0) {
+        await tx.doctorProfile.update({
+          where: { userId: workerId },
+          data: docUpdates,
+        });
+      }
+    } else if (worker.role === 'delivery_driver' && worker.deliveryDriverProfile) {
+      const driverUpdates: any = {};
+      if (data.vehicleType !== undefined) driverUpdates.vehicleType = data.vehicleType;
+      if (data.licensePlate !== undefined) driverUpdates.licensePlate = data.licensePlate;
+
+      if (Object.keys(driverUpdates).length > 0) {
+        await tx.deliveryDriverProfile.update({
+          where: { userId: workerId },
+          data: driverUpdates,
+        });
+      }
+    }
+
+    return updatedUser;
+  });
+
+  // Log in audit log
+  await createAuditLog({
+    userId: ownerId,
+    action: 'update',
+    entityType: 'user',
+    entityId: workerId,
+    details: `Updated worker ${workerId} details: ${JSON.stringify(data)}`,
+    ipAddress,
+    userAgent,
+  });
+
+  const { passwordHash, ...rest } = result;
   return rest;
 }

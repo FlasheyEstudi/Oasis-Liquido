@@ -67,5 +67,12 @@ export async function getAuditLogs(filters: {
     db.auditLog.count({ where }),
   ]);
 
-  return { data, total };
+  const transformed = data.map((log) => ({
+    ...log,
+    user_name: log.user?.name || 'Sistema',
+    resource_type: log.entityType,
+    created_at: log.createdAt.toISOString(),
+  }));
+
+  return { data: transformed, total };
 }

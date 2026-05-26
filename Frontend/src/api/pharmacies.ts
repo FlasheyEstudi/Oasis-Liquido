@@ -5,7 +5,7 @@
 // NO mock fallbacks — all calls go to the real backend
 // ============================================
 
-import { get, post, put } from './client';
+import { get, post, patch } from './client';
 import type {
   Pharmacy,
   CreatePharmacyRequest,
@@ -48,7 +48,7 @@ export async function create(data: CreatePharmacyRequest): Promise<Pharmacy> {
 
 /** Update a pharmacy (admin or pharmacy_manager) */
 export async function update(id: string, data: UpdatePharmacyRequest): Promise<Pharmacy> {
-  const result = await put<Pharmacy>(`/pharmacies/${id}`, data);
+  const result = await patch<Pharmacy>(`/pharmacies/${id}`, data);
   return result.data;
 }
 

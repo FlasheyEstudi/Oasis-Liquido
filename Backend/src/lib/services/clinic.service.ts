@@ -86,7 +86,11 @@ export async function createClinic(data: {
   latitude?: number;
   longitude?: number;
   phone?: string;
+  ownerId?: string;
+  owner_id?: string;
 }, userId?: string, ipAddress?: string, userAgent?: string) {
+  const resolvedOwnerId = data.ownerId || data.owner_id;
+
   const clinic = await db.clinic.create({
     data: {
       name: data.name,
@@ -94,6 +98,7 @@ export async function createClinic(data: {
       latitude: data.latitude ?? 19.4326,
       longitude: data.longitude ?? -99.1332,
       phone: data.phone,
+      ownerId: resolvedOwnerId || null,
     },
   });
 
@@ -121,6 +126,8 @@ export async function updateClinic(
     longitude?: number;
     phone?: string;
     isActive?: boolean;
+    ownerId?: string;
+    owner_id?: string;
   },
   userId?: string,
   ipAddress?: string,
@@ -129,9 +136,24 @@ export async function updateClinic(
   const clinic = await db.clinic.findUnique({ where: { id } });
   if (!clinic) throw new Error('NOT_FOUND');
 
+  const resolvedOwnerId = data.ownerId !== undefined ? data.ownerId : data.owner_id;
+
+  const updatePayload: any = {
+    name: data.name,
+    address: data.address,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    phone: data.phone,
+    isActive: data.isActive,
+  };
+
+  if (resolvedOwnerId !== undefined) {
+    updatePayload.ownerId = resolvedOwnerId || null;
+  }
+
   const updated = await db.clinic.update({
     where: { id },
-    data,
+    data: updatePayload,
   });
 
   await createAuditLog({

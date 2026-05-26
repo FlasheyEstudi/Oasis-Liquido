@@ -25,12 +25,21 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Perfil de repartidor no encontrado', 404);
     }
 
+    const whereClause: any = {
+      status: { in: ['pending', 'ready_for_pickup', 'accepted'] },
+      deliveryDriverId: null
+    };
+
+    if (userRole === 'delivery_driver') {
+      if (!driverProfile?.pharmacyId) {
+        return successResponse([]);
+      }
+      whereClause.pharmacyId = driverProfile.pharmacyId;
+    }
+
     // Traer pedidos con status 'pending' o 'ready_for_pickup' y sin repartidor asignado
     const availableOrders = await db.deliveryOrder.findMany({
-      where: {
-        status: { in: ['pending', 'ready_for_pickup', 'accepted'] },
-        deliveryDriverId: null
-      },
+      where: whereClause,
       include: {
         pharmacy: {
           select: {

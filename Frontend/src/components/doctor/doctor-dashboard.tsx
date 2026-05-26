@@ -28,6 +28,7 @@ import {
   Activity,
   Star,
   QrCode as QrCodeIcon,
+  Shield,
 } from 'lucide-react';
 import { QrCode } from '@/components/common/qr-code';
 
@@ -324,7 +325,7 @@ export function DoctorDashboard() {
         <h3 className="text-base font-semibold text-foreground mb-4">
           Acciones rápidas
         </h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <button
             onClick={() => {
               const next = appointments.find(
@@ -359,7 +360,21 @@ export function DoctorDashboard() {
             <div className="flex size-12 items-center justify-center rounded-full bg-sky-500/10">
               <Activity className="size-5 text-sky-600 dark:text-sky-400" />
             </div>
-            <span className="text-sm font-medium text-foreground">Ver recetas emitidas</span>
+            <span className="text-sm font-medium text-foreground">Ver recetas</span>
+          </button>
+
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-compliance-modal'))}
+            className={cn(
+              'flex flex-col items-center gap-2 rounded-2xl p-5 col-span-2 sm:col-span-1',
+              'glass-input cursor-pointer transition-all duration-200',
+              'hover:bg-amber-500/10 hover:border-amber-500/30',
+            )}
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-amber-500/10">
+              <Shield className="size-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <span className="text-sm font-medium text-foreground">Expediente Legal</span>
           </button>
         </div>
       </GlassCard>

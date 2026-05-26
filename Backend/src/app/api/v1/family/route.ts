@@ -37,15 +37,16 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     const validation = validateBody(createRelationshipSchema, body);
     if (!validation.success) return validation.error;
 
-    const relationship = await familyService.createFamilyRelationship(
+    const relationship = await familyService.requestFamilyLink(
       req.user.userId,
       body.patient_email,
       body.relationship,
+      undefined,
       req.headers.get('x-forwarded-for') || undefined,
       req.headers.get('user-agent') || undefined
     );
 
-    return successResponse(relationship, 'Relación creada exitosamente', 201);
+    return successResponse(relationship, 'Solicitud de relación creada exitosamente', 201);
   } catch (error: any) {
     if (error.message === 'PATIENT_NOT_FOUND') {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Paciente no encontrado con ese correo', 404);

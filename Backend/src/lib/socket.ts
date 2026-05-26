@@ -25,6 +25,11 @@ export function initSocket(server: HTTPServer) {
       console.log(`👤 User joined chat room: ${sessionId}`);
     });
 
+    socket.on('join:user', (userId: string) => {
+      socket.join(`user:${userId}`);
+      console.log(`👤 User joined personal room: ${userId}`);
+    });
+
     socket.on('disconnect', () => {
       console.log('👋 Socket disconnected:', socket.id);
     });
@@ -75,3 +80,21 @@ export function emitChatMessage(sessionId: string, message: any) {
     console.warn('⚠️ Could not emit chat message via socket:', err.message);
   }
 }
+
+/**
+ * Emit a new notification to a specific user
+ */
+export function emitNotification(userId: string, notification: any) {
+  try {
+    const ioInstance = getIO();
+    if (ioInstance) {
+      ioInstance.to(`user:${userId}`).emit('notification:new', notification);
+      console.log(`🔔 [Socket.io] Emitted notification to user ${userId}`);
+    } else {
+      console.log(`ℹ️ [Socket.io] Server not active, skipped notification emit for user ${userId}.`);
+    }
+  } catch (err: any) {
+    console.warn('⚠️ Could not emit notification via socket:', err.message);
+  }
+}
+

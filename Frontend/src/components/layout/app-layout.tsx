@@ -15,6 +15,8 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { ChatOverlay } from '@/components/oasis/chat-overlay';
 import { useTheme } from 'next-themes';
+import { useClinics, usePharmacies } from '@/hooks/use-api';
+import apiClient, { getErrorMessage, post } from '@/api/client';
 
 // --- Notification Toast ---
 function NotificationToast() {
@@ -115,6 +117,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [showDocModal, setShowDocModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
+  
+  const [minsaFile, setMinsaFile] = useState<File | null>(null);
+  const [rucFile, setRucFile] = useState<File | null>(null);
+  
+  const { data: clinicsData } = useClinics(undefined);
+  const { data: pharmaciesData } = usePharmacies(undefined);
+  const { setNotification } = useAuthStore();
 
   useEffect(() => {
     if (user?.verification_deadline) {
@@ -126,19 +135,80 @@ export function AppLayout({ children }: AppLayoutProps) {
     }
   }, [user]);
 
-  const handleUploadDocs = (e: React.FormEvent) => {
+  useEffect(() => {
+    const handleOpen = () => setShowDocModal(true);
+    window.addEventListener('open-compliance-modal', handleOpen);
+    return () => window.removeEventListener('open-compliance-modal', handleOpen);
+  }, []);
+
+  const handleUploadDocs = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
+    if (!minsaFile || !rucFile) {
+      setNotification({ type: 'warning', message: 'Por favor selecciona ambos documentos solicitados' });
+      return;
+    }
+
     setUploading(true);
-    setTimeout(() => {
-      setUploading(false);
-      setShowDocModal(false);
-      if (user) {
+    try {
+      let targetId = '';
+      let targetType: 'doctor' | 'clinic' | 'pharmacy' = 'clinic';
+
+      if (user.role === 'clinic_admin') {
+        const owned = clinicsData?.data?.find((c: any) => c.ownerId === user.id || c.owner_id === user.id);
+        targetId = owned?.id || '';
+      } else if (user.role === 'pharmacy_admin') {
+        const owned = pharmaciesData?.data?.find((p: any) => p.ownerId === user.id || p.owner_id === user.id);
+        targetId = owned?.id || '';
+        targetType = 'pharmacy';
+      } else if (user.role === 'doctor') {
+        targetId = user.id;
+        targetType = 'doctor';
+      }
+
+      if (!targetId) {
+        throw new Error('No se encontró el establecimiento o perfil asociado para realizar la carga.');
+      }
+
+      // Upload MINSA File
+      const minsaFormData = new FormData();
+      minsaFormData.append('file', minsaFile);
+      minsaFormData.append('type', user.role === 'doctor' ? 'license' : 'minsa_certificate');
+      minsaFormData.append('targetType', targetType);
+      minsaFormData.append('targetId', targetId);
+
+      const minsaRes = await apiClient.post<any>('/documents/upload', minsaFormData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }).then(r => r.data);
+
+      // Upload RUC File
+      const rucFormData = new FormData();
+      rucFormData.append('file', rucFile);
+      rucFormData.append('type', 'ruc');
+      rucFormData.append('targetType', targetType);
+      rucFormData.append('targetId', targetId);
+
+      const rucRes = await apiClient.post<any>('/documents/upload', rucFormData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }).then(r => r.data);
+
+      if (minsaRes.success && rucRes.success) {
+        setNotification({ type: 'success', message: 'Documentos cargados con éxito para verificación legal' });
         setUser({
           ...user,
-          verification_status: 'submitted',
+          verification_status: 'submitted'
         });
+        setShowDocModal(false);
+      } else {
+        throw new Error('Error al registrar uno de los documentos.');
       }
-    }, 2000);
+    } catch (err) {
+      console.error('Compliance upload error:', err);
+      setNotification({ type: 'error', message: getErrorMessage(err) || 'Error al subir los documentos sanitarios' });
+    } finally {
+      setUploading(false);
+    }
   };
   const [sidebarPinned, setSidebarPinned] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
@@ -198,7 +268,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Content */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto min-h-0 pb-24 lg:pb-6 space-y-6">
           {/* Banner de Cumplimiento Legal */}
-          {user && (user.role === 'clinic_admin' || user.role === 'pharmacy_admin') && (
+          {user && (user.role === 'clinic_admin' || user.role === 'pharmacy_admin' || user.role === 'doctor') && (
             <AnimatePresence mode="wait">
               {user.verification_status === 'pending' && (
                 <motion.div
@@ -316,25 +386,57 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {/* Licencia Sanitaria del MINSA */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-300">
-                    Licencia Sanitaria de Funcionamiento (MINSA) *
+                    {user?.role === 'doctor' ? 'Cédula Profesional o Licencia MINSA *' : 'Licencia Sanitaria de Funcionamiento (MINSA) *'}
                   </label>
-                  <div className="border border-dashed border-white/10 hover:border-amber-500/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer bg-white/[0.02] hover:bg-white/[0.04] transition duration-300">
-                    <AlertTriangle className="size-8 text-amber-500/60 mb-2" />
-                    <span className="text-xs font-bold text-white">Seleccionar archivo PDF / Imagen</span>
-                    <span className="text-[10px] text-slate-500 mt-1">Debe estar vigente y visible</span>
-                  </div>
+                  <label className="border border-dashed border-white/10 hover:border-amber-500/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer bg-white/[0.02] hover:bg-white/[0.04] transition duration-300">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => setMinsaFile(e.target.files?.[0] || null)}
+                    />
+                    {minsaFile ? (
+                      <div className="flex flex-col items-center">
+                        <CheckCircle className="size-8 text-emerald-500 mb-2" />
+                        <span className="text-xs font-bold text-white max-w-[320px] truncate">{minsaFile.name}</span>
+                        <span className="text-[10px] text-emerald-400 mt-1">{(minsaFile.size / 1024 / 1024).toFixed(2)} MB - Listo</span>
+                      </div>
+                    ) : (
+                      <>
+                        <AlertTriangle className="size-8 text-amber-500/60 mb-2" />
+                        <span className="text-xs font-bold text-white">Seleccionar archivo PDF / Imagen</span>
+                        <span className="text-[10px] text-slate-500 mt-1">Debe estar vigente y visible</span>
+                      </>
+                    )}
+                  </label>
                 </div>
 
                 {/* Cédula RUC */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-300">
-                    Cédula RUC o Registro Comercial *
+                    {user?.role === 'doctor' ? 'Título Universitario (PDF/Imagen) *' : 'Cédula RUC o Registro Comercial *'}
                   </label>
-                  <div className="border border-dashed border-white/10 hover:border-amber-500/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer bg-white/[0.02] hover:bg-white/[0.04] transition duration-300">
-                    <AlertTriangle className="size-8 text-amber-500/60 mb-2" />
-                    <span className="text-xs font-bold text-white">Seleccionar archivo PDF / Imagen</span>
-                    <span className="text-[10px] text-slate-500 mt-1">Persona Natural o Jurídica</span>
-                  </div>
+                  <label className="border border-dashed border-white/10 hover:border-amber-500/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer bg-white/[0.02] hover:bg-white/[0.04] transition duration-300">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => setRucFile(e.target.files?.[0] || null)}
+                    />
+                    {rucFile ? (
+                      <div className="flex flex-col items-center">
+                        <CheckCircle className="size-8 text-emerald-500 mb-2" />
+                        <span className="text-xs font-bold text-white max-w-[320px] truncate">{rucFile.name}</span>
+                        <span className="text-[10px] text-emerald-400 mt-1">{(rucFile.size / 1024 / 1024).toFixed(2)} MB - Listo</span>
+                      </div>
+                    ) : (
+                      <>
+                        <AlertTriangle className="size-8 text-amber-500/60 mb-2" />
+                        <span className="text-xs font-bold text-white">Seleccionar archivo PDF / Imagen</span>
+                        <span className="text-[10px] text-slate-500 mt-1">Persona Natural o Jurídica</span>
+                      </>
+                    )}
+                  </label>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex gap-2">
@@ -360,7 +462,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     {uploading ? (
                       <>
                         <Loader2 className="size-4 animate-spin" />
-                        <span>Enviando...</span>
+                        <span>Cargando Documentos...</span>
                       </>
                     ) : (
                       <span>Enviar Verificación</span>

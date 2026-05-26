@@ -36,3 +36,10 @@ export async function getMovements(pharmacyId: string, params?: any): Promise<an
   const result = await get<any[]>(`/pharmacies/${pharmacyId}/inventory/movements`, params);
   return result.data;
 }
+
+/** Get expiring batches (FEFO) */
+export async function getExpiringBatches(pharmacyId: string): Promise<any> {
+  const result = await get<any[]>(`/pharmacies/${pharmacyId}/inventory/expirations`);
+  return result.data;
+}
+

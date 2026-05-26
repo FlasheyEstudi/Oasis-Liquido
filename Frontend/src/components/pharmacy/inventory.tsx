@@ -8,6 +8,7 @@ import {
   useInventoryMovements,
   getHookErrorMessage,
 } from '@/hooks/use-api';
+import { useActivePharmacyId } from '@/hooks/use-active-pharmacy';
 import type { InventoryItem } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/helpers';
 import { DOSAGE_FORMS } from '@/utils/constants';
@@ -22,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LoadingAnimation } from '@/components/ui/loading-animation';
 import {
   Search,
   Package,
@@ -49,10 +51,7 @@ export function Inventory() {
   const [quantityChange, setQuantityChange] = useState<number>(0);
   const [newPrice, setNewPrice] = useState<string>('');
 
-  const pharmacyId = 
-    user?.pharmacy_manager_profile?.pharmacy_id || 
-    (user as any)?.pharmacyManagerProfile?.pharmacyId || 
-    'demo-pharmacy-1';
+  const pharmacyId = useActivePharmacyId();
 
   const {
     data: inventoryResult,
@@ -269,7 +268,7 @@ export function Inventory() {
         <div className="space-y-3">
           {movementsLoading ? (
             <div className="py-12 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
-              <Loader2 className="size-6 animate-spin" />
+              <LoadingAnimation size="sm" />
               Cargando historial...
             </div>
           ) : movements.length === 0 ? (

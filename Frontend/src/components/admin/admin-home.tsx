@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import {
   useAdminStats,
@@ -26,6 +27,11 @@ import {
   Shield,
   BarChart3,
   RefreshCw,
+  AlertTriangle,
+  Truck,
+  ShieldAlert,
+  Sparkles,
+  Clock,
 } from 'lucide-react';
 import { AnalyticsCard } from '@/components/common/analytics-card';
 import {
@@ -39,6 +45,181 @@ import {
 
 function ShimmerBlock({ className }: { className?: string }) {
   return <div className={cn('shimmer rounded-3xl', className)} />;
+}
+
+export function GlobalBusinessAlerts() {
+  const [activeTab, setActiveTab] = useState<'all' | 'sla' | 'shortage'>('all');
+
+  const slaAlerts = [
+    {
+      id: 'SLA-101',
+      order: '#OAS-2026-9812',
+      pharmacy: 'Oasis Central',
+      driver: 'Marcos Jirón',
+      elapsed: 74,
+      target: 60,
+      severity: 'critical',
+    },
+    {
+      id: 'SLA-102',
+      order: '#OAS-2026-9824',
+      pharmacy: 'Oasis Surbazar',
+      driver: 'Elena Rostrán',
+      elapsed: 63,
+      target: 60,
+      severity: 'warning',
+    }
+  ];
+
+  const shortageAlerts = [
+    {
+      id: 'SH-01',
+      medicine: 'Paracetamol 500mg',
+      pharmacy: 'Oasis Central',
+      stock: 3,
+      target: 20,
+      severity: 'critical',
+    },
+    {
+      id: 'SH-02',
+      medicine: 'Amoxicilina 1g',
+      pharmacy: 'Oasis Occidental',
+      stock: 0,
+      target: 15,
+      severity: 'emergency',
+    },
+    {
+      id: 'SH-03',
+      medicine: 'Ibuprofeno 400mg',
+      pharmacy: 'Oasis Surbazar',
+      stock: 8,
+      target: 30,
+      severity: 'warning',
+    }
+  ];
+
+  const filteredAlerts = [
+    ...(activeTab === 'all' || activeTab === 'sla' ? slaAlerts.map(a => ({ ...a, type: 'sla' as const })) : []),
+    ...(activeTab === 'all' || activeTab === 'shortage' ? shortageAlerts.map(a => ({ ...a, type: 'shortage' as const })) : []),
+  ];
+
+  return (
+    <GlassCard className="col-span-12 relative overflow-hidden border border-rose-500/10 dark:border-rose-500/20 shadow-lg">
+      {/* Background glow */}
+      <div className="absolute -right-24 -top-24 size-48 rounded-full bg-amber-500/5 blur-3xl" />
+      <div className="absolute -left-24 -bottom-24 size-48 rounded-full bg-rose-500/5 blur-3xl" />
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 pb-4 border-b border-border/40">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+            </span>
+            <h3 className="text-sm font-semibold text-rose-500 dark:text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
+              <ShieldAlert className="size-4" /> Alertas Críticas de Negocio
+            </h3>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">SLA de entregas y desabastecimiento de medicamentos en tiempo real</p>
+        </div>
+
+        {/* Tab Controls */}
+        <div className="flex bg-muted/40 p-0.5 rounded-full border border-border/20 self-start md:self-auto">
+          {(['all', 'sla', 'shortage'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                'px-3 py-1 text-xs rounded-full transition-all font-medium capitalize',
+                activeTab === tab
+                  ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {tab === 'all' ? 'Todas' : tab === 'sla' ? 'Retrasos SLA' : 'Escasez Stock'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filteredAlerts.length === 0 ? (
+        <div className="flex flex-col items-center py-6 text-center">
+          <Sparkles className="size-8 text-emerald-500/40 mb-2 animate-bounce" />
+          <p className="text-sm font-medium text-foreground">¡Todo en orden!</p>
+          <p className="text-xs text-muted-foreground">No se detectan alertas activas en la red.</p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredAlerts.map((alert) => (
+            <motion.div
+              key={alert.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={cn(
+                'p-3.5 rounded-2xl border transition-all flex flex-col justify-between relative overflow-hidden',
+                alert.type === 'sla'
+                  ? 'bg-rose-500/5 hover:bg-rose-500/8 border-rose-500/20'
+                  : 'bg-amber-500/5 hover:bg-amber-500/8 border-amber-500/20'
+              )}
+            >
+              {/* Card top details */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={cn(
+                    'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider',
+                    alert.type === 'sla' 
+                      ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  )}>
+                    {alert.type === 'sla' ? 'Demora SLA' : 'Falta de Stock'}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-mono">{alert.id}</span>
+                </div>
+
+                {alert.type === 'sla' ? (
+                  // SLA alert layout
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-foreground">Entrega {alert.order}</p>
+                    <p className="text-xs text-muted-foreground">Farmacia: <span className="font-semibold text-foreground">{alert.pharmacy}</span></p>
+                    <p className="text-xs text-muted-foreground">Repartidor: <span className="font-semibold text-foreground">{alert.driver}</span></p>
+                  </div>
+                ) : (
+                  // Shortage alert layout
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-foreground">{alert.medicine}</p>
+                    <p className="text-xs text-muted-foreground">Farmacia: <span className="font-semibold text-foreground">{alert.pharmacy}</span></p>
+                    <p className="text-xs text-muted-foreground">Stock actual: <span className={cn('font-bold', alert.stock === 0 ? 'text-rose-500' : 'text-amber-500')}>{alert.stock} unidades</span></p>
+                  </div>
+                )}
+              </div>
+
+              {/* Card bottom layout */}
+              <div className="mt-4 pt-2 border-t border-border/20 flex items-center justify-between">
+                {alert.type === 'sla' ? (
+                  <span className="text-xs font-semibold text-rose-500 flex items-center gap-1">
+                    <Clock className="size-3" /> Transcurrido: {alert.elapsed} min ({alert.elapsed - alert.target}m retraso)
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold text-amber-500 flex items-center gap-1">
+                    Mínimo requerido: {alert.target} u.
+                  </span>
+                )}
+                
+                <button className={cn(
+                  'rounded-full px-2.5 py-1 text-[10px] font-bold transition-all shadow-sm border border-border/10 flex items-center gap-1',
+                  alert.type === 'sla'
+                    ? 'bg-rose-500 text-white hover:bg-rose-600'
+                    : 'bg-amber-500 text-white hover:bg-amber-600'
+                )}>
+                  Gestionar
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </GlassCard>
+  );
 }
 
 export function AdminHome() {
@@ -165,6 +346,9 @@ export function AdminHome() {
           </GlassCard>
         </motion.div>
       ))}
+
+      {/* Alertas Críticas de Negocio */}
+      <GlobalBusinessAlerts />
 
       {/* 2026 Premium Analíticas Integradas */}
       <motion.div className="col-span-12 lg:col-span-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>

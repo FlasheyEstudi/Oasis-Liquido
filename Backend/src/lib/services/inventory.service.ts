@@ -306,3 +306,30 @@ export async function getKardex(medicineId: string, pharmacyId?: string) {
     medicine_name: m.inventory.medicine.name,
   }));
 }
+
+/**
+ * Get expiring batches for a pharmacy (FEFO)
+ */
+export async function getExpiringBatches(pharmacyId: string, limit: number = 10) {
+  return await db.inventoryBatch.findMany({
+    where: {
+      inventory: {
+        pharmacyId,
+      },
+      quantity: { gt: 0 },
+      expirationDate: { not: null },
+    },
+    include: {
+      inventory: {
+        include: {
+          medicine: true,
+        },
+      },
+    },
+    orderBy: {
+      expirationDate: 'asc',
+    },
+    take: limit,
+  });
+}
+

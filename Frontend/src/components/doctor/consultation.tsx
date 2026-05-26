@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { checkDrugInteractions } from '@/utils/drug-interactions';
 import {
   useAppointment,
   useAppointments,
@@ -80,6 +81,9 @@ export function Consultation() {
   const [notes, setNotes] = useState('');
   const [prescriptionLines, setPrescriptionLines] = useState<PrescriptionLineForm[]>([]);
   const [createdPrescriptionQr, setCreatedPrescriptionQr] = useState<string | null>(null);
+
+  const selectedMedIds = prescriptionLines.map((l) => l.medicine_id).filter(Boolean);
+  const activeInteractions = checkDrugInteractions(selectedMedIds, medicines);
 
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [signaturePin, setSignaturePin] = useState('');
@@ -534,6 +538,36 @@ export function Consultation() {
               </div>
 
               <div className="space-y-4">
+                {/* Alertas de interacciones medicamentosas */}
+                {activeInteractions.length > 0 && !createdPrescriptionQr && (
+                  <div className="space-y-2">
+                    {activeInteractions.map((interaction, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "rounded-2xl p-4 border flex gap-3 text-xs",
+                          interaction.severity === 'critical'
+                            ? "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                            : "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
+                        )}
+                      >
+                        <ShieldAlert className="size-5 shrink-0" />
+                        <div className="space-y-1">
+                          <p className="font-bold uppercase tracking-wider text-[10px]">
+                            {interaction.severity === 'critical' ? 'Interacción Crítica' : 'Interacción Moderada'}
+                          </p>
+                          <p className="font-medium">
+                            {interaction.medicineA.name} + {interaction.medicineB.name}
+                          </p>
+                          <p className="text-muted-foreground leading-relaxed mt-1">
+                            {interaction.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {prescriptionLines.length === 0 && !createdPrescriptionQr && (
                   <p className="py-4 text-center text-sm text-muted-foreground">
                     No hay medicamentos en la receta. Haz clic en &quot;Agregar medicamento&quot; para añadir.
@@ -698,11 +732,11 @@ export function Consultation() {
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">PIN de Firma Digital</label>
                   <input
                     type="password"
-                    maxLength={6}
+                    maxLength={4}
                     placeholder="••••"
                     value={signaturePin}
                     onChange={(e) => {
-                      setSignaturePin(e.target.value);
+                      setSignaturePin(e.target.value.replace(/\D/g, ''));
                       if (pinError) setPinError('');
                     }}
                     className="w-full h-12 text-center text-lg tracking-[0.5em] bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
@@ -730,7 +764,7 @@ export function Consultation() {
                 </Button>
                 <Button 
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold animate-pulse"
-                  disabled={!signaturePin.trim() || createPrescriptionMutation.isPending}
+                  disabled={signaturePin.trim().length !== 4 || createPrescriptionMutation.isPending}
                   onClick={() => handleCreatePrescription(signaturePin)}
                 >
                   {createPrescriptionMutation.isPending ? (

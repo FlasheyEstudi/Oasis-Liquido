@@ -1,22 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { PWAInitializer } from "@/components/pwa-initializer";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Stand-in font configs to prevent fetching external Google Fonts in offline/sandboxed build environments.
+const inter = { variable: "var(--font-inter, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)" };
+const geistMono = { variable: "var(--font-geist-mono, monospace)" };
 
 export const metadata: Metadata = {
   title: "OASIS — Encuentra tu oasis de salud",
@@ -40,6 +31,7 @@ export const metadata: Metadata = {
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { BetaFeedback } from "@/components/common/BetaFeedback";
 import { NotificationBanner } from "@/components/NotificationBanner";
+import { FamilyProvider } from "@/contexts/FamilyContext";
 
 export default function RootLayout({
   children,
@@ -58,9 +50,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            <ErrorBoundary>
-              {children}
-            </ErrorBoundary>
+            <FamilyProvider>
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+            </FamilyProvider>
             <Toaster />
             <BetaFeedback />
             <PWAInitializer />

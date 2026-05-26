@@ -7,6 +7,7 @@ import {
   useFulfillPrescription,
   useInventory,
 } from '@/hooks/use-api';
+import { useActivePharmacyId } from '@/hooks/use-active-pharmacy';
 import type { Prescription, InventoryItem } from '@/types';
 import { formatDate, formatCurrency } from '@/utils/helpers';
 import { PRESCRIPTION_STATUS_CONFIG } from '@/utils/constants';
@@ -42,10 +43,7 @@ type FulfillmentState = 'scanning' | 'validating' | 'showing_prescription' | 'fu
 
 export function Fulfillment() {
   const { user, setNotification } = useAuthStore();
-  const pharmacyId = 
-    user?.pharmacy_manager_profile?.pharmacy_id || 
-    (user as any)?.pharmacyManagerProfile?.pharmacyId || 
-    'demo-pharmacy-1';
+  const pharmacyId = useActivePharmacyId();
 
   // State machine
   const [fulfillmentState, setFulfillmentState] = useState<FulfillmentState>('scanning');

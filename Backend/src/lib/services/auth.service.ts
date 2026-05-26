@@ -103,6 +103,13 @@ export async function register(name: string, email: string, password: string, ro
   // Hash password
   const passwordHash = await hashPassword(password);
 
+  // Find first pharmacy if registering a driver
+  let pharmacyId: string | undefined;
+  if (role === 'delivery_driver') {
+    const p = await db.pharmacy.findFirst();
+    pharmacyId = p?.id;
+  }
+
   // Create user + patient profile in transaction
   const user = await db.user.create({
     data: {
@@ -112,7 +119,7 @@ export async function register(name: string, email: string, password: string, ro
       role,
       emailVerified: false,
       patientProfile: role === 'patient' ? { create: {} } : undefined,
-      deliveryDriverProfile: role === 'delivery_driver' ? { create: {} } : undefined,
+      deliveryDriverProfile: role === 'delivery_driver' && pharmacyId ? { create: { pharmacyId } } : undefined,
     },
     include: {
       patientProfile: true,
@@ -317,3 +324,103 @@ export async function resetPassword(token: string, newPassword: string) {
 
   return { message: 'Contraseña actualizada' };
 }
+
+/**
+ * Login or register automatically with Firebase Auth verified details
+ */
+export async function loginWithFirebase(
+  email: string,
+  name: string,
+  ipAddress?: string,
+  userAgent?: string
+) {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Find user by email
+  let user = await db.user.findUnique({
+    where: { email: normalizedEmail },
+    include: {
+      doctorProfile: true,
+      receptionistProfile: true,
+      pharmacyManagerProfile: true,
+    },
+  });
+
+  // If user does not exist, auto-register as patient
+  if (!user) {
+    // Create a random password hash since password is managed by Firebase
+    const randomPassword = crypto.randomBytes(32).toString('hex');
+    const randomHash = await hashPassword(randomPassword);
+
+    user = await db.user.create({
+      data: {
+        name: name || 'Paciente Oasis',
+        email: normalizedEmail,
+        passwordHash: randomHash,
+        role: 'patient',
+        emailVerified: true,
+        patientProfile: { create: {} },
+      },
+      include: {
+        doctorProfile: true,
+        receptionistProfile: true,
+        pharmacyManagerProfile: true,
+      },
+    });
+
+    console.log(`👤 Auto-registered new Firebase user as patient: ${normalizedEmail}`);
+  }
+
+  // Check if user is active
+  if (!user.isActive) {
+    throw new Error('USER_INACTIVE');
+  }
+
+  // Generate local JWT tokens for our app
+  const payload: AccessTokenPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    clinicId: user.doctorProfile?.clinicId || user.receptionistProfile?.clinicId || undefined,
+    pharmacyId: user.pharmacyManagerProfile?.pharmacyId || undefined,
+  };
+
+  const access_token = signAccessToken(payload);
+  const refresh_token = signRefreshToken(payload);
+
+  // Store refresh token hash
+  const tokenHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+  await db.refreshToken.create({
+    data: {
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    },
+  });
+
+  // Audit log
+  try {
+    await createAuditLog({
+      userId: user.id,
+      action: 'login',
+      entityType: 'user',
+      entityId: user.id,
+      details: JSON.stringify({ provider: 'firebase' }),
+      ipAddress,
+      userAgent,
+    });
+  } catch (auditError) {
+    console.error('Audit log failed during Firebase login:', auditError);
+  }
+
+  const { passwordHash: _, ...userWithoutPassword } = user;
+  return {
+    user: userWithoutPassword,
+    access_token,
+    refresh_token,
+  };
+}
+

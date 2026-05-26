@@ -27,6 +27,8 @@ import * as reviewsApi from '@/api/reviews';
 import * as familyApi from '@/api/family';
 import * as invitationsApi from '@/api/invitations';
 import * as reconciliationsApi from '@/api/reconciliations';
+import * as settingsApi from '@/api/settings';
+import * as notificationsApi from '@/api/notifications';
 
 // --- Type Imports ---
 import type {
@@ -507,6 +509,16 @@ export function useInventoryMovements(pharmacyId: string, params?: any) {
   });
 }
 
+/** Get expiring batches (FEFO) */
+export function useExpiringBatches(pharmacyId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['expiring-batches', pharmacyId],
+    queryFn: () => inventoryApi.getExpiringBatches(pharmacyId),
+    enabled: !!pharmacyId && enabled,
+  });
+}
+
+
 // ============================================
 // DELIVERY HOOKS
 // ============================================
@@ -519,12 +531,17 @@ export function useDeliveryOrders(params?: DeliveryListParams, enabled = true) {
   });
 }
 
-/** Get a single delivery order */
 export function useDeliveryOrder(id: string, enabled = true) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: ['delivery-orders', id],
     queryFn: () => deliveriesApi.getById(id),
     enabled: !!id && enabled,
+    initialData: () => {
+      const available = queryClient.getQueryData<any[]>(['deliveries', 'available']);
+      const assigned = queryClient.getQueryData<any[]>(['deliveries', 'assigned']);
+      return available?.find(d => d.id === id) || assigned?.find(d => d.id === id);
+    },
   });
 }
 
@@ -637,6 +654,17 @@ export function useUpdateUser() {
   });
 }
 
+/** Delete (deactivate) user (admin) */
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => usersApi.deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
 // ============================================
 // ADMIN HOOKS
 // ============================================
@@ -654,6 +682,65 @@ export function useAuditLogs(params?: AuditLogListParams) {
   return useQuery({
     queryKey: ['admin', 'audit-logs', params],
     queryFn: () => adminApi.getAuditLogs(params),
+  });
+}
+
+/** Get global settings */
+export function useGlobalSettings(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['admin', 'global-settings'],
+    queryFn: () => adminApi.getGlobalSettings(),
+    enabled: options?.enabled,
+  });
+}
+
+/** Update global setting */
+export function useUpdateGlobalSetting() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, value }: { key: string; value: string }) => adminApi.updateGlobalSetting(key, value),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'global-settings'] });
+    },
+  });
+}
+
+// --- Clinic Settings Hooks ---
+export function useClinicSettings() {
+  return useQuery({
+    queryKey: ['clinic', 'settings'],
+    queryFn: () => settingsApi.getClinicSettings(),
+  });
+}
+
+export function useUpdateClinicSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<settingsApi.ClinicSettings>) => settingsApi.updateClinicSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinic', 'settings'] });
+      queryClient.invalidateQueries({ queryKey: ['clinics'] });
+    },
+  });
+}
+
+// --- Notifications Hooks ---
+export function useNotifications(params?: { page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: ['notifications', params],
+    queryFn: () => notificationsApi.getNotifications(params),
+    refetchInterval: 15000, // Poll notifications every 15s to keep UI fresh
+  });
+}
+
+export function useMarkNotificationsAsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { notificationId?: string; all?: boolean }) =>
+      notificationsApi.markNotificationsAsRead(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
   });
 }
 
@@ -810,8 +897,21 @@ export function useChangeWorkerStatus() {
     mutationFn: ({ workerId, isActive }: { workerId: string; isActive: boolean }) =>
       invitationsApi.changeWorkerStatus(workerId, isActive),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clinics'] });
-      queryClient.invalidateQueries({ queryKey: ['pharmacies'] });
+      queryClient.invalidateQueries({ queryKey: ['clinics'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['pharmacies'], exact: false });
+    },
+  });
+}
+
+/** Update worker details */
+export function useUpdateWorker() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ workerId, data }: { workerId: string; data: invitationsApi.UpdateWorkerData }) =>
+      invitationsApi.updateWorker(workerId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinics'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['pharmacies'], exact: false });
     },
   });
 }

@@ -50,7 +50,7 @@ export async function create(data: CreateClinicRequest): Promise<Clinic> {
 
 /** Update a clinic (admin) */
 export async function update(id: string, data: UpdateClinicRequest): Promise<Clinic> {
-  const result = await put<Clinic>(`/clinics/${id}`, data);
+  const result = await patch<Clinic>(`/clinics/${id}`, data);
   return result.data;
 }
 

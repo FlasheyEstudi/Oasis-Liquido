@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
 import { DocumentService } from '@/lib/services/document.service';
-import fs from 'fs';
+import { getStorageProvider } from '@/lib/storage/provider';
 import path from 'path';
 
 /**
@@ -21,7 +21,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
     const type = formData.get('type') as string | null;
-    const targetType = formData.get('targetType') as 'doctor' | 'clinic' | null;
+    const targetType = formData.get('targetType') as 'doctor' | 'clinic' | 'pharmacy' | null;
     const targetId = formData.get('targetId') as string | null;
     const expiryDateStr = formData.get('expiryDate') as string | null;
     const notes = (formData.get('notes') as string | null) || undefined;
@@ -49,18 +49,11 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     const uniqueId = Math.random().toString(36).substring(2, 15) + Date.now();
     const safeFilename = `${targetType}_${type}_${uniqueId}${fileExtension}`;
 
-    // Path setup inside public/uploads/documents/
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    const filePath = path.join(uploadDir, safeFilename);
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await fs.promises.writeFile(filePath, buffer);
 
-    const documentUrl = `/uploads/documents/${safeFilename}`;
+    const storage = getStorageProvider();
+    const documentUrl = await storage.uploadFile(buffer, safeFilename, file.type);
     const expiryDate = expiryDateStr ? new Date(expiryDateStr) : undefined;
 
     let result;
@@ -71,8 +64,16 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         req.headers.get('x-forwarded-for') || undefined,
         req.headers.get('user-agent') || undefined
       );
-    } else {
+    } else if (targetType === 'clinic') {
       result = await DocumentService.uploadClinicDocument(
+        targetId,
+        req.user.userId,
+        { type, documentUrl, expiryDate, notes },
+        req.headers.get('x-forwarded-for') || undefined,
+        req.headers.get('user-agent') || undefined
+      );
+    } else {
+      result = await DocumentService.uploadPharmacyDocument(
         targetId,
         req.user.userId,
         { type, documentUrl, expiryDate, notes },
@@ -89,6 +90,9 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     }
     if (error.message === 'CLINIC_NOT_FOUND') {
       return errorResponse(ErrorCodes.NOT_FOUND, 'La clínica especificada no existe', 404);
+    }
+    if (error.message === 'PHARMACY_NOT_FOUND') {
+      return errorResponse(ErrorCodes.NOT_FOUND, 'La farmacia especificada no existe', 404);
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error al procesar la subida del documento', 500);
   }

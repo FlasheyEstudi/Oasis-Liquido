@@ -75,7 +75,7 @@ const apiClient = axios.create({
     Accept: 'application/json',
   },
   withCredentials: true, // Required for httpOnly refresh cookies
-  timeout: 30000,
+  timeout: 45000,
 });
 
 // --- Request Interceptor: Inject Bearer token ---
@@ -151,7 +151,6 @@ apiClient.interceptors.response.use(
         accessToken = null;
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('auth:expired'));
-          window.location.href = '/entrar';
         }
         return Promise.reject(refreshError);
       } finally {
@@ -160,6 +159,40 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
+  }
+);
+
+// --- Retry Interceptor: Exponential backoff for GET requests ---
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  async (error: any) => {
+    const config = error.config as AxiosRequestConfig & { __retryCount?: number };
+    
+    // Only retry GET requests where the error is a network issue, server error (5xx), or timeout (408)
+    if (!config || !config.method || config.method.toLowerCase() !== 'get') {
+      return Promise.reject(error);
+    }
+
+    const shouldRetry = !error.response || (error.response.status >= 500) || (error.response.status === 408);
+    if (!shouldRetry) {
+      return Promise.reject(error);
+    }
+
+    // Initialize/Increment retry count
+    config.__retryCount = config.__retryCount ?? 0;
+
+    // Retry maximum of 3 times
+    if (config.__retryCount >= 3) {
+      return Promise.reject(error);
+    }
+
+    config.__retryCount += 1;
+
+    // Exponential delay: 1s, 2s, 4s
+    const delay = Math.pow(2, config.__retryCount) * 1000;
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
+    return apiClient(config);
   }
 );
 

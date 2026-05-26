@@ -1,11 +1,11 @@
 // OASIS - Family Service
-// Business logic for patient-caregiver relationships
-
+// Business logic for patient-caregiver relationships with verification codes
 import { db } from '@/lib/db';
 import { createAuditLog } from './audit.service';
+import * as crypto from 'crypto';
 
 /**
- * Get all family relationships for a user (either caregiver or patient)
+ * Get all active or pending family relationships for a user (either caregiver or patient)
  */
 export async function getFamilyRelationships(userId: string) {
   const [caregiverFor, patientOf] = await Promise.all([
@@ -43,6 +43,8 @@ export async function getFamilyRelationships(userId: string) {
       id: r.id,
       patient_id: r.patientId,
       relationship: r.relationship,
+      status: r.status,
+      permissions: r.permissions,
       isActive: r.isActive,
       createdAt: r.createdAt,
       patient: {
@@ -57,6 +59,8 @@ export async function getFamilyRelationships(userId: string) {
       id: r.id,
       caregiver_id: r.caregiverId,
       relationship: r.relationship,
+      status: r.status,
+      permissions: r.permissions,
       isActive: r.isActive,
       createdAt: r.createdAt,
       caregiver: r.caregiver,
@@ -65,16 +69,17 @@ export async function getFamilyRelationships(userId: string) {
 }
 
 /**
- * Link a caregiver to a patient via the patient's email
+ * Request a family link (Supervisor/Caregiver requests to link a Dependent/Patient)
+ * Generates a unique 6-digit code valid for 24 hours.
  */
-export async function createFamilyRelationship(
+export async function requestFamilyLink(
   caregiverId: string,
   patientEmail: string,
   relationship: string,
+  permissions: string[] = ['view_health_data', 'buy_medicines', 'schedule_appointments'],
   ipAddress?: string,
   userAgent?: string
 ) {
-  // Find the patient
   const patient = await db.user.findUnique({
     where: { email: patientEmail.trim().toLowerCase() },
   });
@@ -87,7 +92,11 @@ export async function createFamilyRelationship(
     throw new Error('CANNOT_LINK_SELF');
   }
 
-  // Check if relation already exists
+  // Generate 6-digit code
+  const verificationCode = Math.floor(100000 + crypto.randomInt(900000)).toString();
+  const codeExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+
+  // Check if a relationship already exists (active or inactive)
   const existing = await db.familyRelationship.findUnique({
     where: {
       caregiverId_patientId: {
@@ -97,47 +106,126 @@ export async function createFamilyRelationship(
     },
   });
 
+  let relation;
   if (existing) {
-    if (existing.isActive) {
-      throw new Error('RELATIONSHIP_ALREADY_EXISTS');
-    }
-    // Reactivate existing relationship
-    const updated = await db.familyRelationship.update({
+    relation = await db.familyRelationship.update({
       where: { id: existing.id },
-      data: { isActive: true, relationship },
+      data: {
+        isActive: true,
+        status: 'pending',
+        relationship,
+        verificationCode,
+        codeExpiresAt,
+        permissions,
+      },
     });
-    return updated;
+  } else {
+    relation = await db.familyRelationship.create({
+      data: {
+        caregiverId,
+        patientId: patient.id,
+        relationship,
+        status: 'pending',
+        verificationCode,
+        codeExpiresAt,
+        permissions,
+        isActive: true,
+      },
+    });
   }
-
-  // Create new relationship
-  const newRelation = await db.familyRelationship.create({
-    data: {
-      caregiverId,
-      patientId: patient.id,
-      relationship,
-    },
-  });
 
   // Audit log
   await createAuditLog({
     userId: caregiverId,
     action: 'create',
     entityType: 'family_relationship',
-    entityId: newRelation.id,
-    details: JSON.stringify({ patientId: patient.id, relationship }),
+    entityId: relation.id,
+    details: JSON.stringify({ patientId: patient.id, relationship, status: 'pending' }),
     ipAddress,
     userAgent,
   });
 
-  return newRelation;
+  // Mock sending email to user - in a real scenario we'd use notification service
+  console.log(`✉️ Sending family link code ${verificationCode} to dependent ${patientEmail}`);
+
+  return {
+    relation,
+    verificationCode,
+    expiresAt: codeExpiresAt,
+    patientName: patient.name,
+  };
 }
 
 /**
- * Remove/Deactivate a family relationship
+ * Verify a family link (Dependent/Patient enters the 6-digit code to complete the link)
  */
-export async function deleteFamilyRelationship(
+export async function verifyFamilyLink(
+  patientId: string,
+  code: string,
+  ipAddress?: string,
+  userAgent?: string
+) {
+  // Find a pending relationship with this code for the current patient
+  const relation = await db.familyRelationship.findFirst({
+    where: {
+      patientId,
+      verificationCode: code.trim(),
+      status: 'pending',
+      isActive: true,
+    },
+    include: {
+      caregiver: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!relation) {
+    throw new Error('INVALID_CODE');
+  }
+
+  if (relation.codeExpiresAt && new Date() > relation.codeExpiresAt) {
+    throw new Error('CODE_EXPIRED');
+  }
+
+  // Activate the relationship
+  const updated = await db.familyRelationship.update({
+    where: { id: relation.id },
+    data: {
+      status: 'active',
+      verificationCode: null,
+      codeExpiresAt: null,
+    },
+  });
+
+  // Audit log
+  await createAuditLog({
+    userId: patientId,
+    action: 'update',
+    entityType: 'family_relationship',
+    entityId: relation.id,
+    details: JSON.stringify({ caregiverId: relation.caregiverId, status: 'active' }),
+    ipAddress,
+    userAgent,
+  });
+
+  return {
+    relation: updated,
+    supervisorName: relation.caregiver.name,
+    supervisorEmail: relation.caregiver.email,
+  };
+}
+
+/**
+ * Update permissions for a family relationship
+ */
+export async function updateFamilyPermissions(
   caregiverId: string,
   relationshipId: string,
+  permissions: string[],
   ipAddress?: string,
   userAgent?: string
 ) {
@@ -152,14 +240,56 @@ export async function deleteFamilyRelationship(
     throw new Error('RELATIONSHIP_NOT_FOUND');
   }
 
-  const deleted = await db.familyRelationship.update({
+  const updated = await db.familyRelationship.update({
     where: { id: relationshipId },
-    data: { isActive: false },
+    data: { permissions },
   });
 
   // Audit log
   await createAuditLog({
     userId: caregiverId,
+    action: 'update',
+    entityType: 'family_relationship',
+    entityId: relationshipId,
+    details: JSON.stringify({ updated: 'permissions', permissions }),
+    ipAddress,
+    userAgent,
+  });
+
+  return updated;
+}
+
+/**
+ * Remove or deactivate a family relationship
+ */
+export async function deleteFamilyRelationship(
+  userId: string, // Can be caregiver OR patient
+  relationshipId: string,
+  ipAddress?: string,
+  userAgent?: string
+) {
+  const existing = await db.familyRelationship.findFirst({
+    where: {
+      id: relationshipId,
+      OR: [
+        { caregiverId: userId },
+        { patientId: userId },
+      ],
+    },
+  });
+
+  if (!existing) {
+    throw new Error('RELATIONSHIP_NOT_FOUND');
+  }
+
+  const deleted = await db.familyRelationship.update({
+    where: { id: relationshipId },
+    data: { isActive: false, status: 'rejected' },
+  });
+
+  // Audit log
+  await createAuditLog({
+    userId,
     action: 'delete',
     entityType: 'family_relationship',
     entityId: relationshipId,

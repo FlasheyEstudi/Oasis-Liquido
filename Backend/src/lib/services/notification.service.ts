@@ -136,4 +136,106 @@ export class NotificationService {
     const promises = userIds.map(userId => this.sendToUser(userId, payload));
     await Promise.all(promises);
   }
+
+  /**
+   * Crear y guardar una notificación en la base de datos, y enviarla por socket + FCM.
+   */
+  static async createNotification(data: {
+    userId: string;
+    title: string;
+    body: string;
+    type: string;
+    link?: string;
+  }): Promise<any> {
+    try {
+      // 1. Guardar en base de datos
+      const notification = await db.notification.create({
+        data: {
+          userId: data.userId,
+          title: data.title,
+          body: data.body,
+          type: data.type,
+          link: data.link || null,
+        },
+      });
+
+      // 2. Emitir en tiempo real por Socket.io
+      const { emitNotification } = require('../socket');
+      emitNotification(data.userId, notification);
+
+      // 3. Enviar vía FCM Push Notification
+      await this.sendToUser(data.userId, {
+        userId: data.userId,
+        title: data.title,
+        body: data.body,
+        data: {
+          id: notification.id,
+          type: data.type,
+          link: data.link || '',
+        },
+      });
+
+      return notification;
+    } catch (error) {
+      console.error('Error in NotificationService.createNotification:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Listar las notificaciones de un usuario (paginado, opcionalmente filtrando por isRead)
+   */
+  static async listForUser(
+    userId: string,
+    params: { page?: number; limit?: number; isRead?: boolean } = {}
+  ) {
+    const page = Number(params.page) || 1;
+    const limit = Number(params.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const where: any = { userId };
+    if (params.isRead !== undefined) {
+      where.isRead = params.isRead;
+    }
+
+    const [notifications, total, unreadCount] = await Promise.all([
+      db.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      db.notification.count({ where }),
+      db.notification.count({ where: { userId, isRead: false } }),
+    ]);
+
+    return {
+      notifications,
+      unreadCount,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Marcar una o todas las notificaciones como leídas
+   */
+  static async markAsRead(userId: string, notificationId?: string): Promise<any> {
+    if (notificationId) {
+      return await db.notification.update({
+        where: { id: notificationId, userId },
+        data: { isRead: true },
+      });
+    } else {
+      return await db.notification.updateMany({
+        where: { userId, isRead: false },
+        data: { isRead: true },
+      });
+    }
+  }
 }
+

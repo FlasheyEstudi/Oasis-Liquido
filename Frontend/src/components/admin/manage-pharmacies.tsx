@@ -6,6 +6,7 @@ import {
   usePharmacies,
   useCreatePharmacy,
   useUpdatePharmacy,
+  useUsers,
   getHookErrorMessage,
 } from '@/hooks/use-api';
 import type { Pharmacy } from '@/types';
@@ -54,6 +55,7 @@ import {
   Loader2,
   Activity,
   Store,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,6 +66,8 @@ interface PharmacyFormData {
   latitude: string;
   longitude: string;
   phone: string;
+  ownerId: string;
+  isActive: boolean;
 }
 
 const emptyForm: PharmacyFormData = {
@@ -72,6 +76,8 @@ const emptyForm: PharmacyFormData = {
   latitude: '19.4326',
   longitude: '-99.1332',
   phone: '',
+  ownerId: '',
+  isActive: true,
 };
 
 export function ManagePharmacies() {
@@ -87,6 +93,9 @@ export function ManagePharmacies() {
     error,
     refetch,
   } = usePharmacies({ search: search || undefined });
+
+  const { data: ownersResult } = useUsers({ role: 'pharmacy_admin' });
+  const owners = ownersResult?.data ?? [];
 
   const createPharmacy = useCreatePharmacy();
   const updatePharmacy = useUpdatePharmacy();
@@ -108,6 +117,8 @@ export function ManagePharmacies() {
       latitude: String(pharmacy.latitude),
       longitude: String(pharmacy.longitude),
       phone: pharmacy.phone || '',
+      ownerId: pharmacy.ownerId || pharmacy.owner_id || '',
+      isActive: pharmacy.isActive ?? pharmacy.is_active ?? true,
     });
     setDialogOpen(true);
   };
@@ -124,6 +135,8 @@ export function ManagePharmacies() {
       latitude: parseFloat(form.latitude) || 19.4326,
       longitude: parseFloat(form.longitude) || -99.1332,
       phone: form.phone.trim() || undefined,
+      ownerId: form.ownerId || undefined,
+      isActive: form.isActive,
     };
 
     if (editingPharmacy) {
@@ -179,7 +192,7 @@ export function ManagePharmacies() {
     );
   }
 
-  const isPharmacyOwner = user?.role === 'pharmacy_admin' || user?.role === 'pharmacy_owner';
+  const isPharmacyOwner = user?.role === 'pharmacy_admin';
   const ownedPharmacy = pharmacies.find(
     (p) => p.ownerId === user?.id || p.owner_id === user?.id
   );
@@ -279,7 +292,7 @@ export function ManagePharmacies() {
           <p className="text-sm text-muted-foreground">Detalles de ubicación, contacto y estado físico de tu farmacia</p>
         </motion.div>
 
-        <div className="max-w-3xl">
+        <div className="grid gap-6 md:grid-cols-2 max-w-5xl">
           <GlassCard className="border border-sky-500/10 shadow-lg relative overflow-hidden p-6 md:p-8">
             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
             <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3 border-b pb-3 border-border/20">
@@ -330,6 +343,49 @@ export function ManagePharmacies() {
                 </div>
               </div>
             </div>
+          </GlassCard>
+
+          <GlassCard className="border border-amber-500/10 shadow-lg relative overflow-hidden p-6 md:p-8 flex flex-col justify-between">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div>
+              <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3 border-b pb-3 border-border/20">
+                <Shield className="size-6 text-amber-500" />
+                Cumplimiento Legal Sanitario
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                De acuerdo con la legislación de la República de Nicaragua, toda farmacia autorizada debe mantener su documentación legal debidamente actualizada y aprobada.
+              </p>
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                  <span className="text-xs text-muted-foreground">Licencia MINSA:</span>
+                  <span className="text-xs font-bold text-white">Requerido (Vigente)</span>
+                </div>
+                <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                  <span className="text-xs text-muted-foreground">Cédula RUC / Registro:</span>
+                  <span className="text-xs font-bold text-white">Requerido (Vigente)</span>
+                </div>
+                <div className="flex justify-between items-center bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                  <span className={cn(
+                    "text-xs font-bold",
+                    user?.verification_status === 'approved' && "text-emerald-500 dark:text-emerald-400",
+                    user?.verification_status === 'submitted' && "text-sky-500 dark:text-sky-400",
+                    user?.verification_status === 'rejected' && "text-red-500 dark:text-red-400",
+                    (!user?.verification_status || user?.verification_status === 'pending') && "text-amber-500 dark:text-amber-400"
+                  )}>
+                    {user?.verification_status === 'approved' ? 'Aprobado' :
+                     user?.verification_status === 'submitted' ? 'En revisión' :
+                     user?.verification_status === 'rejected' ? 'Rechazado' : 'Pendiente'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              onClick={() => window.dispatchEvent(new CustomEvent('open-compliance-modal'))}
+              className="glass-btn-primary w-full rounded-full text-xs font-bold py-3 mt-4"
+            >
+              Cargar / Re-subir Expediente Legal
+            </Button>
           </GlassCard>
         </div>
       </div>
@@ -452,12 +508,12 @@ export function ManagePharmacies() {
                         <span
                           className={cn(
                             'rounded-full px-2.5 py-0.5 text-xs font-medium',
-                            pharmacy.is_active
+                            (pharmacy.isActive ?? pharmacy.is_active)
                               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                               : 'bg-red-500/10 text-red-600 dark:text-red-400',
                           )}
                         >
-                          {pharmacy.is_active ? 'Activa' : 'Inactiva'}
+                          {(pharmacy.isActive ?? pharmacy.is_active) ? 'Activa' : 'Inactiva'}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -536,6 +592,33 @@ export function ManagePharmacies() {
                 value={form.phone}
                 onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                 className="glass-input rounded-xl px-4 py-2.5 h-auto text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Dueño / Administrador de Farmacia</label>
+              <select
+                value={form.ownerId}
+                onChange={(e) => setForm((f) => ({ ...f, ownerId: e.target.value }))}
+                className="glass-input rounded-xl px-4 py-2.5 h-11 text-sm w-full bg-background/50 border border-border/40 text-foreground"
+              >
+                <option value="">-- Sin Dueño Asignado --</option>
+                {owners.map((owner) => (
+                  <option key={owner.id} value={owner.id}>
+                    {owner.name} ({owner.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center justify-between p-3 glass rounded-2xl border border-border/20">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium text-foreground">Estado de la Farmacia</span>
+                <span className="text-xs text-muted-foreground">Determina si está activa y operativa</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+                className="size-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 accent-teal-500"
               />
             </div>
           </div>

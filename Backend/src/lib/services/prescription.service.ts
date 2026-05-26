@@ -115,14 +115,25 @@ export async function createPrescription(
   ipAddress?: string,
   userAgent?: string
 ) {
-  // 1. Fetch Doctor Profile
-  const doctorProfile = await db.doctorProfile.findUnique({
-    where: { userId: doctorId },
+  // 1. Fetch Doctor Profile and User Verification Status
+  const doctor = await db.user.findUnique({
+    where: { id: doctorId },
+    select: {
+      verificationStatus: true,
+      doctorProfile: true,
+    },
   });
 
-  if (!doctorProfile) {
+  if (!doctor || !doctor.doctorProfile) {
     throw new Error('DOCTOR_PROFILE_NOT_FOUND');
   }
+
+  // Validate that doctor's medical accreditation is approved by MINSA
+  if (doctor.verificationStatus !== 'approved') {
+    throw new Error('DOCTOR_NOT_VERIFIED');
+  }
+
+  const doctorProfile = doctor.doctorProfile;
 
   let finalHashedPin = doctorProfile.signaturePin;
 
@@ -305,6 +316,17 @@ export async function fulfillPrescription(
 
   // 2. Start transaction
   return await db.$transaction(async (tx) => {
+    // Validate that the pharmacy is active (not suspended by compliance/expirations)
+    const pharmacy = await tx.pharmacy.findUnique({
+      where: { id: data.pharmacy_id },
+      select: { isActive: true },
+    });
+
+    if (!pharmacy) throw new Error('PHARMACY_NOT_FOUND');
+    if (!pharmacy.isActive) {
+      throw new Error('PHARMACY_SUSPENDED');
+    }
+
     const prescription = await tx.prescription.findUnique({
       where: { id: prescriptionId },
       include: { prescriptionLines: true },
@@ -387,6 +409,14 @@ export async function fulfillPrescription(
       ipAddress,
       userAgent,
     });
+
+    // Notify patient
+    try {
+      const { notifyPrescriptionFulfilled } = require('./event-notifications');
+      notifyPrescriptionFulfilled(updated.patientId, updated.fulfilledPharmacy?.name || 'Farmacia').catch((err: any) => console.error(err));
+    } catch (err) {
+      console.error('Failed to trigger prescription fulfilled notification:', err);
+    }
 
     return mapPrescription(updated);
   });

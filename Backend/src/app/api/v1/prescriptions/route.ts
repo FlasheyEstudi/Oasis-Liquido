@@ -56,6 +56,9 @@ export const POST = withAuth(
       if (error.message === 'DOCTOR_PROFILE_NOT_FOUND') {
         return errorResponse(ErrorCodes.NOT_FOUND, 'Perfil de doctor no encontrado', 404);
       }
+      if (error.message === 'DOCTOR_NOT_VERIFIED') {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'Tu acreditación profesional no está aprobada por el MINSA. No puedes emitir recetas.', 403);
+      }
       if (error.message === 'INCORRECT_PIN') {
         return errorResponse(ErrorCodes.FORBIDDEN, 'PIN de firma incorrecto', 403);
       }

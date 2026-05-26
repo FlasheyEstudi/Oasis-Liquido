@@ -3,6 +3,14 @@
 
 import { db } from '@/lib/db';
 import { createAuditLog } from './audit.service';
+import { 
+  notifyAppointmentCreatedForClinic, 
+  notifyAppointmentBookedForDoctor,
+  notifyAppointmentCanceledForClinic,
+  notifyAppointmentCanceledForDoctor,
+  notifyAppointmentRescheduled,
+  notifyReceptionistsOfCheckIn
+} from './event-notifications';
 
 /**
  * Get appointments with filters
@@ -28,13 +36,37 @@ export async function getAppointments(filters: {
     where.patientId = filters.userId;
   } else if (filters.userRole === 'doctor' && filters.userId) {
     where.doctorId = filters.userId;
-  } else {
-    // admin, receptionist, pharmacy_manager see based on filters
+  } else if (filters.userRole === 'clinic_admin' && filters.userId) {
+    // Forzar el aislamiento para el Clinic Admin (solo sus clínicas)
+    const ownedClinic = await db.clinic.findFirst({
+      where: { ownerId: filters.userId }
+    });
+    if (ownedClinic) {
+      where.clinicId = ownedClinic.id;
+    } else {
+      where.clinicId = 'non_existent_clinic_id'; // Bloquea acceso si no tiene clínica asociada
+    }
     if (filters.patientId) where.patientId = filters.patientId;
     if (filters.doctorId) where.doctorId = filters.doctorId;
+  } else if (filters.userRole === 'receptionist' && filters.userId) {
+    // Forzar el aislamiento para la Recepcionista (solo su clínica asignada)
+    const recepProfile = await db.receptionistProfile.findUnique({
+      where: { userId: filters.userId }
+    });
+    if (recepProfile && recepProfile.clinicId) {
+      where.clinicId = recepProfile.clinicId;
+    } else {
+      where.clinicId = 'non_existent_clinic_id'; // Bloquea acceso si no tiene clínica asignada
+    }
+    if (filters.patientId) where.patientId = filters.patientId;
+    if (filters.doctorId) where.doctorId = filters.doctorId;
+  } else {
+    // admin (Super Admin) o cualquier otro rol ve según los filtros provistos
+    if (filters.patientId) where.patientId = filters.patientId;
+    if (filters.doctorId) where.doctorId = filters.doctorId;
+    if (filters.clinicId) where.clinicId = filters.clinicId;
   }
 
-  if (filters.clinicId) where.clinicId = filters.clinicId;
   if (filters.status) where.status = filters.status;
 
   if (filters.dateFrom || filters.dateTo) {
@@ -157,6 +189,15 @@ export async function createAppointment(data: {
     userAgent,
   });
 
+  // Trigger Notifications
+  try {
+    const dateStr = appointment.dateTime.toLocaleString('es-NI', { dateStyle: 'long', timeStyle: 'short' });
+    notifyAppointmentBookedForDoctor(appointment.doctorId, appointment.patient.name || 'Paciente', dateStr).catch(err => console.error(err));
+    notifyAppointmentCreatedForClinic(appointment.clinicId, appointment.patient.name || 'Paciente', appointment.doctor.name || 'Médico', dateStr).catch(err => console.error(err));
+  } catch (err) {
+    console.error('Failed to dispatch appointment creation notifications:', err);
+  }
+
   return appointment;
 }
 
@@ -215,5 +256,96 @@ export async function updateAppointmentStatus(
     userAgent,
   });
 
+  // Trigger Notifications on cancellation
+  if (newStatus === 'cancelled') {
+    try {
+      const dateStr = updated.dateTime.toLocaleString('es-NI', { dateStyle: 'long', timeStyle: 'short' });
+      notifyAppointmentCanceledForDoctor(updated.doctorId, updated.patient.name || 'Paciente', dateStr).catch(err => console.error(err));
+      notifyAppointmentCanceledForClinic(updated.clinicId, updated.patient.name || 'Paciente', updated.doctor.name || 'Médico', dateStr).catch(err => console.error(err));
+    } catch (err) {
+      console.error('Failed to dispatch appointment cancellation notifications:', err);
+    }
+  } else if (newStatus === 'confirmed') {
+    try {
+      notifyReceptionistsOfCheckIn(updated.clinicId, updated.patient.name || 'Paciente', updated.doctor.name || 'Médico').catch(err => console.error(err));
+    } catch (err) {
+      console.error('Failed to dispatch receptionist check-in notification:', err);
+    }
+  }
+
   return updated;
 }
+
+/**
+ * Update an appointment (e.g. reschedule date/time, notes, duration)
+ */
+export async function updateAppointment(
+  id: string,
+  data: { date_time?: string; duration_minutes?: number; notes?: string },
+  userId: string,
+  userRole: string,
+  ipAddress?: string,
+  userAgent?: string
+) {
+  // 1. Fetch current appointment
+  const current = await db.appointment.findUnique({
+    where: { id },
+  });
+
+  if (!current) {
+    throw new Error('NOT_FOUND');
+  }
+
+  const isAuthorized = 
+    userRole === 'admin' || 
+    userRole === 'clinic_admin' || 
+    userRole === 'receptionist' ||
+    current.patientId === userId ||
+    current.doctorId === userId;
+
+  if (!isAuthorized) {
+    throw new Error('UNAUTHORIZED');
+  }
+
+  // 2. Perform DB update
+  const updated = await db.appointment.update({
+    where: { id },
+    data: {
+      dateTime: data.date_time ? new Date(data.date_time) : undefined,
+      durationMinutes: data.duration_minutes !== undefined ? data.duration_minutes : undefined,
+      notes: data.notes !== undefined ? data.notes : undefined,
+    },
+    include: {
+      patient: { select: { id: true, name: true, email: true } },
+      doctor: { select: { id: true, name: true } },
+      clinic: true,
+    },
+  });
+
+  // 3. Create Audit Log
+  await createAuditLog({
+    userId,
+    action: 'update',
+    entityType: 'appointment',
+    entityId: id,
+    details: JSON.stringify({
+      message: 'Appointment updated/rescheduled',
+      changes: data,
+    }),
+    ipAddress,
+    userAgent,
+  });
+
+  // Trigger notifications on reschedule
+  if (data.date_time) {
+    try {
+      const dateStr = updated.dateTime.toLocaleString('es-NI', { dateStyle: 'long', timeStyle: 'short' });
+      notifyAppointmentRescheduled(updated.patientId, updated.doctor.name || 'Médico', dateStr).catch(err => console.error(err));
+    } catch (err) {
+      console.error('Failed to dispatch reschedule notification:', err);
+    }
+  }
+
+  return updated;
+}
+

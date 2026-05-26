@@ -133,7 +133,11 @@ export async function createPharmacy(data: {
   longitude?: number;
   phone?: string;
   delivery_fee?: number;
+  ownerId?: string;
+  owner_id?: string;
 }, userId?: string, ipAddress?: string, userAgent?: string) {
+  const resolvedOwnerId = data.ownerId || data.owner_id;
+
   const pharmacy = await db.pharmacy.create({
     data: {
       name: data.name,
@@ -142,6 +146,7 @@ export async function createPharmacy(data: {
       longitude: data.longitude ?? -99.1332,
       phone: data.phone,
       deliveryFee: data.delivery_fee ?? 29.90,
+      ownerId: resolvedOwnerId || null,
     },
   });
 
@@ -170,6 +175,8 @@ export async function updatePharmacy(
     phone?: string;
     isActive?: boolean;
     delivery_fee?: number;
+    ownerId?: string;
+    owner_id?: string;
   },
   userId?: string,
   ipAddress?: string,
@@ -178,10 +185,23 @@ export async function updatePharmacy(
   const pharmacy = await db.pharmacy.findUnique({ where: { id } });
   if (!pharmacy) throw new Error('NOT_FOUND');
 
-  const updateData: Record<string, unknown> = { ...data };
+  const resolvedOwnerId = data.ownerId !== undefined ? data.ownerId : data.owner_id;
+
+  const updateData: Record<string, unknown> = {
+    name: data.name,
+    address: data.address,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    phone: data.phone,
+    isActive: data.isActive,
+  };
+
   if (data.delivery_fee !== undefined) {
     updateData.deliveryFee = data.delivery_fee;
-    delete updateData.delivery_fee;
+  }
+
+  if (resolvedOwnerId !== undefined) {
+    updateData.ownerId = resolvedOwnerId || null;
   }
 
   const updated = await db.pharmacy.update({

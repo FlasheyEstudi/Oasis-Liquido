@@ -67,14 +67,56 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
         amount
       }));
 
+      // Calculate delivery metrics
+      const completedDeliveries = await db.deliveryOrder.findMany({
+        where: {
+          pharmacyId,
+          status: 'delivered',
+          pickedUpAt: { not: null },
+          deliveredAt: { not: null },
+        },
+        select: {
+          pickedUpAt: true,
+          deliveredAt: true,
+        }
+      });
+
+      let totalDeliveryTimeMinutes = 0;
+      let slaCompliantCount = 0;
+      completedDeliveries.forEach(d => {
+        const pick = new Date(d.pickedUpAt!).getTime();
+        const deliv = new Date(d.deliveredAt!).getTime();
+        const diffMinutes = Math.max(1, Math.round((deliv - pick) / (1000 * 60)));
+        totalDeliveryTimeMinutes += diffMinutes;
+        if (diffMinutes <= 45) {
+          slaCompliantCount++;
+        }
+      });
+
+      const avgDeliveryTime = completedDeliveries.length > 0 
+        ? Math.round(totalDeliveryTimeMinutes / completedDeliveries.length) 
+        : 35; // Default/SLA simulation if no completed deliveries yet
+
+      const slaAttainment = completedDeliveries.length > 0
+        ? Math.round((slaCompliantCount / completedDeliveries.length) * 100)
+        : 95; // Default simulation
+
       return successResponse({
         totalSales,
         todaySalesAmount: todaySales._sum.totalAmount || 0,
         lowStockCount,
         inventoryValue: realInventoryValue,
-        chartData
+        chartData,
+        deliveryMetrics: {
+          avgDeliveryTime,
+          slaAttainment,
+          activeCount: await db.deliveryOrder.count({
+            where: { pharmacyId, status: { in: ['pending', 'accepted', 'picked_up', 'in_transit'] } }
+          })
+        }
       });
     }
+
 
     if (type === 'top_products') {
       // Find top 5 medicines sold

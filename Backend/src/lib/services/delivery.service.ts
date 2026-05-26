@@ -95,9 +95,8 @@ export async function updateDeliveryStatus(
 
   const currentStatus = order.status;
 
-  // Validate transitions based on role
-  if (userRole === 'pharmacy_manager') {
-    // pharmacy_manager can: pending → assigned (with driver_id)
+  if (userRole === 'pharmacy_manager' || userRole === 'pharmacy_admin' || userRole === 'admin') {
+    // Managers and Admins can: pending → assigned (with driver_id)
     if (currentStatus !== 'pending' || newStatus !== 'assigned') {
       throw new Error('INVALID_STATUS_TRANSITION');
     }
@@ -183,6 +182,13 @@ export async function updateDeliveryStatus(
       'Actualización de tu pedido',
       `Tu pedido ${statusLabels[newStatus]}.`
     );
+
+    try {
+      const { notifyDeliveryStatusChanged } = require('./event-notifications');
+      notifyDeliveryStatusChanged(updated.patientId, updated.saleId ? updated.saleId.slice(-6) : id.slice(-6), newStatus).catch((err: any) => console.error(err));
+    } catch (err) {
+      console.error('Error triggering local delivery status notification:', err);
+    }
   }
 
   if (newStatus === 'assigned' && deliveryDriverId) {

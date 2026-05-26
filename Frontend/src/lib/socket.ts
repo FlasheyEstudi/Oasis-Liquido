@@ -33,6 +33,11 @@ export const joinChatRoom = (sessionId: string) => {
   s.emit('join:chat', sessionId);
 };
 
+export const joinUserRoom = (userId: string) => {
+  const s = getSocket();
+  s.emit('join:user', userId);
+};
+
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();

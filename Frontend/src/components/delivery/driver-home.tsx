@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth-store';
 import {
   useDeliveryOrders,
@@ -48,6 +49,7 @@ const fadeUp: any = {
 
 export function DriverHome() {
   const { user, setNotification, navigate } = useAuthStore();
+  const queryClient = useQueryClient();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [localAvailable, setLocalAvailable] = useState(true);
 
@@ -99,10 +101,25 @@ export function DriverHome() {
   const handleAccept = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
+      // Optimización de UX de Oasis: Guardar en caché y navegar inmediatamente
+      const orderToAccept = availableOrders.find((o: any) => o.id === id);
+      if (orderToAccept) {
+        queryClient.setQueryData(['delivery-orders', id], {
+          ...orderToAccept,
+          status: 'accepted',
+          deliveryDriverId: driverId,
+        });
+      }
+      
+      // Redirigir de forma inmediata
+      navigate('delivery-detail', id);
+      
+      // Procesar en segundo plano
       await acceptOrder(id);
       setNotification({ type: 'success', message: '¡Pedido aceptado con éxito!' });
     } catch {
       setNotification({ type: 'error', message: 'Error al aceptar el pedido' });
+      navigate('inicio-repartidor');
     }
   };
 

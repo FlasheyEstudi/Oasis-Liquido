@@ -6,7 +6,7 @@
 import { create } from 'zustand';
 import type { User, AppPage, UserRole } from '@/types';
 import { setAccessToken, getAccessToken, clearAuthTokens } from '@/api/client';
-import { getMe, refreshToken } from '@/api/auth';
+import { getMe, refreshToken, logout as apiLogout } from '@/api/auth';
 
 interface AuthState {
   // Estado
@@ -48,7 +48,8 @@ function getHomeForRole(role: UserRole): AppPage {
     case 'doctor': return 'inicio';
     case 'receptionist': return 'inicio';
     case 'patient': return 'inicio';
-    case 'pharmacy_manager': return 'inicio';
+    case 'pharmacy_manager':
+    case 'cashier': return 'inicio';
     case 'delivery_driver': return 'inicio-repartidor';
     default: return 'inicio';
   }
@@ -92,6 +93,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: () => {
+    // Clear cookies/session on backend as well
+    apiLogout().catch((err) => {
+      console.warn('OASIS: Backend session revocation deferred:', err.message);
+    });
+    
     clearAuthTokens();
     if (typeof window !== 'undefined') {
       localStorage.removeItem('oasis_selected_item_id');
@@ -253,3 +259,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return getHomeForRole(user.role);
   },
 }));
+
+// Escuchar expiración de token de forma global para limpiar sesión de forma reactiva
+if (typeof window !== 'undefined') {
+  window.addEventListener('auth:expired', () => {
+    useAuthStore.getState().logout();
+  });
+}
+

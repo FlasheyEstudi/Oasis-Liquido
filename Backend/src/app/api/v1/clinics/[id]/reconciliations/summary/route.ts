@@ -10,9 +10,9 @@ import * as cashReconciliationService from '@/lib/services/cash-reconciliation.s
  * GET /api/v1/clinics/[id]/reconciliations/summary
  * Calculates expected sales drawer balance for today
  */
-export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { params: { id: string } }) => {
+export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
-    const clinicId = params.id;
+    const { id: clinicId } = await params;
     if (!clinicId) {
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de clínica requerido', 400);
     }

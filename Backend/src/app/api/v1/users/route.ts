@@ -4,6 +4,9 @@
 
 import { NextRequest } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
+
+export const dynamic = 'force-dynamic';
+
 import { successResponse, errorResponse, paginatedResponse, ErrorCodes } from '@/lib/utils/api-response';
 import { validateBody, createUserSchema } from '@/lib/validators';
 import * as userService from '@/lib/services/user.service';
@@ -54,8 +57,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         password: body.password,
         role: body.role,
         phone: body.phone,
-        clinicId: body.clinicId || (req.user.role === 'clinic_admin' || req.user.role === 'clinic_owner' || req.user.role === 'receptionist' ? req.user.clinicId : undefined),
-        pharmacyId: body.pharmacyId || (req.user.role === 'pharmacy_admin' || req.user.role === 'pharmacy_owner' || req.user.role === 'pharmacy_manager' ? req.user.pharmacyId : undefined),
+        clinicId: body.clinicId || (req.user.role === 'clinic_admin' || req.user.role === 'receptionist' ? req.user.clinicId : undefined),
+        pharmacyId: body.pharmacyId || (req.user.role === 'pharmacy_admin' || req.user.role === 'pharmacy_manager' ? req.user.pharmacyId : undefined),
       },
       req.user.userId,
       req.headers.get('x-forwarded-for') || undefined,
@@ -69,4 +72,4 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
-}, { roles: ['admin', 'clinic_admin', 'pharmacy_admin', 'clinic_owner', 'pharmacy_owner', 'receptionist'] });
+}, { roles: ['admin', 'clinic_admin', 'pharmacy_admin', 'receptionist'] });

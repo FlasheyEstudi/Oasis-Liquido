@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { QrCode } from '@/components/common/qr-code';
+import { LoadingAnimation } from '@/components/ui/loading-animation';
 import {
   Calendar,
   FileText,
@@ -104,12 +105,11 @@ export function PatientHome() {
 
   if (isLoading) {
     return (
-      <div className="bento-grid">
-        <div className="col-span-8"><div className="shimmer rounded-3xl h-40" /></div>
-        <div className="col-span-4"><div className="shimmer rounded-3xl h-40" /></div>
-        <div className="col-span-12"><div className="shimmer rounded-3xl h-20" /></div>
-        <div className="col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
-        <div className="col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <LoadingAnimation size="lg" />
+        <p className="text-sm font-bold text-teal-600/60 dark:text-teal-400/60 tracking-widest mt-6 animate-pulse uppercase">
+          Sincronizando tu Oasis de Salud...
+        </p>
       </div>
     );
   }

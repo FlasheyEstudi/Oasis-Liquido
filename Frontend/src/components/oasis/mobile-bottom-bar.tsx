@@ -16,12 +16,30 @@ import {
   Shield,
   User,
   Droplets,
+  Users,
+  DollarSign,
+  Activity,
+  Store,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Navigation items per role — only 3-4 most important
 function getMobileNavItems(role: UserRole): { page: AppPage; label: string; icon: React.ReactNode }[] {
   switch (role) {
+    case 'clinic_admin':
+      return [
+        { page: 'manage-clinics', label: 'Clínica', icon: <MapPin className="size-[20px]" /> },
+        { page: 'clinic-staff', label: 'Personal', icon: <Users className="size-[20px]" /> },
+        { page: 'clinic-finances', label: 'Caja', icon: <DollarSign className="size-[20px]" /> },
+        { page: 'clinic-analytics', label: 'Métricas', icon: <Activity className="size-[20px]" /> },
+      ];
+    case 'pharmacy_admin':
+      return [
+        { page: 'manage-pharmacies', label: 'Farmacia', icon: <Store className="size-[20px]" /> },
+        { page: 'pharmacy-staff', label: 'Personal', icon: <Users className="size-[20px]" /> },
+        { page: 'pharmacy-finances', label: 'Caja', icon: <DollarSign className="size-[20px]" /> },
+        { page: 'pharmacy-analytics', label: 'Métricas', icon: <Activity className="size-[20px]" /> },
+      ];
     case 'patient':
       return [
         { page: 'home', label: 'Inicio', icon: <Home className="size-[20px]" /> },

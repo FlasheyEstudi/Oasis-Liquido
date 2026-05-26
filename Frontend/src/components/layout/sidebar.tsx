@@ -24,6 +24,7 @@ import {
   DollarSign,
   Store,
   Activity,
+  Shield,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -53,6 +54,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { page: 'gestionar-clinicas', label: 'Clínicas', icon: Building2 },
     { page: 'gestionar-farmacias', label: 'Farmacias', icon: Pill },
     { page: 'gestionar-usuarios', label: 'Usuarios', icon: Users },
+    { page: 'gestionar-documentos', label: 'Documentos', icon: Shield },
     { page: 'auditoria', label: 'Auditoría', icon: FileText },
   ],
   clinic_admin: [
@@ -83,6 +85,12 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { page: 'gestion-pedidos', label: 'Mis Pedidos', icon: ShoppingBag },
   ],
   pharmacy_manager: [
+    { page: 'inicio', label: 'Dashboard', icon: LayoutDashboard },
+    { page: 'inventario', label: 'Inventario', icon: Package },
+    { page: 'surtimiento', label: 'Recetas (QR)', icon: QrCode },
+    { page: 'gestion-pedidos', label: 'Pedidos', icon: ClipboardList },
+  ],
+  cashier: [
     { page: 'inicio', label: 'Dashboard', icon: LayoutDashboard },
     { page: 'inventario', label: 'Inventario', icon: Package },
     { page: 'surtimiento', label: 'Recetas (QR)', icon: QrCode },
@@ -127,29 +135,29 @@ function SidebarContent({ collapsed, onNavigate, onLogout }: SidebarContentProps
   const activeParent = getActiveParentPage(currentPage);
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-slate-50/60 dark:bg-[#09090b]/60 backdrop-blur-lg border-r border-slate-200/40 dark:border-white/5 relative glass-sidebar">
       {/* User info at top */}
       <div className={cn(
-        'flex items-center gap-3 border-b px-4 py-4',
+        'flex items-center gap-3 border-b border-slate-200/40 dark:border-white/5 px-4 py-4',
         collapsed && 'justify-center px-2'
       )}>
-        <Avatar className="size-10 shrink-0">
+        <Avatar className="size-10 shrink-0 ring-2 ring-teal-500/20">
           <AvatarImage src={user.avatar_url} alt={user.name} />
-          <AvatarFallback className="bg-emerald-100 text-emerald-700 text-sm font-semibold">
+          <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-sm font-black">
             {getInitials(user.name)}
           </AvatarFallback>
         </Avatar>
         {!collapsed && (
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-gray-900">{user.name}</p>
-            <p className="truncate text-xs text-gray-500">{ROLE_LABELS[role]}</p>
+            <p className="truncate text-sm font-extrabold text-slate-800 dark:text-slate-200">{user.name}</p>
+            <p className="truncate text-[10px] tracking-wider font-bold text-slate-400 uppercase">{ROLE_LABELS[role]}</p>
           </div>
         )}
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-2 py-2">
-        <nav className="flex flex-col gap-1">
+      <ScrollArea className="flex-1 px-2.5 py-3">
+        <nav className="flex flex-col gap-1.5">
           {navItems.map((item) => {
             const isActive = activeParent === item.page;
             const Icon = item.icon;
@@ -159,16 +167,16 @@ function SidebarContent({ collapsed, onNavigate, onLogout }: SidebarContentProps
                 key={item.page}
                 onClick={() => onNavigate(item.page)}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  'flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-xs uppercase tracking-wider font-extrabold transition-all duration-200',
                   isActive
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                    ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 shadow-[inset_1px_1px_3px_rgba(255,255,255,0.1)]'
+                    : 'text-slate-500 hover:bg-slate-100/50 dark:hover:bg-white/[0.03] hover:text-slate-800 dark:hover:text-slate-200',
                   collapsed && 'justify-center px-2'
                 )}
               >
                 <Icon className={cn(
-                  'size-5 shrink-0',
-                  isActive ? 'text-emerald-600' : 'text-gray-400'
+                  'size-5 shrink-0 transition-transform duration-200 group-hover:scale-105',
+                  isActive ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400'
                 )} />
                 {!collapsed && <span>{item.label}</span>}
               </button>
@@ -178,7 +186,7 @@ function SidebarContent({ collapsed, onNavigate, onLogout }: SidebarContentProps
               return (
                 <Tooltip key={item.page}>
                   <TooltipTrigger asChild>{navButton}</TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={8}>
+                  <TooltipContent side="right" sideOffset={8} className="bg-slate-900 text-white font-bold text-xs rounded-xl border-none">
                     {item.label}
                   </TooltipContent>
                 </Tooltip>
@@ -191,27 +199,27 @@ function SidebarContent({ collapsed, onNavigate, onLogout }: SidebarContentProps
       </ScrollArea>
 
       {/* Bottom: Logout */}
-      <div className="border-t px-2 py-2">
+      <div className="border-t border-slate-200/40 dark:border-white/5 px-2 py-2.5">
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={onLogout}
-                className="flex w-full items-center justify-center rounded-lg px-2 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
+                className="flex w-full items-center justify-center rounded-2xl px-2 py-3 text-slate-500 hover:bg-red-500/10 hover:text-red-500 transition-all duration-200"
               >
-                <LogOut className="size-5 text-gray-400" />
+                <LogOut className="size-5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8}>
+            <TooltipContent side="right" sideOffset={8} className="bg-red-600 text-white font-bold text-xs rounded-xl border-none">
               Cerrar sesión
             </TooltipContent>
           </Tooltip>
         ) : (
           <button
             onClick={onLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600"
+            className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-xs uppercase tracking-wider font-extrabold text-slate-500 hover:bg-red-500/10 hover:text-red-500 transition-all duration-200"
           >
-            <LogOut className="size-5 text-gray-400" />
+            <LogOut className="size-5" />
             <span>Cerrar sesión</span>
           </button>
         )}
@@ -232,7 +240,7 @@ export function DesktopSidebar({ collapsed, onToggleCollapse }: DesktopSidebarPr
   return (
     <aside
       className={cn(
-        'relative hidden md:flex flex-col border-r bg-white transition-all duration-300',
+        'relative hidden md:flex flex-col border-r border-slate-200/40 dark:border-white/5 bg-slate-50/30 dark:bg-[#050505]/30 backdrop-blur-md transition-all duration-300',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
@@ -244,12 +252,12 @@ export function DesktopSidebar({ collapsed, onToggleCollapse }: DesktopSidebarPr
       {/* Collapse toggle */}
       <button
         onClick={onToggleCollapse}
-        className="absolute -right-3 top-7 z-10 flex size-6 items-center justify-center rounded-full border bg-white shadow-sm transition-colors hover:bg-gray-50"
+        className="absolute -right-3 top-7 z-10 flex size-6 items-center justify-center rounded-full border border-slate-200/50 dark:border-white/5 bg-white dark:bg-slate-900 shadow-sm transition-all hover:scale-105"
       >
         {collapsed ? (
-          <ChevronRight className="size-3.5 text-gray-500" />
+          <ChevronRight className="size-3.5 text-slate-500" />
         ) : (
-          <ChevronLeft className="size-3.5 text-gray-500" />
+          <ChevronLeft className="size-3.5 text-slate-500" />
         )}
       </button>
     </aside>
@@ -312,6 +320,7 @@ export const PAGE_TITLES: Record<AppPage, string> = {
   'gestionar-clinicas': 'Mi Clínica',
   'gestionar-farmacias': 'Mi Farmacia',
   'gestionar-usuarios': 'Usuarios',
+  'gestionar-documentos': 'Documentos',
   'manage-clinics': 'Mi Clínica',
   'manage-pharmacies': 'Mi Farmacia',
   'clinic-staff': 'Mi Personal',

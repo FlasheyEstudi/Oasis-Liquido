@@ -6,6 +6,7 @@ import {
   useUsers,
   useCreateUser,
   useUpdateUser,
+  useDeleteUser,
   getHookErrorMessage,
 } from '@/hooks/use-api';
 import type { User, UserRole } from '@/types';
@@ -47,6 +48,9 @@ import {
   Loader2,
   Shield,
   Activity,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -57,6 +61,7 @@ interface UserFormData {
   password: string;
   role: UserRole;
   phone: string;
+  isActive: boolean;
 }
 
 const emptyForm: UserFormData = {
@@ -65,6 +70,7 @@ const emptyForm: UserFormData = {
   password: '',
   role: 'patient',
   phone: '',
+  isActive: true,
 };
 
 const ROLE_TABS: { value: string; label: string }[] = [
@@ -81,6 +87,8 @@ export function ManageUsers() {
   const { setNotification } = useAuthStore();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const limit = 8;
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -94,13 +102,32 @@ export function ManageUsers() {
   } = useUsers({
     role: roleFilter !== 'all' ? roleFilter : undefined,
     search: search || undefined,
+    page,
+    limit,
   });
 
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
+  const deleteUserMutation = useDeleteUser();
 
   const users = usersResult?.data ?? [];
-  const isSaving = createUser.isPending || updateUser.isPending;
+  const total = usersResult?.pagination?.total ?? 0;
+  const totalPages = Math.ceil(total / limit) || 1;
+  const isSaving = createUser.isPending || updateUser.isPending || deleteUserMutation.isPending;
+
+  const handleDeleteUser = (id: string, name: string) => {
+    if (window.confirm(`¿Estás seguro de que deseas desactivar al usuario "${name}"?`)) {
+      deleteUserMutation.mutate(id, {
+        onSuccess: () => {
+          setNotification({ type: 'success', message: 'Usuario desactivado exitosamente.' });
+          refetch();
+        },
+        onError: () => {
+          setNotification({ type: 'error', message: 'No se pudo desactivar al usuario.' });
+        }
+      });
+    }
+  };
 
   const handleOpenCreate = () => {
     setEditingUser(null);
@@ -116,6 +143,7 @@ export function ManageUsers() {
       password: '',
       role: user.role,
       phone: user.phone || '',
+      isActive: user.isActive ?? user.is_active ?? true,
     });
     setDialogOpen(true);
   };
@@ -139,6 +167,7 @@ export function ManageUsers() {
             email: form.email.trim(),
             role: form.role,
             phone: form.phone.trim() || undefined,
+            is_active: form.isActive,
           },
         },
         {
@@ -234,7 +263,10 @@ export function ManageUsers() {
           <Input
             placeholder="Buscar por nombre o email..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="glass-input rounded-full pl-10 pr-4 py-2.5 h-auto text-sm"
           />
         </div>
@@ -243,7 +275,10 @@ export function ManageUsers() {
             <motion.button
               key={tab.value}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setRoleFilter(tab.value)}
+              onClick={() => {
+                setRoleFilter(tab.value);
+                setPage(1);
+              }}
               className={cn(
                 'rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                 roleFilter === tab.value
@@ -354,29 +389,66 @@ export function ManageUsers() {
                           <span
                             className={cn(
                               'rounded-full px-2.5 py-0.5 text-xs font-medium',
-                              userItem.is_active
+                              (userItem.isActive ?? userItem.is_active)
                                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                 : 'bg-red-500/10 text-red-600 dark:text-red-400',
                             )}
                           >
-                            {userItem.is_active ? 'Activo' : 'Inactivo'}
+                            {(userItem.isActive ?? userItem.is_active) ? 'Activo' : 'Inactivo'}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleOpenEdit(userItem)}
-                            className="inline-flex size-8 items-center justify-center rounded-full hover:bg-teal-500/10 transition-colors"
-                          >
-                            <Pencil className="size-3.5 text-teal-600 dark:text-teal-400" />
-                          </motion.button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => handleOpenEdit(userItem)}
+                              className="inline-flex size-8 items-center justify-center rounded-full hover:bg-teal-500/10 transition-colors"
+                              title="Editar usuario"
+                            >
+                              <Pencil className="size-3.5 text-teal-600 dark:text-teal-400" />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => handleDeleteUser(userItem.id, userItem.name)}
+                              className="inline-flex size-8 items-center justify-center rounded-full hover:bg-red-500/10 transition-colors"
+                              title="Desactivar usuario"
+                              disabled={deleteUserMutation.isPending}
+                            >
+                              <Trash2 className="size-3.5 text-red-600 dark:text-red-400" />
+                            </motion.button>
+                          </div>
                         </TableCell>
                       </motion.tr>
                     );
                   })}
                 </TableBody>
               </Table>
+              <div className="flex items-center justify-between border-t border-border/50 px-6 py-4 bg-muted/20">
+                <span className="text-xs text-muted-foreground">
+                  Mostrando <strong className="font-semibold text-foreground">{((page - 1) * limit) + 1}</strong> a <strong className="font-semibold text-foreground">{Math.min(page * limit, total)}</strong> de <strong className="font-semibold text-foreground">{total}</strong> usuarios
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="inline-flex items-center justify-center rounded-xl border border-border/50 bg-background/50 hover:bg-muted text-foreground size-8 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    Pág. <strong className="font-semibold text-foreground">{page}</strong> de {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="inline-flex items-center justify-center rounded-xl border border-border/50 bg-background/50 hover:bg-muted text-foreground size-8 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </div>
+              </div>
             </GlassCard>
           </motion.div>
         )}
@@ -450,6 +522,20 @@ export function ManageUsers() {
                 className="glass-input rounded-xl px-4 py-2.5 h-auto text-sm"
               />
             </div>
+            {editingUser && (
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] border border-white/5">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium text-foreground block">Estado de la Cuenta</label>
+                  <span className="text-xs text-muted-foreground">Permitir el acceso al usuario</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+                  className="size-5 rounded border-white/10 bg-slate-800 text-teal-500 focus:ring-0 cursor-pointer accent-teal-500"
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
