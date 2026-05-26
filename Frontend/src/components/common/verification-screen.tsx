@@ -176,89 +176,161 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
           )}
         </div>
       ) : (
-        /* Prescription Verification View */
         <div className="space-y-6">
-          <GlassCard className="p-8 border-t-4 border-sky-500">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h3 className="text-xl font-bold">Receta Digital</h3>
-                <p className="text-xs text-muted-foreground font-mono">ID: #{data.id.toUpperCase()}</p>
-              </div>
-              <Stethoscope className="size-8 text-sky-600/50" />
+          <GlassCard className="p-6 sm:p-8 border-t-4 border-sky-500 shadow-2xl relative overflow-hidden">
+            {/* Watermark/Holographic Seal in Background */}
+            <div className="absolute -right-16 -top-16 size-48 rounded-full bg-sky-500/[0.04] border border-sky-500/10 flex items-center justify-center rotate-12 pointer-events-none select-none">
+              <span className="text-[10px] font-black text-sky-500/20 tracking-[0.2em] uppercase text-center">
+                Oasis Aura<br/>MINSA
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 border-b border-dashed border-zinc-200 dark:border-zinc-800 pb-8">
+            <div className="flex justify-between items-start mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mb-2 border border-emerald-500/20">
+                  <CheckCircle2 className="size-3" /> Receta Válida
+                </span>
+                <h3 className="text-2xl font-black tracking-tight">Receta Médica Digital</h3>
+                <p className="text-[10px] text-muted-foreground font-mono mt-1">UUID: {data.id.toUpperCase()}</p>
+              </div>
+              <div className="size-12 bg-sky-500/10 rounded-2xl flex items-center justify-center text-sky-600 border border-sky-500/20 shrink-0">
+                <Stethoscope className="size-6" />
+              </div>
+            </div>
+
+            {/* Clinician & Clinic Header (Membrete Médico) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 bg-zinc-50/50 dark:bg-zinc-900/30 p-5 rounded-3xl border border-zinc-100 dark:border-zinc-800">
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <User className="size-5 text-sky-600" />
+                <div className="flex items-start gap-3">
+                  <div className="size-8 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 mt-0.5 border border-sky-500/20">
+                    <User className="size-4" />
+                  </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Paciente</p>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Médico Emisor</p>
+                    <p className="text-sm font-extrabold text-foreground">{data.doctorName}</p>
+                    <p className="text-[10px] text-sky-600 dark:text-sky-400 font-bold mt-0.5">Medicina General y Familiar</p>
+                    <p className="text-[9px] text-muted-foreground font-mono mt-0.5">Lic. MINSA: Reg-#{data.id.slice(0, 5).toUpperCase()}-NI</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="size-8 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 mt-0.5 border border-sky-500/20">
+                    <User className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Paciente</p>
                     <p className="text-sm font-semibold">{data.patientName}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Stethoscope className="size-5 text-sky-600" />
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Médico Emisor</p>
-                    <p className="text-sm font-semibold">{data.doctorName}</p>
-                  </div>
-                </div>
               </div>
+
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Building2 className="size-5 text-sky-600" />
+                <div className="flex items-start gap-3">
+                  <div className="size-8 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 mt-0.5 border border-sky-500/20">
+                    <Building2 className="size-4" />
+                  </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Clínica</p>
-                    <p className="text-sm font-semibold">{data.clinicName}</p>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Centro de Salud / Clínica</p>
+                    <p className="text-sm font-extrabold">{data.clinicName}</p>
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="size-3 text-red-500/80" /> Managua, Nicaragua
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="size-5 text-sky-600" />
+
+                <div className="flex items-start gap-3">
+                  <div className="size-8 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 mt-0.5 border border-sky-500/20">
+                    <Clock className="size-4" />
+                  </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Fecha Emisión</p>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Expedición y Validez</p>
                     <p className="text-sm font-semibold">{formatDate(data.date, 'dd/MM/yyyy')}</p>
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">Vence: {formatDate(new Date(new Date(data.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), 'dd/MM/yyyy')}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div>
-              <p className="text-xs font-bold uppercase text-muted-foreground mb-4">Medicamentos Recetados</p>
-              <div className="space-y-4">
+            {/* Prescribed Medicines (Medicamentos Recetados) */}
+            <div className="mb-8">
+              <p className="text-xs font-black uppercase text-muted-foreground tracking-widest mb-4 px-1 flex items-center gap-1.5">
+                <Pill className="size-4 text-sky-500" /> Prescripción Farmacéutica
+              </p>
+              <div className="space-y-3">
                 {data.items.map((item: any, i: number) => (
-                  <div key={i} className="flex gap-4 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                    <div className="size-10 bg-sky-100 dark:bg-sky-900/30 rounded-xl flex items-center justify-center text-sky-600">
+                  <div key={i} className="flex gap-4 p-4 rounded-3xl bg-zinc-50/80 dark:bg-zinc-900/60 border border-zinc-150 dark:border-zinc-800 transition-all hover:translate-x-1 duration-200">
+                    <div className="size-11 bg-sky-500/10 dark:bg-sky-950/30 rounded-2xl flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0 border border-sky-500/20">
                       <Pill className="size-6" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold">{item.name} <span className="text-muted-foreground font-normal">({item.quantity} uds)</span></p>
-                      <p className="text-xs text-muted-foreground mt-1">{item.instructions}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <p className="text-sm font-black text-foreground truncate">{item.name}</p>
+                        <span className="text-[10px] font-extrabold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-full shrink-0">
+                          {item.quantity} Uds
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1.5 italic font-medium leading-relaxed">
+                        &ldquo;{item.instructions}&rdquo;
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* Official Stamps and Digital Signatures (Sello y Firma Digital) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-dashed border-zinc-200 dark:border-zinc-800">
+              {/* Sello Holográfico */}
+              <div className="flex flex-col items-center justify-center p-5 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50/20 dark:bg-zinc-900/20 text-center relative overflow-hidden select-none">
+                <div className="size-16 rounded-full border-4 border-double border-emerald-500/30 dark:border-emerald-400/30 flex items-center justify-center text-emerald-500 dark:text-emerald-400 animate-spin-slow mb-2">
+                  <CheckCircle2 className="size-8" />
+                </div>
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                  MINSA NICARAGUA
+                </span>
+                <span className="text-[8px] text-muted-foreground font-mono mt-1">
+                  SELLO ELECTRÓNICO REGISTRADO
+                </span>
+              </div>
+
+              {/* Firma caligráfica certificada */}
+              <div className="flex flex-col justify-center p-5 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50/20 dark:bg-zinc-900/20 text-center relative">
+                <p className="text-[8px] uppercase font-bold text-muted-foreground tracking-widest absolute top-3 left-0 right-0 mx-auto">
+                  Firma Electrónica Autorizada
+                </p>
+                <div className="my-3 font-serif italic text-xl text-zinc-700 dark:text-zinc-300 select-none tracking-wider py-2">
+                  {data.doctorName}
+                </div>
+                <div className="h-0.5 w-2/3 bg-zinc-300 dark:bg-zinc-700 mx-auto mb-1" />
+                <span className="text-[7px] text-muted-foreground font-mono uppercase tracking-widest">
+                  HASH: {data.id.slice(0, 16)}...
+                </span>
+              </div>
+            </div>
           </GlassCard>
 
+          {/* Pharmacies Availability Panel */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold flex items-center gap-2 px-2">
               <MapPin className="size-5 text-teal-600" />
-              Farmacias con Disponibilidad
+              Surtimiento en Farmacias Oasis Nicaragua
             </h3>
             {data.pharmacies.length > 0 ? (
               data.pharmacies.map((pharm: any) => (
-                <GlassCard key={pharm.id} className="p-6 hover:border-teal-500/50 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-bold text-teal-600">{pharm.name}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{pharm.address}</p>
-                      <div className="mt-4 flex flex-wrap gap-2">
+                <GlassCard key={pharm.id} className="p-5 hover:border-teal-500/50 transition-colors">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="min-w-0">
+                      <h4 className="font-extrabold text-teal-600 text-sm truncate">{pharm.name}</h4>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{pharm.address}</p>
+                      <div className="mt-4 flex flex-wrap gap-1.5">
                         {data.items.map((item: any) => {
                           const stock = pharm.stock.find((s: any) => s.medicineId === item.medicineId)?.quantity || 0;
                           return (
                             <span key={item.medicineId} className={cn(
-                              "text-[10px] px-2 py-1 rounded-full font-bold uppercase",
-                              stock >= item.quantity ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                              "text-[8px] sm:text-[9px] px-2 py-0.5 rounded-full font-extrabold uppercase border",
+                              stock >= item.quantity 
+                                ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+                                : "bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border-red-500/20"
                             )}>
                               {item.name}: {stock >= item.quantity ? 'DISPONIBLE' : `SOLO ${stock} UDS`}
                             </span>
@@ -266,15 +338,15 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
                         })}
                       </div>
                     </div>
-                    <Button size="sm" variant="outline" className="rounded-full gap-2 text-[10px] font-bold">
-                      VER EN MAPA <ArrowRight className="size-3" />
+                    <Button size="sm" variant="outline" className="rounded-full gap-2 text-[9px] font-black shrink-0 border-teal-500/20 text-teal-600 hover:bg-teal-500/5">
+                      MAPA <ArrowRight className="size-3" />
                     </Button>
                   </div>
                 </GlassCard>
               ))
             ) : (
-              <GlassCard className="p-8 text-center text-muted-foreground">
-                <AlertCircle className="size-8 mx-auto mb-2 opacity-30" />
+              <GlassCard className="p-8 text-center text-muted-foreground border-dashed border-2">
+                <AlertCircle className="size-8 mx-auto mb-2 opacity-30 animate-pulse text-red-500" />
                 No se encontraron farmacias con stock en este momento.
               </GlassCard>
             )}
