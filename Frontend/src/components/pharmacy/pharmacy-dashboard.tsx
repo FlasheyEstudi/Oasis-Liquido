@@ -252,7 +252,7 @@ export function PharmacyDashboard() {
               <div className="absolute -inset-2 bg-gradient-to-r from-teal-500 to-sky-500 rounded-[2rem] opacity-20 blur-xl group-hover:opacity-40 transition-opacity" />
               <div className="relative glass-strong rounded-3xl p-2 border border-white/20 shadow-2xl transition-transform group-hover:scale-105">
                 <QrCode 
-                  value={`pharmacy-id-${pharmacyId}`} 
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/pasaporte/${user?.id}`} 
                   size={90} 
                   label="FARMACIA ID"
                   className="bg-white rounded-2xl"

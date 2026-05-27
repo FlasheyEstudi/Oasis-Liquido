@@ -119,12 +119,57 @@ export async function GET(
       const user = await db.user.findUnique({
         where: { id },
         include: {
-          patientProfile: true
+          patientProfile: true,
+          doctorProfile: { include: { clinic: true } },
+          pharmacyManagerProfile: { include: { pharmacy: true } },
+          deliveryDriverProfile: { include: { pharmacy: true } }
         }
       });
 
-      if (!user || user.role !== 'patient') {
-        return errorResponse(ErrorCodes.NOT_FOUND, 'Paciente no encontrado', 404);
+      if (!user) {
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Usuario no encontrado', 404);
+      }
+
+      if (user.role === 'pharmacy') {
+        const data = {
+          type: 'pharmacy',
+          id: user.id,
+          name: user.name,
+          verificationStatus: user.verificationStatus,
+          date: user.createdAt,
+          pharmacyName: user.pharmacyManagerProfile?.pharmacy?.name || 'Oasis Farmacia',
+          pharmacyAddress: user.pharmacyManagerProfile?.pharmacy?.address || 'Nicaragua',
+          pharmacyPhone: user.pharmacyManagerProfile?.pharmacy?.phone || user.phone || 'N/A'
+        };
+        return successResponse(data);
+      }
+
+      if (user.role === 'doctor') {
+        const data = {
+          type: 'doctor',
+          id: user.id,
+          name: user.name,
+          verificationStatus: user.verificationStatus,
+          date: user.createdAt,
+          specialty: user.doctorProfile?.specialty || 'Medicina General',
+          licenseNumber: user.doctorProfile?.licenseNumber || 'N/A',
+          clinicName: user.doctorProfile?.clinic?.name || 'Centro Clínico Oasis'
+        };
+        return successResponse(data);
+      }
+
+      if (user.role === 'delivery') {
+        const data = {
+          type: 'delivery',
+          id: user.id,
+          name: user.name,
+          verificationStatus: user.verificationStatus,
+          date: user.createdAt,
+          vehicleType: user.deliveryDriverProfile?.vehicleType || 'Motocicleta',
+          licensePlate: user.deliveryDriverProfile?.licensePlate || 'N/A',
+          pharmacyName: user.deliveryDriverProfile?.pharmacy?.name || 'Oasis Aura'
+        };
+        return successResponse(data);
       }
 
       const data = {
