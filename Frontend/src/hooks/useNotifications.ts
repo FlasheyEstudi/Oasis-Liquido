@@ -11,6 +11,8 @@ import {
 import { post } from '@/api/client';
 import { useAuthStore } from '@/store/auth-store';
 
+import { toast } from 'sonner';
+
 export function useNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(true);
@@ -75,6 +77,9 @@ export function useNotifications() {
       if (payload.notification) {
         console.log('📨 Notification:', payload.notification.title, payload.notification.body);
         // Custom window alerts or toast can be fired here
+        toast.info(
+          `🔔 ${payload.notification.title || 'Mensaje de Oasis'}\n${payload.notification.body || ''}`
+        );
       }
     });
     
@@ -84,18 +89,24 @@ export function useNotifications() {
   // Solicitar permiso manualmente
   const requestPermission = async () => {
     if (!isSupported) {
-      console.warn('⚠️ Notifications not supported');
+      toast.error('Este navegador no soporta notificaciones de inserción.');
       return false;
     }
     
     if (!hasValidConfig) {
-      console.warn('⚠️ Firebase not configured');
+      toast.error('Firebase no está configurado en producción (Faltan variables de entorno).');
       return false;
     }
     
+    const loadingToast = toast.loading('Solicitando permisos de notificaciones...');
+    
     try {
       const registration = await registerServiceWorker();
-      if (!registration) return false;
+      if (!registration) {
+        toast.dismiss(loadingToast);
+        toast.error('No se pudo registrar el Service Worker de notificaciones.');
+        return false;
+      }
       
       const token = await requestFirebaseToken(registration);
       if (token) {
@@ -105,11 +116,24 @@ export function useNotifications() {
         });
         setPermission('granted');
         setIsEnabled(true);
+        toast.dismiss(loadingToast);
+        toast.success('🎉 ¡Notificaciones activadas con éxito!');
         return true;
+      } else {
+        toast.dismiss(loadingToast);
+        // Analizar qué podría fallar de manera específica
+        const checkPermission = Notification.permission;
+        if (checkPermission === 'denied') {
+          toast.error('Permiso bloqueado por el navegador. Habilítalo en los ajustes del sitio.');
+        } else {
+          toast.error('No se recibió la clave VAPID de Firebase. Verifica tus variables de entorno.');
+        }
+        return false;
       }
-      return false;
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
       console.error('❌ Error requesting permission:', error);
+      toast.error(`Error al activar notificaciones: ${error?.message || 'Error desconocido'}`);
       return false;
     }
   };
