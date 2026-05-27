@@ -264,7 +264,7 @@ export function PrescriptionList() {
           {qrDialog && (
             <div className="flex flex-col items-center py-2">
               <QrCode 
-                value={qrDialog.qr_code_data} 
+                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#prescription-${qrDialog.id}`} 
                 size={160} 
                 label="Receta Médica"
               />

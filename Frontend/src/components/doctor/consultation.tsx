@@ -169,7 +169,8 @@ export function Consultation() {
         lines,
       });
 
-      setCreatedPrescriptionQr(prescription.qr_code_data);
+      const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#prescription-${prescription.id}`;
+      setCreatedPrescriptionQr(verifyUrl);
       setNotification({ type: 'success', message: 'Receta firmada y emitida correctamente' });
       setPinModalOpen(false);
     } catch (err: any) {

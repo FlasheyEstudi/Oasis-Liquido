@@ -193,7 +193,7 @@ export function PrescriptionDetail() {
           {/* QR Code */}
           <div className="mt-6 flex justify-center">
             <QrCode 
-              value={`https://oasis-aura.com/#verify-prescription-${prescription.id}`} 
+              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#prescription-${prescription.id}`} 
               size={160} 
               label="Receta Digital"
             />
