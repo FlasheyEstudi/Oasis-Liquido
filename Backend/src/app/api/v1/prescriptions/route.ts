@@ -59,6 +59,9 @@ export const POST = withAuth(
       if (error.message === 'DOCTOR_NOT_VERIFIED') {
         return errorResponse(ErrorCodes.FORBIDDEN, 'Tu acreditación profesional no está aprobada por el MINSA. No puedes emitir recetas.', 403);
       }
+      if (error.message === 'PIN_NOT_CONFIGURED') {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'PIN_NOT_CONFIGURED', 403);
+      }
       if (error.message === 'INCORRECT_PIN') {
         return errorResponse(ErrorCodes.FORBIDDEN, 'PIN de firma incorrecto', 403);
       }

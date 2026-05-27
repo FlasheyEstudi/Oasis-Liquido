@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import apiClient from '@/api/client';
 import { checkDrugInteractions } from '@/utils/drug-interactions';
 import {
   useAppointment,
@@ -88,6 +89,9 @@ export function Consultation() {
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [signaturePin, setSignaturePin] = useState('');
   const [pinError, setPinError] = useState('');
+  const [isConfiguringPin, setIsConfiguringPin] = useState(false);
+  const [accountPassword, setAccountPassword] = useState('');
+  const [isSettingPinLoading, setIsSettingPinLoading] = useState(false);
 
   const createAppointmentMutation = useCreateAppointment();
   const [isSchedulingFollowUp, setIsSchedulingFollowUp] = useState(false);
@@ -144,6 +148,37 @@ export function Consultation() {
     }
   };
 
+  const handleConfigurePin = async () => {
+    if (signaturePin.length !== 4) {
+      setPinError('El PIN debe ser exactamente de 4 dígitos');
+      return;
+    }
+    if (!accountPassword) {
+      setPinError('La contraseña de tu cuenta es requerida');
+      return;
+    }
+
+    setIsSettingPinLoading(true);
+    setPinError('');
+    try {
+      await apiClient.post('/v1/doctor/profile/pin', {
+        pin: signaturePin,
+        password: accountPassword,
+      });
+      
+      setNotification({ type: 'success', message: 'PIN de firma digital configurado correctamente' });
+      // Proceed to sign the prescription immediately with the newly configured PIN!
+      await handleCreatePrescription(signaturePin);
+    } catch (err: any) {
+      console.error(err);
+      const errMsg = err?.response?.data?.message || 'Error al configurar el PIN de firma';
+      setPinError(errMsg);
+      setNotification({ type: 'error', message: errMsg });
+    } finally {
+      setIsSettingPinLoading(false);
+    }
+  };
+
   const handleCreatePrescription = async (pin: string) => {
     if (!appointment) return;
     if (prescriptionLines.some((l) => !l.medicine_id)) {
@@ -173,11 +208,20 @@ export function Consultation() {
       setCreatedPrescriptionQr(verifyUrl);
       setNotification({ type: 'success', message: 'Receta firmada y emitida correctamente' });
       setPinModalOpen(false);
+      setIsConfiguringPin(false);
+      setAccountPassword('');
+      setSignaturePin('');
     } catch (err: any) {
       console.error(err);
-      const errMsg = err?.response?.data?.message || 'PIN de firma incorrecto o perfil no verificado';
-      setPinError(errMsg);
-      setNotification({ type: 'error', message: errMsg });
+      const errMsg = err?.response?.data?.message || err?.message || 'PIN de firma incorrecto o perfil no verificado';
+      
+      if (errMsg === 'PIN_NOT_CONFIGURED') {
+        setIsConfiguringPin(true);
+        setPinError('Parece que es tu primera receta. Configura tu PIN de firma de 4 dígitos ingresando tu contraseña de cuenta.');
+      } else {
+        setPinError(errMsg);
+        setNotification({ type: 'error', message: errMsg });
+      }
     }
   };
 
@@ -719,18 +763,22 @@ export function Consultation() {
                 <div className="size-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mx-auto mb-4 animate-pulse">
                   <Lock className="size-8" />
                 </div>
-                <h3 className="text-xl font-bold tracking-tight">Firma Digital Requerida</h3>
+                <h3 className="text-xl font-bold tracking-tight">
+                  {isConfiguringPin ? 'Configurar PIN de Firma' : 'Firma Digital Requerida'}
+                </h3>
                 <p className="text-xs text-gray-400 mt-2">
-                  Por favor, ingresa tu PIN de firma digital para firmar electrónicamente la receta de <span className="font-bold text-teal-400">{patient?.name}</span>.
-                </p>
-                <p className="text-[10px] text-gray-500 mt-1 italic">
-                  * Si es tu primera receta, el PIN ingresado se registrará como tu PIN de firma.
+                  {isConfiguringPin 
+                    ? 'Para tu seguridad y cumplimiento legal, ingresa la contraseña de tu cuenta de Oasis para guardar tu nuevo PIN de 4 dígitos.' 
+                    : `Por favor, ingresa tu PIN de firma digital para firmar electrónicamente la receta de `}
+                  {!isConfiguringPin && <span className="font-bold text-teal-400">{patient?.name}</span>}
                 </p>
               </div>
 
               <div className="space-y-4 mb-6">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">PIN de Firma Digital</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    {isConfiguringPin ? 'Nuevo PIN de 4 dígitos' : 'PIN de Firma Digital'}
+                  </label>
                   <input
                     type="password"
                     maxLength={4}
@@ -742,13 +790,30 @@ export function Consultation() {
                     }}
                     className="w-full h-12 text-center text-lg tracking-[0.5em] bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
                   />
-                  {pinError && (
-                    <div className="flex items-center gap-1.5 text-[10px] text-red-400 font-bold mt-1 bg-red-500/10 p-2 rounded-lg">
-                      <ShieldAlert className="size-3.5 shrink-0" />
-                      <span>{pinError}</span>
-                    </div>
-                  )}
                 </div>
+
+                {isConfiguringPin && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contraseña de tu Cuenta</label>
+                    <input
+                      type="password"
+                      placeholder="Contraseña de Oasis"
+                      value={accountPassword}
+                      onChange={(e) => {
+                        setAccountPassword(e.target.value);
+                        if (pinError) setPinError('');
+                      }}
+                      className="w-full h-10 px-3 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm"
+                    />
+                  </div>
+                )}
+
+                {pinError && (
+                  <div className="flex items-start gap-1.5 text-[10px] text-red-400 font-bold mt-1 bg-red-500/10 p-2.5 rounded-xl leading-normal">
+                    <ShieldAlert className="size-4 shrink-0 mt-0.5" />
+                    <span>{pinError}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3">
@@ -758,23 +823,31 @@ export function Consultation() {
                   onClick={() => {
                     setPinModalOpen(false);
                     setPinError('');
+                    setIsConfiguringPin(false);
+                    setAccountPassword('');
+                    setSignaturePin('');
                   }}
-                  disabled={createPrescriptionMutation.isPending}
+                  disabled={createPrescriptionMutation.isPending || isSettingPinLoading}
                 >
                   Cancelar
                 </Button>
                 <Button 
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold animate-pulse"
-                  disabled={signaturePin.trim().length !== 4 || createPrescriptionMutation.isPending}
-                  onClick={() => handleCreatePrescription(signaturePin)}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold"
+                  disabled={
+                    signaturePin.trim().length !== 4 || 
+                    (isConfiguringPin && !accountPassword) || 
+                    createPrescriptionMutation.isPending || 
+                    isSettingPinLoading
+                  }
+                  onClick={isConfiguringPin ? handleConfigurePin : () => handleCreatePrescription(signaturePin)}
                 >
-                  {createPrescriptionMutation.isPending ? (
+                  {createPrescriptionMutation.isPending || isSettingPinLoading ? (
                     <>
                       <Loader2 className="size-4 animate-spin mr-1" />
-                      Firmando...
+                      Procesando...
                     </>
                   ) : (
-                    'Firmar Receta'
+                    isConfiguringPin ? 'Configurar y Firmar' : 'Firmar Receta'
                   )}
                 </Button>
               </div>

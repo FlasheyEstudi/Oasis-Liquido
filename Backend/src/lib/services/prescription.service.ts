@@ -135,21 +135,17 @@ export async function createPrescription(
 
   const doctorProfile = doctor.doctorProfile;
 
-  let finalHashedPin = doctorProfile.signaturePin;
+  const finalHashedPin = doctorProfile.signaturePin;
 
-  // 2. Default PIN flow (if no PIN is configured, set this one as default)
-  if (!doctorProfile.signaturePin) {
-    finalHashedPin = await hashPassword(data.signature_pin);
-    await db.doctorProfile.update({
-      where: { userId: doctorId },
-      data: { signaturePin: finalHashedPin },
-    });
-  } else {
-    // 3. Verify PIN
-    const isValid = await verifyPassword(data.signature_pin, doctorProfile.signaturePin);
-    if (!isValid) {
-      throw new Error('INCORRECT_PIN');
-    }
+  // 2. Enforce pre-configured PIN signature
+  if (!finalHashedPin) {
+    throw new Error('PIN_NOT_CONFIGURED');
+  }
+
+  // 3. Verify PIN
+  const isValid = await verifyPassword(data.signature_pin, finalHashedPin);
+  if (!isValid) {
+    throw new Error('INCORRECT_PIN');
   }
 
   // 4. Generate verification code & QR code
