@@ -115,6 +115,30 @@ export async function GET(
 
       return successResponse(data);
     }
+    if (type === 'patient') {
+      const user = await db.user.findUnique({
+        where: { id },
+        include: {
+          patientProfile: true
+        }
+      });
+
+      if (!user || user.role !== 'patient') {
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Paciente no encontrado', 404);
+      }
+
+      const data = {
+        type: 'patient',
+        id: user.id,
+        name: user.name,
+        verificationStatus: user.verificationStatus,
+        date: user.createdAt,
+        bloodType: user.patientProfile?.bloodType || 'N/A',
+        allergies: user.patientProfile?.allergies || []
+      };
+
+      return successResponse(data);
+    }
 
     return errorResponse(ErrorCodes.BAD_REQUEST, 'Tipo de verificación inválido', 400);
   } catch (error: any) {

@@ -236,7 +236,7 @@ export function ProfileScreen() {
           >
             <div className="absolute -inset-1 rounded-2xl bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
             <QrCode 
-              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#patient-${profile.id}`} 
+              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verificar-paciente-${profile.id}`} 
               size={64} 
               label="Ver ID"
               showValue={false}
@@ -912,7 +912,7 @@ export function ProfileScreen() {
                 />
                 
                 <QrCode 
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#patient-${profile.id}`} 
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verificar-paciente-${profile.id}`} 
                   size={220} 
                   label="ID DIGITAL"
                   showValue={false}

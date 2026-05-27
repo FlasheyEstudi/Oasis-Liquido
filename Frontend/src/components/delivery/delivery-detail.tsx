@@ -155,6 +155,9 @@ export function DeliveryDetail() {
     if (scannedPatientId.includes('#patient-')) {
       const parts = scannedPatientId.split('#patient-');
       scannedPatientId = `patient-id-${parts[parts.length - 1]}`;
+    } else if (scannedPatientId.includes('/verificar-paciente-')) {
+      const parts = scannedPatientId.split('/verificar-paciente-');
+      scannedPatientId = `patient-id-${parts[parts.length - 1]}`;
     } else if (scannedPatientId.includes('/verify#patient-')) {
       const parts = scannedPatientId.split('/verify#patient-');
       scannedPatientId = `patient-id-${parts[parts.length - 1]}`;

@@ -16,7 +16,8 @@ import {
   MapPin, 
   AlertCircle,
   Loader2,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -351,6 +352,137 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
               </GlassCard>
             )}
           </div>
+      )}
+
+      {data.type === 'patient' && (
+        <div className="space-y-6">
+          <GlassCard className="p-8 border-t-4 border-teal-500 overflow-hidden relative">
+            {/* Watermark */}
+            <div className="absolute -right-16 -top-16 size-44 rounded-full bg-teal-500/[0.02] border border-teal-500/10 flex items-center justify-center rotate-12 pointer-events-none select-none">
+              <span className="text-[8px] font-black text-teal-500/20 tracking-[0.2em] uppercase text-center leading-normal">
+                Pasaporte<br/>Digital
+              </span>
+            </div>
+
+            <div className="flex justify-between items-start mb-8 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+              <div>
+                <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Expediente Clínico Verificado</h3>
+                <p className="text-xs text-muted-foreground font-mono mt-1">ID Único: #{data.id.toUpperCase()}</p>
+              </div>
+              <ShieldCheck className="size-8 text-teal-600/50" />
+            </div>
+
+            {/* Grid de Información del Paciente */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 border border-teal-500/20 shrink-0">
+                    <User className="size-5" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Nombre Completo</p>
+                    <p className="text-sm font-black text-foreground">{data.name}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-600 border border-sky-500/20 shrink-0">
+                    <Clock className="size-5" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Miembro Desde</p>
+                    <p className="text-sm font-semibold text-foreground">{formatDate(data.date, 'dd/MM/yyyy')}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 border border-emerald-500/20 shrink-0">
+                    <CheckCircle2 className="size-5" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Estatus del Carnet</p>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mt-1">
+                      ACTIVO / HOMOLOGADO
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 border border-teal-500/20 shrink-0">
+                    <ShieldCheck className="size-5" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Acreditación Legal</p>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-teal-100 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 border border-teal-500/20 mt-1">
+                      VERIFICACIÓN MINSA APROBADA
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalles Médicos Cruciales para Emergencias */}
+            <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800 py-6 space-y-6">
+              <div>
+                <p className="text-xs font-black uppercase text-muted-foreground tracking-widest mb-3">Información de Emergencia</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Tipo de Sangre */}
+                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800">
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Tipo de Sangre</p>
+                    <p className="text-lg font-black text-red-600 dark:text-red-400 mt-1">{data.bloodType}</p>
+                  </div>
+
+                  {/* Alergias Registradas */}
+                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800">
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Alergias Conocidas</p>
+                    {data.allergies && data.allergies.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {data.allergies.map((allergy: string, i: number) => (
+                          <span key={i} className="text-[9px] font-extrabold bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/25 uppercase">
+                            {allergy}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic mt-2">Ninguna alergia reportada</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sello y Firmas del Carnet Digital */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-dashed border-zinc-200 dark:border-zinc-800">
+              {/* Sello Holográfico */}
+              <div className="flex flex-col items-center justify-center p-5 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50/20 dark:bg-zinc-900/20 text-center relative overflow-hidden select-none">
+                <div className="size-16 rounded-full border-4 border-double border-emerald-500/30 dark:border-emerald-400/30 flex items-center justify-center text-emerald-500 dark:text-emerald-400 mb-2 animate-pulse">
+                  <ShieldCheck className="size-8" />
+                </div>
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                  OASIS AURA VERIFIED
+                </span>
+                <span className="text-[8px] text-muted-foreground font-mono mt-1">
+                  CARNET HOMOLOGADO MINSA
+                </span>
+              </div>
+
+              {/* Registro Criptográfico */}
+              <div className="flex flex-col justify-center p-5 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50/20 dark:bg-zinc-900/20 text-center relative">
+                <p className="text-[8px] uppercase font-bold text-muted-foreground tracking-widest absolute top-3 left-0 right-0 mx-auto">
+                  Certificado de Seguridad Digital
+                </p>
+                <div className="my-4 font-mono text-[10px] text-zinc-700 dark:text-zinc-300 py-2 break-all uppercase font-semibold">
+                  SEC-HASH-PAC-{data.id.slice(0, 16)}
+                </div>
+                <div className="h-0.5 w-2/3 bg-zinc-300 dark:bg-zinc-700 mx-auto mb-1" />
+                <span className="text-[7px] text-muted-foreground font-mono uppercase tracking-widest">
+                  Validez Criptográfica Permanente
+                </span>
+              </div>
+            </div>
+          </GlassCard>
         </div>
       )}
       

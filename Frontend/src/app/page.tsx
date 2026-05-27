@@ -242,6 +242,10 @@ export default function Home() {
           const id = page.replace('verificar-receta-', '');
           return <VerificationScreen type="prescription" id={id} />;
         }
+        if (page.startsWith('verificar-paciente-')) {
+          const id = page.replace('verificar-paciente-', '');
+          return <VerificationScreen type="patient" id={id} />;
+        }
         
         return (
           <div className="flex min-h-[50vh] items-center justify-center">
