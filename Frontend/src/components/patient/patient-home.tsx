@@ -280,7 +280,7 @@ export function PatientHome() {
               <div className="relative glass-strong rounded-[1.8rem] p-0.5 border border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-105 active:scale-95">
                 <div className="overflow-hidden rounded-[1.6rem] bg-black/5 dark:bg-white/5">
                   <QrCode 
-                    value={`patient-id-${user?.id}`} 
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/pasaporte/${user?.id}`} 
                     size={75} 
                     label="PASAPORTE"
                     className="scale-90"
