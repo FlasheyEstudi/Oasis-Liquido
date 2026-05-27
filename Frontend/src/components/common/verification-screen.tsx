@@ -89,7 +89,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
         <p className="text-sm text-muted-foreground mt-2 font-medium">Este es un documento oficial emitido por Oasis Aura</p>
       </motion.div>
 
-      {data.type === 'sale' ? (
+      {data.type === 'sale' && (
         <div className="space-y-6">
           <GlassCard className="p-8 border-t-4 border-teal-500">
             <div className="flex justify-between items-start mb-8">
@@ -176,7 +176,9 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
             </GlassCard>
           )}
         </div>
-      ) : (
+      )}
+
+      {data.type === 'prescription' && (
         <div className="space-y-6">
           <GlassCard className="p-6 sm:p-8 border-t-4 border-sky-500 shadow-2xl relative overflow-hidden">
             {/* Watermark/Holographic Seal in Background */}
@@ -352,6 +354,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
               </GlassCard>
             )}
           </div>
+        </div>
       )}
 
       {data.type === 'patient' && (
