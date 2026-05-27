@@ -229,6 +229,33 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
+  // Handle ChunkLoadError globally and reload page automatically to fetch the newest deployment
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      const errorMsg = event.message || '';
+      if (errorMsg.includes('ChunkLoadError') || errorMsg.includes('Failed to load chunk')) {
+        console.warn('Oasis Auto-Recovery: ChunkLoadError detected, reloading page...');
+        window.location.reload();
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const errorMsg = event.reason?.message || event.reason?.name || '';
+      if (errorMsg.includes('ChunkLoadError') || errorMsg.includes('Failed to load chunk')) {
+        console.warn('Oasis Auto-Recovery: ChunkLoadError in promise detected, reloading page...');
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   const sidebarExpanded = isDesktop && (sidebarPinned || sidebarHovered);
   const sidebarWidth = isDesktop ? (sidebarExpanded ? 260 : 72) : 0;
 
