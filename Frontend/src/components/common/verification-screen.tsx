@@ -358,134 +358,197 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
       )}
 
       {data.type === 'patient' && (
-        <div className="space-y-6">
-          <GlassCard className="p-8 border-t-4 border-teal-500 overflow-hidden relative">
-            {/* Watermark */}
-            <div className="absolute -right-16 -top-16 size-44 rounded-full bg-teal-500/[0.02] border border-teal-500/10 flex items-center justify-center rotate-12 pointer-events-none select-none">
-              <span className="text-[8px] font-black text-teal-500/20 tracking-[0.2em] uppercase text-center leading-normal">
-                Pasaporte<br/>Digital
+        <div className="space-y-8">
+          {/* Tarjeta de Identidad Digital Interactiva (Efecto Tarjeta Física Premium) */}
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 30 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 100, damping: 15 }}
+            className="relative w-full max-w-lg mx-auto aspect-[1.586/1] rounded-[2.5rem] overflow-hidden text-white shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-teal-500/30 group"
+          >
+            {/* Fondo Base con Gradiente Satinado y Profundo */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-teal-950 to-zinc-950" />
+            
+            {/* Capa de Brillo Holográfico y Destellos Reactivos */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(20,184,166,0.2),transparent)] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 via-purple-500/5 to-emerald-500/10 opacity-70 mix-blend-overlay pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-teal-400/40 to-transparent" />
+
+            {/* Marca de Agua Texturizada MINSA en el fondo */}
+            <div className="absolute -right-20 -bottom-20 size-64 rounded-full border border-teal-500/[0.04] bg-teal-500/[0.01] flex items-center justify-center rotate-12 pointer-events-none select-none">
+              <span className="text-[10px] font-black text-teal-400/10 tracking-[0.3em] uppercase text-center leading-normal">
+                REPÚBLICA DE NICARAGUA<br/>MINISTERIO DE SALUD
               </span>
             </div>
 
-            <div className="flex justify-between items-start mb-8 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-              <div>
-                <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Expediente Clínico Verificado</h3>
-                <p className="text-xs text-muted-foreground font-mono mt-1">ID Único: #{data.id.toUpperCase()}</p>
+            {/* Contenido Principal de la Tarjeta */}
+            <div className="absolute inset-0 p-6 sm:p-7 flex flex-col justify-between z-10 select-none">
+              {/* Header: Oasis Logo y Acreditación Oficial */}
+              <div className="flex justify-between items-start border-b border-white/10 pb-3">
+                <div>
+                  <h3 className="text-base sm:text-lg font-black tracking-[0.15em] text-teal-300 uppercase flex items-center gap-2">
+                    <span className="inline-block size-3 rounded-full bg-teal-400 shadow-[0_0_10px_#2dd4bf] animate-pulse" />
+                    OASIS LÍQUIDA
+                  </h3>
+                  <p className="text-[7px] sm:text-[8px] text-teal-400/70 font-mono tracking-widest uppercase mt-0.5">PASAPORTE DIGITAL DE SALUD</p>
+                </div>
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/35 uppercase">
+                    MINSA ACREDITADO
+                  </span>
+                </div>
               </div>
-              <ShieldCheck className="size-8 text-teal-600/50" />
+
+              {/* Centro de la Tarjeta: Layout Realista de Carnet */}
+              <div className="grid grid-cols-12 gap-4 items-center my-4">
+                {/* Columna Izquierda: Foto de Perfil & Chip Inteligente */}
+                <div className="col-span-4 flex flex-col gap-3 items-center">
+                  {/* Foto de Perfil con Estilo Holográfico */}
+                  <div className="relative size-20 sm:size-24 rounded-2xl bg-zinc-900/90 border-2 border-teal-500/40 flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(20,184,166,0.25)] group-hover:border-teal-400 transition-colors">
+                    <User className="size-10 sm:size-12 text-teal-400/40" />
+                    {/* Efecto de Escáner Clínico Láser */}
+                    <div className="absolute left-0 top-0 w-full h-[2px] bg-gradient-to-r from-transparent via-teal-400 to-transparent shadow-[0_0_10px_#2dd4bf] animate-scan pointer-events-none" />
+                    {/* Hologram Overlay Grid */}
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0)_95%,rgba(20,184,166,0.15)_95%)] bg-[size:100%_4px] pointer-events-none mix-blend-overlay" />
+                  </div>
+
+                  {/* Chip Inteligente Simulado (Metalizado Dorado) */}
+                  <div className="w-10 h-7 bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 rounded-md border border-amber-400/40 relative shadow-inner overflow-hidden flex flex-col justify-between p-1 opacity-90">
+                    <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60">
+                      <div className="border-r border-amber-950/20 border-b" />
+                      <div className="border-r border-amber-950/20 border-b" />
+                      <div className="border-b" />
+                      <div className="border-r border-amber-950/20" />
+                      <div className="border-r border-amber-950/20" />
+                      <div className="border-none" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Columna Derecha: Datos Clave en Mayúsculas */}
+                <div className="col-span-8 space-y-2 sm:space-y-3 pl-2 sm:pl-4">
+                  <div>
+                    <p className="text-[7px] sm:text-[8px] text-teal-400 font-bold tracking-widest uppercase">TITULAR / CITIZEN</p>
+                    <p className="text-sm sm:text-base font-black text-white uppercase tracking-wide leading-none mt-0.5">{data.name}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[7px] sm:text-[8px] text-teal-400 font-bold tracking-widest uppercase">EXPEDIENTE ID</p>
+                      <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-100 uppercase tracking-wider mt-0.5">{data.id.slice(0, 10).toUpperCase()}</p>
+                    </div>
+                    <div>
+                      <p className="text-[7px] sm:text-[8px] text-teal-400 font-bold tracking-widest uppercase">TIPO SANGRE</p>
+                      <span className="inline-block text-xs sm:text-sm font-black text-red-400 uppercase tracking-widest mt-0.5">
+                        {data.bloodType || 'O+'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[7px] sm:text-[8px] text-teal-400 font-bold tracking-widest uppercase">EMISIÓN / EMITTED</p>
+                      <p className="text-[10px] sm:text-xs font-extrabold text-zinc-300 font-mono mt-0.5">{formatDate(data.date, 'dd/MM/yyyy')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[7px] sm:text-[8px] text-teal-400 font-bold tracking-widest uppercase">PAÍS / COUNTRY</p>
+                      <p className="text-[9px] sm:text-xs font-black text-zinc-100 uppercase mt-0.5">NICARAGUA</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer de la Tarjeta: Código de Barras & Firma Criptográfica */}
+              <div className="flex justify-between items-end border-t border-white/10 pt-2.5">
+                <div className="font-mono text-[6px] sm:text-[8px] text-zinc-400 tracking-wider">
+                  PAC-HASH: {data.id.slice(0, 20).toUpperCase()}
+                </div>
+                {/* Código de barras biométrico simulado */}
+                <div className="h-4 sm:h-5 w-24 sm:w-32 bg-white/10 rounded-sm flex items-center justify-between p-1 gap-[1.5px] overflow-hidden opacity-40">
+                  {Array(24).fill(0).map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="h-full bg-white rounded-[0.5px]" 
+                      style={{ width: `${(i % 3 === 0 ? 3 : i % 2 === 0 ? 1 : 2)}px` }} 
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
+          </motion.div>
 
-            {/* Grid de Información del Paciente */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 border border-teal-500/20 shrink-0">
-                    <User className="size-5" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Nombre Completo</p>
-                    <p className="text-sm font-black text-foreground">{data.name}</p>
-                  </div>
+          {/* Panel Clínico Detallado de Emergencia */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <GlassCard className="p-6 border-t-4 border-red-500/40 relative overflow-hidden">
+              <div className="flex items-center gap-3 mb-4 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                <div className="size-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
+                  <AlertCircle className="size-4" />
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-600 border border-sky-500/20 shrink-0">
-                    <Clock className="size-5" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Miembro Desde</p>
-                    <p className="text-sm font-semibold text-foreground">{formatDate(data.date, 'dd/MM/yyyy')}</p>
-                  </div>
-                </div>
+                <h4 className="text-sm font-black uppercase text-foreground tracking-widest">Información Crítica Médica</h4>
               </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Alergias Conocidas</p>
+                  {data.allergies && data.allergies.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {data.allergies.map((allergy: string, i: number) => (
+                        <span key={i} className="text-[9px] font-extrabold bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/20 uppercase tracking-wider shadow-sm">
+                          {allergy}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic mt-1 bg-zinc-50 dark:bg-zinc-900 p-3 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                      Ninguna alergia reportada en el historial
+                    </p>
+                  )}
+                </div>
 
-              <div className="space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 border border-emerald-500/20 shrink-0">
-                    <CheckCircle2 className="size-5" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Estatus del Carnet</p>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mt-1">
-                      ACTIVO / HOMOLOGADO
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Tipo de Sangre</p>
+                  <div className="mt-1 flex items-center gap-3 bg-red-500/5 p-3 rounded-2xl border border-red-500/10">
+                    <span className="size-10 rounded-xl bg-red-500 flex items-center justify-center font-black text-lg text-white shadow-lg shadow-red-500/25 select-none">
+                      {data.bloodType || 'O+'}
                     </span>
+                    <div>
+                      <p className="text-xs font-black text-foreground">Factor Crítico Confirmado</p>
+                      <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Válido para transfusiones en clínicas MINSA</p>
+                    </div>
                   </div>
                 </div>
+              </div>
+            </GlassCard>
 
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 border border-teal-500/20 shrink-0">
-                    <ShieldCheck className="size-5" />
-                  </div>
+            <GlassCard className="p-6 border-t-4 border-teal-500/40 relative overflow-hidden">
+              <div className="flex items-center gap-3 mb-4 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                <div className="size-8 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 border border-teal-500/20">
+                  <ShieldCheck className="size-4" />
+                </div>
+                <h4 className="text-sm font-black uppercase text-foreground tracking-widest">Acreditación Legal y Licencias</h4>
+              </div>
+              <div className="space-y-4">
+                <div className="flex gap-3 bg-zinc-50/50 dark:bg-zinc-900/30 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <CheckCircle2 className="size-5 text-emerald-500 mt-0.5" />
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Acreditación Legal</p>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-teal-100 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 border border-teal-500/20 mt-1">
-                      VERIFICACIÓN MINSA APROBADA
-                    </span>
+                    <p className="text-[10px] font-black text-foreground uppercase tracking-wide">Estatus Homologado Activo</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-normal">
+                      Este carnet cumple con las normativas vigentes del Ministerio de Salud (MINSA) para identificación y trazabilidad de pacientes crónicos.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 bg-zinc-50/50 dark:bg-zinc-900/30 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <ShieldCheck className="size-5 text-teal-600 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] font-black text-foreground uppercase tracking-wide">Firma Criptográfica Segura</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-normal font-mono text-[10px] truncate">
+                      SEC-HASH-PAC-{data.id.toUpperCase()}
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Detalles Médicos Cruciales para Emergencias */}
-            <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800 py-6 space-y-6">
-              <div>
-                <p className="text-xs font-black uppercase text-muted-foreground tracking-widest mb-3">Información de Emergencia</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Tipo de Sangre */}
-                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800">
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Tipo de Sangre</p>
-                    <p className="text-lg font-black text-red-600 dark:text-red-400 mt-1">{data.bloodType}</p>
-                  </div>
-
-                  {/* Alergias Registradas */}
-                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800">
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Alergias Conocidas</p>
-                    {data.allergies && data.allergies.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {data.allergies.map((allergy: string, i: number) => (
-                          <span key={i} className="text-[9px] font-extrabold bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/25 uppercase">
-                            {allergy}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground italic mt-2">Ninguna alergia reportada</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sello y Firmas del Carnet Digital */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-dashed border-zinc-200 dark:border-zinc-800">
-              {/* Sello Holográfico */}
-              <div className="flex flex-col items-center justify-center p-5 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50/20 dark:bg-zinc-900/20 text-center relative overflow-hidden select-none">
-                <div className="size-16 rounded-full border-4 border-double border-emerald-500/30 dark:border-emerald-400/30 flex items-center justify-center text-emerald-500 dark:text-emerald-400 mb-2 animate-pulse">
-                  <ShieldCheck className="size-8" />
-                </div>
-                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                  OASIS AURA VERIFIED
-                </span>
-                <span className="text-[8px] text-muted-foreground font-mono mt-1">
-                  CARNET HOMOLOGADO MINSA
-                </span>
-              </div>
-
-              {/* Registro Criptográfico */}
-              <div className="flex flex-col justify-center p-5 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-50/20 dark:bg-zinc-900/20 text-center relative">
-                <p className="text-[8px] uppercase font-bold text-muted-foreground tracking-widest absolute top-3 left-0 right-0 mx-auto">
-                  Certificado de Seguridad Digital
-                </p>
-                <div className="my-4 font-mono text-[10px] text-zinc-700 dark:text-zinc-300 py-2 break-all uppercase font-semibold">
-                  SEC-HASH-PAC-{data.id.slice(0, 16)}
-                </div>
-                <div className="h-0.5 w-2/3 bg-zinc-300 dark:bg-zinc-700 mx-auto mb-1" />
-                <span className="text-[7px] text-muted-foreground font-mono uppercase tracking-widest">
-                  Validez Criptográfica Permanente
-                </span>
-              </div>
-            </div>
-          </GlassCard>
+            </GlassCard>
+          </div>
         </div>
       )}
       
