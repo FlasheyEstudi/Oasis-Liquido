@@ -278,6 +278,7 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
       if (prescription) {
         setIsPrescriptionApplied(true);
         setQrMode(false);
+        setQrValue(prescription.id); // Guardar el ID limpio de la receta en lugar de la URL escaneada
         
         // Auto-fill cart with items from prescription
         const newCartItems: CartItem[] = [];

@@ -256,8 +256,26 @@ export async function updatePrescription(
  * Validate a prescription by QR code
  */
 export async function validatePrescription(qrData: string) {
-  const prescription = await db.prescription.findUnique({
-    where: { qrCode: qrData },
+  let searchField: 'qrCode' | 'id' = 'qrCode';
+  let searchValue = qrData.trim();
+
+  // Smart URL parser for recipe verify strings
+  if (searchValue.includes('verificar-receta-')) {
+    const parts = searchValue.split('verificar-receta-');
+    searchValue = parts[parts.length - 1];
+    searchField = 'id';
+  } else if (searchValue.includes('#prescription-')) {
+    const parts = searchValue.split('#prescription-');
+    searchValue = parts[parts.length - 1];
+    searchField = 'id';
+  } else if (searchValue.includes('verify-prescription-')) {
+    const parts = searchValue.split('verify-prescription-');
+    searchValue = parts[parts.length - 1];
+    searchField = 'id';
+  }
+
+  const prescription = await db.prescription.findFirst({
+    where: searchField === 'id' ? { id: searchValue } : { qrCode: searchValue },
     include: {
       patient: { select: { id: true, name: true, email: true, patientProfile: true } },
       doctor: { select: { id: true, name: true, doctorProfile: true } },
