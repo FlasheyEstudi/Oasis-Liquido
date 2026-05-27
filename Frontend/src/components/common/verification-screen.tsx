@@ -22,12 +22,12 @@ import {
 import { motion } from 'framer-motion';
 
 interface VerificationData {
-  type: 'sale' | 'prescription';
+  type: 'sale' | 'prescription' | 'patient';
   id: string;
   [key: string]: any;
 }
 
-export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'; id: string }) {
+export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription' | 'patient'; id: string }) {
   const [data, setData] = useState<VerificationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
