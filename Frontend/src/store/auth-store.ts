@@ -218,6 +218,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hydrate: async () => {
     if (typeof window === 'undefined') return;
     
+    // Check if the current URL is a public verification route
+    const path = window.location.pathname.replace('/', '');
+    const isPublicVerifyRoute = path.startsWith('verificar-venta-') || 
+                                path.startsWith('verificar-receta-') || 
+                                path.startsWith('verificar-paciente-');
+
     set({ isLoading: true });
     try {
       // Try to refresh the token using the httpOnly cookie
@@ -237,7 +243,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: true,
         isHydrated: true,
         isLoading: false,
-        currentPage: homePage,
+        currentPage: isPublicVerifyRoute ? (path as any) : homePage,
         selectedItemId: savedItemId,
         prescriptionId: savedPrescriptionId,
       });
@@ -248,7 +254,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: false,
         isHydrated: true,
         isLoading: false,
-        currentPage: 'bienvenida',
+        currentPage: isPublicVerifyRoute ? (path as any) : 'bienvenida',
       });
     }
   },
