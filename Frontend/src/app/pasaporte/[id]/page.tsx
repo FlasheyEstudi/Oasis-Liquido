@@ -62,7 +62,13 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
         if (json.success) {
           setData(json.data);
         } else {
-          setError(json.error || 'No se encontró el Pasaporte de Salud');
+          setError(
+            typeof json.error === 'object' && json.error?.message 
+              ? json.error.message 
+              : typeof json.error === 'string' 
+                ? json.error 
+                : 'No se encontró el Pasaporte de Salud'
+          );
         }
       } catch (err) {
         setError('Error de conexión con la red de salud Oasis');

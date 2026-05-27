@@ -60,7 +60,13 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
         if (json.success) {
           setData(json.data);
         } else {
-          setError(json.error || 'No se encontró la información');
+          setError(
+            typeof json.error === 'object' && json.error?.message 
+              ? json.error.message 
+              : typeof json.error === 'string' 
+                ? json.error 
+                : 'No se encontró la información'
+          );
         }
       } catch (err) {
         setError('Error al conectar con el servidor');
