@@ -27,6 +27,26 @@ interface VerificationData {
   [key: string]: any;
 }
 
+function parseAllergies(allergies: any): string[] {
+  if (!allergies) return [];
+  if (Array.isArray(allergies)) return allergies;
+  if (typeof allergies === 'string') {
+    const trimmed = allergies.trim();
+    if (!trimmed || trimmed.toLowerCase() === 'ninguna' || trimmed.toLowerCase() === 'ninguno') return [];
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    if (trimmed.includes(',')) {
+      return trimmed.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [trimmed];
+  }
+  return [];
+}
+
 export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription' | 'patient'; id: string }) {
   const [data, setData] = useState<VerificationData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -489,9 +509,9 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
               <div className="space-y-4">
                 <div>
                   <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Alergias Conocidas</p>
-                  {data.allergies && data.allergies.length > 0 ? (
+                  {parseAllergies(data.allergies).length > 0 ? (
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      {data.allergies.map((allergy: string, i: number) => (
+                      {parseAllergies(data.allergies).map((allergy: string, i: number) => (
                         <span key={i} className="text-[9px] font-extrabold bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/20 uppercase tracking-wider shadow-sm">
                           {allergy}
                         </span>
