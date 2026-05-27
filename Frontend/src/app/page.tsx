@@ -37,19 +37,21 @@ const PharmacyPOS = dynamic(() => import('@/components/pharmacy/pos').then(m => 
 
 const ReceptionistDashboard = dynamic(() => import('@/components/receptionist/receptionist-dashboard').then(m => m.ReceptionistDashboard));
 
-// Mobile Core Roles (Standard imports for instant load)
-import { PatientHome } from '@/components/patient/patient-home';
-import { AppointmentList } from '@/components/patient/appointment-list';
-import { NewAppointment } from '@/components/patient/new-appointment';
-import { PrescriptionList } from '@/components/patient/prescription-list';
-import { PrescriptionDetail } from '@/components/patient/prescription-detail';
-import { PharmacyMap } from '@/components/patient/pharmacy-map';
-import { DeliveryRequest } from '@/components/patient/delivery-request';
-import { OrderTracking } from '@/components/patient/order-tracking';
-import { DriverHome } from '@/components/delivery/driver-home';
-import { DeliveryDetail } from '@/components/delivery/delivery-detail';
+// Mobile Core Roles (Dynamic imports to prevent hydration mismatches and minimize bundle size)
+const PatientHome = dynamic(() => import('@/components/patient/patient-home').then(m => m.PatientHome), { ssr: false });
+const AppointmentList = dynamic(() => import('@/components/patient/appointment-list').then(m => m.AppointmentList), { ssr: false });
+const NewAppointment = dynamic(() => import('@/components/patient/new-appointment').then(m => m.NewAppointment), { ssr: false });
+const PrescriptionList = dynamic(() => import('@/components/patient/prescription-list').then(m => m.PrescriptionList), { ssr: false });
+const PrescriptionDetail = dynamic(() => import('@/components/patient/prescription-detail').then(m => m.PrescriptionDetail), { ssr: false });
+const PharmacyMap = dynamic(() => import('@/components/patient/pharmacy-map').then(m => m.PharmacyMap), { ssr: false });
+const DeliveryRequest = dynamic(() => import('@/components/patient/delivery-request').then(m => m.DeliveryRequest), { ssr: false });
+const OrderTracking = dynamic(() => import('@/components/patient/order-tracking').then(m => m.OrderTracking), { ssr: false });
+const DriverHome = dynamic(() => import('@/components/delivery/driver-home').then(m => m.DriverHome), { ssr: false });
+const DeliveryDetail = dynamic(() => import('@/components/delivery/delivery-detail').then(m => m.DeliveryDetail), { ssr: false });
+
 // Profile
-import { ProfileScreen } from '@/components/profile/profile-screen';
+const ProfileScreen = dynamic(() => import('@/components/profile/profile-screen').then(m => m.ProfileScreen), { ssr: false });
+
 // Verification
 import { VerificationScreen } from '@/components/common/verification-screen';
 import { ShieldCheck } from 'lucide-react';

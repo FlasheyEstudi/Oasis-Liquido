@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import {
   useAppointments,
@@ -47,7 +48,12 @@ function getGreeting(): { text: string; icon: React.ReactNode } {
 }
 
 export function PatientHome() {
+  const [mounted, setMounted] = useState(false);
   const { user, representedUser, setRepresentedUser, isElderlyMode, toggleElderlyMode, navigate } = useAuthStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const activePatientId = representedUser?.id || user?.id;
 
@@ -103,7 +109,7 @@ export function PatientHome() {
 
   const totalAppointments = appointments.length;
 
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <LoadingAnimation size="lg" />
