@@ -25,7 +25,7 @@ export function NotificationBanner() {
   }
 
   // Animation variants for the bell swinging dynamically
-  const bellVariants = {
+  const bellVariants: any = {
     ring: {
       rotate: [0, -15, 12, -10, 8, -4, 0],
       scale: [1, 1.1, 1.1, 1.05, 1.05, 1, 1],
