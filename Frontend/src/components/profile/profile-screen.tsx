@@ -70,6 +70,9 @@ export function ProfileScreen() {
   const createFamilyMutation = useCreateFamily();
   const deleteFamilyMutation = useDeleteFamily();
 
+  // QR Zoom State
+  const [isQrZoomed, setIsQrZoomed] = useState(false);
+
   // Edit mode
   const [isEditing, setIsEditing] = useState(false);
 
@@ -225,13 +228,23 @@ export function ProfileScreen() {
             </div>
           </div>
 
-          {/* Digital ID QR */}
-          <div className="hidden sm:block">
+          {/* Digital ID QR — Interactive Tap to Zoom */}
+          <div 
+            onClick={() => setIsQrZoomed(true)}
+            className="cursor-pointer active:scale-90 hover:scale-105 transition-all duration-300 relative group flex flex-col items-center select-none"
+            title="Tocar para ampliar Pasaporte QR"
+          >
+            <div className="absolute -inset-1 rounded-2xl bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
             <QrCode 
               value={`${profile.role}-id-${profile.id}`} 
-              size={60} 
-              label="ID Digital"
+              size={64} 
+              label="Ver ID"
+              showValue={false}
+              className="!p-1 bg-white/50 dark:bg-black/30 rounded-2xl border border-white/10"
             />
+            <span className="text-[7px] font-black tracking-widest text-teal-600 dark:text-teal-400 uppercase mt-1 opacity-60 group-hover:opacity-100 animate-pulse">
+              Ampliar 🔍
+            </span>
           </div>
 
           {/* Edit button */}
@@ -844,6 +857,105 @@ export function ProfileScreen() {
         <LogOut className="size-4" />
         Cerrar sesión
       </motion.button>
+
+      {/* Dynamic Passport QR Zoom Modal with Premium Holographic & Laser Scanner Effect */}
+      <AnimatePresence>
+        {isQrZoomed && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Dark blur glass backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsQrZoomed(false)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl"
+            />
+            
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              className="relative max-w-sm w-full glass-card p-6 rounded-[2.5rem] bg-white/95 dark:bg-slate-950/95 backdrop-blur-3xl border border-teal-500/30 shadow-2xl z-10 overflow-hidden text-center"
+            >
+              {/* Decorative top dynamic neon border */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-sky-500 to-indigo-500" />
+              
+              {/* Sello de verificación de fondo / Watermark */}
+              <div className="absolute -right-16 -top-16 size-44 rounded-full bg-teal-500/[0.03] border border-teal-500/10 flex items-center justify-center rotate-12 pointer-events-none select-none">
+                <span className="text-[9px] font-black text-teal-500/20 tracking-[0.2em] uppercase text-center leading-normal">
+                  Oasis Aura<br/>MINSA
+                </span>
+              </div>
+
+              {/* Header */}
+              <div className="flex flex-col items-center mb-6">
+                <div className="size-12 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-teal-400 border border-teal-500/20 mb-3 shadow-inner">
+                  <Shield className="size-6 animate-pulse" />
+                </div>
+                <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 uppercase">
+                  Pasaporte Digital QR
+                </h3>
+                <p className="text-[10px] font-bold text-teal-600 dark:text-teal-400 tracking-[0.15em] uppercase mt-0.5">
+                  Verificado por MINSA
+                </p>
+              </div>
+
+              {/* QR Container with holographic border & green laser scanline */}
+              <div className="relative inline-flex flex-col items-center justify-center bg-white rounded-3xl p-5 shadow-2xl border border-zinc-200/50 mb-6 group overflow-hidden w-[260px] h-[260px]">
+                {/* Laser scan line effect */}
+                <motion.div 
+                  animate={{ top: ['0%', '100%'] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+                  className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent z-20 pointer-events-none shadow-[0_0_10px_#10b981]"
+                />
+                
+                <QrCode 
+                  value={`${profile.role}-id-${profile.id}`} 
+                  size={220} 
+                  label="ID DIGITAL"
+                  showValue={false}
+                  className="!p-0"
+                />
+                
+                {/* Corner highlights */}
+                <div className="absolute top-0 left-0 size-6 border-t-4 border-l-4 border-teal-500 rounded-tl-2xl" />
+                <div className="absolute top-0 right-0 size-6 border-t-4 border-r-4 border-teal-500 rounded-tr-2xl" />
+                <div className="absolute bottom-0 left-0 size-6 border-b-4 border-l-4 border-teal-500 rounded-bl-2xl" />
+                <div className="absolute bottom-0 right-0 size-6 border-b-4 border-r-4 border-teal-500 rounded-br-2xl" />
+              </div>
+
+              {/* User details card in the modal */}
+              <div className="bg-slate-500/5 dark:bg-black/40 border border-slate-500/10 rounded-2xl p-4 mb-6 text-left space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Titular</span>
+                  <span className="text-[9px] uppercase font-mono text-muted-foreground">{profile.role.toUpperCase()} ID</span>
+                </div>
+                <p className="text-sm font-black text-foreground">{profile.name}</p>
+                
+                <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-500/10">
+                  <div>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground">Registro Nacional</p>
+                    <p className="font-mono text-[10px] text-foreground mt-0.5">{profile.id.toUpperCase()}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <CheckCircle2 className="size-2.5" /> Activo
+                  </span>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setIsQrZoomed(false)}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-extrabold text-xs shadow-lg shadow-teal-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                Cerrar Pasaporte
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
