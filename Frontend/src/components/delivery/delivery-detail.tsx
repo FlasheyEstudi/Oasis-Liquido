@@ -149,9 +149,18 @@ export function DeliveryDetail() {
   const handleConfirmDelivery = () => {
     if (!order) return;
     
-    // Verify QR digital ID matches patient's digital ID
+    // Verify QR digital ID matches patient's digital ID (Smart Extractor supporting URLs)
     const expectedId = `patient-id-${order.patient?.id}`;
-    if (patientQrCode.trim() !== expectedId) {
+    let scannedPatientId = patientQrCode.trim();
+    if (scannedPatientId.includes('#patient-')) {
+      const parts = scannedPatientId.split('#patient-');
+      scannedPatientId = `patient-id-${parts[parts.length - 1]}`;
+    } else if (scannedPatientId.includes('/verify#patient-')) {
+      const parts = scannedPatientId.split('/verify#patient-');
+      scannedPatientId = `patient-id-${parts[parts.length - 1]}`;
+    }
+
+    if (scannedPatientId !== expectedId) {
       setVerificationError('Código QR incorrecto. No coincide con el ID digital de este paciente.');
       return;
     }
