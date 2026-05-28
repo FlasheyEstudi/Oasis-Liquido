@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
-import { useGetMe, useUpdateMe, useUpdatePatientProfile, useFamily, useCreateFamily, useDeleteFamily, getHookErrorMessage } from '@/hooks/use-api';
+import { useGetMe, useUpdateMe, useUpdatePatientProfile, useFamily, useCreateFamily, useDeleteFamily, useVerifyFamily, getHookErrorMessage } from '@/hooks/use-api';
 import { getInitials } from '@/utils/helpers';
 import { ROLE_LABELS, ROLE_COLORS } from '@/utils/constants';
 import { GlassCard } from '@/components/oasis/glass-card';
@@ -69,6 +69,27 @@ export function ProfileScreen() {
   const familyQuery = useFamily(authUser?.role === 'patient');
   const createFamilyMutation = useCreateFamily();
   const deleteFamilyMutation = useDeleteFamily();
+  const verifyFamilyMutation = useVerifyFamily();
+  
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState<string | null>(null);
+
+  const handleVerifyFamily = async (code: string, relationshipId: string) => {
+    if (!code.trim() || code.trim().length !== 6) {
+      toast.error('El código PIN de verificación debe ser de 6 dígitos');
+      return;
+    }
+    setIsVerifying(relationshipId);
+    try {
+      const res = await verifyFamilyMutation.mutateAsync(code.trim());
+      toast.success(`Vinculación con ${res.supervisorName} confirmada de forma exitosa.`);
+      setVerificationCode('');
+      setIsVerifying(null);
+    } catch (err: any) {
+      toast.error(getHookErrorMessage(err) || 'El código PIN ingresado es incorrecto o ya expiró');
+      setIsVerifying(null);
+    }
+  };
 
   // QR Zoom State
   const [isQrZoomed, setIsQrZoomed] = useState(false);
@@ -640,19 +661,41 @@ export function ProfileScreen() {
                   ) : (familyQuery.data?.caregiverFor?.length ?? 0) > 0 ? (
                     <div className="space-y-2">
                       {familyQuery.data?.caregiverFor?.map((rel: any) => (
-                        <div key={rel.id} className="flex items-center justify-between p-3 rounded-2xl glass hover:border-teal-500/30 transition-colors">
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{rel.patient?.name}</p>
-                            <p className="text-[10px] text-muted-foreground capitalize">Relación: {rel.relationship}</p>
+                        <div key={rel.id} className="p-3 rounded-2xl glass border border-white/5 hover:border-teal-500/30 transition-colors space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-foreground">{rel.patient?.name}</p>
+                                {rel.status === 'pending' && (
+                                  <span className="text-[9px] font-black uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                                    Pendiente
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground capitalize">Relación: {rel.relationship}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-xl text-xs h-8"
+                              onClick={() => handleUnlinkFamily(rel.id)}
+                            >
+                              Desvincular
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-xl"
-                            onClick={() => handleUnlinkFamily(rel.id)}
-                          >
-                            Desvincular
-                          </Button>
+                          
+                          {/* Pending PIN instructions for Caregiver */}
+                          {rel.status === 'pending' && rel.verificationCode && (
+                            <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-2.5 text-[11px] text-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div>
+                                <p className="font-bold">🔑 Código de Vinculación Requerido</p>
+                                <p className="text-[10px] text-gray-400 mt-0.5">Dale este PIN a tu familiar para que lo ingrese en su app.</p>
+                              </div>
+                              <div className="bg-slate-900 px-3 py-1.5 rounded-lg border border-amber-500/25 text-center font-mono text-xs font-black tracking-widest text-amber-400 shrink-0">
+                                {rel.verificationCode}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -674,19 +717,57 @@ export function ProfileScreen() {
                   ) : (familyQuery.data?.patientOf?.length ?? 0) > 0 ? (
                     <div className="space-y-2">
                       {familyQuery.data?.patientOf?.map((rel: any) => (
-                        <div key={rel.id} className="flex items-center justify-between p-3 rounded-2xl glass hover:border-sky-500/30 transition-colors">
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{rel.caregiver?.name}</p>
-                            <p className="text-[10px] text-muted-foreground capitalize">Relación: {rel.relationship}</p>
+                        <div key={rel.id} className="p-3 rounded-2xl glass border border-white/5 hover:border-sky-500/30 transition-colors space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-foreground">{rel.caregiver?.name}</p>
+                                {rel.status === 'pending' && (
+                                  <span className="text-[9px] font-black uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                                    Esperando PIN
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground capitalize">Relación: {rel.relationship}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-xl text-xs h-8"
+                              onClick={() => handleUnlinkFamily(rel.id)}
+                            >
+                              Revocar
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-xl"
-                            onClick={() => handleUnlinkFamily(rel.id)}
-                          >
-                            Revocar
-                          </Button>
+
+                          {/* Verification Input for Dependent */}
+                          {rel.status === 'pending' && (
+                            <div className="bg-sky-500/5 border border-sky-500/10 rounded-xl p-2.5 space-y-2">
+                              <p className="text-[11px] font-bold text-sky-300">🔑 Confirmar Vinculación Familiar</p>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  maxLength={6}
+                                  placeholder="Ingresa PIN de 6 dígitos"
+                                  defaultValue={verificationCode}
+                                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                                  className="glass-input rounded-lg flex-1 px-3 py-1.5 text-xs font-mono text-center tracking-widest text-sky-400"
+                                />
+                                <Button
+                                  size="sm"
+                                  className="bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold px-3"
+                                  disabled={isVerifying === rel.id}
+                                  onClick={() => handleVerifyFamily(verificationCode, rel.id)}
+                                >
+                                  {isVerifying === rel.id ? (
+                                    <Loader2 className="size-3 animate-spin" />
+                                  ) : (
+                                    'Verificar'
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

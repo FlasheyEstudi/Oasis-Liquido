@@ -62,10 +62,22 @@ export default function RootLayout({
           </QueryProvider>
         </ThemeProvider>
 
-        {/* Register Service Worker */}
+        {/* Register Service Worker and Global ChunkLoadError resilience */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Global ChunkLoadError resiliency interceptor
+              window.addEventListener('error', function(e) {
+                const message = e.message || '';
+                const isChunkError = message.indexOf('ChunkLoadError') !== -1 || 
+                                     message.indexOf('Loading chunk') !== -1 ||
+                                     (e.target && (e.target.src || '').indexOf('_next/static/chunks/') !== -1);
+                if (isChunkError) {
+                  console.warn('OASIS: Dynamic chunk load failed. Auto-reloading to fetch active production deployment...');
+                  window.location.reload();
+                }
+              }, true);
+
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').then(

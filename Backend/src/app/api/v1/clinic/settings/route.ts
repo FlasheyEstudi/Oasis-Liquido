@@ -76,7 +76,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
     console.error('Error fetching clinic settings:', error);
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error al obtener la configuración de la clínica', 500);
   }
-}, { roles: ['clinic_admin', 'admin'] });
+}, { roles: ['clinic_admin', 'admin', 'receptionist', 'doctor'] });
 
 export const PUT = withAuth(async (req: AuthenticatedRequest) => {
   try {

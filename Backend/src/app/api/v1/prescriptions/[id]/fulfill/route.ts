@@ -55,5 +55,5 @@ export const POST = withAuth(
       return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error interno del servidor', 500);
     }
   },
-  { roles: ['pharmacy_manager', 'admin'] }
+  { roles: ['pharmacy_manager', 'pharmacy_admin', 'cashier', 'admin'] }
 );

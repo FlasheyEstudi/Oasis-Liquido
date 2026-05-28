@@ -220,3 +220,18 @@ export async function getClinicDoctors(clinicId: string, filters?: { search?: st
     } : null
   }));
 }
+
+/**
+ * Get a single clinic by ID
+ */
+export async function getClinic(id: string) {
+  const clinic = await db.clinic.findUnique({
+    where: { id },
+    include: {
+      _count: { select: { doctorProfiles: true, appointments: true } },
+    },
+  });
+  if (!clinic) throw new Error('NOT_FOUND');
+  return clinic;
+}
+

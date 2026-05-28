@@ -8,6 +8,23 @@ import { validateBody, updateClinicSchema } from '@/lib/validators';
 import * as clinicService from '@/lib/services/clinic.service';
 
 /**
+ * GET /api/clinics/:id
+ * Authenticated — retrieves a single clinic.
+ */
+export const GET = withAuth(async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+  try {
+    const { id } = await context.params;
+    const clinic = await clinicService.getClinic(id);
+    return successResponse(clinic);
+  } catch (error: any) {
+    if (error.message === 'NOT_FOUND') {
+      return errorResponse(ErrorCodes.NOT_FOUND, 'Clínica no encontrada', 404);
+    }
+    return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
+  }
+}, { roles: ['admin', 'clinic_admin', 'doctor', 'receptionist', 'patient'] });
+
+/**
  * PATCH /api/clinics/:id
  * Admin only — updates a clinic's data.
  */
@@ -35,3 +52,4 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
 }, { roles: ['admin'] });
+

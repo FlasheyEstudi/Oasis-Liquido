@@ -42,4 +42,4 @@ export const POST = withAuth(async (req: AuthenticatedRequest, context: any) => 
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
-}, { roles: ['patient', 'pharmacy_manager', 'pharmacy_admin', 'admin'] });
+}, { roles: ['patient', 'pharmacy_manager', 'pharmacy_admin', 'admin', 'cashier'] });

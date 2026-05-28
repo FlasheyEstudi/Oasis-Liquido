@@ -10,6 +10,11 @@ export const getSocket = () => {
     socket = io(socketUrl, {
       autoConnect: true,
       reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+      transports: ['polling', 'websocket'], // Start with HTTP polling, upgrade to WebSocket to prevent ERR_CONNECTION failures on serverless Vercel
     });
     
     socket.on('connect', () => {

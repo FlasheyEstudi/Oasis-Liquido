@@ -103,8 +103,8 @@ apiClient.interceptors.response.use(
   async (error: any) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    // Only attempt refresh on 401 and not already retried
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Attempt refresh on 401 (expired) or 403 (forbidden/role changed) and not already retried
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       // Don't try to refresh auth endpoints themselves
       const isAuthEndpoint =
         typeof originalRequest.url === 'string' &&
@@ -131,7 +131,7 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // We don't send the refresh_token in the body anymore, it's in the cookie
+        // Refresh access token via httpOnly cookie
         const response = await axios.post<ApiResponse<{ access_token: string }>>(
           `${API_BASE_URL}${API_PREFIX}/auth/refresh`,
           {},
@@ -145,6 +145,12 @@ apiClient.interceptors.response.use(
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
         }
+
+        // Notify session store that user profiles/roles might have updated
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('auth:roles-updated'));
+        }
+
         return apiClient(originalRequest);
       } catch (refreshError) {
         refreshSubscribers = [];

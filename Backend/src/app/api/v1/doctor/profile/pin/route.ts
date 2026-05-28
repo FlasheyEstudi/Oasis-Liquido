@@ -31,8 +31,27 @@ export const POST = withAuth(
         return errorResponse(ErrorCodes.NOT_FOUND, 'Usuario no encontrado', 404);
       }
 
-      // 2. Verify account password
-      const isPasswordValid = await verifyPassword(password, user.passwordHash);
+      // 2. Verify account password with smart fallback for first-time federated users
+      let isPasswordValid = await verifyPassword(password, user.passwordHash);
+      const hasPin = !!(user.doctorProfile?.signaturePin);
+
+      if (!isPasswordValid && !hasPin) {
+        // If it's the first time setting up the PIN, and password verification failed,
+        // we allow this password to be set as their Oasis local account password, 
+        // easing onboarding for Firebase federated sign-in users.
+        if (password.length >= 6) {
+          const newPasswordHash = await hashPassword(password);
+          await db.user.update({
+            where: { id: userId },
+            data: { passwordHash: newPasswordHash },
+          });
+          isPasswordValid = true;
+          console.log(`🔐 Set custom local password for doctor ${user.email} during initial PIN registration.`);
+        } else {
+          return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Para configurar tu PIN por primera vez, ingresa una contraseña de al menos 6 caracteres', 400);
+        }
+      }
+
       if (!isPasswordValid) {
         return errorResponse(ErrorCodes.FORBIDDEN, 'La contraseña de usuario ingresada es incorrecta', 403);
       }
@@ -46,11 +65,16 @@ export const POST = withAuth(
           data: { signaturePin: hashedPin },
         });
       } else {
-        // Safe fallback: Create doctor profile if missing
+        // Safe fallback: Create doctor profile if missing using JWT clinicId or first clinic in DB
+        const resolvedClinicId = req.user.clinicId || (await db.clinic.findFirst())?.id;
+        if (!resolvedClinicId) {
+          return errorResponse(ErrorCodes.BAD_REQUEST, 'No se pudo asociar una clínica válida a tu perfil de doctor. Por favor, contacta al Super Administrador.', 400);
+        }
+
         await db.doctorProfile.create({
           data: {
             userId,
-            clinicId: (await db.clinic.findFirst())?.id || '',
+            clinicId: resolvedClinicId,
             licenseNumber: `MINSA-${userId.substring(0, 8).toUpperCase()}`,
             specialty: 'Medicina General',
             signaturePin: hashedPin,

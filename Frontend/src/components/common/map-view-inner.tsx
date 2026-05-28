@@ -248,6 +248,10 @@ export function MapViewInner({
       // Add new markers
       markers.forEach((marker) => {
         try {
+          if (marker.lat == null || marker.lng == null || isNaN(marker.lat) || isNaN(marker.lng)) {
+            console.warn('⚠️ MapViewInner: Skipped invalid marker coordinates:', marker);
+            return;
+          }
           const color = marker.color || MARKER_COLORS[marker.type || ''] || DEFAULT_MARKER_COLOR;
           const icon = createMarkerIcon(color);
 
@@ -321,7 +325,9 @@ export function MapViewInner({
           const originMarker = markers.find(m => m.type === 'driver') || markers.find(m => m.type === 'pharmacy') || markers[0];
           const destMarker = markers.find(m => m.type === 'destination') || markers[markers.length - 1];
 
-          if (originMarker && destMarker) {
+          if (originMarker && destMarker && 
+              originMarker.lat != null && originMarker.lng != null && !isNaN(originMarker.lat) && !isNaN(originMarker.lng) &&
+              destMarker.lat != null && destMarker.lng != null && !isNaN(destMarker.lat) && !isNaN(destMarker.lng)) {
             try {
               console.log("📡 Frontend: Fetching street route directly from browser network...");
               const publicUrl = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${originMarker.lng},${originMarker.lat};${destMarker.lng},${destMarker.lat}?overview=full&geometries=polyline`;
@@ -338,6 +344,10 @@ export function MapViewInner({
               console.warn("⚠️ Frontend failed to fetch route directly:", err);
             }
           }
+        }
+
+        if (coords) {
+          coords = coords.filter(c => c && c[0] != null && c[1] != null && !isNaN(c[0]) && !isNaN(c[1]));
         }
 
         if (!coords || coords.length < 2) return;

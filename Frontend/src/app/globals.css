@@ -912,3 +912,71 @@ html.elderly-mode svg {
 .animate-scan {
   animation: scan-laser 3s ease-in-out infinite;
 }
+
+/* ============================================
+   OASIS — Dark Mode Global Contrast & Depth Enhancements
+   ============================================ */
+
+/* Force fluid gradient background globally on body */
+body {
+  background: var(--bg-gradient) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
+}
+
+/* Enhances readability & text contrast inside dark mode inputs/selects */
+.dark input, 
+.dark select, 
+.dark textarea,
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"] {
+  color: #FFFFFF !important;
+  background-color: rgba(9, 9, 11, 0.6) !important; /* Premium dark background */
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark input:focus, 
+.dark select:focus, 
+.dark textarea:focus {
+  border-color: rgba(20, 184, 166, 0.6) !important; /* Teal focus */
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2) !important;
+}
+
+.dark input::placeholder, 
+.dark textarea::placeholder {
+  color: #94A3B8 !important; /* Perfect contrast slate-400 placeholder */
+  opacity: 0.9 !important;
+}
+
+/* Fix dropdown option backgrounds in dark mode */
+.dark select option {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+}
+
+/* Table dark mode border and header legibility */
+.dark th {
+  color: #E2E8F0 !important;
+  font-weight: 700 !important;
+}
+
+.dark td {
+  color: #F1F5F9 !important;
+}
+
+/* Satellite GPS Widget Dark Mode Optimization */
+.dark .bg-slate-950\/20, 
+.dark .bg-zinc-900\/20 {
+  background-color: rgba(9, 9, 11, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .text-emerald-400 {
+  color: #34D399 !important;
+}
+
+.dark .text-rose-400 {
+  color: #FB7185 !important;
+}
+

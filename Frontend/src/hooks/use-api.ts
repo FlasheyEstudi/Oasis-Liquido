@@ -192,6 +192,18 @@ export function useDeleteFamily() {
   });
 }
 
+/** Verify family relationship using code */
+export function useVerifyFamily() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => familyApi.verifyFamily(code),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['family'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+}
+
 // ============================================
 // APPOINTMENT HOOKS
 // ============================================

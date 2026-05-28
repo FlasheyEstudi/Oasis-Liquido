@@ -23,7 +23,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
   } catch (error: any) {
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error al obtener historial de arqueos', 500);
   }
-}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'pharmacy_manager', 'admin'] });
+}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'pharmacy_manager', 'admin', 'cashier'] });
 
 /**
  * POST /api/v1/pharmacies/[id]/reconciliations
@@ -65,4 +65,4 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
   } catch (error: any) {
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error al guardar el arqueo de caja', 500);
   }
-}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'pharmacy_manager', 'admin'] });
+}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'pharmacy_manager', 'admin', 'cashier'] });

@@ -1,7 +1,7 @@
 // OASIS - PWA Service Worker
 // Manages offline assets caching and Firebase Cloud Messaging push events
 
-const CACHE_NAME = 'oasis-cache-v1';
+const CACHE_NAME = 'oasis-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
@@ -47,14 +47,16 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // 2. ABSOLUTE BYPASS: Ignore Socket.io, backend API routes, local IP / remote backend hosts, and all cross-origin requests
+  // 2. ABSOLUTE BYPASS: Ignore Socket.io, backend API routes, hot updates, local/remote backend, and Next.js dynamic chunks
   if (
+    url.pathname.includes('/_next/static/chunks/') || // Next.js dynamic code chunks
+    url.pathname.includes('/_next/static/webpack/') || // Webpack hot updates
     url.pathname.includes('/socket.io/') ||
     url.pathname.includes('/api/') ||
     url.pathname.includes('/auth/') ||
     url.port === '8000' ||
     url.host.includes('localhost:8000') ||
-    url.hostname !== self.location.hostname // Bypasses all cross-origin requests (like backend APIs or OSRM maps)
+    url.hostname !== self.location.hostname // Bypasses all cross-origin requests
   ) {
     return; // Pass through to the browser network layer
   }

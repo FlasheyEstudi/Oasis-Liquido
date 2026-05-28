@@ -99,6 +99,45 @@ export function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Geolocation States
+  const [entityLat, setEntityLat] = useState<number | null>(null);
+  const [entityLng, setEntityLng] = useState<number | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const requestLocation = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setLocationError('Tu navegador no soporta geolocalización.');
+      return;
+    }
+    setIsLocating(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setEntityLat(position.coords.latitude);
+        setEntityLng(position.coords.longitude);
+        setIsLocating(false);
+      },
+      (error) => {
+        console.error('Error getting geolocation:', error);
+        let errorMsg = 'No se pudo obtener la ubicación. Por favor concede permisos de GPS.';
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = 'Permiso denegado. Activa el GPS de tu dispositivo o navegador y recarga.';
+        }
+        setLocationError(errorMsg);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  // Trigger geolocation pro-actively on Step 2 entrance
+  useEffect(() => {
+    if (step === 2 && (role === 'pharmacy_admin' || role === 'clinic_admin') && !entityLat) {
+      requestLocation();
+    }
+  }, [step, role]);
+
   // Dynamic Fields States
   const [pharmacyId, setPharmacyId] = useState('');
   const [clinicId, setClinicId] = useState('');
@@ -145,6 +184,10 @@ export function RegisterForm() {
         }
         if (!entityAddress.trim()) {
           setApiError('Por favor ingresa la dirección.');
+          return;
+        }
+        if (!entityLat || !entityLng) {
+          setApiError('Es obligatorio obtener la geolocalización GPS real de tu entidad en Oasis para trazar rutas de reparto. Por favor concede permisos de ubicación.');
           return;
         }
       }
@@ -256,12 +299,16 @@ export function RegisterForm() {
         payload.entityName = entityName;
         payload.entityAddress = entityAddress;
         payload.entityPhone = entityPhone || undefined;
+        payload.entityLatitude = entityLat || undefined;
+        payload.entityLongitude = entityLng || undefined;
       } else if (role === 'pharmacy_manager') {
         payload.pharmacyId = pharmacyId;
       } else if (role === 'clinic_admin') {
         payload.entityName = entityName;
         payload.entityAddress = entityAddress;
         payload.entityPhone = entityPhone || undefined;
+        payload.entityLatitude = entityLat || undefined;
+        payload.entityLongitude = entityLng || undefined;
       } else if (role === 'delivery_driver') {
         payload.vehicleType = vehicleType;
         payload.licensePlate = licensePlate;
@@ -534,6 +581,63 @@ export function RegisterForm() {
                               />
                             </div>
                           </div>
+
+                          {/* GPS Location Widget */}
+                          <div className="bg-slate-950/20 dark:bg-zinc-900/20 border border-slate-200/50 dark:border-zinc-800/30 rounded-2xl p-3.5 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                                📍 Georreferenciación Satelital (Obligatorio)
+                              </label>
+                              {entityLat && entityLng ? (
+                                <span className="text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full animate-pulse">
+                                  GPS Activo
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-black uppercase bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full">
+                                  Requerido
+                                </span>
+                              )}
+                            </div>
+
+                            {isLocating ? (
+                              <div className="flex items-center gap-2 text-xs text-teal-600 dark:text-teal-400 bg-white/5 rounded-xl p-3 border border-white/5">
+                                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                                <span>Determinando coordenadas exactas de tu dispositivo...</span>
+                              </div>
+                            ) : entityLat && entityLng ? (
+                              <div className="flex items-center justify-between gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3">
+                                <div className="space-y-0.5">
+                                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Ubicación real capturada con éxito</p>
+                                  <div className="flex gap-4 font-mono text-[10px] text-slate-500 dark:text-gray-400">
+                                    <span>Lat: <strong className="text-slate-900 dark:text-foreground">{entityLat.toFixed(6)}</strong></span>
+                                    <span>Lng: <strong className="text-slate-900 dark:text-foreground">{entityLng.toFixed(6)}</strong></span>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={requestLocation}
+                                  className="text-[10px] font-bold text-teal-600 dark:text-teal-400 hover:underline shrink-0"
+                                >
+                                  Recapturar
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {locationError && (
+                                  <p className="text-[10px] text-rose-600 dark:text-rose-400 bg-rose-500/5 border border-rose-500/10 rounded-xl p-2 font-medium">
+                                    ⚠️ {locationError}
+                                  </p>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={requestLocation}
+                                  className="w-full h-10 rounded-xl text-xs font-bold bg-teal-600/10 border border-teal-500/20 hover:bg-teal-600/20 text-teal-600 dark:text-teal-400 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                                >
+                                  📍 Obtener Ubicación GPS del Dispositivo
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 
@@ -614,6 +718,63 @@ export function RegisterForm() {
                                 className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 focus:outline-none disabled:opacity-50"
                               />
                             </div>
+                          </div>
+
+                          {/* GPS Location Widget */}
+                          <div className="bg-slate-950/20 dark:bg-zinc-900/20 border border-slate-200/50 dark:border-zinc-800/30 rounded-2xl p-3.5 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                                📍 Georreferenciación Satelital (Obligatorio)
+                              </label>
+                              {entityLat && entityLng ? (
+                                <span className="text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full animate-pulse">
+                                  GPS Activo
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-black uppercase bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full">
+                                  Requerido
+                                </span>
+                              )}
+                            </div>
+
+                            {isLocating ? (
+                              <div className="flex items-center gap-2 text-xs text-teal-600 dark:text-teal-400 bg-white/5 rounded-xl p-3 border border-white/5">
+                                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                                <span>Determinando coordenadas exactas de tu dispositivo...</span>
+                              </div>
+                            ) : entityLat && entityLng ? (
+                              <div className="flex items-center justify-between gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3">
+                                <div className="space-y-0.5">
+                                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Ubicación real capturada con éxito</p>
+                                  <div className="flex gap-4 font-mono text-[10px] text-slate-500 dark:text-gray-400">
+                                    <span>Lat: <strong className="text-slate-900 dark:text-foreground">{entityLat.toFixed(6)}</strong></span>
+                                    <span>Lng: <strong className="text-slate-900 dark:text-foreground">{entityLng.toFixed(6)}</strong></span>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={requestLocation}
+                                  className="text-[10px] font-bold text-teal-600 dark:text-teal-400 hover:underline shrink-0"
+                                >
+                                  Recapturar
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {locationError && (
+                                  <p className="text-[10px] text-rose-600 dark:text-rose-400 bg-rose-500/5 border border-rose-500/10 rounded-xl p-2 font-medium">
+                                    ⚠️ {locationError}
+                                  </p>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={requestLocation}
+                                  className="w-full h-10 rounded-xl text-xs font-bold bg-teal-600/10 border border-teal-500/20 hover:bg-teal-600/20 text-teal-600 dark:text-teal-400 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                                >
+                                  📍 Obtener Ubicación GPS del Dispositivo
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}

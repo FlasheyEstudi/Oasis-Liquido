@@ -46,6 +46,7 @@ export async function getFamilyRelationships(userId: string) {
       status: r.status,
       permissions: r.permissions,
       isActive: r.isActive,
+      verificationCode: r.verificationCode,
       createdAt: r.createdAt,
       patient: {
         id: r.patient.id,
@@ -62,6 +63,7 @@ export async function getFamilyRelationships(userId: string) {
       status: r.status,
       permissions: r.permissions,
       isActive: r.isActive,
+      verificationCode: r.verificationCode,
       createdAt: r.createdAt,
       caregiver: r.caregiver,
     })),
@@ -73,23 +75,45 @@ export async function getFamilyRelationships(userId: string) {
  * Generates a unique 6-digit code valid for 24 hours.
  */
 export async function requestFamilyLink(
-  caregiverId: string,
-  patientEmail: string,
+  initiatorId: string,
+  targetEmail: string,
   relationship: string,
   permissions: string[] = ['view_health_data', 'buy_medicines', 'schedule_appointments'],
   ipAddress?: string,
   userAgent?: string
 ) {
-  const patient = await db.user.findUnique({
-    where: { email: patientEmail.trim().toLowerCase() },
+  const initiator = await db.user.findUnique({
+    where: { id: initiatorId },
   });
 
-  if (!patient) {
-    throw new Error('PATIENT_NOT_FOUND');
+  if (!initiator) {
+    throw new Error('INITIATOR_NOT_FOUND');
   }
 
-  if (patient.id === caregiverId) {
+  const targetUser = await db.user.findUnique({
+    where: { email: targetEmail.trim().toLowerCase() },
+  });
+
+  if (!targetUser) {
+    throw new Error('PATIENT_NOT_FOUND'); // Mapped to existing error for API consistency
+  }
+
+  if (targetUser.id === initiatorId) {
     throw new Error('CANNOT_LINK_SELF');
+  }
+
+  // Determine role roles dynamically
+  let caregiverId: string;
+  let patientId: string;
+
+  if (initiator.role === 'patient') {
+    // Patient initiates: Patient wants to link a Caregiver (Supervisor)
+    patientId = initiatorId;
+    caregiverId = targetUser.id;
+  } else {
+    // Caregiver/Supervisor initiates: Caregiver wants to link a Patient (Dependent)
+    caregiverId = initiatorId;
+    patientId = targetUser.id;
   }
 
   // Generate 6-digit code
@@ -101,7 +125,7 @@ export async function requestFamilyLink(
     where: {
       caregiverId_patientId: {
         caregiverId,
-        patientId: patient.id,
+        patientId,
       },
     },
   });
@@ -123,7 +147,7 @@ export async function requestFamilyLink(
     relation = await db.familyRelationship.create({
       data: {
         caregiverId,
-        patientId: patient.id,
+        patientId,
         relationship,
         status: 'pending',
         verificationCode,
@@ -136,23 +160,23 @@ export async function requestFamilyLink(
 
   // Audit log
   await createAuditLog({
-    userId: caregiverId,
+    userId: initiatorId,
     action: 'create',
     entityType: 'family_relationship',
     entityId: relation.id,
-    details: JSON.stringify({ patientId: patient.id, relationship, status: 'pending' }),
+    details: JSON.stringify({ patientId, caregiverId, relationship, status: 'pending' }),
     ipAddress,
     userAgent,
   });
 
   // Mock sending email to user - in a real scenario we'd use notification service
-  console.log(`✉️ Sending family link code ${verificationCode} to dependent ${patientEmail}`);
+  console.log(`✉️ Sending family link code ${verificationCode} to target ${targetEmail}`);
 
   return {
     relation,
     verificationCode,
     expiresAt: codeExpiresAt,
-    patientName: patient.name,
+    patientName: initiator.role === 'patient' ? targetUser.name : initiator.name,
   };
 }
 

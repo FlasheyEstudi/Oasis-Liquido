@@ -12,9 +12,16 @@ export const GET = withAuth(
     try {
       const { id } = await context.params;
 
-      // Verify pharmacy_manager or pharmacy_admin belongs to this pharmacy
-      if (req.user.role === 'pharmacy_manager') {
+      // Verify access to this pharmacy based on employee role profile
+      if (req.user.role === 'pharmacy_manager' || req.user.role === 'cashier') {
         const profile = await db.pharmacyManagerProfile.findUnique({
+          where: { userId: req.user.userId },
+        });
+        if (!profile || profile.pharmacyId !== id) {
+          return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
+        }
+      } else if (req.user.role === 'delivery_driver') {
+        const profile = await db.deliveryDriverProfile.findUnique({
           where: { userId: req.user.userId },
         });
         if (!profile || profile.pharmacyId !== id) {
@@ -48,5 +55,5 @@ export const GET = withAuth(
       return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
     }
   },
-  { roles: ['pharmacy_manager', 'pharmacy_admin', 'admin', 'patient', 'doctor'] }
+  { roles: ['pharmacy_manager', 'pharmacy_admin', 'admin', 'patient', 'doctor', 'cashier', 'delivery_driver'] }
 );

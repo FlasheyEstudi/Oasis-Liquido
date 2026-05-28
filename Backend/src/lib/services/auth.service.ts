@@ -20,6 +20,7 @@ export async function login(email: string, password: string, ipAddress?: string,
         doctorProfile: true,
         receptionistProfile: true,
         pharmacyManagerProfile: true,
+        deliveryDriverProfile: true,
       }
     });
     if (!user) {
@@ -43,7 +44,7 @@ export async function login(email: string, password: string, ipAddress?: string,
       email: user.email,
       role: user.role,
       clinicId: user.doctorProfile?.clinicId || user.receptionistProfile?.clinicId || undefined,
-      pharmacyId: user.pharmacyManagerProfile?.pharmacyId || undefined,
+      pharmacyId: user.pharmacyManagerProfile?.pharmacyId || user.deliveryDriverProfile?.pharmacyId || undefined,
     };
 
     const access_token = signAccessToken(payload);
@@ -201,6 +202,7 @@ export async function refreshTokens(refreshToken: string) {
       doctorProfile: true,
       receptionistProfile: true,
       pharmacyManagerProfile: true,
+      deliveryDriverProfile: true,
     }
   });
   if (!user || !user.isActive) {
@@ -213,7 +215,7 @@ export async function refreshTokens(refreshToken: string) {
     email: user.email,
     role: user.role,
     clinicId: user.doctorProfile?.clinicId || user.receptionistProfile?.clinicId || undefined,
-    pharmacyId: user.pharmacyManagerProfile?.pharmacyId || undefined,
+    pharmacyId: user.pharmacyManagerProfile?.pharmacyId || user.deliveryDriverProfile?.pharmacyId || undefined,
   };
 
   const access_token = signAccessToken(newPayload);
@@ -343,6 +345,7 @@ export async function loginWithFirebase(
       doctorProfile: true,
       receptionistProfile: true,
       pharmacyManagerProfile: true,
+      deliveryDriverProfile: true,
     },
   });
 
@@ -365,6 +368,7 @@ export async function loginWithFirebase(
         doctorProfile: true,
         receptionistProfile: true,
         pharmacyManagerProfile: true,
+        deliveryDriverProfile: true,
       },
     });
 
@@ -382,7 +386,7 @@ export async function loginWithFirebase(
     email: user.email,
     role: user.role,
     clinicId: user.doctorProfile?.clinicId || user.receptionistProfile?.clinicId || undefined,
-    pharmacyId: user.pharmacyManagerProfile?.pharmacyId || undefined,
+    pharmacyId: user.pharmacyManagerProfile?.pharmacyId || user.deliveryDriverProfile?.pharmacyId || undefined,
   };
 
   const access_token = signAccessToken(payload);

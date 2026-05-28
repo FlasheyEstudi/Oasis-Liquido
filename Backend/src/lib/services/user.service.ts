@@ -168,6 +168,26 @@ export async function updateUser(
     if (emailExists) {
       throw new Error('EMAIL_EXISTS');
     }
+
+    // Update email in Firebase Auth if the user has an active Firebase record
+    try {
+      const { firebaseAdmin } = await import('@/lib/firebase/admin');
+      if (firebaseAdmin) {
+        try {
+          await firebaseAdmin.auth().getUser(userId);
+          await firebaseAdmin.auth().updateUser(userId, { email: data.email });
+          console.log(`🔥 Synchronized email update in Firebase Auth for user: ${userId}`);
+        } catch (firebaseErr: any) {
+          if (firebaseErr.code === 'auth/user-not-found') {
+            console.log(`ℹ️ User ${userId} not registered in Firebase Auth. Skipping Firebase email sync.`);
+          } else {
+            throw firebaseErr;
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error(`⚠️ Failed to sync email update with Firebase: ${err.message}`);
+    }
   }
 
   // Run update and profile checks in a safe transaction
@@ -194,6 +214,16 @@ export async function updateUser(
         updatedAt: true,
       },
     });
+
+    // Invalidate active sessions if role, email or active status changes
+    if (
+      (data.email && data.email !== existing.email) ||
+      (data.role && data.role !== existing.role) ||
+      (data.isActive !== undefined && data.isActive !== existing.isActive)
+    ) {
+      await tx.refreshToken.deleteMany({ where: { userId } });
+      console.log(`🔒 Revoked all active refresh tokens for user: ${userId} due to identity updates.`);
+    }
 
     // 2. Manage role-specific profiles on role change
     if (data.role && data.role !== existing.role) {

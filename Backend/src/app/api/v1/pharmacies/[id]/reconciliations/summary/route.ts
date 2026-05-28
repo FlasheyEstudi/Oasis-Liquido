@@ -25,4 +25,4 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
   } catch (error: any) {
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error al calcular resumen de caja', 500);
   }
-}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'pharmacy_manager', 'admin'] });
+}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'pharmacy_manager', 'admin', 'cashier'] });

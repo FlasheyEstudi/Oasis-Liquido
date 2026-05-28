@@ -266,10 +266,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 }));
 
-// Escuchar expiración de token de forma global para limpiar sesión de forma reactiva
+// Escuchar expiración de token y actualizaciones de roles de forma global
 if (typeof window !== 'undefined') {
   window.addEventListener('auth:expired', () => {
     useAuthStore.getState().logout();
+  });
+
+  window.addEventListener('auth:roles-updated', async () => {
+    try {
+      const user = await getMe();
+      const normalized = normalizeUser(user);
+      if (normalized) {
+        const homePage = getHomeForRole(normalized.role);
+        const currentRole = useAuthStore.getState().user?.role;
+        
+        useAuthStore.setState({
+          user: normalized,
+          isAuthenticated: true,
+        });
+
+        // Redirect if the role has changed to prevent dashboard rendering breakdown
+        if (normalized.role !== currentRole) {
+          useAuthStore.getState().navigate(homePage);
+          useAuthStore.getState().setNotification({
+            type: 'info',
+            message: `Tu rol y permisos han sido actualizados por el Administrador. Redirigiendo...`,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('OASIS: Failed to sync reactively after role update event:', err);
+    }
   });
 }
 

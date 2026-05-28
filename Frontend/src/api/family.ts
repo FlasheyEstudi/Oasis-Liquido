@@ -57,3 +57,9 @@ export async function actAsFamily(id: string): Promise<{ token: string; user: an
   const result = await post<{ token: string; user: any }>(`/family/${id}/act-as`);
   return result.data;
 }
+
+/** Verify family relationship using 6-digit link PIN */
+export async function verifyFamily(code: string): Promise<{ relation: FamilyMember; supervisorName: string; supervisorEmail: string }> {
+  const result = await post<{ relation: FamilyMember; supervisorName: string; supervisorEmail: string }>('/family/verify', { code });
+  return result.data;
+}
