@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useSpatialGyro } from '@/hooks/use-spatial-gyro';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface GlassCardProps {
   onClick?: () => void;
   layoutId?: string;
   variants?: any;
+  spatial?: boolean;
 }
 
 export function GlassCard({
@@ -21,7 +23,13 @@ export function GlassCard({
   onClick,
   layoutId,
   variants,
+  spatial = false,
 }: GlassCardProps) {
+  // Invoca el hook reactivo de giroscopio si se requiere efecto espacial
+  if (spatial) {
+    useSpatialGyro();
+  }
+
   const glassClass = variant === 'strong'
     ? 'glass-strong'
     : variant === 'sidebar'
@@ -44,6 +52,7 @@ export function GlassCard({
       whileTap={onClick ? { scale: 0.99 } : undefined}
       className={cn(
         glassClass,
+        spatial && 'spatial-card clarity-shield',
         'rounded-[20px] p-4 sm:p-6',
         hover && 'cursor-pointer',
         onClick && 'cursor-pointer',

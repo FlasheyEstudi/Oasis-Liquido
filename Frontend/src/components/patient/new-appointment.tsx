@@ -191,14 +191,19 @@ export function NewAppointment() {
         ))}
       </div>
 
-      {/* Step labels */}
-      <div className="flex items-center justify-center gap-1 sm:gap-4 text-xs text-muted-foreground">
+      {/* Mobile Step Name */}
+      <div className="block sm:hidden text-center text-xs font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest bg-teal-500/5 py-1 px-3 rounded-full border border-teal-500/10 w-fit mx-auto animate-pulse">
+        Paso {step} de 4: {STEPS[step - 1].label}
+      </div>
+
+      {/* Step labels - Desktop only */}
+      <div className="hidden sm:flex items-center justify-center gap-4 text-xs text-muted-foreground">
         {STEPS.map((s) => (
           <span
             key={s.number}
             className={cn(
-              'w-16 sm:w-20 text-center transition-colors',
-              step === s.number ? 'font-semibold text-teal-600 dark:text-teal-400' : ''
+              'w-20 text-center transition-colors',
+              step === s.number ? 'font-bold text-teal-600 dark:text-teal-400' : ''
             )}
           >
             {s.label}

@@ -73,7 +73,7 @@ export function ContextualFAB() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         onClick={() => navigate(config.page)}
-        className="fixed bottom-20 right-4 z-40 lg:hidden size-14 rounded-2xl glass-btn-primary flex items-center justify-center shadow-lg shadow-teal-500/30"
+        className="fixed bottom-20 right-4 z-40 lg:hidden size-14 rounded-2xl clay-btn-primary flex items-center justify-center shadow-lg shadow-teal-500/20"
         aria-label={config.label}
       >
         {config.icon}

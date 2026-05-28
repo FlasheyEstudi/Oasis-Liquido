@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getApiUrl } from '@/api/client';
 import { GlassCard } from '@/components/oasis/glass-card';
+import { useSpatialGyro } from '@/hooks/use-spatial-gyro';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/utils/helpers';
 import { 
@@ -48,6 +49,7 @@ function parseAllergies(allergies: any): string[] {
 }
 
 export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription' | 'patient'; id: string }) {
+  useSpatialGyro();
   const [data, setData] = useState<VerificationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,12 +96,15 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
         </div>
         <h2 className="text-xl sm:text-2xl font-black mb-2 text-foreground">Error de Verificación</h2>
         <p className="text-xs sm:text-sm text-muted-foreground mb-8 max-w-md">{error}</p>
-        <Button 
+        <motion.button 
+          whileHover={{ y: -2, scale: 1.02 }}
+          whileTap={{ y: 1, scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 450, damping: 18 }}
           onClick={() => window.location.href = '/'} 
-          className="h-11 px-6 rounded-full font-semibold shadow-md bg-teal-500 text-white hover:bg-teal-600 active:scale-[0.98] transition-all"
+          className="clay-btn-primary h-12 px-8 font-extrabold flex items-center justify-center gap-2 select-none shadow-lg cursor-pointer"
         >
           Volver al inicio
-        </Button>
+        </motion.button>
       </div>
     );
   }
@@ -120,7 +125,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
       {data.type === 'sale' && (
         <div className="space-y-4 sm:space-y-6">
-          <GlassCard className="p-4 sm:p-6 border-t-4 border-teal-500">
+          <GlassCard spatial className="p-4 sm:p-6 border-t-4 border-teal-500">
             <div className="flex justify-between items-start mb-6 sm:mb-8">
               <div>
                 <h3 className="text-lg sm:text-xl font-semibold leading-snug text-foreground">Resumen de Venta</h3>
@@ -209,7 +214,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
       {data.type === 'prescription' && (
         <div className="space-y-4 sm:space-y-6">
-          <GlassCard className="p-4 sm:p-6 border-t-4 border-sky-500 shadow-2xl relative overflow-hidden">
+          <GlassCard spatial className="p-4 sm:p-6 border-t-4 border-sky-500 shadow-2xl relative overflow-hidden">
             {/* Watermark/Holographic Seal in Background */}
             <div className="absolute -right-16 -top-16 size-48 rounded-full bg-sky-500/[0.04] border border-sky-500/10 flex items-center justify-center rotate-12 pointer-events-none select-none">
               <span className="text-[10px] font-black text-sky-500/20 tracking-[0.2em] uppercase text-center">
@@ -219,7 +224,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
             <div className="flex justify-between items-start mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mb-2 border border-emerald-500/20">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mb-3 border border-emerald-500/25 pulse-badge-success shadow-sm">
                   <CheckCircle2 className="size-3" /> Receta Válida
                 </span>
                 <h3 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Receta Médica Digital</h3>
@@ -372,14 +377,15 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
                         </div>
                       </div>
                       <div className="flex justify-end mt-2 sm:mt-0 shrink-0">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <motion.button 
+                          whileHover={{ y: -1, scale: 1.02 }}
+                          whileTap={{ y: 0.5, scale: 0.98 }}
+                          transition={{ type: "spring", stiffness: 450, damping: 18 }}
                           onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(pharm.name + ', ' + pharm.address)}`, '_blank')}
-                          className="rounded-full gap-1.5 text-xs py-2.5 px-4 h-11 sm:h-9 font-semibold border-teal-500/20 text-teal-600 hover:bg-teal-500/5 transition-all select-none"
+                          className="clay-btn-primary text-xs py-2.5 px-4 rounded-xl font-bold flex items-center gap-1.5 select-none cursor-pointer"
                         >
                           MAPA <ArrowRight className="size-4 sm:size-3" />
-                        </Button>
+                        </motion.button>
                       </div>
                     </div>
                   </GlassCard>
@@ -409,15 +415,16 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
           {/* Tarjeta de Identidad Digital Interactiva (Efecto Tarjeta Física Premium) */}
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 24 }}
+            initial={{ scale: 0.93, opacity: 0, y: 32 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 100, damping: 15 }}
+            whileHover={{ y: -6, rotateX: 2, rotateY: -2, scale: 1.015 }}
+            transition={{ type: "spring", stiffness: 220, damping: 24 }}
             className={cn(
-              "relative w-full aspect-[1.586/1] rounded-[1.8rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.7)] border group backdrop-blur-md bg-zinc-950/40 select-none",
-              data.type === 'pharmacy' && "border-emerald-500/20",
-              data.type === 'doctor' && "border-sky-500/20",
-              data.type === 'delivery' && "border-amber-500/20",
-              data.type === 'patient' && "border-teal-500/20"
+              "spatial-card clarity-shield relative w-full aspect-[1.586/1] rounded-[1.8rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.5)] border group select-none",
+              data.type === 'pharmacy' && "border-emerald-500/25",
+              data.type === 'doctor' && "border-sky-500/25",
+              data.type === 'delivery' && "border-amber-500/25",
+              data.type === 'patient' && "border-teal-500/25"
             )}
           >
             {/* Fondo Base con Gradiente Satinado y Profundo según rol */}
@@ -459,7 +466,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg md:text-xl font-black tracking-[0.15em] text-teal-300 uppercase flex items-center gap-1.5 leading-none">
+                    <h3 className="text-base sm:text-lg md:text-xl font-black tracking-[0.15em] text-teal-300 uppercase flex items-center gap-1.5 leading-none kinetic-text kinetic-pulse">
                       OASIS LÍQUIDA
                     </h3>
                     <p className="text-[6px] sm:text-[7px] text-teal-400/60 font-mono tracking-widest uppercase mt-1">
@@ -471,7 +478,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase pulse-badge-success shadow-sm">
                     {data.type === 'pharmacy' && 'MINSA AUTORIZADO'}
                     {data.type === 'doctor' && 'MINSA CERTIFICADO'}
                     {data.type === 'delivery' && 'MINSA AUTORIZADO'}
@@ -838,13 +845,14 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
       )}
       
       <div className="pt-8 text-center flex justify-center">
-        <Button 
-          variant="ghost" 
+        <motion.button 
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => window.location.href = '/'}
-          className="h-11 px-4 text-xs font-bold text-muted-foreground hover:text-teal-600 transition-colors rounded-full hover:bg-slate-500/5 select-none"
+          className="h-11 px-4 text-xs font-extrabold tracking-widest text-muted-foreground hover:text-teal-500 transition-colors rounded-full hover:bg-teal-500/5 select-none cursor-pointer"
         >
           OASIS AURA HEALTH ECOSYSTEM © 2026
-        </Button>
+        </motion.button>
       </div>
     </div>
   );

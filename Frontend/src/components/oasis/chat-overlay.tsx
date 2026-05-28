@@ -162,7 +162,7 @@ export function ChatOverlay() {
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="pointer-events-auto"
           >
-            <GlassCard className="w-80 h-[450px] flex flex-col p-0 overflow-hidden shadow-2xl border-white/20 bg-background/80 backdrop-blur-2xl">
+            <GlassCard spatial className="w-80 h-[450px] flex flex-col p-0 overflow-hidden shadow-2xl">
               {/* Chat Header */}
               <div className="p-4 bg-gradient-to-r from-teal-500/20 to-sky-500/20 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -211,8 +211,8 @@ export function ChatOverlay() {
                             <div className={cn(
                               "max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm",
                               isMe 
-                                ? "rounded-tr-none bg-teal-500 text-white" 
-                                : "rounded-tl-none bg-muted border border-border/50 text-foreground"
+                                ? "rounded-tr-none bg-gradient-to-br from-teal-500 to-teal-600 text-white font-medium shadow-[inset_-1px_-1px_3px_rgba(0,0,0,0.15),inset_1px_1px_3px_rgba(255,255,255,0.25)] border border-teal-400/20" 
+                                : "rounded-tl-none bg-muted border border-border/50 text-foreground shadow-[inset_1px_1px_2px_rgba(255,255,255,0.05)]"
                             )}>
                               {msg.content}
                               <p className={cn("text-[9px] mt-1 opacity-70", isMe ? "text-right" : "text-left")}>
@@ -243,7 +243,7 @@ export function ChatOverlay() {
                     type="submit" 
                     size="icon" 
                     disabled={!message.trim()}
-                    className="size-10 rounded-full bg-teal-500 hover:bg-teal-600 text-white shrink-0 shadow-lg shadow-teal-500/20"
+                    className="size-10 rounded-full clay-btn-primary flex items-center justify-center shrink-0 shadow-lg text-black font-extrabold"
                   >
                     <Send className="size-4" />
                   </Button>
@@ -259,7 +259,7 @@ export function ChatOverlay() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="pointer-events-auto relative size-14 rounded-full bg-gradient-to-br from-teal-500 to-sky-600 text-white flex items-center justify-center shadow-2xl shadow-teal-500/40 ring-4 ring-white/10"
+        className="pointer-events-auto relative size-14 rounded-full clay-btn-primary flex items-center justify-center shadow-2xl shadow-teal-500/30 text-black"
       >
         <MessageCircle className={cn("size-7 transition-transform duration-500", isOpen ? "rotate-90 scale-0" : "scale-100")} />
         <X className={cn("size-7 absolute transition-transform duration-500", isOpen ? "scale-100" : "scale-0 -rotate-90")} />

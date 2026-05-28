@@ -100,6 +100,24 @@ export function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Desktop Mouse Perspective Tilt states
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    
+    // Scale rotation to max 5 degrees for larger double-panels
+    const rotateX = -(y / (rect.height / 2)) * 5;
+    const rotateY = (x / (rect.width / 2)) * 5;
+    setTilt({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
   // Geolocation States
   const [entityLat, setEntityLat] = useState<number | null>(null);
   const [entityLng, setEntityLng] = useState<number | null>(null);
@@ -345,6 +363,13 @@ export function RegisterForm() {
       <motion.div
         initial="hidden"
         animate="visible"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          transformStyle: 'preserve-3d',
+          transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          transition: 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)',
+        }}
         className="relative z-10 w-full max-w-md md:max-w-4xl"
       >
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
@@ -901,14 +926,14 @@ export function RegisterForm() {
                   )}
                 </AnimatePresence>
 
-                {/* Bottom Action buttons */}
+                {/* Bottom Action buttons - Claymorphic Reconstructed */}
                 <div className="flex items-center gap-3 pt-2">
                   {step > 1 && (
                     <button
                       type="button"
                       onClick={handlePrevStep}
                       disabled={isSubmitting}
-                      className="w-1/3 h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all disabled:opacity-50"
+                      className="w-1/3 h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border bg-slate-100/50 dark:bg-zinc-800/30 hover:bg-slate-200/50 dark:hover:bg-zinc-800/50 border-slate-200/50 dark:border-zinc-800/30 text-slate-700 dark:text-zinc-300 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 cursor-pointer"
                     >
                       <ArrowLeft className="size-3.5" />
                       Atrás
@@ -920,7 +945,7 @@ export function RegisterForm() {
                       type="button"
                       onClick={handleNextStep}
                       className={cn(
-                        "h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/10 hover:shadow-teal-500/25 active:scale-[0.98] transition-all duration-300",
+                        "clay-btn-primary h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 relative transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] cursor-pointer",
                         step > 1 ? "w-2/3" : "w-full"
                       )}
                     >
@@ -932,7 +957,7 @@ export function RegisterForm() {
                       type="submit"
                       disabled={isSubmitting}
                       className={cn(
-                        "h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 text-white shadow-lg shadow-teal-500/20 hover:shadow-teal-500/35 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed",
+                        "clay-btn-primary h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 relative transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer",
                         step > 1 ? "w-2/3" : "w-full"
                       )}
                     >

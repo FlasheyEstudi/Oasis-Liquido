@@ -127,7 +127,7 @@ export function GlassSidebar() {
 
   return (
     <aside
-      className="glass-sidebar sticky left-0 top-0 h-screen z-40 w-[260px] flex flex-col overflow-hidden shrink-0 border-r border-sidebar-border"
+      className="glass-sidebar clarity-shield sticky left-0 top-0 h-screen z-40 w-[260px] flex flex-col overflow-hidden shrink-0 border-r border-sidebar-border"
     >
       {/* Logo Area */}
       <div className="flex items-center h-[60px] px-4 border-b border-sidebar-border">
@@ -171,8 +171,8 @@ export function GlassSidebar() {
                   'relative flex items-center gap-3 w-full rounded-xl transition-all duration-200',
                   expanded ? 'px-3 py-2.5' : 'justify-center px-0 py-2.5',
                   isActive
-                    ? 'bg-teal-500/10 text-teal-700 dark:text-teal-400'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-500/5'
+                    ? 'bg-teal-500/[0.08] dark:bg-teal-400/[0.08] border border-teal-500/15 dark:border-teal-400/15 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] text-teal-700 dark:text-teal-400 font-semibold'
+                    : 'border border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-500/5'
                 )}
               >
                 {/* Active indicator */}
@@ -223,8 +223,8 @@ export function GlassSidebar() {
             'flex items-center gap-3 w-full rounded-xl transition-all duration-200',
             expanded ? 'px-3 py-2.5' : 'justify-center px-0 py-2.5',
             currentPage === 'profile'
-              ? 'bg-teal-500/10 text-teal-700 dark:text-teal-400'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-500/5'
+              ? 'bg-teal-500/[0.08] dark:bg-teal-400/[0.08] border border-teal-500/15 dark:border-teal-400/15 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] text-teal-700 dark:text-teal-400 font-semibold'
+              : 'border border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-500/5'
           )}
         >
           <User className="size-[18px] shrink-0" />

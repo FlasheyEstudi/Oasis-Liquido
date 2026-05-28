@@ -181,30 +181,30 @@ export function PatientHome() {
 
   return (
     <div className={cn("bento-grid transition-all duration-300", isElderlyMode && "text-base font-medium [&_h2]:text-4xl [&_h3]:text-2xl [&_p]:text-lg [&_span]:text-base [&_button]:py-4 [&_button]:px-6 [&_button]:text-base [&_svg]:size-6")}>
-      {/* Welcome Card - col-span-8 */}
-      <GlassCard className="col-span-12 lg:col-span-8 bg-gradient-to-br from-teal-500/10 to-sky-500/10 overflow-hidden relative">
+      {/* Welcome Card - col-span-8 with Spatial Gyroscope Depth */}
+      <GlassCard spatial className="col-span-12 lg:col-span-8 overflow-hidden relative">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="flex items-center gap-2">
               {greeting.icon}
-              <h2 className="text-3xl font-black text-foreground tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight leading-none">
                 {greeting.text}, {firstName}
               </h2>
             </div>
-            <p className="text-base text-muted-foreground font-semibold">{dateStr}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground font-semibold">{dateStr}</p>
             
             {/* Controles Modo Mayor y Selector de Familiares */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center gap-2 pt-1.5">
               <button
                 onClick={toggleElderlyMode}
                 className={cn(
-                  "flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-black transition-all duration-300 shadow-md",
+                  "flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] sm:text-xs font-black transition-all duration-300 shadow-md",
                   isElderlyMode
                     ? "bg-amber-500/25 border-amber-500/50 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20"
                     : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground"
                 )}
               >
-                <Activity className="size-3.5 text-amber-500 animate-pulse" />
+                <Activity className="size-3 text-amber-500 animate-pulse" />
                 <span>{isElderlyMode ? 'Modo Mayor Activo' : 'Modo Mayor'}</span>
               </button>
 
@@ -304,8 +304,8 @@ export function PatientHome() {
         <div className="absolute -right-20 -bottom-20 size-64 bg-teal-500/5 rounded-full blur-3xl" />
       </GlassCard>
 
-      {/* Next Appointment Card - col-span-4 */}
-      <GlassCard className="col-span-12 lg:col-span-4" hover={!!nextAppointment} onClick={nextAppointment ? () => navigate('appointments') : undefined}>
+      {/* Next Appointment Card - col-span-4 with Spatial Gyroscope Depth */}
+      <GlassCard spatial className="col-span-12 lg:col-span-4" hover={!!nextAppointment} onClick={nextAppointment ? () => navigate('appointments') : undefined}>
         <div className="flex items-center gap-2 mb-3">
           <div className="flex size-8 items-center justify-center rounded-full bg-teal-500/10">
             <Calendar className="size-4 text-teal-600 dark:text-teal-400" />
@@ -353,8 +353,8 @@ export function PatientHome() {
       </GlassCard>
 
       {/* Quick Actions Row - col-span-12 */}
-      <GlassCard className="col-span-12 !p-4">
-        <div className="grid grid-cols-4 gap-3">
+      <GlassCard className="col-span-12 !p-3 sm:!p-4">
+        <div className="grid grid-cols-4 gap-2 sm:gap-4">
           {[
             { label: 'Agendar cita', icon: Plus, page: 'nueva-cita' as const, color: 'teal' },
             { label: 'Ver recetas', icon: FileText, page: 'recetas' as const, color: 'sky' },
@@ -366,15 +366,15 @@ export function PatientHome() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               className={cn(
-                'flex flex-col items-center gap-2 rounded-2xl py-4 px-2 transition-colors',
-                action.color === 'teal' && 'bg-teal-500/10 hover:bg-teal-500/15 text-teal-600 dark:text-teal-400',
-                action.color === 'sky' && 'bg-sky-500/10 hover:bg-sky-500/15 text-sky-600 dark:text-sky-400',
-                action.color === 'amber' && 'bg-amber-500/10 hover:bg-amber-500/15 text-amber-600 dark:text-amber-400',
+                'flex flex-col items-center gap-1.5 rounded-2xl py-3 sm:py-4 px-1 sm:px-2 transition-all duration-300 border shadow-md',
+                action.color === 'teal' && 'bg-teal-500/10 dark:bg-teal-500/[0.08] border-teal-500/15 text-teal-600 dark:text-teal-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold',
+                action.color === 'sky' && 'bg-sky-500/10 dark:bg-sky-500/[0.08] border-sky-500/15 text-sky-600 dark:text-sky-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold',
+                action.color === 'amber' && 'bg-amber-500/10 dark:bg-amber-500/[0.08] border-amber-500/15 text-amber-600 dark:text-amber-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold',
               )}
               onClick={() => navigate(action.page)}
             >
-              <action.icon className="size-5" />
-              <span className="text-xs font-medium">{action.label}</span>
+              <action.icon className="size-4.5 sm:size-5 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-black tracking-wide uppercase text-center truncate w-full">{action.label}</span>
             </motion.button>
           ))}
         </div>
@@ -506,18 +506,18 @@ export function PatientHome() {
         </div>
       </GlassCard>
 
-      {/* Floating Emergency Button */}
+      {/* Floating Claymorphic Emergency Button */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={handleEmergency}
         disabled={emergencyMutation.isPending}
-        className="fixed bottom-24 left-6 z-[40] size-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl shadow-red-500/50 border-4 border-white/20 overflow-hidden"
+        className="fixed bottom-24 left-6 z-[40] size-16 rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center shadow-2xl shadow-red-500/40 border border-red-400/20 shadow-[inset_-2px_-2px_6px_rgba(0,0,0,0.2),inset_2px_2px_6px_rgba(255,255,255,0.3)] overflow-hidden"
       >
         <motion.div
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="absolute inset-0 bg-red-500/50"
+          className="absolute inset-0 bg-red-500/30"
         />
         <AlertCircle className="size-8 relative z-10" />
       </motion.button>

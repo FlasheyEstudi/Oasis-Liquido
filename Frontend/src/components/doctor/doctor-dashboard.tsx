@@ -99,8 +99,8 @@ export function DoctorDashboard() {
 
   return (
     <div className="bento-grid p-4 md:p-6">
-      {/* Welcome Card - col-span-8 */}
-      <GlassCard className="col-span-8">
+      {/* Welcome Card - col-span-12 md:col-span-8 with Spatial Gyroscope Depth */}
+      <GlassCard spatial className="col-span-12 md:col-span-8">
         <div className="flex items-center justify-between">
           <div>
             <motion.h1
@@ -175,8 +175,8 @@ export function DoctorDashboard() {
         </div>
       </GlassCard>
 
-      {/* Next Appointment - col-span-4 */}
-      <GlassCard className="col-span-4">
+      {/* Next Appointment - col-span-12 md:col-span-4 with Spatial Gyroscope Depth */}
+      <GlassCard spatial className="col-span-12 md:col-span-4">
         <h3 className="text-sm font-medium text-muted-foreground mb-3">
           Próxima cita
         </h3>
@@ -227,8 +227,8 @@ export function DoctorDashboard() {
         )}
       </GlassCard>
 
-      {/* Patient Queue - col-span-6 */}
-      <GlassCard className="col-span-6">
+      {/* Patient Queue - col-span-12 md:col-span-6 */}
+      <GlassCard className="col-span-12 md:col-span-6">
         <h3 className="text-base font-semibold text-foreground mb-4">
           Pacientes de hoy
         </h3>
@@ -320,8 +320,8 @@ export function DoctorDashboard() {
         )}
       </GlassCard>
 
-      {/* Quick Actions - col-span-6 */}
-      <GlassCard className="col-span-6">
+      {/* Quick Actions - col-span-12 md:col-span-6 */}
+      <GlassCard className="col-span-12 md:col-span-6">
         <h3 className="text-base font-semibold text-foreground mb-4">
           Acciones rápidas
         </h3>
@@ -338,9 +338,8 @@ export function DoctorDashboard() {
               }
             }}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl p-5',
-              'glass-input cursor-pointer transition-all duration-200',
-              'hover:bg-teal-500/10 hover:border-teal-500/30',
+              'flex flex-col items-center gap-2 rounded-2xl p-5 border shadow-md',
+              'bg-teal-500/10 dark:bg-teal-500/[0.08] border-teal-500/15 text-teal-600 dark:text-teal-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]',
             )}
           >
             <div className="flex size-12 items-center justify-center rounded-full bg-teal-500/10">
@@ -352,9 +351,8 @@ export function DoctorDashboard() {
           <button
             onClick={() => navigate('recetas')}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl p-5',
-              'glass-input cursor-pointer transition-all duration-200',
-              'hover:bg-sky-500/10 hover:border-sky-500/30',
+              'flex flex-col items-center gap-2 rounded-2xl p-5 border shadow-md',
+              'bg-sky-500/10 dark:bg-sky-500/[0.08] border-sky-500/15 text-sky-600 dark:text-sky-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]',
             )}
           >
             <div className="flex size-12 items-center justify-center rounded-full bg-sky-500/10">
@@ -366,9 +364,8 @@ export function DoctorDashboard() {
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('open-compliance-modal'))}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl p-5 col-span-2 sm:col-span-1',
-              'glass-input cursor-pointer transition-all duration-200',
-              'hover:bg-amber-500/10 hover:border-amber-500/30',
+              'flex flex-col items-center gap-2 rounded-2xl p-5 col-span-2 sm:col-span-1 border shadow-md',
+              'bg-amber-500/10 dark:bg-amber-500/[0.08] border-amber-500/15 text-amber-600 dark:text-amber-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]',
             )}
           >
             <div className="flex size-12 items-center justify-center rounded-full bg-amber-500/10">

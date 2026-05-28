@@ -194,7 +194,7 @@ export function AppointmentList() {
                   key={apt.id}
                   variants={fadeInUp}
                   transition={{ delay: index * 0.04 }}
-                  className="col-span-6 lg:col-span-4"
+                  className="col-span-12 sm:col-span-6 lg:col-span-4"
                 >
                   <GlassCard
                     hover

@@ -162,9 +162,293 @@
 
 /* --- ACCESSIBILITY & PREFERS REDUCED MOTION --- */
 @media (prefers-reduced-motion: reduce) {
-  .clay-card, .clay-btn, .kinetic-text, .liquid-blob {
+  .clay-card, .clay-btn, .kinetic-text, .liquid-blob, .spatial-card, .pulse-badge-success, .liquid-input {
     animation: none !important;
     transition: none !important;
     transform: none !important;
   }
 }
+
+/* ============================================
+   OASIS 2026 - Spatial Glassmorphism 3.0
+   ============================================ */
+
+/* Variable de opacidad dinámica por sensor o contraste */
+:root {
+  --glass-opacity: 0.40;
+  --glass-blur: 24px;
+  --glass-saturate: 1.25;
+  --contrast-shield-tint: rgba(255, 255, 255, 0.05);
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --glass-opacity: 0.80;
+    --glass-blur: 40px;
+    --glass-saturate: 1.5;
+    --contrast-shield-tint: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Capa de protección de contraste inteligente contra blobs */
+.clarity-shield {
+  background: rgba(var(--glass-bg-rgb, 255, 255, 255), var(--glass-opacity));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  box-shadow: 
+    inset 0 0 16px var(--contrast-shield-tint),
+    0 8px 32px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+.dark .clarity-shield {
+  background: rgba(var(--glass-bg-rgb-dark, 15, 23, 42), calc(var(--glass-opacity) + 0.15));
+  border-color: rgba(0, 226, 192, 0.2);
+  box-shadow: 
+    inset 0 0 16px rgba(0, 226, 192, 0.03),
+    0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Spatial gyro-reactive card */
+.spatial-card {
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s ease, box-shadow 0.25s ease;
+  background: radial-gradient(
+    circle at calc(50% + var(--gyro-x, 0px)) calc(50% + var(--gyro-y, 0px)),
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.35) 100%
+  );
+  border: 1.5px solid rgba(13, 148, 136, 0.15);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.01),
+    0 12px 28px -4px rgba(13, 148, 136, 0.06),
+    0 20px 40px -10px rgba(0, 0, 0, 0.04);
+}
+
+.dark .spatial-card {
+  background: radial-gradient(
+    circle at calc(50% + var(--gyro-x, 0px)) calc(50% + var(--gyro-y, 0px)),
+    rgba(30, 41, 59, 0.6) 0%,
+    rgba(15, 23, 42, 0.45) 100%
+  );
+  border-color: rgba(0, 226, 192, 0.18);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.1),
+    inset 0 0 12px rgba(0, 226, 192, 0.05),
+    0 12px 32px -8px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   OASIS 2026 - Claymorphic 3D Buttons
+   ============================================ */
+
+.clay-btn-primary {
+  background: linear-gradient(135deg, #00E2C0, #00A190);
+  color: #050505;
+  font-weight: 800;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 18px;
+  box-shadow: 
+    0 8px 20px -4px rgba(0, 226, 192, 0.4), 
+    inset -3px -3px 8px rgba(0, 0, 0, 0.15), 
+    inset 3px 3px 8px rgba(255, 255, 255, 0.45);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.clay-btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 12px 24px -4px rgba(0, 226, 192, 0.55), 
+    inset -4px -4px 10px rgba(0, 0, 0, 0.15), 
+    inset 4px 4px 10px rgba(255, 255, 255, 0.6);
+}
+
+.clay-btn-primary:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 
+    0 4px 8px -2px rgba(0, 226, 192, 0.3), 
+    inset -1px -1px 3px rgba(0, 0, 0, 0.15), 
+    inset 1px 1px 3px rgba(255, 255, 255, 0.4);
+}
+
+.clay-btn-success {
+  background: linear-gradient(135deg, #34D399, #059669);
+  color: white;
+  font-weight: 800;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 18px;
+  box-shadow: 
+    0 8px 20px -4px rgba(16, 185, 129, 0.35), 
+    inset -3px -3px 8px rgba(0, 0, 0, 0.2), 
+    inset 3px 3px 8px rgba(255, 255, 255, 0.3);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.clay-btn-success:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 12px 24px -4px rgba(16, 185, 129, 0.5), 
+    inset -4px -4px 10px rgba(0, 0, 0, 0.2), 
+    inset 4px 4px 10px rgba(255, 255, 255, 0.45);
+}
+
+.clay-btn-danger {
+  background: linear-gradient(135deg, #F87171, #EF4444);
+  color: white;
+  font-weight: 800;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 18px;
+  box-shadow: 
+    0 8px 20px -4px rgba(239, 68, 68, 0.35), 
+    inset -3px -3px 8px rgba(0, 0, 0, 0.2), 
+    inset 3px 3px 8px rgba(255, 255, 255, 0.3);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.clay-btn-danger:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 12px 24px -4px rgba(239, 68, 68, 0.5), 
+    inset -4px -4px 10px rgba(0, 0, 0, 0.2), 
+    inset 4px 4px 10px rgba(255, 255, 255, 0.45);
+}
+
+/* ============================================
+   OASIS 2026 - Liquid Inputs (Campos Líquidos)
+   ============================================ */
+
+.liquid-input-container {
+  position: relative;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.liquid-input {
+  width: 100%;
+  height: 54px;
+  padding: 22px 16px 6px 16px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1.5px solid rgba(13, 148, 136, 0.18);
+  border-radius: 16px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  color: var(--foreground);
+}
+
+.dark .liquid-input {
+  background: rgba(15, 23, 42, 0.45);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.liquid-input:focus {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: #00E2C0;
+  box-shadow: 
+    0 4px 16px rgba(0, 226, 192, 0.08), 
+    0 0 0 3px rgba(0, 226, 192, 0.15);
+  transform: translateY(-1px);
+}
+
+.dark .liquid-input:focus {
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow: 
+    0 4px 20px rgba(0, 226, 192, 0.15), 
+    0 0 0 3px rgba(0, 226, 192, 0.2);
+}
+
+.liquid-label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), font-size 0.3s ease, color 0.2s ease;
+  transform-origin: left top;
+}
+
+.liquid-input:focus ~ .liquid-label,
+.liquid-input:not(:placeholder-shown) ~ .liquid-label {
+  transform: translateY(-135%) scale(0.8);
+  color: #00C2A0;
+  font-weight: 700;
+}
+
+.dark .liquid-input:focus ~ .liquid-label,
+.dark .liquid-input:not(:placeholder-shown) ~ .liquid-label {
+  color: #00E2C0;
+}
+
+/* ============================================
+   OASIS 2026 - Pulse Badges (Respiración Glow)
+   ============================================ */
+
+@keyframes pulse-glow-breath {
+  0%, 100% { box-shadow: 0 0 4px rgba(16, 185, 129, 0.2), 0 1px 2px rgba(0,0,0,0.1); }
+  50% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.6), 0 2px 4px rgba(0,0,0,0.15); }
+}
+
+@keyframes pulse-glow-warning {
+  0%, 100% { box-shadow: 0 0 4px rgba(245, 158, 11, 0.2), 0 1px 2px rgba(0,0,0,0.1); }
+  50% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.6), 0 2px 4px rgba(0,0,0,0.15); }
+}
+
+.pulse-badge-success {
+  animation: pulse-glow-breath 3s ease-in-out infinite;
+}
+
+.pulse-badge-warning {
+  animation: pulse-glow-warning 3s ease-in-out infinite;
+}
+
+/* ============================================
+   OASIS 2026 - Fluid Table Horizon
+   ============================================ */
+
+.fluid-table-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--card);
+}
+
+.fluid-table-scroll {
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+/* Fading edge indicators for horizontal content */
+.fluid-table-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0; width: 32px;
+  background: linear-gradient(90deg, var(--background), transparent);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+  z-index: 10;
+}
+
+.fluid-table-container::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; width: 32px;
+  background: linear-gradient(90deg, transparent, var(--background));
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+  z-index: 10;
+}
+
+.fluid-table-container.scroll-started::before {
+  opacity: 1;
+}
+
+.fluid-table-container.scroll-ended::after {
+  opacity: 0;
+}
+

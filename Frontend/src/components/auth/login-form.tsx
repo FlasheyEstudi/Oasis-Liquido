@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Droplets, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Droplets, Loader2, ArrowLeft, Heart, Stethoscope, Store, Truck, ShieldCheck, Users, Activity, Sparkles } from 'lucide-react';
 
 import { useAuthStore } from '@/store/auth-store';
 import { APP_NAME } from '@/utils/constants';
 import { post, getErrorMessage } from '@/api/client';
 import { OrganicBlobs } from '@/components/oasis/organic-blobs';
-
 import { AnimatedLogo } from '@/components/ui/animated-logo';
+import { cn } from '@/lib/utils';
 import type { AuthResponse } from '@/types';
 
 const fadeInUp: any = {
@@ -29,6 +29,24 @@ export function LoginForm() {
   const [apiError, setApiError] = useState<string | null>(null);
 
   const { navigate, login, setNotification } = useAuthStore();
+
+  // Desktop Mouse Perspective Tilt states
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    
+    // Scale rotation to max 8 degrees for smooth natural physical drift
+    const rotateX = -(y / (rect.height / 2)) * 8;
+    const rotateY = (x / (rect.width / 2)) * 8;
+    setTilt({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,16 +76,23 @@ export function LoginForm() {
   }
 
   return (
-    <div className="relative flex h-screen max-h-screen overflow-hidden items-center justify-center px-4 py-0 bg-gradient-to-tr from-slate-50 via-zinc-100 to-teal-50/20 dark:from-[#030606] dark:via-[#010203] dark:to-[#020507] transition-colors duration-500">
+    <div className="relative flex h-screen max-h-screen overflow-hidden items-center justify-center px-4 py-0 bg-gradient-to-tr from-slate-50 via-zinc-100 to-teal-50/20 dark:from-[#030606] dark:via-[#010203] dark:to-[#020507] transition-colors duration-500 select-none">
       <OrganicBlobs />
 
-      {/* Futuristic Floating Lights */}
-      <div className="absolute top-10 left-10 w-96 h-96 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
+      {/* Futuristic Floating Aura Lights */}
+      <div className="absolute top-10 left-10 w-[450px] h-[450px] bg-teal-500/5 rounded-full blur-[110px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-cyan-500/5 rounded-full blur-[110px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
 
       <motion.div
         initial="hidden"
         animate="visible"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          transformStyle: 'preserve-3d',
+          transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          transition: 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)',
+        }}
         className="relative z-10 w-full max-w-md md:max-w-4xl"
       >
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
@@ -76,7 +101,7 @@ export function LoginForm() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
             
-            <div>
+            <div style={{ transform: 'translateZ(30px)' }}>
               <div className="flex items-center gap-2 mb-6">
                 <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/20 uppercase">
                   Oasis v0.2-RC1
@@ -110,7 +135,7 @@ export function LoginForm() {
               </div>
             </div>
 
-            <div className="mt-8 pt-4 border-t border-slate-200/50 dark:border-zinc-800/30 flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
+            <div className="mt-8 pt-4 border-t border-slate-200/50 dark:border-zinc-800/30 flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-medium" style={{ transform: 'translateZ(10px)' }}>
               <span>© {new Date().getFullYear()} Oasis Nicaragua</span>
               <span className="flex items-center gap-1">
                 <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -121,12 +146,12 @@ export function LoginForm() {
 
           {/* Right Panel: The Login Form */}
           <div className="col-span-1 md:col-span-7 flex flex-col justify-between backdrop-blur-3xl bg-white/40 dark:bg-zinc-950/40 border border-white/20 dark:border-zinc-800/30 shadow-[inset_1px_1px_4px_rgba(255,255,255,0.1),_0_24px_64px_rgba(0,0,0,0.5)] rounded-[2.5rem] p-6 md:p-8 transition-all duration-300">
-            <div>
+            <div style={{ transform: 'translateZ(40px)' }}>
               {/* Go Back button */}
               <button
                 type="button"
                 onClick={() => navigate('bienvenida')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white bg-slate-100/50 dark:bg-zinc-800/30 hover:bg-slate-200/50 dark:hover:bg-zinc-800/50 border border-slate-200/50 dark:border-zinc-800/30 transition-all mb-4 self-start group"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white bg-slate-100/50 dark:bg-zinc-800/30 hover:bg-slate-200/50 dark:hover:bg-zinc-800/50 border border-slate-200/50 dark:border-zinc-800/30 transition-all mb-4 self-start group cursor-pointer"
               >
                 <ArrowLeft className="size-3.5 group-hover:-translate-x-0.5 transition-transform" />
                 Volver al inicio
@@ -194,7 +219,7 @@ export function LoginForm() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 transition-colors cursor-pointer"
                       tabIndex={-1}
                       aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     >
@@ -209,18 +234,18 @@ export function LoginForm() {
                     type="button"
                     onClick={() => navigate('recuperar-cuenta')}
                     disabled={isSubmitting}
-                    className="text-[11px] text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-bold transition-colors disabled:opacity-50"
+                    className="text-[11px] text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-bold transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     ¿Olvidaste tu contraseña?
                   </button>
                 </motion.div>
 
-                {/* Submit */}
+                {/* Submit - Rebuilt to Claymorphic Primary */}
                 <motion.div custom={4} variants={fadeInUp}>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-11 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 text-white shadow-lg shadow-teal-500/20 hover:shadow-teal-500/35 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                    className="clay-btn-primary w-full h-11 rounded-xl text-xs font-black flex items-center justify-center gap-2 relative transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
                   >
                     {isSubmitting ? (
                       <>
@@ -245,7 +270,7 @@ export function LoginForm() {
                     type="button"
                     onClick={() => navigate('registro')}
                     disabled={isSubmitting}
-                    className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-bold transition-colors disabled:opacity-50"
+                    className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-bold transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     Crear cuenta
                   </button>
@@ -253,7 +278,7 @@ export function LoginForm() {
               </motion.div>
             </div>
 
-            {/* Demo Logins */}
+            {/* Demo Logins Section */}
             <DemoLoginSection isSubmitting={isSubmitting} />
           </div>
         </div>
@@ -281,15 +306,15 @@ function DemoLoginSection({ isSubmitting }: { isSubmitting: boolean }) {
   }
 
   const roles = [
-    { id: 'patient', label: 'Soy Paciente', icon: <Heart className="size-3.5" />, color: 'bg-teal-500/10 text-teal-600' },
-    { id: 'doctor', label: 'Soy Doctor', icon: <Stethoscope className="size-3.5" />, color: 'bg-sky-500/10 text-sky-600' },
-    { id: 'pharmacy_manager', label: 'Soy Farmacia', icon: <Store className="size-3.5" />, color: 'bg-emerald-500/10 text-emerald-600' },
-    { id: 'delivery_driver', label: 'Soy Repartidor', icon: <Truck className="size-3.5" />, color: 'bg-amber-500/10 text-amber-600' },
+    { id: 'patient', label: 'Soy Paciente', icon: <Heart className="size-3.5" />, color: 'bg-teal-500/10 border-teal-500/20 text-teal-600 dark:text-teal-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold' },
+    { id: 'doctor', label: 'Soy Doctor', icon: <Stethoscope className="size-3.5" />, color: 'bg-sky-500/10 border-sky-500/20 text-sky-600 dark:text-sky-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold' },
+    { id: 'pharmacy_manager', label: 'Soy Farmacia', icon: <Store className="size-3.5" />, color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold' },
+    { id: 'delivery_driver', label: 'Soy Repartidor', icon: <Truck className="size-3.5" />, color: 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.06),inset_2px_2px_6px_rgba(0,0,0,0.15)] font-bold' },
   ];
 
   return (
-    <div className="mt-6 pt-5 border-t border-border/50">
-      <p className="text-[9px] uppercase tracking-widest font-black text-muted-foreground text-center mb-3">
+    <div className="mt-6 pt-5 border-t border-slate-200/40 dark:border-zinc-800/30" style={{ transform: 'translateZ(20px)' }}>
+      <p className="text-[9px] uppercase tracking-widest font-black text-slate-400 dark:text-zinc-500 text-center mb-3">
         Acceso rápido Demo
       </p>
       <div className="grid grid-cols-2 gap-2">
@@ -300,12 +325,12 @@ function DemoLoginSection({ isSubmitting }: { isSubmitting: boolean }) {
             disabled={isSubmitting || !!isDemoLoading}
             onClick={() => handleDemoLogin(role.id)}
             className={cn(
-              "flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50",
+              "flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 cursor-pointer",
               role.color
             )}
           >
             {isDemoLoading === role.id ? (
-              <Loader2 className="size-3.5 animate-spin mx-auto" />
+              <Loader2 className="size-3.5 animate-spin mx-auto text-teal-500" />
             ) : (
               <>
                 {role.icon}
@@ -318,7 +343,3 @@ function DemoLoginSection({ isSubmitting }: { isSubmitting: boolean }) {
     </div>
   );
 }
-
-import { Heart, Stethoscope, Store, Truck, ArrowLeft, ShieldCheck, Users, Activity, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
-

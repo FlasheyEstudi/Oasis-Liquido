@@ -163,7 +163,7 @@ export function PrescriptionList() {
                   variants={fadeInUp}
                   transition={{ delay: index * 0.04 }}
                   className={cn(
-                    "col-span-6 lg:col-span-4 w-full",
+                    "col-span-12 sm:col-span-6 lg:col-span-4 w-full",
                     prescriptions.length <= 2 ? "max-w-md" : ""
                   )}
                 >

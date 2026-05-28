@@ -95,7 +95,7 @@ export function MobileBottomBar() {
       transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.1 }}
       className="fixed bottom-4 left-4 right-4 z-50 lg:hidden"
     >
-      <div className="glass-strong rounded-2xl px-2 py-1.5 flex items-center justify-around shadow-xl">
+      <div className="glass-strong clarity-shield rounded-2xl px-2 py-1.5 flex items-center justify-around shadow-xl">
         {navItems.map((item) => {
           const isActive = currentPage === item.page;
           return (
@@ -115,7 +115,7 @@ export function MobileBottomBar() {
                 {isActive && (
                   <motion.div
                     layoutId="mobile-nav-active"
-                    className="absolute inset-0 rounded-xl bg-teal-500/10 dark:bg-teal-400/10"
+                    className="absolute inset-0 rounded-xl bg-teal-500/[0.08] dark:bg-teal-400/[0.08] border border-teal-500/15 dark:border-teal-400/15 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.1),inset_2px_2px_6px_rgba(0,0,0,0.15)]"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     style={{ position: 'absolute' }}
                   />
@@ -147,7 +147,7 @@ export function MobileBottomBar() {
             {currentPage === 'profile' && (
               <motion.div
                 layoutId="mobile-nav-active"
-                className="absolute inset-0 rounded-xl bg-teal-500/10 dark:bg-teal-400/10"
+                className="absolute inset-0 rounded-xl bg-teal-500/[0.08] dark:bg-teal-400/[0.08] border border-teal-500/15 dark:border-teal-400/15 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.1),inset_2px_2px_6px_rgba(0,0,0,0.15)]"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
