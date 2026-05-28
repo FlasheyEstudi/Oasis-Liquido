@@ -210,8 +210,6 @@ export function AppLayout({ children }: AppLayoutProps) {
       setUploading(false);
     }
   };
-  const [sidebarPinned, setSidebarPinned] = useState(false);
-  const [sidebarHovered, setSidebarHovered] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -256,8 +254,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     };
   }, []);
 
-  const sidebarExpanded = isDesktop && (sidebarPinned || sidebarHovered);
-  const sidebarWidth = isDesktop ? (sidebarExpanded ? 260 : 72) : 0;
+
 
   if (!isAuthenticated) {
     return (
@@ -277,7 +274,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <OrganicBlobs />
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block shrink-0">
+      <div className="hidden lg:block w-[260px] shrink-0">
         <GlassSidebar />
       </div>
 

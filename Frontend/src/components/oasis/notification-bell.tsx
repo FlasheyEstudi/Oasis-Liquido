@@ -35,7 +35,7 @@ export function NotificationBell() {
 
   // 1. Fetch Notifications with React Query
   const { data: notificationsData, isLoading } = useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', user?.id, user?.role],
     queryFn: () => getNotifications({ page: 1, limit: 20 }),
     enabled: !!user,
     refetchOnWindowFocus: true,
@@ -49,7 +49,7 @@ export function NotificationBell() {
     mutationFn: (variables: { notificationId?: string; all?: boolean }) =>
       markNotificationsAsRead(variables),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id, user?.role] });
     },
   });
 
@@ -73,7 +73,7 @@ export function NotificationBell() {
         } catch {}
 
         // Invalidate notifications to trigger re-fetch
-        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['notifications', user?.id, user?.role] });
       });
 
       return () => {
@@ -155,7 +155,7 @@ export function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.95 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute right-0 mt-2.5 w-[360px] sm:w-[400px] z-50 rounded-2xl glass-strong border border-slate-200/60 dark:border-white/10 shadow-2xl overflow-hidden"
+            className="fixed sm:absolute left-4 sm:left-auto right-4 sm:right-0 mt-2.5 w-[calc(100vw-2rem)] sm:w-[380px] z-50 rounded-2xl glass-strong border border-slate-200/60 dark:border-white/10 shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200/40 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20">

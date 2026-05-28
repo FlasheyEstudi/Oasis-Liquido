@@ -44,7 +44,7 @@ export function GlassCard({
       whileTap={onClick ? { scale: 0.99 } : undefined}
       className={cn(
         glassClass,
-        'rounded-3xl p-6',
+        'rounded-[20px] p-4 sm:p-6',
         hover && 'cursor-pointer',
         onClick && 'cursor-pointer',
         className

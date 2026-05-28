@@ -123,17 +123,11 @@ export function GlassSidebar() {
   if (!user) return null;
 
   const navItems = getNavItems(user.role);
-  const expanded = isHovered || pinned;
-  const sidebarWidth = expanded ? 260 : 72;
+  const expanded = true;
 
   return (
-    <motion.aside
-      initial={false}
-      animate={{ width: sidebarWidth }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="glass-sidebar sticky left-0 top-0 h-screen z-40 flex flex-col overflow-hidden shrink-0"
+    <aside
+      className="glass-sidebar sticky left-0 top-0 h-screen z-40 w-[260px] flex flex-col overflow-hidden shrink-0 border-r border-sidebar-border"
     >
       {/* Logo Area */}
       <div className="flex items-center h-[60px] px-4 border-b border-sidebar-border">
@@ -325,44 +319,7 @@ export function GlassSidebar() {
           </AnimatePresence>
         </motion.button>
 
-        {/* Pin/Unpin Toggle */}
-        <motion.button
-          onClick={() => setPinned(!pinned)}
-          whileTap={{ scale: 0.95 }}
-          className={cn(
-            'flex items-center gap-3 w-full rounded-xl transition-all duration-200',
-            expanded ? 'px-3 py-2.5' : 'justify-center px-0 py-2.5',
-            pinned
-              ? 'text-teal-600 dark:text-teal-400 bg-teal-500/10'
-              : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-500/5'
-          )}
-        >
-          <div className={cn(
-            'size-[18px] shrink-0 rounded-sm border-2 transition-colors',
-            pinned
-              ? 'border-teal-500 bg-teal-500'
-              : 'border-slate-400 dark:border-slate-500'
-          )}>
-            {pinned && (
-              <svg viewBox="0 0 18 18" className="size-full text-white" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="4,9 7,12 14,5" />
-              </svg>
-            )}
-          </div>
-          <AnimatePresence>
-            {expanded && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-sm font-medium"
-              >
-                {pinned ? 'Fijado' : 'Fijar barra'}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
       </div>
-    </motion.aside>
+    </aside>
   );
 }

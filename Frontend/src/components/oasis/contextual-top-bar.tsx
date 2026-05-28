@@ -69,37 +69,41 @@ export function ContextualTopBar({ onMenuClick }: ContextualTopBarProps) {
   const parentTitle = parentPage ? PAGE_TITLES[parentPage] : null;
 
   return (
-    <header className="h-[60px] flex items-center justify-between px-4 lg:px-6 border-b border-border/50">
-      <div className="flex items-center gap-3">
+    <header className="h-[60px] flex items-center justify-between px-3 lg:px-6 border-b border-border/50 select-none overflow-hidden bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {/* Mobile menu toggle */}
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-xl hover:bg-slate-500/5 transition-colors text-slate-500 dark:text-slate-400"
+          className="lg:hidden p-1.5 sm:p-2 rounded-xl hover:bg-slate-500/5 transition-colors text-slate-500 dark:text-slate-400 shrink-0"
         >
           <Menu className="size-5" />
         </button>
-
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-sm">
+ 
+        {/* Breadcrumb with safety truncation to prevent overflow in mobile */}
+        <nav className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm min-w-0">
           {parentPage && parentTitle ? (
-            <>
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
               <button
                 onClick={() => navigate(parentPage)}
-                className="text-slate-400 dark:text-slate-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                className="text-slate-400 dark:text-slate-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors truncate max-w-[70px] lg:max-w-[150px]"
               >
                 {parentTitle}
               </button>
-              <span className="text-slate-300 dark:text-slate-600">/</span>
-              <span className="font-semibold text-foreground">{pageTitle}</span>
-            </>
+              <span className="text-slate-300 dark:text-slate-600 shrink-0">/</span>
+              <span className="font-semibold text-foreground truncate max-w-[100px] lg:max-w-[200px]">
+                {pageTitle}
+              </span>
+            </div>
           ) : (
-            <span className="font-semibold text-foreground">{pageTitle}</span>
+            <span className="font-semibold text-foreground truncate max-w-[200px] lg:max-w-[300px]">
+              {pageTitle}
+            </span>
           )}
         </nav>
       </div>
 
       {/* Right side: Search + Role + Profile */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         {/* Universal Search Button */}
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -118,7 +122,7 @@ export function ContextualTopBar({ onMenuClick }: ContextualTopBarProps) {
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('open-beta-feedback'))}
           title="Reportar problema o sugerencia de la Beta"
-          className="relative p-2 rounded-xl hover:bg-slate-500/5 transition-colors text-teal-600 dark:text-teal-400"
+          className="relative p-1.5 sm:p-2 rounded-xl hover:bg-slate-500/5 transition-colors text-teal-600 dark:text-teal-400"
         >
           <MessageSquare className="size-[18px]" />
           <span className="absolute top-1 right-1 size-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -141,9 +145,9 @@ export function ContextualTopBar({ onMenuClick }: ContextualTopBarProps) {
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('profile')}
-          className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full hover:bg-slate-500/5 transition-colors"
+          className="flex items-center gap-2 p-1 sm:pl-2 sm:pr-3 sm:py-1.5 rounded-full hover:bg-slate-500/5 transition-colors"
         >
-          <div className="size-8 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+          <div className="size-8 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-xs">
               {user.name.charAt(0)}
             </span>

@@ -89,6 +89,7 @@ const roleAdvantages: Record<string, Array<{ title: string; desc: string; icon: 
 };
 
 export function RegisterForm() {
+  const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -154,7 +155,7 @@ export function RegisterForm() {
 
   const { navigate, login, setNotification } = useAuthStore();
 
-  const [step, setStep] = useState(1);
+
 
   function handleNextStep() {
     setApiError(null);

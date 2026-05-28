@@ -73,8 +73,8 @@ interface PharmacyFormData {
 const emptyForm: PharmacyFormData = {
   name: '',
   address: '',
-  latitude: '19.4326',
-  longitude: '-99.1332',
+  latitude: '12.1364',
+  longitude: '-86.2514',
   phone: '',
   ownerId: '',
   isActive: true,
@@ -86,6 +86,36 @@ export function ManagePharmacies() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPharmacy, setEditingPharmacy] = useState<Pharmacy | null>(null);
   const [form, setForm] = useState<PharmacyFormData>(emptyForm);
+  const [isDetecting, setIsDetecting] = useState(false);
+
+  const detectGPS = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setNotification({ type: 'warning', message: 'Tu navegador no soporta geolocalización o no está en un entorno seguro (HTTPS)' });
+      return;
+    }
+
+    setIsDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setForm((f) => ({
+          ...f,
+          latitude: String(position.coords.latitude.toFixed(6)),
+          longitude: String(position.coords.longitude.toFixed(6)),
+        }));
+        setNotification({ type: 'success', message: 'Ubicación obtenida con precisión vía GPS' });
+        setIsDetecting(false);
+      },
+      (error) => {
+        let msg = 'No se pudo obtener la ubicación GPS.';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = 'Permiso denegado. Por favor, habilita el GPS y los permisos de ubicación de tu navegador.';
+        }
+        setNotification({ type: 'warning', message: msg });
+        setIsDetecting(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const {
     data: pharmaciesResult,
@@ -132,8 +162,8 @@ export function ManagePharmacies() {
     const data = {
       name: form.name.trim(),
       address: form.address.trim(),
-      latitude: parseFloat(form.latitude) || 19.4326,
-      longitude: parseFloat(form.longitude) || -99.1332,
+      latitude: parseFloat(form.latitude) || 12.1364,
+      longitude: parseFloat(form.longitude) || -86.2514,
       phone: form.phone.trim() || undefined,
       ownerId: form.ownerId || undefined,
       isActive: form.isActive,
@@ -563,26 +593,51 @@ export function ManagePharmacies() {
                 className="glass-input rounded-xl px-4 py-2.5 h-auto text-sm"
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Latitud</label>
-                <Input
-                  type="number"
-                  step="any"
-                  value={form.latitude}
-                  onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
-                  className="glass-input rounded-xl px-4 py-2.5 h-auto text-sm"
-                />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">Coordenadas Geográficas (GPS) *</label>
+                <button
+                  type="button"
+                  onClick={detectGPS}
+                  disabled={isDetecting}
+                  className="text-xs font-black text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 flex items-center gap-1 transition-all focus:outline-none"
+                >
+                  {isDetecting ? (
+                    <>
+                      <Loader2 className="size-3 animate-spin" />
+                      Detectando...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="size-3 text-teal-500 animate-bounce" />
+                      Autodetectar GPS
+                    </>
+                  )}
+                </button>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Longitud</label>
-                <Input
-                  type="number"
-                  step="any"
-                  value={form.longitude}
-                  onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
-                  className="glass-input rounded-xl px-4 py-2.5 h-auto text-sm"
-                />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground block font-medium">Latitud</span>
+                  <Input
+                    type="number"
+                    step="any"
+                    placeholder="Ej: 12.1364"
+                    value={form.latitude}
+                    onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
+                    className="glass-input rounded-xl px-4 py-2.5 h-auto text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground block font-medium">Longitud</span>
+                  <Input
+                    type="number"
+                    step="any"
+                    placeholder="Ej: -86.2514"
+                    value={form.longitude}
+                    onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
+                    className="glass-input rounded-xl px-4 py-2.5 h-auto text-sm"
+                  />
+                </div>
               </div>
             </div>
             <div className="space-y-1.5">
