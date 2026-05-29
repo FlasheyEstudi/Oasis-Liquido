@@ -658,7 +658,7 @@ export function PatientHome() {
         onClick={handleSosClick}
         disabled={emergencyMutation.isPending}
         className={cn(
-          "fixed bottom-24 right-6 z-[40] size-15 rounded-full flex items-center justify-center shadow-2xl border text-white transition-all duration-300 overflow-hidden",
+          "fixed bottom-24 left-6 z-[40] size-15 rounded-full flex items-center justify-center shadow-2xl border text-white transition-all duration-300 overflow-hidden",
           sosTaps === 0 
             ? "bg-red-500 border-red-400/20 shadow-red-500/20"
             : "bg-amber-500 border-amber-400/20 shadow-amber-500/30 animate-pulse ring-4 ring-amber-500/20"

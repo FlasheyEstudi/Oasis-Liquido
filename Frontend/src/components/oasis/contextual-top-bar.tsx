@@ -69,7 +69,7 @@ export function ContextualTopBar({ onMenuClick }: ContextualTopBarProps) {
   const parentTitle = parentPage ? PAGE_TITLES[parentPage] : null;
 
   return (
-    <header className="h-[60px] flex items-center justify-between px-3 lg:px-6 border-b border-border/50 select-none overflow-hidden bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
+    <header className="h-[60px] flex items-center justify-between px-3 lg:px-6 border-b border-border/50 select-none bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {/* Mobile menu toggle */}
         <button
