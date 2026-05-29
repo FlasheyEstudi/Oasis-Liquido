@@ -58,6 +58,7 @@ export const updateUserSchema = z.object({
   phone: z.string().optional(),
   role: z.enum(['patient', 'doctor', 'pharmacy_manager', 'delivery_driver', 'receptionist', 'admin', 'clinic_admin', 'pharmacy_admin', 'cashier']).optional(),
   isActive: z.boolean().optional(),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
 });
 
 export const updateMeSchema = z.object({

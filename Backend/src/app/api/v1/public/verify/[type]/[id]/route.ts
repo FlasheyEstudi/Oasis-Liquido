@@ -130,7 +130,7 @@ export async function GET(
         return errorResponse(ErrorCodes.NOT_FOUND, 'Usuario no encontrado', 404);
       }
 
-      if (user.role === 'pharmacy') {
+      if (user.role === 'pharmacy' || user.role === 'pharmacy_admin' || user.role === 'pharmacy_manager') {
         const data = {
           type: 'pharmacy',
           id: user.id,
@@ -158,7 +158,7 @@ export async function GET(
         return successResponse(data);
       }
 
-      if (user.role === 'delivery') {
+      if (user.role === 'delivery' || user.role === 'delivery_driver') {
         const data = {
           type: 'delivery',
           id: user.id,

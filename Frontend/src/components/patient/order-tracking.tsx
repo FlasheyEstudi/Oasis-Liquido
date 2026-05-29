@@ -16,7 +16,6 @@ import { formatDate, formatCurrency } from '@/utils/helpers';
 import { DEFAULT_LAT, DEFAULT_LNG } from '@/utils/constants';
 import { ReviewModal } from '@/components/oasis/review-modal';
 import { toast } from 'sonner';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/common/status-badge';
 import { MapView } from '@/components/common/map-view';
@@ -33,9 +32,6 @@ import {
   ChevronDown,
   ChevronUp,
   Phone,
-  Navigation,
-  CircleCheck,
-  CircleDot,
   Circle,
   Star,
   ShieldCheck,
@@ -44,7 +40,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-/** Status timeline steps for delivery */
 const DELIVERY_STEPS: { status: DeliveryStatus; label: string; description: string }[] = [
   { status: 'pending', label: 'Pendiente', description: 'Pedido recibido' },
   { status: 'assigned', label: 'Asignado', description: 'Repartidor asignado' },
@@ -60,7 +55,6 @@ function getStepIndex(status: DeliveryStatus): number {
   return idx >= 0 ? idx : 0;
 }
 
-/** Timeline visualization component */
 function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
   const currentIndex = getStepIndex(currentStatus);
 
@@ -96,7 +90,6 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
 
           return (
             <div key={step.status} className="flex items-start gap-4 relative">
-              {/* Connector Line */}
               {index < DELIVERY_STEPS.length - 1 && (
                 <div
                   className={cn(
@@ -110,7 +103,6 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
                 />
               )}
 
-              {/* Icon Badge */}
               <div
                 className={cn(
                   'flex size-10 items-center justify-center rounded-2xl border transition-all duration-500 z-10 shadow-md',
@@ -126,7 +118,6 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
                 {getStepIcon(step.status, 'size-4.5 shrink-0')}
               </div>
 
-              {/* Text */}
               <div className="pb-8 last:pb-0 pt-1.5 flex-1 min-w-0">
                 <p
                   className={cn(
@@ -149,7 +140,7 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
                       ? 'text-slate-500 dark:text-zinc-400'
                       : isCurrent && !isCancelled
                       ? 'text-slate-700 dark:text-zinc-200 font-bold'
-                      : 'text-slate-400 dark:text-zinc-550'
+                      : 'text-slate-450 dark:text-zinc-555'
                   )}
                 >
                   {isCancelled && isCurrent ? 'Pedido cancelado' : step.description}
@@ -163,7 +154,6 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
   );
 }
 
-/** Helper to normalize database fields from both camelCase (Prisma default) and snake_case API versions */
 function normalizeOrder(order: any): any {
   if (!order) return null;
 
@@ -206,16 +196,13 @@ function normalizeOrder(order: any): any {
   };
 }
 
-/** Expanded order detail with tracking */
 function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
   const order = useMemo(() => normalizeOrder(rawOrder), [rawOrder]);
   
-  // Use tracking hook with polling for active orders
   const isActive = order.status !== 'delivered' && order.status !== 'cancelled';
   const trackingQuery = useDeliveryOrderTracking(isActive ? order.id : '');
   const routeQuery = useDeliveryRoute(order.id, isActive);
 
-  // Use tracking data if available (more up-to-date), fall back to original order
   const currentOrder = useMemo(() => {
     const raw = trackingQuery.data ?? order;
     return normalizeOrder(raw);
@@ -223,7 +210,6 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
 
   const route = routeQuery.data;
 
-  // Real-time driver location state
   const [driverLocation, setDriverLocation] = useState<{ lat: number, lng: number } | null>(null);
 
   useEffect(() => {
@@ -245,7 +231,6 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
     }
   }, [order.id, isActive]);
 
-  // Build map markers
   const mapMarkers = useMemo(() => {
     const markers: MapMarker[] = [];
     if (currentOrder.pickup_lat && currentOrder.pickup_lng) {
@@ -266,7 +251,7 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
         label: 'Tu ubicación',
       });
     }
-    // Add driver marker if in transit
+    
     const driverProfile = currentOrder.driver?.delivery_driver_profile;
     const lat = driverLocation?.lat || driverProfile?.current_lat;
     const lng = driverLocation?.lng || driverProfile?.current_lng;
@@ -295,90 +280,78 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
 
   return (
     <div className="space-y-6">
-      {/* Map for active deliveries */}
       {mapMarkers.length > 0 && (
-        <div className="relative rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-white/5 shadow-2xl bg-white dark:bg-zinc-950 transition-colors duration-300">
+        <div className="relative rounded-[2rem] overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-inner bg-zinc-950">
           <MapView
             markers={mapMarkers}
             center={mapCenter}
-            height="300px"
+            height="260px"
             showUserLocation
             route={route ? { geometry: route.geometry } : null}
           />
-          {/* Real-time overlay tag */}
-          <div className="absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-slate-200 dark:border-white/10 flex items-center gap-2 shadow-lg transition-all duration-300">
+          <div className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-slate-200/55 dark:border-white/10 flex items-center gap-1.5 shadow-md">
             <span className="relative flex size-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
             </span>
-            <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">GPS Telemetría Activa</span>
+            <span className="text-[8.5px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Telemetría Activa</span>
           </div>
         </div>
       )}
 
-      {/* Status Timeline */}
       <StatusTimeline currentStatus={currentOrder.status} />
 
-      {/* Estimated delivery */}
       {(currentOrder.status === 'in_transit' || currentOrder.status === 'picked_up') && (
-        <div className="rounded-3xl bg-amber-500/[0.07] border border-amber-500/20 p-4.5 space-y-2 shadow-inner">
-          <div className="flex items-center gap-3">
-            <div className="size-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 animate-pulse">
-              <Clock className="size-4 text-amber-600 dark:text-amber-400" />
-            </div>
-            <p className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400">
-              Entrega Estimada: 15-30 minutos
+        <div className="rounded-2xl bg-amber-500/[0.05] border border-amber-500/15 p-4 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Clock className="size-4 text-amber-600 dark:text-amber-500 animate-pulse" />
+            <p className="text-xs font-black text-amber-600 dark:text-amber-500">
+              Arribo Estimado: 15-30 minutos
             </p>
           </div>
-          <p className="text-[10px] text-amber-600/80 leading-relaxed font-semibold italic pl-11">
+          <p className="text-[9.5px] text-amber-650/80 leading-relaxed font-semibold italic">
             ⚠️ Tu medicina es transportada en compartimientos térmicos certificados para mantener la eficacia biológica de la fórmula.
           </p>
         </div>
       )}
 
-      {/* Driver info (Caregiver Pilot Badge) */}
       {currentOrder.driver && (
-        <div className="bg-gradient-to-br from-slate-50 to-white dark:from-zinc-950 dark:to-zinc-900 border border-slate-200 dark:border-white/5 p-4 sm:p-5 rounded-[2rem] shadow-xl relative overflow-hidden transition-all duration-300">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 dark:bg-teal-400/[0.02] rounded-bl-full pointer-events-none" />
+        <div className="bg-slate-500/[0.02] border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/[0.02] rounded-bl-full pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-            {/* Pulsing Pilot Avatar frame */}
-            <div className="relative size-14 shrink-0 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-500 to-teal-400 p-[2px] shadow-lg shadow-emerald-500/10">
-              <div className="size-full rounded-full bg-white dark:bg-zinc-900 flex items-center justify-center font-black text-teal-600 text-sm">
+            <div className="relative size-12 shrink-0 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1.5px] shadow-sm">
+              <div className="size-full rounded-full bg-white dark:bg-zinc-900 flex items-center justify-center font-black text-teal-600 text-xs">
                 {currentOrder.driver.name.substring(0, 2).toUpperCase()}
               </div>
-              <span className="absolute bottom-0 right-0 size-3 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900 animate-pulse" />
+              <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900 animate-pulse" />
             </div>
 
             <div className="flex-1 text-center sm:text-left min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 justify-center sm:justify-start">
-                <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">
+                <p className="text-xs font-black text-slate-800 dark:text-white leading-tight">
                   {currentOrder.driver.name}
                 </p>
-                <div className="flex items-center gap-1 bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider w-fit mx-auto sm:mx-0">
+                <div className="flex items-center gap-1 bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider w-fit mx-auto sm:mx-0">
                   <Star className="size-2.5 fill-amber-500" />
                   <span>4.9 Certificado</span>
                 </div>
               </div>
               
-              <p className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-1">
+              <p className="text-[8.5px] font-black text-teal-605 dark:text-teal-400 uppercase tracking-widest mt-0.5">
                 Repartidor de Salud Oasis
-              </p>
-              
-              <p className="text-xs text-slate-500 dark:text-zinc-400 font-semibold mt-1">
-                Equipado con equipo de protección y termo de bioseguridad
               </p>
             </div>
 
             {currentOrder.driver.phone && (
               <Button
                 size="sm"
-                className="h-10 px-5 rounded-full bg-teal-500 hover:bg-teal-600 dark:bg-teal-500/10 dark:text-teal-400 dark:hover:bg-teal-500/20 border border-teal-500/20 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-teal-500/10 w-full sm:w-auto transition-all duration-300"
+                className="h-9 px-4 rounded-full bg-teal-500 hover:bg-teal-600 dark:bg-teal-500/10 dark:text-teal-400 dark:hover:bg-teal-500/20 border border-teal-500/20 font-black text-[10px] flex items-center gap-1 w-full sm:w-auto shadow-sm"
                 asChild
               >
                 <a href={`tel:${currentOrder.driver.phone}`}>
-                  <Phone className="size-3.5 fill-current" />
-                  Llamar Repartidor
+                  <Phone className="size-3 fill-current" />
+                  Llamar
                 </a>
               </Button>
             )}
@@ -386,55 +359,42 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
         </div>
       )}
 
-      {/* Items list (Clinical Translucent Receipt) */}
       {currentOrder.items && currentOrder.items.length > 0 && (
-        <div className="space-y-4 bg-slate-500/[0.02] dark:bg-zinc-950/20 border border-slate-200 dark:border-white/5 rounded-[2rem] p-5 shadow-2xl relative overflow-hidden transition-colors duration-300">
-          <div className="flex items-center justify-between pb-3 border-b border-dashed border-slate-200 dark:border-white/10">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Medicamentos Despachados</span>
-            <span className="text-[9px] font-black bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-2 py-0.5 rounded-full uppercase tracking-wider">Verificados</span>
+        <div className="space-y-3 bg-slate-500/[0.01] dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-[2rem] p-4 shadow-sm relative overflow-hidden">
+          <div className="flex items-center justify-between pb-2 border-b border-dashed border-slate-200 dark:border-white/10">
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Medicamentos Despachados</span>
+            <span className="text-[8px] font-black bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-2 py-0.5 rounded-full uppercase tracking-wider">Verificados</span>
           </div>
 
-          <div className="space-y-3.5 py-1">
+          <div className="space-y-2.5 py-1">
             {currentOrder.items.map((item: any) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between text-xs"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-slate-700 dark:text-white font-extrabold truncate">
-                    {item.medicine?.name || 'Medicamento'}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono font-semibold mt-0.5">
-                    {item.quantity} un × {formatCurrency(item.unit_price)}
-                  </p>
-                </div>
-                <p className="font-extrabold text-slate-800 dark:text-white font-mono shrink-0 ml-2">
-                  {formatCurrency(item.quantity * item.unit_price)}
+              <div key={item.id} className="flex items-center justify-between text-[11px] font-bold">
+                <p className="text-slate-700 dark:text-zinc-300 truncate">{item.medicine?.name || 'Medicamento'}</p>
+                <p className="font-mono text-slate-800 dark:text-white shrink-0 ml-2">
+                  {item.quantity} un × {formatCurrency(item.unit_price)}
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="flex justify-between pt-3.5 border-t border-dashed border-slate-200 dark:border-white/10 font-bold">
-            <span className="text-xs text-slate-500 dark:text-zinc-450 uppercase font-black tracking-widest">Total Factura</span>
-            <span className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono shadow-sm">
+          <div className="flex justify-between pt-3 border-t border-dashed border-slate-200 dark:border-white/10 font-bold">
+            <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Total Factura</span>
+            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono">
               {formatCurrency(orderTotal)}
             </span>
           </div>
         </div>
       )}
 
-      {/* Notes */}
       {currentOrder.notes && (
-        <div className="rounded-2xl bg-slate-500/[0.01] dark:bg-zinc-950/20 border border-slate-200 dark:border-white/5 p-4 transition-colors duration-300">
-          <p className="text-[9px] font-black text-slate-500 dark:text-zinc-450 uppercase tracking-widest mb-1.5">Notas del Paciente:</p>
-          <p className="text-xs text-slate-700 dark:text-zinc-300 font-semibold leading-relaxed">{currentOrder.notes}</p>
+        <div className="rounded-xl bg-slate-500/[0.01] dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 p-3.5">
+          <p className="text-[8.5px] font-black text-slate-500 uppercase tracking-widest mb-1">Notas del Paciente:</p>
+          <p className="text-[11px] text-slate-700 dark:text-zinc-300 font-semibold leading-relaxed">{currentOrder.notes}</p>
         </div>
       )}
 
-      {/* Pharmacy info */}
       {currentOrder.pharmacy && (
-        <div className="text-[10px] text-slate-450 dark:text-zinc-550 font-black uppercase tracking-wider px-1 text-center">
+        <div className="text-[9px] text-slate-450 dark:text-zinc-550 font-black uppercase tracking-wider text-center">
           Despachado en: <span className="text-slate-600 dark:text-zinc-450">{currentOrder.pharmacy.name}</span>
         </div>
       )}
@@ -450,10 +410,8 @@ export function OrderTracking() {
   const ordersQuery = useDeliveryOrders({});
   const rawOrders = ordersQuery.data?.data ?? [];
   
-  // Normalize all orders mapping camelCase and custom relations correctly
   const orders = useMemo(() => rawOrders.map(normalizeOrder), [rawOrders]);
 
-  // Separate active and past orders
   const activeOrders = orders.filter(
     (o) => o.status !== 'delivered' && o.status !== 'cancelled'
   );
@@ -461,7 +419,6 @@ export function OrderTracking() {
     (o) => o.status === 'delivered' || o.status === 'cancelled'
   );
 
-  // Auto-expand first active order
   const effectiveExpandedId = expandedId ?? (activeOrders.length > 0 ? activeOrders[0].id : null);
 
   const toggleExpand = (id: string) => {
@@ -469,7 +426,7 @@ export function OrderTracking() {
   };
 
   if (ordersQuery.isLoading) {
-    return <LoadingSkeleton type="list" count={4} />;
+    return <LoadingSkeleton type="list" count={3} />;
   }
 
   if (ordersQuery.isError) {
@@ -482,117 +439,107 @@ export function OrderTracking() {
   }
 
   return (
-    <div className="space-y-7 max-w-2xl mx-auto">
-      {/* Premium Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5 transition-colors duration-300">
+    <div className="space-y-6 max-w-2xl mx-auto px-1 sm:px-0 relative overflow-visible">
+      {/* Ambience glow */}
+      <div className="absolute top-[10%] left-[-10%] size-80 bg-gradient-to-br from-teal-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-dashed border-slate-200 dark:border-white/5">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2.5">
-            <Sparkles className="size-6 text-teal-500 dark:text-teal-400 animate-pulse" />
-            <span>Mis Pedidos Bioseguros</span>
+          <h2 className="text-lg sm:text-xl font-black text-slate-805 dark:text-white tracking-tight flex items-center gap-2">
+            <Sparkles className="size-5 text-teal-500 dark:text-teal-400 animate-pulse" />
+            <span>Mis Pedidos Domicilio</span>
           </h2>
-          <p className="text-[10px] sm:text-xs text-muted-foreground font-semibold mt-1">
+          <p className="text-[10px] text-slate-500 dark:text-zinc-450 font-bold mt-0.5">
             Sigue en tiempo real tus tratamientos médicos despachados
           </p>
         </div>
       </div>
 
-      {/* Active Orders */}
+      {/* Active Orders Track list */}
       {activeOrders.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-400 flex items-center gap-2 pl-1">
-            <span className="relative flex size-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500"></span>
-            </span>
-            <span>Rastreo Activo ({activeOrders.length})</span>
-          </h3>
+          <p className="text-[8.5px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500 pl-1">RASTREO EN TIEMPO REAL</p>
 
-          <div className="space-y-3.5">
+          <div className="space-y-4">
             {activeOrders.map((order) => {
               const isExpanded = effectiveExpandedId === order.id;
 
               return (
-                <Card
+                <div
                   key={order.id}
                   className={cn(
-                    "overflow-hidden border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-zinc-950/20 rounded-[2.25rem] shadow-2xl backdrop-blur-md transition-all duration-300",
+                    "overflow-hidden border border-slate-200/50 dark:border-white/5 bg-white/10 dark:bg-zinc-950/20 rounded-[2.5rem] shadow-xl backdrop-blur-md transition-all duration-300",
                     isExpanded && "ring-1 ring-teal-500/20 border-teal-500/10 shadow-[0_15px_30px_rgba(20,184,166,0.06)]"
                   )}
                 >
-                  <CardContent className="p-0">
-                    {/* Collapsed header */}
-                    <button
-                      className="w-full p-5 sm:p-6 text-left hover:bg-slate-100/50 dark:hover:bg-white/[0.02] transition-colors"
-                      onClick={() => toggleExpand(order.id)}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-teal-500/10 border border-teal-500/20 shadow-md">
-                          <Truck className="size-5 text-teal-600 dark:text-teal-400 animate-pulse" />
+                  <button
+                    className="w-full p-5 text-left hover:bg-slate-100/50 dark:hover:bg-white/[0.02] transition-colors border-none bg-transparent cursor-pointer"
+                    onClick={() => toggleExpand(order.id)}
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-teal-500/10 border border-teal-500/20 shadow-sm text-teal-600 dark:text-teal-400">
+                        <Truck className="size-5 shrink-0 animate-pulse" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-3">
+                          <h4 className="text-xs font-black text-slate-805 dark:text-white font-serif truncate">
+                            {order.pharmacy?.name || 'Farmacia'}
+                          </h4>
+                          <StatusBadge status={order.status} type="delivery" />
                         </div>
                         
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-extrabold text-slate-800 dark:text-white truncate tracking-tight">
-                              {order.pharmacy?.name || 'Farmacia'}
-                            </p>
-                            <StatusBadge status={order.status} type="delivery" />
-                          </div>
-                          
-                          <p className="mt-1 text-xs text-slate-550 dark:text-zinc-400 truncate flex items-center gap-1.5 font-medium leading-none">
-                            <MapPin className="size-3.5 shrink-0 text-red-500" />
-                            {order.delivery_address}
-                          </p>
-                          
-                          <div className="mt-3 flex items-center gap-2.5 text-[10px] text-slate-400 dark:text-zinc-550 font-black uppercase tracking-wider">
-                            <Clock className="size-3.5" />
-                            <span>{formatDate(order.order_date, 'dd/MM/yyyy HH:mm')}</span>
-                            <span>•</span>
-                            <span className="text-slate-550 dark:text-zinc-400">
-                              {order.items?.length || 0} medicamento{(order.items?.length || 0) !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        </div>
+                        <p className="mt-0.5 text-[10px] text-slate-500 dark:text-zinc-450 truncate flex items-center gap-1 font-bold">
+                          <MapPin className="size-3.5 shrink-0 text-red-500" />
+                          {order.delivery_address}
+                        </p>
                         
-                        <div className="shrink-0 mt-1">
-                          {isExpanded ? (
-                            <ChevronUp className="size-5 text-slate-400 dark:text-zinc-600" />
-                          ) : (
-                            <ChevronDown className="size-5 text-slate-400 dark:text-zinc-600" />
-                          )}
+                        <div className="mt-2.5 flex items-center gap-2 text-[9px] text-slate-400 dark:text-zinc-550 font-black uppercase tracking-wider">
+                          <Clock className="size-3.5 animate-pulse" />
+                          <span>{formatDate(order.order_date, 'dd/MM/yyyy HH:mm')} hrs</span>
+                          <span>·</span>
+                          <span className="text-slate-500">
+                            {order.items?.length || 0} medicamentos
+                          </span>
                         </div>
                       </div>
-                    </button>
+                      
+                      <div className="shrink-0 mt-1">
+                        {isExpanded ? (
+                          <ChevronUp className="size-4 text-slate-450" />
+                        ) : (
+                          <ChevronDown className="size-4 text-slate-450" />
+                        )}
+                      </div>
+                    </div>
+                  </button>
 
-                    {/* Expanded detail */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="border-t border-slate-200 dark:border-white/5 px-5 sm:px-6 pb-6 pt-5"
-                        >
-                          <OrderDetail order={order} />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </CardContent>
-                </Card>
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="border-t border-dashed border-slate-200 dark:border-white/5 px-5 pb-5 pt-4"
+                      >
+                        <OrderDetail order={order} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               );
             })}
           </div>
         </div>
       )}
 
-      {/* Past Orders */}
+      {/* Past Orders feed */}
       {pastOrders.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500 flex items-center gap-2 pl-1">
-            <Package className="size-4 text-slate-400 dark:text-zinc-500" />
-            <span>Historial de Envíos ({pastOrders.length})</span>
-          </h3>
+          <p className="text-[8.5px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500 pl-1">HISTORIAL DE ENVÍOS</p>
 
-          <div className="space-y-3">
+          <div className="divide-y divide-dashed divide-slate-200/60 dark:divide-white/5">
             {pastOrders.map((order) => {
               const isExpanded = expandedId === order.id;
               const orderTotal = order.items?.reduce(
@@ -601,110 +548,97 @@ export function OrderTracking() {
               ) || 0;
 
               return (
-                <Card
-                  key={order.id}
-                  className="overflow-hidden border border-slate-200 dark:border-white/5 bg-slate-50/20 dark:bg-zinc-950/10 rounded-[2rem] shadow-sm hover:shadow-md transition-all duration-300 opacity-90 hover:opacity-100"
-                >
-                  <CardContent className="p-0">
-                    <button
-                      className="w-full p-5 text-left hover:bg-slate-100/30 dark:hover:bg-white/[0.01] transition-colors"
-                      onClick={() => toggleExpand(order.id)}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-white/5">
-                          <Package className="size-4.5 text-slate-400 dark:text-zinc-550" />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-extrabold text-slate-700 dark:text-zinc-300 truncate">
-                              {order.pharmacy?.name || 'Farmacia'}
-                            </p>
-                            <StatusBadge status={order.status} type="delivery" />
-                          </div>
-                          
-                          <p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-zinc-450 truncate flex items-center gap-1.5">
-                            <MapPin className="size-3.5 shrink-0" />
-                            {order.delivery_address}
-                          </p>
-                          
-                          <div className="mt-2.5 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-600">
-                            <Clock className="size-3.5" />
-                            <span>{formatDate(order.order_date, 'dd/MM/yyyy HH:mm')}</span>
-                            <span>•</span>
-                            <span className="font-extrabold text-slate-700 dark:text-zinc-400">
-                              {formatCurrency(orderTotal)}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="shrink-0 mt-1">
-                          {isExpanded ? (
-                            <ChevronUp className="size-5 text-slate-400 dark:text-zinc-650" />
-                          ) : (
-                            <ChevronDown className="size-5 text-slate-400 dark:text-zinc-650" />
-                          )}
-                        </div>
+                <div key={order.id} className="py-3">
+                  <button
+                    className="w-full flex items-start justify-between gap-3 py-2 text-left hover:bg-slate-500/[0.02] rounded-xl transition-all border-none bg-transparent cursor-pointer"
+                    onClick={() => toggleExpand(order.id)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-500/5 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 text-slate-550">
+                        <Package className="size-4 shrink-0" />
                       </div>
-                    </button>
+                      
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-black text-slate-705 dark:text-zinc-300 font-serif truncate">
+                          {order.pharmacy?.name || 'Farmacia'}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 dark:text-zinc-450 truncate mt-0.5">{order.delivery_address}</p>
+                        
+                        <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mt-1.5 flex items-center gap-1.5">
+                          <Clock className="size-3" />
+                          <span>{formatDate(order.order_date, 'dd/MM/yyyy HH:mm')} hrs</span>
+                          <span>·</span>
+                          <span className="font-mono text-slate-650 dark:text-zinc-400">{formatCurrency(orderTotal)}</span>
+                        </p>
+                      </div>
+                    </div>
 
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="border-t border-slate-200 dark:border-white/5 px-5 pb-5 pt-4 space-y-4"
-                        >
-                          {order.items && order.items.length > 0 && (
-                            <div className="space-y-3 bg-slate-500/[0.01] dark:bg-zinc-950/20 border border-slate-200 dark:border-white/5 rounded-2xl p-4 transition-colors">
-                              <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-550">Productos Despachados</p>
-                              
-                              <div className="space-y-2.5">
-                                {order.items.map((item: any) => (
-                                  <div
-                                    key={item.id}
-                                    className="flex items-center justify-between text-xs"
-                                  >
-                                    <p className="text-slate-700 dark:text-zinc-350 font-bold truncate">
-                                      {item.medicine?.name || 'Medicamento'} × {item.quantity}
-                                    </p>
-                                    <p className="font-extrabold text-slate-800 dark:text-white shrink-0 ml-2 font-mono">
-                                      {formatCurrency(item.quantity * item.unit_price)}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                              
-                              <div className="flex justify-between pt-3 border-t border-dashed border-slate-200 dark:border-white/10 font-bold">
-                                <span className="text-xs text-slate-500 dark:text-zinc-450 uppercase font-black tracking-widest">Total Facturado</span>
-                                <span className="text-xs font-black text-slate-800 dark:text-white font-mono">
-                                  {formatCurrency(orderTotal)}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {order.status === 'delivered' && (
-                            <Button
-                              size="sm"
-                              className="w-full rounded-full bg-teal-500/10 dark:bg-teal-500/10 text-teal-650 dark:text-teal-400 hover:bg-teal-500/20 border border-teal-500/20 font-black h-10 transition-colors uppercase tracking-widest text-[10px]"
-                              onClick={() => setReviewOrder(order)}
-                            >
-                              Calificar Reparto Bioseguro
-                            </Button>
-                          )}
-                          
-                          {order.delivered_at && (
-                            <p className="text-[10px] text-slate-400 dark:text-zinc-600 text-center font-mono font-semibold">
-                              Entregado: {formatDate(order.delivered_at, 'dd/MM/yyyy HH:mm')}
-                            </p>
-                          )}
-                        </motion.div>
+                    <div className="flex items-center gap-2.5 shrink-0 pt-1">
+                      <StatusBadge status={order.status} type="delivery" />
+                      {isExpanded ? (
+                        <ChevronUp className="size-4 text-slate-450" />
+                      ) : (
+                        <ChevronDown className="size-4 text-slate-450" />
                       )}
-                    </AnimatePresence>
-                  </CardContent>
-                </Card>
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="px-4 pb-4 pt-3 space-y-4"
+                      >
+                        {order.items && order.items.length > 0 && (
+                          <div className="space-y-3 bg-slate-500/[0.01] dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 transition-colors">
+                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-550">Productos Despachados</p>
+                            
+                            <div className="space-y-2">
+                              {order.items.map((item: any) => (
+                                <div
+                                  key={item.id}
+                                  className="flex items-center justify-between text-xs font-bold"
+                                >
+                                  <p className="text-slate-700 dark:text-zinc-350 truncate">
+                                    {item.medicine?.name || 'Medicamento'} × {item.quantity}
+                                  </p>
+                                  <p className="font-mono text-slate-850 dark:text-white shrink-0 ml-2">
+                                    {formatCurrency(item.quantity * item.unit_price)}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            <div className="flex justify-between pt-3 border-t border-dashed border-slate-200 dark:border-white/10 font-bold">
+                              <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Total Facturado</span>
+                              <span className="text-xs font-black text-slate-805 dark:text-white font-mono">
+                                {formatCurrency(orderTotal)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {order.status === 'delivered' && (
+                          <Button
+                            size="sm"
+                            className="w-full rounded-full bg-teal-500/10 dark:bg-teal-500/10 text-teal-650 dark:text-teal-400 hover:bg-teal-500/20 border border-teal-500/20 font-black h-10 transition-colors uppercase tracking-widest text-[9px]"
+                            onClick={() => setReviewOrder(order)}
+                          >
+                            Calificar Reparto Bioseguro
+                          </Button>
+                        )}
+                        
+                        {order.delivered_at && (
+                          <p className="text-[9px] text-slate-400 dark:text-zinc-600 text-center font-mono font-semibold">
+                            Arribado: {formatDate(order.delivered_at, 'dd/MM/yyyy HH:mm')}
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               );
             })}
           </div>
@@ -724,7 +658,6 @@ export function OrderTracking() {
         />
       )}
 
-      {/* Empty state */}
       {orders.length === 0 && (
         <EmptyState
           icon={Package}

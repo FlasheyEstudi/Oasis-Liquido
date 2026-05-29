@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, generateResetToken, verifyResetToken, AccessTokenPayload } from '@/lib/auth/jwt';
 import { createAuditLog } from './audit.service';
+import { sendWhatsAppOTP } from './whatsapp.service';
 import crypto from 'crypto';
 
 /**
@@ -290,7 +291,13 @@ export async function forgotPassword(email: string) {
     details: JSON.stringify({ action: 'forgot_password', token: resetToken }),
   });
 
-  return { message: 'Se envió un correo de recuperación', reset_token: resetToken };
+  // Log recovery token securely to server console for Admin manual lookup
+  console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${email} | Recovery Token: ${resetToken}`);
+
+  return { 
+    message: 'Solicitud registrada. Si el correo existe, recibirás instrucciones. También puedes contactar al Superadministrador directamente.', 
+    reset_token: resetToken 
+  };
 }
 
 /**

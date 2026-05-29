@@ -18,7 +18,11 @@ import {
   AlertCircle,
   Loader2,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Activity,
+  Car,
+  Heart,
+  Zap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -414,227 +418,462 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
           </div>
 
           {/* Tarjeta de Identidad Digital Interactiva (Efecto Tarjeta Física Premium) */}
-          <motion.div
-            initial={{ scale: 0.93, opacity: 0, y: 32 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            whileHover={{ y: -6, rotateX: 2, rotateY: -2, scale: 1.015 }}
-            transition={{ type: "spring", stiffness: 220, damping: 24 }}
-            className={cn(
-              "spatial-card clarity-shield relative w-full aspect-[1.586/1] rounded-[1.8rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.5)] border group select-none",
-              data.type === 'pharmacy' && "border-emerald-500/25",
-              data.type === 'doctor' && "border-sky-500/25",
-              data.type === 'delivery' && "border-amber-500/25",
-              data.type === 'patient' && "border-teal-500/25"
-            )}
-          >
-            {/* Fondo Base con Gradiente Satinado y Profundo según rol */}
-            {data.type === 'pharmacy' && <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-emerald-950/60 to-zinc-950" />}
-            {data.type === 'doctor' && <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-sky-950/60 to-zinc-950" />}
-            {data.type === 'delivery' && <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-amber-950/60 to-zinc-950" />}
-            {data.type === 'patient' && <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-teal-950/70 to-zinc-950" />}
+          {data.type === 'pharmacy' && (
+            <motion.div
+              initial={{ scale: 0.93, opacity: 0, y: 32 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              whileHover={{ y: -6, rotateX: 1, rotateY: -1, scale: 1.015 }}
+              transition={{ type: "spring", stiffness: 120, damping: 14 }}
+              className="relative w-full aspect-[1.586/1] rounded-[2rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.6)] border border-emerald-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-emerald-950/75 to-zinc-900" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(16,185,129,0.2),transparent)] pointer-events-none" />
+              
+              <svg className="absolute inset-0 w-full h-full opacity-10 stroke-emerald-400 pointer-events-none" fill="none">
+                <pattern id="guilloche-screen" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 0 20 Q 10 5, 20 20 T 40 20" strokeWidth="0.5" />
+                  <path d="M 0 10 Q 10 25, 20 10 T 40 10" strokeWidth="0.5" />
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#guilloche-screen)" />
+              </svg>
 
-            {/* Capa de Brillo Holográfico y Destellos Reactivos */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(20,184,166,0.15),transparent)] pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 via-purple-500/5 to-emerald-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
-            
-            {data.type === 'pharmacy' && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />}
-            {data.type === 'doctor' && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-sky-500/30 to-transparent" />}
-            {data.type === 'delivery' && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />}
-            {data.type === 'patient' && <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-teal-500/30 to-transparent" />}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
 
-            {/* Marca de Agua Texturizada MINSA en el fondo */}
-            <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-white/[0.02] bg-white/[0.002] flex items-center justify-center rotate-12 pointer-events-none select-none">
-              <span className="text-[8px] font-black text-white/[0.04] tracking-[0.3em] uppercase text-center leading-normal">
-                REPÚBLICA DE NICARAGUA<br/>MINISTERIO DE SALUD
-              </span>
-            </div>
-
-            {/* Contenido Principal de la Tarjeta */}
-            <div className="absolute inset-0 p-4 sm:p-6 md:p-8 flex flex-col justify-between z-10 select-none">
-              {/* Header: Oasis Logo y Acreditación Oficial */}
-              <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <div className="flex items-center gap-3">
-                  {/* Chip Inteligente Simulado */}
-                  <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 rounded-[4px] border border-amber-400/30 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">
-                    <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60">
-                      <div className="border-r border-amber-950/20 border-b" />
-                      <div className="border-r border-amber-950/20 border-b" />
-                      <div className="border-b" />
-                      <div className="border-r border-amber-950/20" />
-                      <div className="border-r border-amber-950/20" />
-                      <div className="border-none" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-base sm:text-lg md:text-xl font-black tracking-[0.15em] text-teal-300 uppercase flex items-center gap-1.5 leading-none kinetic-text kinetic-pulse">
-                      OASIS LÍQUIDA
-                    </h3>
-                    <p className="text-[6px] sm:text-[7px] text-teal-400/60 font-mono tracking-widest uppercase mt-1">
-                      {data.type === 'pharmacy' && 'FARMACIA CONVENIADA'}
-                      {data.type === 'doctor' && 'MÉDICO COLEGIADO'}
-                      {data.type === 'delivery' && 'LOGÍSTICA / LOGISTICS'}
-                      {data.type === 'patient' && 'PASAPORTE DIGITAL DE SALUD'}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase pulse-badge-success shadow-sm">
-                    {data.type === 'pharmacy' && 'MINSA AUTORIZADO'}
-                    {data.type === 'doctor' && 'MINSA CERTIFICADO'}
-                    {data.type === 'delivery' && 'MINSA AUTORIZADO'}
-                    {data.type === 'patient' && 'MINSA ACREDITADO'}
-                  </span>
-                </div>
+              <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-emerald-500/[0.04] bg-emerald-500/[0.005] flex items-center justify-center rotate-12 pointer-events-none select-none">
+                <span className="text-[7px] font-black text-emerald-400/[0.08] tracking-[0.25em] uppercase text-center leading-relaxed">
+                  FARMACIA AUTORIZADA<br/>MINISTERIO DE SALUD<br/>REPÚBLICA DE NICARAGUA
+                </span>
               </div>
 
-              {/* Centro de la Tarjeta: Layout Realista de Carnet */}
-              <div className="grid grid-cols-12 gap-4 items-center my-auto py-2">
-                {/* Columna Izquierda: Foto de Perfil */}
-                <div className="col-span-3 flex justify-start">
-                  <div className="relative size-16 sm:size-20 md:size-24 rounded-2xl bg-zinc-950/90 border border-teal-500/30 flex items-center justify-center overflow-hidden shadow-[0_0_30px_rgba(20,184,166,0.15)] group-hover:border-teal-400/50 transition-colors">
-                    {data.type === 'pharmacy' ? (
-                      <Building2 className="size-8 sm:size-10 md:size-12 text-emerald-400/30" />
-                    ) : (
-                      <User className="size-8 sm:size-10 md:size-12 text-teal-400/30" />
-                    )}
-                    <div className="absolute left-0 top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400/70 to-transparent shadow-[0_0_8px_#2dd4bf] animate-scan pointer-events-none" />
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0)_95%,rgba(20,184,166,0.1)_95%)] bg-[size:100%_4px] pointer-events-none mix-blend-overlay" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 via-cyan-500/5 to-amber-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
+
+              <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+                <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-emerald-300 via-teal-500 to-emerald-600 rounded-[4px] border border-emerald-400/40 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">
+                      <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60">
+                        <div className="border-r border-emerald-950/20 border-b" />
+                        <div className="border-r border-emerald-950/20 border-b" />
+                        <div className="border-b" />
+                        <div className="border-r border-emerald-950/20" />
+                        <div className="border-r border-emerald-950/20" />
+                        <div className="border-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg md:text-xl font-black tracking-[0.15em] text-emerald-300 uppercase flex items-center gap-1.5 leading-none">
+                        OASIS LÍQUIDA
+                      </h3>
+                      <p className="text-[6px] sm:text-[7px] text-emerald-400/60 font-mono tracking-widest uppercase mt-1">CREDENCIAL DE ESTABLECIMIENTO</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase shadow-[0_0_15px_rgba(16,185,129,0.15)] animate-pulse">
+                      MINSA AUTORIZADO
+                    </span>
                   </div>
                 </div>
 
-                {/* Columna Derecha: Datos Clave */}
-                <div className="col-span-9 space-y-2 sm:space-y-3.5 pl-3 sm:pl-6">
-                  {data.type === 'pharmacy' ? (
-                    <>
-                      <div>
-                        <p className="text-[6px] sm:text-[7px] text-emerald-400/50 font-bold tracking-[0.2em] uppercase font-mono">ESTABLECIMIENTO / PHARMACY</p>
-                        <p className="text-sm sm:text-base md:text-lg font-black text-white uppercase tracking-wide leading-none mt-1 truncate max-w-[280px]">{data.pharmacyName}</p>
-                      </div>
-
-                      <div className="grid grid-cols-12 gap-2 sm:gap-4">
-                        <div className="col-span-7">
-                          <p className="text-[6px] sm:text-[7px] text-emerald-400/50 font-bold tracking-[0.2em] uppercase font-mono">ID ESTABLECIMIENTO</p>
-                          <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.id.slice(0, 10).toUpperCase()}</p>
-                        </div>
-                        <div className="col-span-5">
-                          <p className="text-[6px] sm:text-[7px] text-emerald-400/50 font-bold tracking-[0.2em] uppercase font-mono">REGENTE</p>
-                          <span className="inline-block text-[10px] sm:text-xs font-black text-emerald-400 uppercase tracking-widest mt-1 truncate max-w-[120px]">
-                            {data.name}
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  ) : data.type === 'doctor' ? (
-                    <>
-                      <div>
-                        <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">PROFESIONAL DE SALUD</p>
-                        <p className="text-sm sm:text-base md:text-lg font-black text-white uppercase tracking-wide leading-none mt-1 truncate max-w-[280px]">{data.name}</p>
-                      </div>
-
-                      <div className="grid grid-cols-12 gap-2 sm:gap-4">
-                        <div className="col-span-7">
-                          <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">REGISTRO MINSA</p>
-                          <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.licenseNumber}</p>
-                        </div>
-                        <div className="col-span-5">
-                          <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">ESPECIALIDAD</p>
-                          <span className="inline-block text-[10px] sm:text-xs font-black text-sky-400 uppercase tracking-widest mt-1 truncate max-w-[120px]">
-                            {data.specialty}
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  ) : data.type === 'delivery' ? (
-                    <>
-                      <div>
-                        <p className="text-[6px] sm:text-[7px] text-amber-400/50 font-bold tracking-[0.2em] uppercase font-mono">REPARTIDOR AUTORIZADO</p>
-                        <p className="text-sm sm:text-base md:text-lg font-black text-white uppercase tracking-wide leading-none mt-1 truncate max-w-[280px]">{data.name}</p>
-                      </div>
-
-                      <div className="grid grid-cols-12 gap-2 sm:gap-4">
-                        <div className="col-span-7">
-                          <p className="text-[6px] sm:text-[7px] text-amber-400/50 font-bold tracking-[0.2em] uppercase font-mono">ID DE LICENCIA</p>
-                          <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.id.slice(0, 10).toUpperCase()}</p>
-                        </div>
-                        <div className="col-span-5">
-                          <p className="text-[6px] sm:text-[7px] text-amber-400/50 font-bold tracking-[0.2em] uppercase font-mono">TRANSPORTE</p>
-                          <span className="inline-block text-[10px] sm:text-xs font-black text-amber-400 uppercase tracking-widest mt-1 truncate max-w-[120px]">
-                            {data.vehicleType}
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">TITULAR / CITIZEN</p>
-                        <p className="text-sm sm:text-base md:text-lg font-black text-white uppercase tracking-wide leading-none mt-1 truncate max-w-[280px]">{data.name}</p>
-                      </div>
-
-                      <div className="grid grid-cols-12 gap-2 sm:gap-4">
-                        <div className="col-span-7">
-                          <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">EXPEDIENTE ID</p>
-                          <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.id.slice(0, 10).toUpperCase()}</p>
-                        </div>
-                        <div className="col-span-5">
-                          <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">TIPO SANGRE</p>
-                          <span className="inline-block text-[11px] sm:text-xs md:text-sm font-black text-red-400 uppercase tracking-widest mt-1 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 leading-none">
-                            {data.bloodType || 'O+'}
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Fila inferior de Datos (Común) */}
-                  <div className="grid grid-cols-12 gap-2 sm:gap-4">
-                    <div className="col-span-7">
-                      <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">
-                        {data.type === 'pharmacy' && 'DIRECCIÓN'}
-                        {data.type === 'doctor' && 'CENTRO MÉDICO'}
-                        {data.type === 'delivery' && 'CENTRO ASOCIADO'}
-                        {data.type === 'patient' && 'EMISIÓN / EMITTED'}
-                      </p>
-                      <p className="text-[9px] sm:text-[10px] font-semibold text-zinc-300 truncate max-w-[160px] mt-1">
-                        {data.type === 'pharmacy' && data.pharmacyAddress}
-                        {data.type === 'doctor' && data.clinicName}
-                        {data.type === 'delivery' && data.pharmacyName}
-                        {data.type === 'patient' && formatDate(data.date, 'dd/MM/yyyy')}
-                      </p>
+                <div className="grid grid-cols-12 gap-4 items-center my-auto py-2">
+                  <div className="col-span-3 flex justify-start">
+                    <div className="relative size-16 sm:size-20 rounded-2xl bg-zinc-950/90 border border-emerald-500/40 flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(16,185,129,0.25)] group-hover:border-emerald-400/60 transition-colors">
+                      <Building2 className="size-8 sm:size-10 text-emerald-400/50" />
+                      <div className="absolute left-0 top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_8px_#10b981] animate-scan pointer-events-none" />
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0)_95%,rgba(16,185,129,0.15)_95%)] bg-[size:100%_4px] pointer-events-none mix-blend-overlay" />
                     </div>
-                    <div className="col-span-5">
-                      <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">
-                        {data.type === 'delivery' && 'PLACA'}
-                        {data.type !== 'delivery' && 'PAÍS / COUNTRY'}
-                      </p>
-                      <p className="text-[10px] sm:text-xs font-black text-zinc-200 uppercase mt-1 font-mono">
-                        {data.type === 'delivery' ? data.licensePlate : 'NICARAGUA'}
-                      </p>
+                  </div>
+
+                  <div className="col-span-9 space-y-2.5 pl-3 sm:pl-6">
+                    <div>
+                      <p className="text-[6px] sm:text-[7px] text-emerald-400/50 font-bold tracking-[0.2em] uppercase font-mono">FARMACIA CERTIFICADA / FACILITY</p>
+                      <p className="text-sm sm:text-base font-black text-white uppercase tracking-wide leading-none mt-1 truncate max-w-[280px]">{data.pharmacyName}</p>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4">
+                      <div className="col-span-7">
+                        <p className="text-[6px] sm:text-[7px] text-emerald-400/50 font-bold tracking-[0.2em] uppercase font-mono">CÓDIGO DE REGISTRO</p>
+                        <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.id.slice(0, 10).toUpperCase()}</p>
+                      </div>
+                      <div className="col-span-5">
+                        <p className="text-[6px] sm:text-[7px] text-emerald-400/50 font-bold tracking-[0.2em] uppercase font-mono">RESPONSABLE REGENTE</p>
+                        <span className="inline-block text-[10px] sm:text-xs font-black text-emerald-300 uppercase tracking-widest mt-1 truncate max-w-[120px]">
+                          {data.name}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4">
+                      <div className="col-span-7">
+                        <p className="text-[6px] sm:text-[7px] text-emerald-400/50 font-bold tracking-[0.2em] uppercase font-mono">DIRECCIÓN FÍSICA</p>
+                        <p className="text-[9px] sm:text-[10px] font-semibold text-zinc-300 truncate max-w-[165px] mt-1">{data.pharmacyAddress}</p>
+                      </div>
+                      <div className="col-span-5">
+                        <p className="text-[6px] sm:text-[7px] text-emerald-400/50 font-bold tracking-[0.2em] uppercase font-mono">ESTATUS REGISTRO</p>
+                        <p className="text-[10px] sm:text-xs font-black text-emerald-400 uppercase mt-1 font-mono tracking-wider">VIGENTE</p>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                <div className="flex justify-between items-end border-t border-white/10 pt-3">
+                  <div className="font-mono text-[6px] sm:text-[7px] text-zinc-500 tracking-wider">
+                    EST-SEC-HASH: {data.id.slice(0, 24).toUpperCase()}
+                  </div>
+                  <div className="h-4 sm:h-5 w-28 sm:w-36 bg-white/5 rounded-[2px] flex items-center justify-between p-0.5 gap-[1.5px] overflow-hidden opacity-30 shrink-0">
+                    {Array(26).fill(0).map((_, i) => (
+                      <div 
+                        key={i} 
+                        className="h-full bg-white rounded-[0.5px]" 
+                        style={{ width: `${(i % 3 === 0 ? 3 : i % 2 === 0 ? 1 : 2)}px` }} 
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {data.type === 'doctor' && (
+            <motion.div
+              initial={{ scale: 0.93, opacity: 0, y: 32 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              whileHover={{ y: -6, rotateX: 1, rotateY: -1, scale: 1.015 }}
+              transition={{ type: "spring", stiffness: 120, damping: 14 }}
+              className="relative w-full aspect-[1.586/1] rounded-[2rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.6)] border border-sky-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-sky-950/75 to-zinc-900" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(14,165,233,0.2),transparent)] pointer-events-none" />
+              
+              <svg className="absolute inset-0 w-full h-full opacity-[0.08] stroke-sky-400 pointer-events-none" fill="none">
+                <path d="M 0 100 L 100 100 L 120 100 L 130 60 L 140 140 L 150 90 L 160 105 L 170 100 L 270 100" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M 270 100 L 370 100 L 390 100 L 400 60 L 410 140 L 420 90 L 430 105 L 440 100 L 540 100" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <rect width="100%" height="100%" />
+              </svg>
+
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" />
+
+              <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-sky-500/[0.04] bg-sky-500/[0.005] flex items-center justify-center rotate-12 pointer-events-none select-none">
+                <span className="text-[7px] font-black text-sky-400/[0.08] tracking-[0.25em] uppercase text-center leading-relaxed">
+                  MÉDICO COLEGIADO<br/>MINISTERIO DE SALUD<br/>REPÚBLICA DE NICARAGUA
+                </span>
               </div>
 
-              {/* Footer de la Tarjeta */}
-              <div className="flex justify-between items-end border-t border-white/5 pt-3">
-                <div className="font-mono text-[6px] sm:text-[7px] text-zinc-500 tracking-wider">
-                  {data.type === 'pharmacy' && `EST-HASH: ${data.id.slice(0, 24).toUpperCase()}`}
-                  {data.type === 'doctor' && `DOC-HASH: ${data.id.slice(0, 24).toUpperCase()}`}
-                  {data.type === 'delivery' && `DEL-HASH: ${data.id.slice(0, 24).toUpperCase()}`}
-                  {data.type === 'patient' && `PAC-HASH: ${data.id.slice(0, 24).toUpperCase()}`}
+              <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 via-indigo-500/5 to-cyan-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
+
+              <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+                <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-sky-300 via-indigo-500 to-sky-700 rounded-[4px] border border-sky-400/40 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">
+                      <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60">
+                        <div className="border-r border-sky-950/20 border-b" />
+                        <div className="border-r border-sky-950/20 border-b" />
+                        <div className="border-b" />
+                        <div className="border-r border-sky-950/20" />
+                        <div className="border-r border-sky-950/20" />
+                        <div className="border-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg md:text-xl font-black tracking-[0.15em] text-sky-300 uppercase flex items-center gap-1.5 leading-none">
+                        OASIS CLÍNICA
+                      </h3>
+                      <p className="text-[6px] sm:text-[7px] text-sky-400/60 font-mono tracking-widest uppercase mt-1">CREDENCIAL MÉDICA OFICIAL</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase shadow-[0_0_15px_rgba(14,165,233,0.15)] animate-pulse">
+                      MINSA CERTIFICADO
+                    </span>
+                  </div>
                 </div>
-                <div className="h-4 sm:h-5 w-28 sm:w-36 bg-white/5 rounded-[2px] flex items-center justify-between p-0.5 gap-[1.5px] overflow-hidden opacity-30 shrink-0">
-                  {Array(26).fill(0).map((_, i) => (
-                    <div 
-                      key={i} 
-                      className="h-full bg-white rounded-[0.5px]" 
-                      style={{ width: `${(i % 3 === 0 ? 3 : i % 2 === 0 ? 1 : 2)}px` }} 
-                    />
-                  ))}
+
+                <div className="grid grid-cols-12 gap-4 items-center my-auto py-2">
+                  <div className="col-span-3 flex justify-start">
+                    <div className="relative size-16 sm:size-20 rounded-2xl bg-zinc-950/90 border border-sky-500/40 flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(14,165,233,0.25)] group-hover:border-sky-400/60 transition-colors">
+                      <Stethoscope className="size-8 sm:size-10 text-sky-400/50 animate-pulse" />
+                      <div className="absolute left-0 top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-sky-400 to-transparent shadow-[0_0_8px_#38bdf8] animate-scan pointer-events-none" />
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0)_95%,rgba(14,165,233,0.15)_95%)] bg-[size:100%_4px] pointer-events-none mix-blend-overlay" />
+                    </div>
+                  </div>
+
+                  <div className="col-span-9 space-y-2.5 pl-3 sm:pl-6">
+                    <div>
+                      <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">PROFESIONAL DE MEDICINA / PHYSICIAN</p>
+                      <p className="text-sm sm:text-base font-black text-white uppercase tracking-wide leading-none mt-1 truncate max-w-[280px]">{data.name}</p>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4">
+                      <div className="col-span-7">
+                        <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">LICENCIA SANITARIA MINSA</p>
+                        <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.licenseNumber}</p>
+                      </div>
+                      <div className="col-span-5">
+                        <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">ESPECIALIDAD</p>
+                        <span className="inline-block text-[10px] sm:text-xs font-black text-sky-300 uppercase tracking-widest mt-1 truncate max-w-[120px]">
+                          {data.specialty}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4">
+                      <div className="col-span-7">
+                        <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">CENTRO DE PRÁCTICA PRINCIPAL</p>
+                        <p className="text-[9px] sm:text-[10px] font-semibold text-zinc-300 truncate max-w-[165px] mt-1">{data.clinicName}</p>
+                      </div>
+                      <div className="col-span-5">
+                        <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">ESTATUS REGISTRO</p>
+                        <p className="text-[10px] sm:text-xs font-black text-emerald-400 uppercase mt-1 font-mono tracking-wider">ACTIVO</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end border-t border-white/10 pt-3 relative">
+                  <div className="font-mono text-[6px] sm:text-[7px] text-zinc-500 tracking-wider">
+                    DOC-SEC-HASH: {data.id.slice(0, 24).toUpperCase()}
+                  </div>
+                  <div className="absolute right-0 bottom-0 select-none pointer-events-none translate-y-[20%] size-11 rounded-full bg-gradient-to-br from-yellow-400 via-amber-500 to-amber-600 border border-yellow-300/40 flex items-center justify-center shadow-lg shadow-amber-900/50 opacity-90 overflow-hidden">
+                    <div className="size-full rounded-full border border-zinc-950/20 flex items-center justify-center p-0.5">
+                      <span className="text-[5px] font-black text-zinc-950 text-center tracking-tighter uppercase leading-none font-serif">MINSA<br/>FIRMA</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
+
+          {data.type === 'delivery' && (
+            <motion.div
+              initial={{ scale: 0.93, opacity: 0, y: 32 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              whileHover={{ y: -6, rotateX: 1, rotateY: -1, scale: 1.015 }}
+              transition={{ type: "spring", stiffness: 120, damping: 14 }}
+              className="relative w-full aspect-[1.586/1] rounded-[2rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.6)] border border-amber-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-amber-950/60 to-zinc-900" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(245,158,11,0.2),transparent)] pointer-events-none" />
+              
+              <svg className="absolute inset-0 w-full h-full opacity-[0.04] stroke-amber-400 pointer-events-none" fill="none">
+                <pattern id="telemesh-screen" width="30" height="30" patternUnits="userSpaceOnUse">
+                  <path d="M 0 30 L 30 0 M 15 15 L 30 30 M 0 0 L 15 15" strokeWidth="0.75" />
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#telemesh-screen)" />
+              </svg>
+
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+
+              <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-amber-500/[0.04] bg-amber-500/[0.005] flex items-center justify-center rotate-12 pointer-events-none select-none">
+                <span className="text-[7px] font-black text-amber-400/[0.08] tracking-[0.25em] uppercase text-center leading-relaxed">
+                  LOGÍSTICA OASIS<br/>DESPACHO CERTIFICADO<br/>MINSA NICARAGUA
+                </span>
+              </div>
+
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 via-orange-500/5 to-yellow-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
+
+              <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+                <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-amber-300 via-orange-500 to-amber-755 rounded-[4px] border border-amber-400/40 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">
+                      <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60">
+                        <div className="border-r border-amber-950/20 border-b" />
+                        <div className="border-r border-amber-950/20 border-b" />
+                        <div className="border-b" />
+                        <div className="border-r border-amber-950/20" />
+                        <div className="border-r border-amber-950/20" />
+                        <div className="border-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg md:text-xl font-black tracking-[0.15em] text-amber-400 uppercase flex items-center gap-1.5 leading-none">
+                        OASIS LOGISTICS
+                      </h3>
+                      <p className="text-[6px] sm:text-[7px] text-amber-500/60 font-mono tracking-widest uppercase mt-1">ACREDITACIÓN DE LOGÍSTICA CRÍTICA</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-amber-500/15 text-amber-400 border border-amber-500/30 uppercase shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                      MINSA AUTORIZADO
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-12 gap-4 items-center my-auto py-2">
+                  <div className="col-span-3 flex justify-start">
+                    <div className="relative size-16 sm:size-20 rounded-2xl bg-zinc-950/90 border border-amber-500/40 flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(245,158,11,0.25)] group-hover:border-amber-400/60 transition-colors">
+                      <Car className="size-8 sm:size-10 text-amber-400/50" />
+                      <div className="absolute left-0 top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_8px_#f59e0b] animate-scan pointer-events-none" />
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0)_95%,rgba(245,158,11,0.15)_95%)] bg-[size:100%_4px] pointer-events-none mix-blend-overlay" />
+                    </div>
+                  </div>
+
+                  <div className="col-span-9 space-y-2.5 pl-3 sm:pl-6">
+                    <div>
+                      <p className="text-[6px] sm:text-[7px] text-amber-400/50 font-bold tracking-[0.2em] uppercase font-mono">REPARTIDOR AUTORIZADO / COURIER</p>
+                      <p className="text-sm sm:text-base font-black text-white uppercase tracking-wide leading-none mt-1 truncate max-w-[280px]">{data.name}</p>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4">
+                      <div className="col-span-7">
+                        <p className="text-[6px] sm:text-[7px] text-amber-400/50 font-bold tracking-[0.2em] uppercase font-mono">ID DE LICENCIA LOGÍSTICA</p>
+                        <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.id.slice(0, 10).toUpperCase()}</p>
+                      </div>
+                      <div className="col-span-5">
+                        <p className="text-[6px] sm:text-[7px] text-amber-400/50 font-bold tracking-[0.2em] uppercase font-mono">MEDIO TRANSPORTE</p>
+                        <span className="inline-block text-[10px] sm:text-xs font-black text-amber-300 uppercase tracking-widest mt-1 truncate max-w-[120px]">
+                          {data.vehicleType}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4 items-baseline">
+                      <div className="col-span-7">
+                        <p className="text-[6px] sm:text-[7px] text-amber-400/50 font-bold tracking-[0.2em] uppercase font-mono">CENTRO DE DESPACHO BASE</p>
+                        <p className="text-[9px] sm:text-[10px] font-semibold text-zinc-300 truncate max-w-[165px] mt-1">{data.pharmacyName}</p>
+                      </div>
+                      <div className="col-span-5">
+                        <p className="text-[6px] sm:text-[7px] text-amber-400/50 font-bold tracking-[0.2em] uppercase font-mono mb-1">PLACA METÁLICA N°</p>
+                        <div className="inline-flex items-center justify-center px-2 py-0.5 bg-gradient-to-b from-yellow-300 to-yellow-500 text-zinc-950 font-mono font-black text-[9px] sm:text-xs rounded border border-yellow-600 tracking-widest shadow-md leading-none select-none">
+                          {data.licensePlate}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end border-t border-white/10 pt-3">
+                  <div className="font-mono text-[6px] sm:text-[7px] text-zinc-500 tracking-wider">
+                    DEL-SEC-HASH: {data.id.slice(0, 24).toUpperCase()}
+                  </div>
+                  <div className="h-4 sm:h-5 w-28 sm:w-36 bg-white/5 rounded-[2px] flex items-center justify-between p-0.5 gap-[1.5px] overflow-hidden opacity-30 shrink-0">
+                    {Array(26).fill(0).map((_, i) => (
+                      <div 
+                        key={i} 
+                        className="h-full bg-white rounded-[0.5px]" 
+                        style={{ width: `${(i % 3 === 0 ? 3 : i % 2 === 0 ? 1 : 2)}px` }} 
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {data.type === 'patient' && (
+            <motion.div
+              initial={{ scale: 0.93, opacity: 0, y: 32 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              whileHover={{ y: -6, rotateX: 1, rotateY: -1, scale: 1.015 }}
+              transition={{ type: "spring", stiffness: 100, damping: 15 }}
+              className="relative w-full aspect-[1.586/1] rounded-[2rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.6)] border border-teal-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-teal-950/70 to-zinc-900" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(20,184,166,0.22),transparent)] pointer-events-none" />
+              
+              <div className="absolute top-1/4 right-1/4 size-32 bg-cyan-500/10 rounded-full blur-[40px] animate-pulse pointer-events-none" />
+
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-teal-500/40 to-transparent" />
+
+              <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-teal-500/[0.04] bg-teal-500/[0.005] flex items-center justify-center rotate-12 pointer-events-none select-none">
+                <span className="text-[7px] font-black text-teal-400/[0.08] tracking-[0.25em] uppercase text-center leading-relaxed">
+                  PASAPORTE DE SALUD<br/>MINISTERIO DE SALUD<br/>REPÚBLICA DE NICARAGUA
+                </span>
+              </div>
+
+              <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 via-purple-500/5 to-emerald-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
+
+              <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+                <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 rounded-[4px] border border-amber-400/40 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">
+                      <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60">
+                        <div className="border-r border-amber-950/20 border-b" />
+                        <div className="border-r border-amber-950/20 border-b" />
+                        <div className="border-b" />
+                        <div className="border-r border-amber-950/20" />
+                        <div className="border-r border-amber-950/20" />
+                        <div className="border-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg md:text-xl font-black tracking-[0.15em] text-teal-300 uppercase flex items-center gap-1.5 leading-none">
+                        OASIS LÍQUIDA
+                      </h3>
+                      <p className="text-[6px] sm:text-[7px] text-teal-400/60 font-mono tracking-widest uppercase mt-1">PASAPORTE DIGITAL DE SALUD</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-teal-500/15 text-teal-400 border border-teal-500/30 uppercase shadow-[0_0_15px_rgba(20,184,166,0.15)] animate-pulse">
+                      MINSA ACREDITADO
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-12 gap-4 items-center my-auto py-2">
+                  <div className="col-span-3 flex justify-start">
+                    <div className="relative size-16 sm:size-20 rounded-2xl bg-zinc-950/90 border border-teal-500/40 flex items-center justify-center overflow-hidden shadow-[0_0_35px_rgba(20,184,166,0.25)] group-hover:border-teal-400/60 transition-colors">
+                      <User className="size-8 sm:size-10 text-teal-400/50" />
+                      <div className="absolute left-0 top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-400 to-transparent shadow-[0_0_8px_#2dd4bf] animate-scan pointer-events-none" />
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0)_95%,rgba(20,184,166,0.15)_95%)] bg-[size:100%_4px] pointer-events-none mix-blend-overlay" />
+                    </div>
+                  </div>
+
+                  <div className="col-span-9 space-y-2.5 pl-3 sm:pl-6">
+                    <div>
+                      <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">TITULAR DE SALUD / CITIZEN</p>
+                      <p className="text-sm sm:text-base font-black text-white uppercase tracking-wide leading-none mt-1 truncate max-w-[280px]">{data.name}</p>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4">
+                      <div className="col-span-7">
+                        <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">EXPEDIENTE ID</p>
+                        <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.id.slice(0, 10).toUpperCase()}</p>
+                      </div>
+                      <div className="col-span-5">
+                        <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">GRUPO SANGUÍNEO</p>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-red-500/15 text-red-400 border border-red-500/35 shadow-[0_0_15px_rgba(239,68,68,0.2)] font-mono font-black text-xs mt-0.5 select-none leading-none">
+                          <span className="size-2 rounded-full bg-red-500 animate-pulse" />
+                          {data.bloodType || 'O+'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4">
+                      <div className="col-span-7">
+                        <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">FECHA EMISIÓN</p>
+                        <p className="text-[10px] sm:text-xs font-semibold text-zinc-300 font-mono mt-1">{formatDate(data.date, 'dd/MM/yyyy')}</p>
+                      </div>
+                      <div className="col-span-5">
+                        <p className="text-[6px] sm:text-[7px] text-teal-400/50 font-bold tracking-[0.2em] uppercase font-mono">ALERGIAS</p>
+                        <p className={cn(
+                          "text-[9px] sm:text-[10px] font-black uppercase mt-1.5 leading-none",
+                          parseAllergies(data.allergies).length > 0 ? "text-amber-400 font-black animate-pulse" : "text-emerald-400 font-bold"
+                        )}>
+                          {parseAllergies(data.allergies).length > 0 ? 'SÍ REGISTRA' : 'NINGUNA'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end border-t border-white/10 pt-3">
+                  <div className="font-mono text-[6px] sm:text-[7px] text-zinc-500 tracking-wider">
+                    PAC-SEC-HASH: {data.id.slice(0, 24).toUpperCase()}
+                  </div>
+                  <div className="h-4 sm:h-5 w-28 sm:w-36 bg-white/5 rounded-[2px] flex items-center justify-between p-0.5 gap-[1.5px] overflow-hidden opacity-30 shrink-0">
+                    {Array(26).fill(0).map((_, i) => (
+                      <div 
+                        key={i} 
+                        className="h-full bg-white rounded-[0.5px]" 
+                        style={{ width: `${(i % 3 === 0 ? 3 : i % 2 === 0 ? 1 : 2)}px` }} 
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Panel Informativo / Clínico Detallado en Verificación */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">

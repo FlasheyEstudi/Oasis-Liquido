@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { GlassSidebar } from '@/components/oasis/glass-sidebar';
 import { ContextualTopBar } from '@/components/oasis/contextual-top-bar';
@@ -8,10 +8,11 @@ import { MobileBottomBar } from '@/components/oasis/mobile-bottom-bar';
 import { BottomSheetNav } from '@/components/oasis/bottom-sheet-nav';
 import { ContextualFAB } from '@/components/oasis/contextual-fab';
 import { OrganicBlobs } from '@/components/oasis/organic-blobs';
-import { CheckCircle, XCircle, AlertTriangle, Info, X, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Info, X, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 import { ChatOverlay } from '@/components/oasis/chat-overlay';
 import { useTheme } from 'next-themes';
@@ -112,7 +113,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { isAuthenticated, user, setUser } = useAuthStore();
+  const { isAuthenticated, user, setUser, currentPage, isElderlyMode } = useAuthStore();
   const queryClient = useQueryClient();
   const [showDocModal, setShowDocModal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -124,6 +125,52 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { data: clinicsData } = useClinics(undefined);
   const { data: pharmaciesData } = usePharmacies(undefined);
   const { setNotification } = useAuthStore();
+
+  // --- SOS Emergency State & Direct Dial Handlers ---
+  const [showSosModal, setShowSosModal] = useState(false);
+  const timerRef = useRef<any>(null);
+  const startTimeRef = useRef<number>(0);
+  const isLongPressRef = useRef(false);
+
+  const handleSosStart = (e: React.MouseEvent | React.TouchEvent) => {
+    isLongPressRef.current = false;
+    startTimeRef.current = Date.now();
+    
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    
+    timerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      setShowSosModal(true);
+      if (typeof window !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+      }
+    }, 700); // 700ms threshold for intentional long press
+  };
+
+  const handleSosEnd = (e: React.MouseEvent | React.TouchEvent) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    
+    const duration = Date.now() - startTimeRef.current;
+    
+    if (startTimeRef.current > 0) {
+      if (!isLongPressRef.current && duration < 700) {
+        // Simple tap: direct emergency dial to Nicaragua Red Cross (128)
+        window.location.href = 'tel:128';
+      }
+      startTimeRef.current = 0;
+    }
+  };
+
+  const handleSosCancel = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    startTimeRef.current = 0;
+  };
 
   useEffect(() => {
     if (user?.verification_deadline) {
@@ -274,9 +321,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <OrganicBlobs />
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block w-[260px] shrink-0">
-        <GlassSidebar />
-      </div>
+      <GlassSidebar />
 
       {/* Mobile Bottom Sheet */}
       <BottomSheetNav
@@ -365,6 +410,126 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile Contextual FAB */}
       <ContextualFAB />
+
+      {/* Floating SOS Emergency Action Button — Global Level */}
+      {user?.role === 'patient' && currentPage === 'home' && (
+        <>
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="fixed bottom-24 left-6 z-[60] flex flex-col items-center gap-1.5"
+          >
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onMouseDown={handleSosStart}
+              onMouseUp={handleSosEnd}
+              onMouseLeave={handleSosCancel}
+              onTouchStart={handleSosStart}
+              onTouchEnd={handleSosEnd}
+              onTouchCancel={handleSosCancel}
+              className="size-16 flex flex-col items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.4)] border border-red-500/20 text-white bg-red-600 rounded-full cursor-pointer select-none relative overflow-hidden group active:bg-red-700"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-red-700 to-red-500 opacity-90 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.25),transparent)]" />
+              <AlertCircle className="size-6 shrink-0 z-10" />
+              <span className="text-[8px] font-black uppercase tracking-[0.15em] mt-0.5 z-10 font-mono">SOS</span>
+            </motion.button>
+            <div className="flex flex-col items-center text-[7px] font-black uppercase tracking-widest text-red-400 bg-red-950/60 border border-red-500/20 px-2 py-0.5 rounded shadow-md backdrop-blur-sm pointer-events-none select-none font-mono text-center max-w-[80px]">
+              <span>Tocar: 128</span>
+              <span className="text-[5px] text-red-500/60">Mantener: Menú</span>
+            </div>
+          </motion.div>
+
+          {/* Mini Modal de Opciones de Emergencia de Nicaragua */}
+          <AnimatePresence>
+            {showSosModal && (
+              <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowSosModal(false)}
+                  className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                />
+
+                {/* Modal Content */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                  className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl overflow-hidden select-none"
+                >
+                  {/* Organic glowing indicator */}
+                  <div className="absolute -top-12 -left-12 size-36 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
+                  
+                  <div className="text-center mb-6">
+                    <div className="mx-auto size-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-3 animate-pulse">
+                      <AlertCircle className="size-6" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white uppercase tracking-wider">Línea de Emergencia</h3>
+                    <p className="text-xs text-slate-400 mt-1">Selecciona la línea de ayuda directa en Nicaragua</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <a
+                      href="tel:102"
+                      className="flex items-center gap-4 w-full p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-red-500/30 hover:bg-red-500/10 text-white transition duration-200 cursor-pointer"
+                    >
+                      <div className="size-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 font-bold text-lg">🚑</div>
+                      <div className="text-left flex-1">
+                        <div className="text-xs font-semibold text-slate-400">MINSA / Ambulancias</div>
+                        <div className="text-sm font-black text-white">Marcar 102</div>
+                      </div>
+                    </a>
+
+                    <a
+                      href="tel:128"
+                      className="flex items-center gap-4 w-full p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-red-500/30 hover:bg-red-500/10 text-white transition duration-200 cursor-pointer"
+                    >
+                      <div className="size-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 font-bold text-lg">🔴</div>
+                      <div className="text-left flex-1">
+                        <div className="text-xs font-semibold text-slate-400">Cruz Roja Nicaragüense</div>
+                        <div className="text-sm font-black text-white">Marcar 128</div>
+                      </div>
+                    </a>
+
+                    <a
+                      href="tel:118"
+                      className="flex items-center gap-4 w-full p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/10 text-white transition duration-200 cursor-pointer"
+                    >
+                      <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold text-lg">🚔</div>
+                      <div className="text-left flex-1">
+                        <div className="text-xs font-semibold text-slate-400">Policía Nacional</div>
+                        <div className="text-sm font-black text-white">Marcar 118</div>
+                      </div>
+                    </a>
+
+                    <a
+                      href="tel:115"
+                      className="flex items-center gap-4 w-full p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-orange-500/30 hover:bg-orange-500/10 text-white transition duration-200 cursor-pointer"
+                    >
+                      <div className="size-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 font-bold text-lg">🚒</div>
+                      <div className="text-left flex-1">
+                        <div className="text-xs font-semibold text-slate-400">Bomberos Unificados</div>
+                        <div className="text-sm font-black text-white">Marcar 115</div>
+                      </div>
+                    </a>
+                  </div>
+
+                  <button
+                    onClick={() => setShowSosModal(false)}
+                    className="w-full mt-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:text-white transition duration-200"
+                  >
+                    Cancelar
+                  </button>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
 
       <ChatOverlay />
       <NotificationToast />

@@ -68,7 +68,6 @@ function getGreeting(): { text: string; icon: React.ReactNode; bgClass: string; 
 
 export function PatientHome() {
   const [mounted, setMounted] = useState(false);
-  const [sosTaps, setSosTaps] = useState(0);
   const [showQrModal, setShowQrModal] = useState(false);
   
   const { user, representedUser, setRepresentedUser, isElderlyMode, toggleElderlyMode, navigate } = useAuthStore();
@@ -77,35 +76,12 @@ export function PatientHome() {
     setMounted(true);
   }, []);
 
-  // Reset SOS taps after 3 seconds of inactivity
-  useEffect(() => {
-    if (sosTaps > 0) {
-      const timer = setTimeout(() => setSosTaps(0), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [sosTaps]);
-
   const activePatientId = representedUser?.id || user?.id;
 
   const appointmentsQuery = useAppointments({ limit: 5, patient_id: activePatientId });
   const prescriptionsQuery = usePrescriptions({ limit: 5, patient_id: activePatientId });
   const deliveriesQuery = useDeliveryOrders({ status: 'pending' });
   const familyQuery = useFamily(user?.role === 'patient');
-
-  const emergencyMutation = useMutation({
-    mutationFn: async (coords: { lat: number; lng: number }) => {
-      const response = await post<{ message: string }>('/patient/emergency', coords);
-      return response.data;
-    },
-    onSuccess: (data) => {
-      toast.success(data.message || 'Alerta médica de urgencia enviada correctamente.');
-      setSosTaps(0);
-    },
-    onError: () => {
-      toast.error('Error al transmitir la telemetría de emergencia.');
-      setSosTaps(0);
-    }
-  });
 
   const appointments = appointmentsQuery.data?.data ?? [];
   const prescriptions = prescriptionsQuery.data?.data ?? [];
@@ -194,38 +170,7 @@ export function PatientHome() {
 
   const dateStr = formatDate(new Date().toISOString(), "EEEE d 'de' MMMM, yyyy");
 
-  const triggerEmergency = () => {
-    if (!navigator.geolocation) {
-      toast.error('La geolocalización de emergencia no está activa en tu dispositivo.');
-      return;
-    }
 
-    toast.loading('Obteniendo coordenadas satelitales...', { id: 'emergency-alert' });
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        emergencyMutation.mutate({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        }, {
-          onSettled: () => toast.dismiss('emergency-alert')
-        });
-      },
-      (error) => {
-        toast.dismiss('emergency-alert');
-        toast.error('Imposible obtener coordenadas de geolocalización.');
-      }
-    );
-  };
-
-  const handleSosClick = () => {
-    if (sosTaps === 0) {
-      setSosTaps(1);
-      toast.warning('Presiona el botón SOS una vez más para confirmar la alerta médica.');
-    } else {
-      triggerEmergency();
-    }
-  };
 
   return (
     <div className={cn(
@@ -304,57 +249,63 @@ export function PatientHome() {
         </div>
       </div>
 
-      {/* SEAMLESS HEADER SECTION — Completely Cardless */}
-      <div className="py-6 border-b border-dashed border-slate-200 dark:border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="p-1 bg-teal-500/10 rounded-full shrink-0">
-              {greeting.icon}
+      {/* SEAMLESS HEADER SECTION — Asymmetric Glowing Glass Header (Matches Design Audit DSG-PAT-001) */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-teal-500/10 via-white/[0.02] to-emerald-500/[0.03] dark:from-teal-500/10 dark:via-zinc-950/20 dark:to-emerald-500/5 p-6 sm:p-8 border border-slate-250/50 dark:border-white/5 shadow-2xl backdrop-blur-xl">
+        {/* Dynamic Fluid Glowing Orbs */}
+        <div className="absolute -right-16 -top-16 size-56 rounded-full bg-teal-400/15 dark:bg-teal-400/10 blur-3xl pointer-events-none animate-pulse" />
+        <div className="absolute -left-16 -bottom-16 size-56 rounded-full bg-emerald-400/10 dark:bg-emerald-400/5 blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-teal-500/10 rounded-full shrink-0">
+                {greeting.icon}
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-700/80 dark:text-teal-300">
+                {greeting.text}
+              </span>
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-700/80 dark:text-zinc-350">
-              {greeting.text}
-            </span>
+            
+            <h1 className="text-3xl sm:text-4xl font-serif font-black text-slate-900 dark:text-white tracking-tight leading-none italic">
+              Hola, {firstName}
+            </h1>
+            
+            <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold">{dateStr}</p>
+            
+            <div className="flex items-center gap-1.5 bg-teal-500/15 border border-teal-500/25 text-teal-700 dark:text-teal-300 px-3.5 py-1 rounded-[50px] text-[8px] font-black uppercase tracking-widest w-fit shadow-sm">
+              <Shield className="size-3 text-teal-500 shrink-0" />
+              <span>Expediente Seguro MINSA</span>
+            </div>
           </div>
-          
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none font-serif">
-            Hola, {firstName}
-          </h2>
-          
-          <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold">{dateStr}</p>
-          
-          <div className="flex items-center gap-1.5 bg-teal-550/10 border border-teal-550/20 text-teal-700 dark:text-teal-400 px-3.5 py-1 rounded-[50px] text-[8px] font-black uppercase tracking-widest w-fit shadow-sm">
-            <Shield className="size-3 text-teal-500 dark:text-teal-400 shrink-0" />
-            <span>Expediente Seguro MINSA</span>
-          </div>
-        </div>
 
-        {/* Profile Avatar + Digital QR Passport Seal */}
-        <div className="flex items-center gap-4 shrink-0">
-          <div className="text-right">
-            <p className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Código Expediente</p>
-            <div className="flex items-center gap-1.5 mt-0.5 justify-end">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black text-slate-805 dark:text-white uppercase tracking-wider">Acreditado</span>
+          {/* Profile Avatar + Digital QR Passport Seal */}
+          <div className="flex items-center gap-4 shrink-0 bg-white/40 dark:bg-black/10 border border-slate-200/50 dark:border-white/5 rounded-[2rem] p-3 shadow-inner">
+            <div className="text-right">
+              <p className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Código Expediente</p>
+              <div className="flex items-center gap-1.5 mt-0.5 justify-end">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black text-slate-805 dark:text-white uppercase tracking-wider">Acreditado</span>
+              </div>
             </div>
+            <Avatar className="size-14 border-2 border-white/60 dark:border-white/10 shadow-lg ring-4 ring-teal-500/10">
+              <AvatarImage src={user?.avatar_url} alt={user?.name} />
+              <AvatarFallback className="bg-teal-500/10 text-teal-655 dark:text-teal-450 text-base font-black font-serif">
+                {getInitials(representedUser?.name || user?.name || 'Paciente')}
+              </AvatarFallback>
+            </Avatar>
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowQrModal(true)}
+              className="group relative flex items-center justify-center size-11 rounded-[16px_8px_14px_8px] bg-white/50 dark:bg-white/5 hover:bg-teal-500/10 border border-slate-250 dark:border-white/10 shadow-sm transition-all duration-300 cursor-pointer"
+            >
+              <QrCodeIcon className="size-5 text-slate-700 dark:text-teal-400 group-hover:scale-105 shrink-0" />
+              <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-teal-500 border border-white dark:border-zinc-950 shadow-md">
+                <Shield className="size-2.5 text-white" />
+              </span>
+            </motion.button>
           </div>
-          <Avatar className="size-14 border-2 border-white/60 dark:border-white/10 shadow-lg ring-4 ring-teal-500/10">
-            <AvatarImage src={user?.avatar_url} alt={user?.name} />
-            <AvatarFallback className="bg-teal-500/10 text-teal-655 dark:text-teal-450 text-base font-black font-serif">
-              {getInitials(representedUser?.name || user?.name || 'Paciente')}
-            </AvatarFallback>
-          </Avatar>
-          
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowQrModal(true)}
-            className="group relative flex items-center justify-center size-11 rounded-[16px_8px_14px_8px] bg-white/50 dark:bg-white/5 hover:bg-teal-500/10 border border-slate-250 dark:border-white/10 shadow-sm transition-all duration-300 cursor-pointer"
-          >
-            <QrCodeIcon className="size-5 text-slate-700 dark:text-teal-400 group-hover:scale-105 shrink-0" />
-            <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-teal-500 border border-white dark:border-zinc-950 shadow-md">
-              <Shield className="size-2.5 text-white" />
-            </span>
-          </motion.button>
         </div>
       </div>
 
@@ -639,48 +590,7 @@ export function PatientHome() {
         )}
       </AnimatePresence>
 
-      {/* Floating SOS Emergency Action Button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={handleSosClick}
-        disabled={emergencyMutation.isPending}
-        style={{
-          borderRadius: sosTaps === 0 ? '50% 50% 50% 50% / 40% 40% 60% 60%' : '30% 70% 30% 70% / 70% 30% 70% 30%'
-        }}
-        className={cn(
-          "fixed bottom-24 left-6 z-[40] size-16 flex flex-col items-center justify-center shadow-2xl border text-white transition-all duration-300 overflow-hidden backdrop-blur-md cursor-pointer",
-          sosTaps === 0 
-            ? "bg-red-500 border-red-400/20 shadow-red-500/30 animate-pulse"
-            : "bg-amber-500 border-amber-400/20 shadow-amber-500/40 ring-4 ring-amber-500/20"
-        )}
-      >
-        <AnimatePresence mode="wait">
-          {sosTaps === 0 ? (
-            <motion.div
-              key="sos"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="flex flex-col items-center justify-center"
-            >
-              <AlertCircle className="size-7 shrink-0" />
-              <span className="text-[7px] font-black uppercase tracking-widest mt-0.5">SOS</span>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="confirm"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="flex flex-col items-center justify-center font-black text-[9px] uppercase tracking-wider leading-none"
-            >
-              <span>Confirmar</span>
-              <span className="text-[7px] opacity-80 mt-0.5 font-bold">Volver a tocar</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.button>
+
 
     </div>
   );

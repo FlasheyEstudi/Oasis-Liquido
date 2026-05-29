@@ -144,9 +144,8 @@ export function PrescriptionDetail() {
         <ArrowLeft className="size-4" />
         Volver a recetas
       </Button>
-
-      {/* SEAMLESS CLINICAL RECIPE SHEATH — 100% Cardless dashboard layout */}
-      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md overflow-hidden p-4 sm:p-6 shadow-xl space-y-6">
+      {/* SEAMLESS CLINICAL RECIPE SHEATH — 100% Cardless dashboard layout (Premium Ticket Cut-outs) */}
+      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md overflow-visible relative p-4 sm:p-6 shadow-xl space-y-6">
         
         {/* Header Section: Doctor Profile & Status Indicator with timeline ribbon */}
         <div className="relative pl-4 py-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -198,8 +197,12 @@ export function PrescriptionDetail() {
           </div>
         </div>
 
-        {/* Tear Line Separator */}
-        <div className="border-t border-dashed border-slate-200 dark:border-white/10" />
+        {/* Tear Line Separator (Matches DSG-PAT-002 ticket cut-outs) */}
+        <div className="relative my-2">
+          <div className="absolute left-[-28px] sm:left-[-36px] top-1/2 -translate-y-1/2 size-6 rounded-full bg-white dark:bg-zinc-950 border-r border-slate-200/50 dark:border-white/10 z-20 pointer-events-none" />
+          <div className="absolute right-[-28px] sm:right-[-36px] top-1/2 -translate-y-1/2 size-6 rounded-full bg-white dark:bg-zinc-950 border-l border-slate-200/50 dark:border-white/10 z-20 pointer-events-none" />
+          <div className="border-t border-dashed border-slate-200 dark:border-white/10 w-full" />
+        </div>
 
         {/* Dashboard middle split grid (Fulfillment vs QR passport seal) */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
@@ -225,7 +228,7 @@ export function PrescriptionDetail() {
             <div className="text-center sm:text-left space-y-1.5">
               <div className="flex items-center justify-center sm:justify-start gap-1.5">
                 <Pill className="size-3.5 text-teal-500 shrink-0" />
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Progreso de Entrega</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Progreso de Entrega</h3>
               </div>
               <p className="text-sm font-extrabold text-slate-800 dark:text-zinc-200">
                 {fulfilledQuantity} de {totalQuantity} unidades
@@ -250,8 +253,12 @@ export function PrescriptionDetail() {
 
         </div>
 
-        {/* Tear Line Separator */}
-        <div className="border-t border-dashed border-slate-200 dark:border-white/10" />
+        {/* Tear Line Separator (Matches DSG-PAT-002 ticket cut-outs) */}
+        <div className="relative my-2">
+          <div className="absolute left-[-28px] sm:left-[-36px] top-1/2 -translate-y-1/2 size-6 rounded-full bg-white dark:bg-zinc-950 border-r border-slate-200/50 dark:border-white/10 z-20 pointer-events-none" />
+          <div className="absolute right-[-28px] sm:right-[-36px] top-1/2 -translate-y-1/2 size-6 rounded-full bg-white dark:bg-zinc-950 border-l border-slate-200/50 dark:border-white/10 z-20 pointer-events-none" />
+          <div className="border-t border-dashed border-slate-200 dark:border-white/10 w-full" />
+        </div>
 
         {/* Medication Lines list - Cardless troquel feed */}
         <div className="space-y-4">

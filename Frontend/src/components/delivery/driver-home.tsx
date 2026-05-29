@@ -15,7 +15,6 @@ import {
 } from '@/hooks/use-api';
 import { formatDate, formatCurrency } from '@/utils/helpers';
 import { DELIVERY_STATUS_CONFIG } from '@/utils/constants';
-import { GlassCard } from '@/components/oasis/glass-card';
 import { StatusBadge } from '@/components/common/status-badge';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,7 +63,7 @@ const playRadarSound = (type: 'ping' | 'success' | 'click' | 'sonar') => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(330, ctx.currentTime + 0.25);
       gain.gain.setValueAtTime(0.12, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
@@ -87,9 +86,9 @@ const playRadarSound = (type: 'ping' | 'success' | 'click' | 'sonar') => {
     } else if (type === 'success') {
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
-      osc1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-      osc1.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
-      osc1.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16); // G5
+      osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+      osc1.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+      osc1.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
       gain1.gain.setValueAtTime(0.1, ctx.currentTime);
       gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
       osc1.connect(gain1);
@@ -109,23 +108,22 @@ const playRadarSound = (type: 'ping' | 'success' | 'click' | 'sonar') => {
       osc.stop(ctx.currentTime + 0.06);
     }
   } catch (e) {
-    console.warn('Audio synthesis blocked by browser security policy:', e);
+    console.warn('Audio synthesis blocked:', e);
   }
 };
 
 const stagger: any = {
-  animate: { transition: { staggerChildren: 0.06 } },
+  animate: { transition: { staggerChildren: 0.05 } },
 };
 const fadeUp: any = {
-  initial: { opacity: 0, scale: 0.96, y: 24 },
-  animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 22 } },
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { type: 'spring', damping: 25 } },
 };
 
 export function DriverHome() {
   const { user, setNotification, navigate, isElderlyMode } = useAuthStore();
   const queryClient = useQueryClient();
 
-  // Core state declarations
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [localAvailable, setLocalAvailable] = useState(true);
   const [isFullscreenRadar, setIsFullscreenRadar] = useState(false);
@@ -137,19 +135,16 @@ export function DriverHome() {
   const driverId = user?.id || '';
   const firstName = user?.name?.split(' ')[0] || 'Repartidor';
 
-  // API query hooks
   const { data: stats } = useDriverEarnings(localAvailable);
   const { data: availableOrders = [], isLoading: availableLoading } = useAvailableDeliveries(localAvailable);
   const { data: activeOrders = [], isLoading: activeLoading } = useAssignedDeliveries(!!driverId);
 
-  // API mutation hooks
   const { mutateAsync: acceptOrder } = useAcceptDelivery();
   const { mutateAsync: rejectOrder } = useRejectDelivery();
   const updateDeliveryStatus = useUpdateDeliveryStatus();
 
   const isLoading = activeLoading || availableLoading;
 
-  // Geolocation tracking effect
   useEffect(() => {
     if (!localAvailable) {
       setDriverCoords(null);
@@ -162,8 +157,8 @@ export function DriverHome() {
           setDriverCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
         (err) => {
-          console.warn('Radar driver geolocation error:', err.message);
-          setDriverCoords({ lat: 12.1364, lng: -86.2514 }); // Central Managua
+          console.warn('Radar GPS error:', err.message);
+          setDriverCoords({ lat: 12.1364, lng: -86.2514 });
         },
         { enableHighAccuracy: true }
       );
@@ -172,7 +167,7 @@ export function DriverHome() {
         (pos) => {
           setDriverCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
-        (err) => console.warn('Radar geolocation watch error:', err),
+        (err) => console.warn('Radar GPS watch error:', err),
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
 
@@ -180,27 +175,23 @@ export function DriverHome() {
     }
   }, [localAvailable]);
 
-  // Radar ping audio triggers
   useEffect(() => {
     if (localAvailable && availableOrders.length > 0 && soundEnabled) {
       playRadarSound('ping');
     }
   }, [availableOrders.length, localAvailable, soundEnabled]);
 
-  // Build markers
   const radarMarkers = useMemo(() => {
     const list: any[] = [];
-
     if (driverCoords) {
       list.push({
         id: 'driver',
         lat: driverCoords.lat,
         lng: driverCoords.lng,
         type: 'driver',
-        label: 'Tu Ubicación Táctica',
+        label: 'Tu posición',
       });
     }
-
     availableOrders.forEach((order: any) => {
       const pLat = order.pickup_lat ?? order.pickupLat;
       const pLng = order.pickup_lng ?? order.pickupLng;
@@ -217,19 +208,17 @@ export function DriverHome() {
           orderRef: order,
         });
       }
-
       if (dLat && dLng) {
         list.push({
           id: `delivery-${order.id}`,
           lat: dLat,
           lng: dLng,
           type: 'destination',
-          label: `Destino: Entregar Pedido #${order.id.slice(-6)}`,
+          label: `Destino: Pedido #${order.id.slice(-6)}`,
           orderRef: order,
         });
       }
     });
-
     return list;
   }, [driverCoords, availableOrders]);
 
@@ -281,7 +270,6 @@ export function DriverHome() {
           { ...orderToAccept, status: 'accepted', deliveryDriverId: driverId },
         ]);
       }
-      
       navigate('delivery-detail', id);
       await acceptOrder(id);
       setNotification({ type: 'success', message: '¡Misión aceptada con éxito!' });
@@ -310,21 +298,21 @@ export function DriverHome() {
           label: 'Recoger en farmacia',
           icon: PackageOpen,
           newStatus: 'picked_up' as const,
-          className: 'bg-teal-500 hover:bg-teal-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-teal-500/20 h-11 rounded-full transition-all duration-300 border-none w-full flex items-center justify-center gap-2 cursor-pointer',
+          className: 'bg-teal-500 hover:bg-teal-600 text-white font-black text-[9px] uppercase tracking-widest shadow-md h-10 rounded-full transition-all duration-300 border-none w-full flex items-center justify-center gap-1.5 cursor-pointer',
         };
       case 'picked_up':
         return {
           label: 'Iniciar ruta al paciente',
           icon: Navigation,
           newStatus: 'in_transit' as const,
-          className: 'bg-sky-500 hover:bg-sky-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-sky-500/20 h-11 rounded-full transition-all duration-300 border-none w-full flex items-center justify-center gap-2 cursor-pointer',
+          className: 'bg-sky-500 hover:bg-sky-600 text-white font-black text-[9px] uppercase tracking-widest shadow-md h-10 rounded-full transition-all duration-300 border-none w-full flex items-center justify-center gap-1.5 cursor-pointer',
         };
       case 'in_transit':
         return {
           label: 'Marcar como entregado',
           icon: CheckCircle2,
           newStatus: 'delivered' as const,
-          className: 'bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 h-11 rounded-full transition-all duration-300 border-none w-full flex items-center justify-center gap-2 cursor-pointer',
+          className: 'bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[9px] uppercase tracking-widest shadow-md h-10 rounded-full transition-all duration-300 border-none w-full flex items-center justify-center gap-1.5 cursor-pointer',
         };
       default:
         return null;
@@ -340,14 +328,13 @@ export function DriverHome() {
 
   if (isLoading) {
     return (
-      <div className="delivery-container space-y-6">
-        <div className="shimmer rounded-[40px_16px_40px_16px] h-28 w-full" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="shimmer rounded-[24px_12px_20px_12px] h-36" />
-          <div className="shimmer rounded-[12px_24px_12px_20px] h-36" />
-          <div className="shimmer rounded-[20px_12px_24px_12px] h-36" />
+      <div className="space-y-6 max-w-4xl mx-auto px-1 sm:px-0">
+        <div className="shimmer rounded-[40px_16px_40px_16px] h-28 w-full opacity-70" />
+        <div className="grid grid-cols-3 gap-4">
+          <div className="shimmer rounded-2xl h-24 opacity-70" />
+          <div className="shimmer rounded-2xl h-24 opacity-70" />
+          <div className="shimmer rounded-2xl h-24 opacity-70" />
         </div>
-        <div className="shimmer rounded-[80px_40px_32px_120px] h-[400px] w-full animate-shimmer-fast" />
       </div>
     );
   }
@@ -355,485 +342,365 @@ export function DriverHome() {
   return (
     <motion.div 
       className={cn(
-        "delivery-container space-y-6 font-sans relative overflow-visible",
+        "space-y-6 pb-24 font-sans relative overflow-visible px-1 sm:px-0",
         isElderlyMode && "text-base font-medium [&_h2]:text-3xl [&_h3]:text-xl [&_p]:text-sm [&_button]:text-sm [&_button]:h-12"
       )} 
       variants={stagger} 
       initial="initial" 
       animate="animate"
     >
-      
-      {/* Dynamic Ambient Background Elements */}
-      <div className="absolute top-[30%] left-[-15%] size-96 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-15%] size-96 rounded-full bg-gradient-to-br from-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
+      {/* Background Ambience */}
+      <div className="absolute top-[25%] left-[-10%] size-96 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[-10%] size-96 rounded-full bg-gradient-to-br from-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
 
-      {/* 1. Header Card - Welcome & Telemetry Visor Shield */}
-      <motion.div 
-        className="relative overflow-hidden rounded-[80px_40px_32px_120px] px-4 py-6 sm:p-8 bg-white/20 dark:bg-zinc-950/20 text-slate-805 dark:text-white shadow-2xl border border-slate-200/50 dark:border-white/5 backdrop-blur-xl" 
-        variants={fadeUp}
-      >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/3 translate-x-1/4" />
+      {/* 1. Curved Top Visor Header — Cardless, flowing directly from top */}
+      <div className="bg-teal-500/10 dark:bg-zinc-950/40 border-b border-dashed border-teal-500/20 rounded-b-[48px] py-7 px-5 sm:px-8 -mx-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden shadow-sm">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/3" />
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <div className="size-14 sm:size-16 rounded-[24px_10px_20px_10px] bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-650 dark:text-teal-400 shrink-0 shadow-lg shadow-teal-500/5">
-              <Bike className="size-8 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white font-serif">
-                  Hola, {firstName}
-                </h2>
-                <Sparkles className="size-4.5 text-yellow-500 dark:text-yellow-400 fill-yellow-400/20 animate-pulse" />
-              </div>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-bold">
-                {activeOrders.length > 0
-                  ? `Tienes ${activeOrders.length} misión/misiones activas en curso. ¡Conduce con cuidado!`
-                  : 'Radar activo. Conéctate y abre el visor satelital táctico en pantalla completa.'}
-              </p>
-            </div>
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="size-12 rounded-[20px_8px_16px_8px] bg-teal-500/15 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+            <Bike className="size-6 animate-pulse" />
           </div>
-
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            {/* Live Indicator block */}
-            <div className="flex items-center gap-2 bg-white/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-full px-4 py-2 text-[8px] font-black uppercase tracking-widest text-emerald-650 dark:text-emerald-400 shadow-sm backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>Central Oasis En Línea</span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white font-serif">
+                Hola, {firstName}
+              </h2>
+              <Sparkles className="size-4 text-yellow-500 fill-yellow-400/20 animate-pulse" />
             </div>
-            
-            {/* Audio Toggle Feedback */}
-            <button
-              onClick={() => {
-                setSoundEnabled(!soundEnabled);
-                playRadarSound('click');
-              }}
-              className={cn(
-                'size-10 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-md backdrop-blur-sm',
-                soundEnabled
-                  ? 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-400 hover:bg-teal-500/20'
-                  : 'bg-white/40 dark:bg-white/5 border-slate-200/50 dark:border-white/10 text-slate-400 dark:text-zinc-500 hover:bg-white/10'
-              )}
-            >
-              {soundEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
-            </button>
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold mt-0.5">
+              {activeOrders.length > 0
+                ? `Misiones activas: ${activeOrders.length}. ¡Seguridad ante todo!`
+                : 'Visor de radar táctico enlazado y listo.'}
+            </p>
           </div>
         </div>
-      </motion.div>
 
-      {/* 2. Bento Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-        
-        {/* Availability Switch Shield */}
-        <div style={{ borderRadius: '40px 16px 28px 16px' }} className="px-5 py-5 bg-white/20 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 backdrop-blur-xl shadow-xl flex flex-col justify-between" variants={fadeUp}>
-          <div className="flex items-center gap-3.5">
-            <div className={cn(
-              'size-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm border border-slate-200/20',
-              localAvailable ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'
-            )}>
-              <CircleDot className={cn('size-6', localAvailable && 'animate-pulse')} />
-            </div>
-            <div>
-              <p className="text-[9px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-widest">Tu Estado</p>
-              <p className="text-base font-black text-slate-800 dark:text-white mt-0.5 font-serif">
-                {localAvailable ? 'Disponible' : 'Offline'}
-              </p>
-            </div>
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="flex items-center gap-1.5 bg-white/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-full px-3.5 py-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 shadow-sm">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            <span>Central Oasis Conectada</span>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          
+          <button
+            onClick={() => {
+              setSoundEnabled(!soundEnabled);
+              playRadarSound('click');
+            }}
+            className={cn(
+              'size-9 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-sm',
+              soundEnabled
+                ? 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-400 hover:bg-teal-500/20'
+                : 'bg-white/40 dark:bg-white/5 border-slate-200/50 dark:border-white/10 text-slate-400 dark:text-zinc-500 hover:bg-white/10'
+            )}
+          >
+            {soundEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Flat Dashboard Stats Grid — Zero Card Borders */}
+      <div className="grid grid-cols-3 gap-3">
+        
+        {/* Availability Switch */}
+        <div className="bg-slate-500/[0.03] dark:bg-zinc-950/20 rounded-2xl p-3 border border-slate-200/40 dark:border-white/5 text-center flex flex-col justify-between items-center h-28 shadow-sm">
+          <div className="flex flex-col items-center">
+            <CircleDot className={cn('size-5 text-slate-400', localAvailable && 'text-emerald-500 animate-pulse')} />
+            <p className="text-[9px] font-black text-slate-800 dark:text-white mt-1.5 font-serif uppercase tracking-wider">
+              {localAvailable ? 'Disponible' : 'Desconectado'}
+            </p>
+          </div>
+          <button
             onClick={() => {
               setLocalAvailable(!localAvailable);
               if (soundEnabled) playRadarSound('success');
             }}
             className={cn(
-              'w-full mt-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer border shadow-sm text-center flex items-center justify-center shrink-0',
+              'w-full py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer border shadow-sm text-center shrink-0',
               localAvailable
-                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20'
-                : 'bg-emerald-500 text-white border-transparent hover:bg-emerald-600'
+                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                : 'bg-emerald-500 text-white border-transparent'
             )}
           >
-            {localAvailable ? 'Desconectar' : 'Conectarse'}
-          </motion.button>
+            {localAvailable ? 'Off' : 'On'}
+          </button>
         </div>
 
-        {/* Daily Earnings Card */}
-        <div style={{ borderRadius: '16px 40px 16px 28px' }} className="px-5 py-5 bg-white/20 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 backdrop-blur-xl shadow-xl flex flex-col justify-between group" variants={fadeUp}>
-          <div className="flex items-center gap-3.5">
-            <div className="size-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 flex items-center justify-center shadow-sm border border-slate-200/20">
-              <DollarSign className="size-6 group-hover:scale-110 transition-transform" />
-            </div>
-            <div>
-              <p className="text-[9px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-widest">Créditos del Día</p>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <p className="text-xl font-black text-slate-880 dark:text-white font-serif">
-                  {formatCurrency(stats?.totalEarnings ?? 0)}
-                </p>
-                <span className="text-[9px] text-emerald-655 dark:text-emerald-500 font-black flex items-center gap-0.5">
-                  <TrendingUp className="size-3" /> +100%
-                </span>
-              </div>
-            </div>
+        {/* Daily Earnings stats */}
+        <div className="bg-slate-500/[0.03] dark:bg-zinc-950/20 rounded-2xl p-3 border border-slate-200/40 dark:border-white/5 text-center flex flex-col justify-between items-center h-28 shadow-sm">
+          <div className="flex flex-col items-center">
+            <DollarSign className="size-5 text-emerald-500" />
+            <p className="text-[9px] font-black text-slate-800 dark:text-white mt-1.5 font-serif uppercase tracking-wider">Créditos</p>
           </div>
-          <p className="text-[9px] text-slate-450 dark:text-zinc-500 font-bold mt-4 border-t border-dashed border-slate-250 dark:border-white/5 pt-2 flex items-center justify-between">
-            <span>Entregas Completadas</span>
-            <span className="font-mono font-black text-slate-800 dark:text-white">{stats?.totalDeliveries ?? 0} MISIONES</span>
-          </p>
+          <div>
+            <p className="text-sm font-black text-slate-800 dark:text-white font-mono">
+              {formatCurrency(stats?.totalEarnings ?? 0)}
+            </p>
+            <p className="text-[7px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase mt-0.5">{stats?.totalDeliveries ?? 0} viajes</p>
+          </div>
         </div>
 
-        {/* Reputation Score Card */}
-        <div style={{ borderRadius: '28px 16px 40px 16px' }} className="px-5 py-5 bg-white/20 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 backdrop-blur-xl shadow-xl flex flex-col justify-between group" variants={fadeUp}>
-          <div className="flex items-center gap-3.5">
-            <div className="size-12 rounded-2xl bg-teal-500/10 text-teal-655 dark:text-teal-400 flex items-center justify-center shadow-sm border border-slate-200/20">
-              <Star className="size-6 fill-teal-500/20 group-hover:rotate-12 transition-transform duration-300" />
-            </div>
-            <div>
-              <p className="text-[9px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-widest">Reputación Escuadrón</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-xl font-black text-slate-880 dark:text-white font-serif">
-                  {stats?.rating ?? 5.0}
-                </p>
-                <div className="flex text-amber-500">
-                  <Star className="size-3 fill-current" />
-                  <Star className="size-3 fill-current" />
-                  <Star className="size-3 fill-current" />
-                </div>
-              </div>
-            </div>
+        {/* Reputation stats */}
+        <div className="bg-slate-500/[0.03] dark:bg-zinc-950/20 rounded-2xl p-3 border border-slate-200/40 dark:border-white/5 text-center flex flex-col justify-between items-center h-28 shadow-sm">
+          <div className="flex flex-col items-center">
+            <Star className="size-5 text-amber-500 fill-amber-500/20" />
+            <p className="text-[9px] font-black text-slate-800 dark:text-white mt-1.5 font-serif uppercase tracking-wider">Reputación</p>
           </div>
-          <p className="text-[9px] text-slate-450 dark:text-zinc-500 font-bold mt-4 border-t border-dashed border-slate-250 dark:border-white/5 pt-2 flex items-center justify-between">
-            <span>Rango de Reparto</span>
-            <span className="font-black text-teal-650 dark:text-teal-400 uppercase tracking-widest">ELITE COURIER</span>
-          </p>
+          <div>
+            <p className="text-sm font-black text-slate-800 dark:text-white font-mono">
+              {stats?.rating ?? 5.0} ★
+            </p>
+            <p className="text-[7px] text-teal-655 dark:text-teal-400 font-black uppercase tracking-wider mt-0.5">ELITE</p>
+          </div>
         </div>
       </div>
 
-      {/* 3. The Radar Portal Card (Mini Map Scope Visor) */}
-      <motion.div className="col-span-12" variants={fadeUp}>
-        <div className="relative overflow-hidden rounded-[80px_40px_32px_120px] border border-slate-200 dark:border-zinc-800/80 bg-white/30 dark:bg-zinc-950/20 backdrop-blur-xl shadow-2xl p-5 sm:p-6 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="size-10 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-500 shadow-inner">
-                <Radio className="size-5 animate-pulse" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-850 dark:text-white flex items-center gap-2 font-serif">
-                  Radar Táctico Oasis
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase bg-teal-500/10 text-teal-500 border border-teal-500/20">
-                    <span className="size-1.5 rounded-full bg-teal-450 animate-ping" />
-                    Escaneo Managua
-                  </span>
-                </h3>
-                <p className="text-[10px] text-slate-500 dark:text-zinc-450 font-bold mt-1">
-                  Visualiza farmacias y pacientes en tiempo real. Abre el visor en pantalla completa para capturar entregas.
-                </p>
-              </div>
+      {/* 3. The Radar Preview Panel — Floating HUD scoped Map */}
+      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-4 sm:p-5 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-dashed border-slate-200 dark:border-white/5">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7.5 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/15">
+              <Radio className="size-4 text-teal-500 animate-pulse animate-bounce-slow" />
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.03, y: -1 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                if (soundEnabled) playRadarSound('success');
-                setIsFullscreenRadar(true);
-              }}
-              className="flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-850 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 px-6 h-11 rounded-full text-[10px] font-black uppercase tracking-widest border border-transparent shadow-lg shadow-teal-500/5 transition-all duration-300 cursor-pointer self-start md:self-center"
-            >
-              <Maximize2 className="size-4 shrink-0" /> Buscar en Radar Completo
-            </motion.button>
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Radar Satelital</h3>
+            </div>
           </div>
 
-          {/* Mini-Scope preview map */}
-          <div className="relative rounded-[60px_20px_28px_100px] overflow-hidden border border-slate-200/80 dark:border-zinc-800/80 shadow-2xl h-80 bg-zinc-950">
-            {localAvailable ? (
-              <MapView
-                markers={radarMarkers}
-                center={radarMapCenter}
-                height="100%"
-                onMarkerClick={handleMarkerClick}
-              />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100/50 dark:bg-zinc-950/70 backdrop-blur-sm z-[500] text-center p-6">
-                <Bike className="size-16 text-slate-400 dark:text-zinc-650 mb-3 animate-bounce" />
-                <h4 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-zinc-450">Sistema de Radar Inactivo</h4>
-                <p className="text-xs text-slate-450 dark:text-zinc-500 font-bold max-w-xs mt-1 leading-relaxed">Conéctate en la parte superior para activar el posicionamiento satelital y recibir notificaciones.</p>
-              </div>
-            )}
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              if (soundEnabled) playRadarSound('success');
+              setIsFullscreenRadar(true);
+            }}
+            className="flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-850 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 px-4 py-2 rounded-full text-[8.5px] font-black uppercase tracking-widest cursor-pointer border-none shadow-sm"
+          >
+            <Maximize2 className="size-3.5 shrink-0" /> Pantalla Completa
+          </motion.button>
+        </div>
 
-            {/* Sweep radar lines overlay in mini-map */}
-            {localAvailable && availableOrders.length === 0 && (
-              <div className="absolute inset-0 pointer-events-none z-[400] flex items-center justify-center overflow-hidden">
-                <div className="radar-sweep-line" />
-                <div className="radar-circle w-32 h-32" />
-                <div className="radar-circle w-64 h-64 animate-ping-slow" />
-                <div className="radar-circle w-96 h-96" />
-                
-                <div className="absolute bottom-6 left-6 z-[401] rounded-2xl bg-zinc-950/90 border border-teal-500/20 px-4 py-2.5 text-[9px] font-black text-teal-400 uppercase tracking-widest backdrop-blur-md flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-teal-400 animate-ping" />
-                  Buscando prescripciones en tu zona...
-                </div>
+        {/* Mini Radar scope preview */}
+        <div className="relative rounded-[32px_12px_24px_12px] overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-inner h-64 bg-zinc-950">
+          {localAvailable ? (
+            <MapView
+              markers={radarMarkers}
+              center={radarMapCenter}
+              height="100%"
+              onMarkerClick={handleMarkerClick}
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100/50 dark:bg-zinc-950/70 backdrop-blur-sm z-[500] text-center p-6">
+              <Bike className="size-12 text-slate-400 dark:text-zinc-650 mb-2 animate-bounce-slow" />
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-550 dark:text-zinc-450">Radar Inactivo</h4>
+              <p className="text-[10px] text-slate-450 dark:text-zinc-500 font-bold max-w-xs mt-1 leading-relaxed">Conéctate para recibir coordenadas satelitales en vivo.</p>
+            </div>
+          )}
+
+          {localAvailable && availableOrders.length === 0 && (
+            <div className="absolute inset-0 pointer-events-none z-[400] flex items-center justify-center overflow-hidden">
+              <div className="radar-sweep-line" />
+              <div className="radar-circle w-28 h-28" />
+              <div className="radar-circle w-56 h-56 animate-ping-slow" />
+              <div className="absolute bottom-4 left-4 z-[401] rounded-xl bg-zinc-950/90 border border-teal-500/20 px-3 py-1.5 text-[8px] font-black text-teal-400 uppercase tracking-widest backdrop-blur-md flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-teal-400 animate-ping" />
+                Rastreando zona...
               </div>
-            )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 4. Tabbed Misiones Feed — Cardless tab lists divided by clinic dashed separators */}
+      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-4 sm:p-5 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-dashed border-slate-200 dark:border-white/5">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7.5 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/15">
+              <Truck className="size-4 text-indigo-500" />
+            </div>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Canal de Misiones</h3>
+          </div>
+
+          {/* Inline filters */}
+          <div className="flex bg-slate-500/[0.04] dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 w-fit">
+            <button
+              onClick={() => {
+                setActiveTab('all');
+                if (soundEnabled) playRadarSound('click');
+              }}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none',
+                activeTab === 'all'
+                  ? 'bg-white dark:bg-zinc-800 text-teal-500 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent'
+              )}
+            >
+              Disponibles ({availableOrders.length})
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('high_fee');
+                if (soundEnabled) playRadarSound('click');
+              }}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none',
+                activeTab === 'high_fee'
+                  ? 'bg-white dark:bg-zinc-800 text-emerald-500 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent'
+              )}
+            >
+              Premium Pago
+            </button>
           </div>
         </div>
-      </motion.div>
 
-      {/* 4. Split Dashboard Grid: Available vs Assigned */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Left Column: Freelance order board */}
-        <div style={{ borderRadius: '40px 16px 32px 16px' }} className="p-5 border border-slate-200/50 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 backdrop-blur-xl shadow-2xl space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-dashed border-slate-200/60 dark:border-white/5">
-            <div className="flex items-center gap-2.5">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <h3 className="text-xs font-black text-slate-805 dark:text-white uppercase tracking-widest font-serif">Pedidos Disponibles</h3>
-            </div>
+        {/* Tab content splits */}
+        <div className="divide-y divide-dashed divide-slate-200/60 dark:divide-white/5">
+          
+          {/* Active Missions (Fixed header priority) */}
+          {activeOrders.length > 0 && (
+            <div className="pb-3.5 space-y-3">
+              <p className="text-[8.5px] font-black text-sky-655 dark:text-sky-400 uppercase tracking-[0.2em] mb-2 pl-2">Misiones en Curso</p>
+              {activeOrders.map((order, idx) => {
+                const action = getActionForOrder(order.status);
+                const totalAmount = order.items
+                  ? order.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0)
+                  : 0;
 
-            {/* Internal filters tabs */}
-            <div className="flex bg-white/30 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/5">
-              <button
-                onClick={() => {
-                  setActiveTab('all');
-                  if (soundEnabled) playRadarSound('click');
-                }}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none',
-                  activeTab === 'all'
-                    ? 'bg-white dark:bg-zinc-800 text-teal-500 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent'
-                )}
-              >
-                Todos ({availableOrders.length})
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('high_fee');
-                  if (soundEnabled) playRadarSound('click');
-                }}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none',
-                  activeTab === 'high_fee'
-                    ? 'bg-white dark:bg-zinc-800 text-emerald-500 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent'
-                )}
-              >
-                Mejor Pago ({(availableOrders.filter((o: any) => (o.deliveryFee || 60) >= 100)).length})
-              </button>
-            </div>
-          </div>
-
-          {!localAvailable ? (
-            <div className="flex flex-col items-center py-16 text-center space-y-2">
-              <Bike className="size-12 text-slate-350 dark:text-zinc-700" />
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-zinc-400">Escuadrón Desconectado</h4>
-              <p className="text-[11px] text-slate-450 dark:text-zinc-550 font-bold max-w-xs mt-1 leading-relaxed">
-                Conéctate usando el switch en la parte superior para recibir las alertas satelitales en vivo.
-              </p>
-            </div>
-          ) : filteredAvailableOrders.length === 0 ? (
-            <div className="flex flex-col items-center py-16 text-center space-y-2">
-              <Activity className="size-12 text-teal-500/30 animate-pulse" />
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-zinc-400">Buscando nuevas órdenes...</h4>
-              <p className="text-[11px] text-slate-455 dark:text-zinc-550 font-bold max-w-xs mt-1 leading-relaxed">
-                Actualmente no hay pedidos pendientes en esta categoría. Te notificaremos al instante en tu radar.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
-              <AnimatePresence>
-                {filteredAvailableOrders.map((order: any, idx) => (
+                return (
                   <motion.div
                     key={order.id}
-                    initial={{ opacity: 0, scale: 0.97 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.97 }}
-                    style={{
-                      borderRadius: idx % 2 === 0
-                        ? '32px 12px 20px 12px'
-                        : '12px 32px 12px 20px'
-                    }}
-                    className="p-4 border border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-zinc-950/20 hover:border-teal-500/30 dark:hover:border-teal-500/30 shadow-sm transition-all duration-300 flex flex-col gap-3 group"
+                    variants={fadeUp}
+                    className="p-3 hover:bg-slate-500/[0.03] dark:hover:bg-white/[0.01] cursor-pointer transition-all duration-200 relative flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl"
+                    onClick={() => navigate('delivery-detail', order.id)}
                   >
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-widest border border-emerald-500/10">
-                            Entrega Asegurada
-                          </span>
-                          <h4 className="text-xs font-black text-slate-805 dark:text-white mt-2 font-serif group-hover:text-teal-600 transition-colors">{order.pharmacy?.name || 'Farmacia Oasis'}</h4>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-base font-black text-emerald-500">
-                            +{formatCurrency(order.deliveryFee || 60)}
-                          </p>
-                          <p className="text-[9px] text-slate-400 dark:text-zinc-550 font-black uppercase tracking-wider">Crédito envío</p>
-                        </div>
+                    {/* Glow sidebar indicating running status */}
+                    <div className="absolute left-0 top-2 bottom-2 w-1 bg-sky-500 rounded-full" />
+                    
+                    <div className="flex items-center gap-4 min-w-0 pl-2">
+                      <div className="size-10 rounded-lg bg-sky-500/10 border border-sky-500/15 flex items-center justify-center text-sky-550 shrink-0">
+                        <Truck className="size-5 shrink-0" />
                       </div>
-
-                      <div className="space-y-2 text-xs text-slate-550 dark:text-zinc-400 border-l-2 border-teal-500/30 pl-3 ml-1 font-bold">
-                        <div className="flex items-start gap-1.5">
-                          <MapPin className="size-3.5 text-rose-500 shrink-0 mt-0.5" />
-                          <span><b className="font-black">Origen:</b> {order.pharmacy?.address || 'Managua, Nicaragua'}</span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-black text-slate-805 dark:text-white truncate font-serif">
+                            {order.pharmacy?.name || 'Farmacia Oasis'}
+                          </h4>
+                          <StatusBadge status={order.status} type="delivery" />
                         </div>
-                        <div className="flex items-start gap-1.5">
-                          <Navigation className="size-3.5 text-teal-500 shrink-0 mt-0.5" />
-                          <span><b className="font-black">Destino:</b> {order.deliveryAddress || 'Domicilio paciente'}</span>
-                        </div>
-                      </div>
-
-                      {order.items && order.items.length > 0 && (
-                        <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 shadow-inner">
-                          <p className="text-[8px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest mb-1">Medicamentos en paquete:</p>
-                          <p className="text-xs text-slate-705 dark:text-zinc-350 font-medium truncate">
-                            {order.items.map((i: any) => `${i.name || 'Medicina'} (x${i.quantity})`).join(', ')}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex gap-2.5 pt-1">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={(e) => handleAccept(e, order.id)}
-                          className="flex-1 h-10 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-650 hover:to-cyan-650 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-teal-500/10 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer border-none"
-                        >
-                          <Check className="size-4 stroke-[3]" /> Aceptar Misión
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={(e) => handleReject(e, order.id)}
-                          className="h-10 px-4 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-zinc-450 font-black text-[9px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-1 cursor-pointer border-none"
-                        >
-                          Declinación
-                        </motion.button>
+                        <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold mt-1.5 flex items-center gap-1">
+                          <MapPin className="size-3 text-rose-500" />
+                          <span className="truncate">{order.delivery_address}</span>
+                        </p>
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
 
-        {/* Right Column: Active route / assigned mission panel */}
-        <div style={{ borderRadius: '16px 40px 16px 32px' }} className="p-5 border border-slate-200/50 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 backdrop-blur-xl shadow-2xl space-y-4">
-          <div className="flex items-center justify-between pb-4 border-b border-dashed border-slate-200/60 dark:border-white/5">
-            <h3 className="text-xs font-black text-slate-805 dark:text-white uppercase tracking-widest font-serif">Tus Misiones Activas</h3>
-            <span className="px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 text-[9px] font-black uppercase">
-              {activeOrders.length} Asignadas
-            </span>
-          </div>
-
-          {activeOrders.length === 0 ? (
-            <div className="flex flex-col items-center py-20 text-center space-y-2">
-              <Truck className="size-14 text-slate-350 dark:text-zinc-700 animate-pulse" />
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-zinc-400">Sin Misiones Asignadas</h4>
-              <p className="text-[11px] text-slate-455 dark:text-zinc-550 font-bold max-w-xs mt-1 leading-relaxed">
-                Activa tu radar, selecciona un objetivo y haz clic en "Aceptar Misión" para comenzar a ganar.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
-              <AnimatePresence>
-                {activeOrders.map((order, idx) => {
-                  const action = getActionForOrder(order.status);
-                  const totalAmount = order.items
-                    ? order.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0)
-                    : 0;
-
-                  return (
-                    <motion.div
-                      key={order.id}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -12 }}
-                      style={{
-                        borderRadius: idx % 2 === 0
-                          ? '32px 12px 20px 12px'
-                          : '12px 32px 12px 20px'
-                      }}
-                      className="p-4 bg-white/40 dark:bg-zinc-950/20 backdrop-blur-xl border border-slate-200/50 dark:border-white/5 hover:border-teal-500/30 dark:hover:border-teal-500/30 transition-all cursor-pointer shadow-sm group relative overflow-hidden flex flex-col gap-3"
-                      onClick={() => navigate('delivery-detail', order.id)}
-                    >
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/[0.01] rounded-full blur-xl pointer-events-none" />
-                      
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <h4 className="text-xs font-black text-slate-805 dark:text-white truncate font-serif group-hover:text-teal-655 transition-colors">
-                              {order.pharmacy?.name || 'Farmacia Oasis'}
-                            </h4>
-                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                              <StatusBadge status={order.status} type="delivery" />
-                              {(order as any).cashOnDelivery > 0 && (
-                                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase border border-amber-500/10">
-                                  Cobrar en Efectivo
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-black text-slate-880 dark:text-white">
-                              {formatCurrency(totalAmount || 180)}
-                            </p>
-                            <p className="text-[8px] text-slate-400 dark:text-zinc-550 font-black uppercase tracking-wider">Valor Pedido</p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2 text-xs text-slate-550 dark:text-zinc-400 border-l-2 border-sky-500/30 pl-3 font-bold">
-                          <div className="flex items-start gap-1.5">
-                            <MapPin className="size-3.5 text-rose-500 shrink-0 mt-0.5" />
-                            <span className="line-clamp-1 font-semibold">{order.delivery_address}</span>
-                          </div>
-                        </div>
-
-                        {order.items && order.items.length > 0 && (
-                          <div className="flex items-center gap-2 text-xs text-slate-550 dark:text-zinc-400 bg-white/40 dark:bg-white/5 p-2 rounded-xl border border-slate-200/50 shadow-inner">
-                            <Package className="size-3.5 text-teal-500 shrink-0" />
-                            <span className="truncate font-semibold text-[11px]">
-                              {order.items.map((i) => `${i.medicine?.name || 'Fármaco'} x${i.quantity}`).join(', ')}
-                            </span>
-                          </div>
-                        )}
-
-                        {action && (
-                          <div className="pt-3 border-t border-dashed border-slate-200 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
-                            <motion.button
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              onClick={() => handleStatusUpdate(order.id, action.newStatus)}
-                              disabled={updatingId === order.id}
-                              className={action.className}
-                            >
-                              {updatingId === order.id ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                <action.icon className="size-4 stroke-[3]" />
-                              )}
-                              {updatingId === order.id ? 'PROCESANDO...' : action.label}
-                            </motion.button>
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-end text-[9px] font-black uppercase tracking-widest text-teal-655 dark:text-teal-400 gap-0.5 mt-1">
-                          Ver bitácora de misión <ChevronRight className="size-3" />
-                        </div>
+                    <div className="flex items-center gap-4 pl-12 md:pl-0 shrink-0 justify-between md:justify-end w-full md:w-auto" onClick={(e) => e.stopPropagation()}>
+                      <div className="text-left md:text-right font-mono font-bold text-xs space-y-0.5 text-slate-800 dark:text-zinc-200">
+                        <p className="text-emerald-500">+{formatCurrency(order.deliveryFee || 60)} fee</p>
+                        <p className="text-[9px] text-slate-400 dark:text-zinc-550 font-black">VAL: {formatCurrency(totalAmount)}</p>
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+
+                      {action && (
+                        <motion.button
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => handleStatusUpdate(order.id, action.newStatus)}
+                          disabled={updatingId === order.id}
+                          className={cn(action.className, "!w-fit !px-4 !h-9 text-[8px]")}
+                        >
+                          {updatingId === order.id ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : (
+                            <action.icon className="size-3 shrink-0 stroke-[3]" />
+                          )}
+                          {updatingId === order.id ? 'PROCESANDO...' : action.label}
+                        </motion.button>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
+
+          {/* Available Jobs list */}
+          <div className="pt-3.5 space-y-3">
+            <p className="text-[8.5px] font-black text-emerald-655 dark:text-emerald-450 uppercase tracking-[0.2em] mb-2 pl-2">Órdenes Disponibles en Radar</p>
+            
+            {!localAvailable ? (
+              <div className="flex flex-col items-center py-10 text-center">
+                <Bike className="size-10 text-slate-350 dark:text-zinc-700 mb-2" />
+                <p className="text-xs text-slate-450 dark:text-zinc-500 font-bold">Conéctate para activar el radar satelital.</p>
+              </div>
+            ) : filteredAvailableOrders.length === 0 ? (
+              <div className="flex flex-col items-center py-10 text-center">
+                <Activity className="size-8 text-teal-500/20 animate-pulse mb-2" />
+                <p className="text-xs text-slate-450 dark:text-zinc-500 font-bold">No hay pedidos adicionales en esta zona.</p>
+              </div>
+            ) : (
+              filteredAvailableOrders.map((order, idx) => (
+                <motion.div
+                  key={order.id}
+                  variants={fadeUp}
+                  className="py-4 px-3 hover:bg-slate-500/[0.03] dark:hover:bg-white/[0.01] cursor-pointer transition-all duration-200 relative flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl"
+                  onClick={() => navigate('delivery-detail', order.id)}
+                >
+                  {/* Glowing neon green accent row border */}
+                  <div className="absolute left-0 top-3 bottom-3 w-1 bg-emerald-500 rounded-full" />
+
+                  <div className="flex items-center gap-4 min-w-0 pl-2">
+                    <div className="size-10 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-600 shrink-0">
+                      <Package className="size-5 shrink-0" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-black text-slate-805 dark:text-white truncate font-serif">
+                          {order.pharmacy?.name || 'Farmacia Oasis'}
+                        </h4>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-widest border border-emerald-500/10 shrink-0">
+                          Radar Activo
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold mt-1.5 flex items-center gap-1">
+                        <MapPin className="size-3 text-rose-500" />
+                        <span className="truncate">Destino: {order.deliveryAddress || 'Domicilio paciente'}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 pl-12 md:pl-0 shrink-0 justify-between md:justify-end w-full md:w-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="text-left md:text-right font-mono font-bold text-xs space-y-0.5 text-slate-805 dark:text-white">
+                      <p className="text-emerald-500">+{formatCurrency(order.deliveryFee || 60)} fee</p>
+                      <p className="text-[8px] text-slate-400 dark:text-zinc-555 font-black uppercase tracking-wide">Recibe crédito</p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={(e) => handleAccept(e, order.id)}
+                        className="px-4 py-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-650 hover:to-cyan-655 text-white font-black text-[8.5px] uppercase tracking-widest cursor-pointer border-none shadow-sm flex items-center gap-1"
+                      >
+                        <Check className="size-3 stroke-[3]" /> Aceptar
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={(e) => handleReject(e, order.id)}
+                        className="px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-zinc-450 font-black text-[8.5px] uppercase cursor-pointer border-none"
+                      >
+                        Omitir
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
@@ -879,19 +746,19 @@ export function DriverHome() {
               {/* Real-time telemetry counters */}
               <div className="flex flex-wrap items-center gap-4 sm:gap-6 font-mono text-[9px] sm:text-[10px] text-slate-600 dark:text-cyan-400/80">
                 <div className="text-left">
-                  <span className="block text-slate-400 dark:text-zinc-550 text-[7px] sm:text-[8px] uppercase font-sans">Coordenadas GPS</span>
+                  <span className="block text-slate-400 dark:text-zinc-555 text-[7px] sm:text-[8px] uppercase font-sans">Coordenadas GPS</span>
                   <span className="font-bold tracking-widest text-slate-800 dark:text-white">
                     {driverCoords ? `[${driverCoords.lat.toFixed(4)}, ${driverCoords.lng.toFixed(4)}]` : 'BUSCANDO SATÉLITE...'}
                   </span>
                 </div>
                 <div className="text-left">
-                  <span className="block text-slate-400 dark:text-zinc-550 text-[7px] sm:text-[8px] uppercase font-sans">Blancos Detectados</span>
+                  <span className="block text-slate-400 dark:text-zinc-555 text-[7px] sm:text-[8px] uppercase font-sans">Blancos Detectados</span>
                   <span className="font-bold tracking-widest text-emerald-600 dark:text-emerald-400">
                     {availableOrders.length} PEDIDOS
                   </span>
                 </div>
                 <div className="text-right hidden md:block">
-                  <span className="block text-slate-400 dark:text-zinc-550 text-[8px] uppercase font-sans">Escala Visor</span>
+                  <span className="block text-slate-400 dark:text-zinc-555 text-[8px] uppercase font-sans">Escala Visor</span>
                   <span className="font-bold tracking-widest text-slate-800 dark:text-white">RADIUS: 5.0 KM</span>
                 </div>
               </div>
@@ -930,7 +797,7 @@ export function DriverHome() {
                   <span className="size-2 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-ping" />
                   <span>MODO DE ESCANEO DE CANALES SATELITALES ACTIVO</span>
                 </div>
-                <span className="text-[8px] text-slate-400 dark:text-zinc-550">POLLING DEL SERVER CADA 15 SEG PARA NUEVAS RECETAS</span>
+                <span className="text-[8px] text-slate-400 dark:text-zinc-555">POLLING DEL SERVER CADA 15 SEG PARA NUEVAS RECETAS</span>
               </div>
 
               {/* Floating holographic card details */}
@@ -953,7 +820,7 @@ export function DriverHome() {
                         </h4>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-550 block">RECOMPENSA CRÉDITO</span>
+                        <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-555 block">RECOMPENSA CRÉDITO</span>
                         <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
                           {formatCurrency(selectedRadarOrder.deliveryFee || 60)}
                         </span>
@@ -967,14 +834,14 @@ export function DriverHome() {
                       <div className="flex items-start gap-2.5 text-slate-650 dark:text-zinc-400">
                         <MapPin className="size-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5" />
                         <div>
-                          <strong className="text-[8px] text-slate-450 dark:text-zinc-550 uppercase block font-sans">ORIGEN RECOLECCIÓN</strong>
+                          <strong className="text-[8px] text-slate-450 dark:text-zinc-555 uppercase block font-sans">ORIGEN RECOLECCIÓN</strong>
                           <span className="text-[11px] leading-relaxed text-slate-800 dark:text-zinc-300 font-bold">{selectedRadarOrder.pharmacy?.address || 'Managua, Nicaragua'}</span>
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5 text-slate-655 dark:text-zinc-400">
                         <Target className="size-4 text-rose-500 shrink-0 mt-0.5" />
                         <div>
-                          <strong className="text-[8px] text-slate-450 dark:text-zinc-550 uppercase block font-sans">DESTINO DE ENTREGA</strong>
+                          <strong className="text-[8px] text-slate-455 dark:text-zinc-555 uppercase block font-sans">DESTINO DE ENTREGA</strong>
                           <span className="text-[11px] leading-relaxed text-slate-800 dark:text-zinc-300 font-bold">{selectedRadarOrder.deliveryAddress || 'Domicilio paciente'}</span>
                         </div>
                       </div>
@@ -1012,7 +879,7 @@ export function DriverHome() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setSelectedRadarOrder(null)}
-                        className="px-5 h-12 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white text-xs font-black uppercase cursor-pointer transition-colors border-none"
+                        className="px-5 h-12 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-zinc-400 hover:text-slate-805 dark:hover:text-white text-xs font-black uppercase cursor-pointer transition-colors border-none"
                       >
                         DESCARTAR
                       </motion.button>

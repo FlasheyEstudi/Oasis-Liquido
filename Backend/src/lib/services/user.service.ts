@@ -151,6 +151,7 @@ export async function updateUser(
     phone?: string;
     role?: string;
     isActive?: boolean;
+    password?: string;
   },
   adminUserId?: string,
   ipAddress?: string,
@@ -192,6 +193,12 @@ export async function updateUser(
 
   // Run update and profile checks in a safe transaction
   const user = await db.$transaction(async (tx) => {
+    // Hash password if updating password
+    let passwordHash: string | undefined = undefined;
+    if (data.password) {
+      passwordHash = await hashPassword(data.password);
+    }
+
     // 1. Perform User table update
     const updatedUser = await tx.user.update({
       where: { id: userId },
@@ -201,6 +208,7 @@ export async function updateUser(
         phone: data.phone,
         role: data.role,
         isActive: data.isActive,
+        passwordHash: passwordHash,
       },
       select: {
         id: true,
@@ -226,98 +234,106 @@ export async function updateUser(
     }
 
     // 2. Manage role-specific profiles on role change
-    if (data.role && data.role !== existing.role) {
-      // a) Deprovision old profile based on existing.role
-      if (existing.role === 'patient') {
-        await tx.patientProfile.deleteMany({ where: { userId } });
-      } else if (existing.role === 'doctor') {
-        await tx.doctorProfileSpecialty.deleteMany({ where: { doctorId: userId } });
-        await tx.doctorProfile.deleteMany({ where: { userId } });
-      } else if (existing.role === 'delivery_driver') {
-        await tx.deliveryDriverProfile.deleteMany({ where: { userId } });
-      } else if (existing.role === 'receptionist') {
-        await tx.receptionistProfile.deleteMany({ where: { userId } });
-      } else if (existing.role === 'cashier' || existing.role === 'pharmacy_manager' || existing.role === 'pharmacy_admin') {
-        await tx.pharmacyManagerProfile.deleteMany({ where: { userId } });
-      }
+    const targetRole = data.role || existing.role;
 
-      // b) Provision new profile based on data.role
-      if (data.role === 'patient') {
-        const patientProfile = await tx.patientProfile.findUnique({ where: { userId } });
-        if (!patientProfile) {
-          await tx.patientProfile.create({
-            data: { userId },
-          });
-        }
-      } else if (data.role === 'doctor') {
-        const docProfile = await tx.doctorProfile.findUnique({ where: { userId } });
-        if (!docProfile) {
-          let clinic = await tx.clinic.findFirst();
-          if (!clinic) {
-            clinic = await tx.clinic.create({
-              data: {
-                name: 'Clínica Oasis Principal',
-                address: 'Managua, Nicaragua',
-                latitude: 12.1364,
-                longitude: -86.2514,
-              }
-            });
-          }
-          await tx.doctorProfile.create({
+    // a) Deprovision profiles that do not match the target role
+    if (targetRole !== 'patient') {
+      await tx.patientProfile.deleteMany({ where: { userId } });
+    }
+    if (targetRole !== 'doctor') {
+      try {
+        await tx.doctorProfileSpecialty.deleteMany({ where: { doctorId: userId } });
+      } catch (e) {
+        // Ignore if table does not exist or relation name differs
+      }
+      await tx.doctorProfile.deleteMany({ where: { userId } });
+    }
+    if (targetRole !== 'delivery_driver') {
+      await tx.deliveryDriverProfile.deleteMany({ where: { userId } });
+    }
+    if (targetRole !== 'receptionist') {
+      await tx.receptionistProfile.deleteMany({ where: { userId } });
+    }
+    if (targetRole !== 'cashier' && targetRole !== 'pharmacy_manager' && targetRole !== 'pharmacy_admin') {
+      await tx.pharmacyManagerProfile.deleteMany({ where: { userId } });
+    }
+
+    // b) Provision matching profile if missing
+    if (targetRole === 'patient') {
+      const patientProfile = await tx.patientProfile.findUnique({ where: { userId } });
+      if (!patientProfile) {
+        await tx.patientProfile.create({
+          data: { userId },
+        });
+      }
+    } else if (targetRole === 'doctor') {
+      const docProfile = await tx.doctorProfile.findUnique({ where: { userId } });
+      if (!docProfile) {
+        let clinic = await tx.clinic.findFirst();
+        if (!clinic) {
+          clinic = await tx.clinic.create({
             data: {
-              userId,
-              clinicId: clinic.id,
-              specialty: 'Medicina General',
-              licenseNumber: `MINSA-${userId.substring(0, 8).toUpperCase()}`,
-            },
+              name: 'Clínica Oasis Principal',
+              address: 'Managua, Nicaragua',
+              latitude: 12.1364,
+              longitude: -86.2514,
+            }
           });
         }
-      } else if (data.role === 'delivery_driver') {
-        const driverProfile = await tx.deliveryDriverProfile.findUnique({ where: { userId } });
-        if (!driverProfile) {
-          let pharmacy = await tx.pharmacy.findFirst();
-          if (!pharmacy) {
-            pharmacy = await tx.pharmacy.create({
-              data: {
-                name: 'Farmacia Oasis Principal',
-                address: 'Managua, Nicaragua',
-                latitude: 12.1364,
-                longitude: -86.2514,
-                deliveryFee: 29.90,
-              }
-            });
-          }
-          await tx.deliveryDriverProfile.create({
+        await tx.doctorProfile.create({
+          data: {
+            userId,
+            clinicId: clinic.id,
+            specialty: 'Medicina General',
+            licenseNumber: `MINSA-${userId.substring(0, 8).toUpperCase()}`,
+          },
+        });
+      }
+    } else if (targetRole === 'delivery_driver') {
+      const driverProfile = await tx.deliveryDriverProfile.findUnique({ where: { userId } });
+      if (!driverProfile) {
+        let pharmacy = await tx.pharmacy.findFirst();
+        if (!pharmacy) {
+          pharmacy = await tx.pharmacy.create({
             data: {
-              userId,
-              pharmacyId: pharmacy.id,
-              vehicleType: 'motocicleta',
-              isAvailable: true,
-            },
+              name: 'Farmacia Oasis Principal',
+              address: 'Managua, Nicaragua',
+              latitude: 12.1364,
+              longitude: -86.2514,
+              deliveryFee: 29.90,
+            }
           });
         }
-      } else if (data.role === 'receptionist') {
-        const recProfile = await tx.receptionistProfile.findUnique({ where: { userId } });
-        if (!recProfile) {
-          const clinic = await tx.clinic.findFirst();
-          await tx.receptionistProfile.create({
-            data: {
-              userId,
-              clinicId: clinic?.id || null,
-            },
-          });
-        }
-      } else if (data.role === 'cashier' || data.role === 'pharmacy_manager' || data.role === 'pharmacy_admin') {
-        const mgrProfile = await tx.pharmacyManagerProfile.findUnique({ where: { userId } });
-        if (!mgrProfile) {
-          const pharmacy = await tx.pharmacy.findFirst();
-          await tx.pharmacyManagerProfile.create({
-            data: {
-              userId,
-              pharmacyId: pharmacy?.id || null,
-            },
-          });
-        }
+        await tx.deliveryDriverProfile.create({
+          data: {
+            userId,
+            pharmacyId: pharmacy.id,
+            vehicleType: 'motocicleta',
+            isAvailable: true,
+          },
+        });
+      }
+    } else if (targetRole === 'receptionist') {
+      const recProfile = await tx.receptionistProfile.findUnique({ where: { userId } });
+      if (!recProfile) {
+        const clinic = await tx.clinic.findFirst();
+        await tx.receptionistProfile.create({
+          data: {
+            userId,
+            clinicId: clinic?.id || null,
+          },
+        });
+      }
+    } else if (targetRole === 'cashier' || targetRole === 'pharmacy_manager' || targetRole === 'pharmacy_admin') {
+      const mgrProfile = await tx.pharmacyManagerProfile.findUnique({ where: { userId } });
+      if (!mgrProfile) {
+        const pharmacy = await tx.pharmacy.findFirst();
+        await tx.pharmacyManagerProfile.create({
+          data: {
+            userId,
+            pharmacyId: pharmacy?.id || null,
+          },
+        });
       }
     }
 

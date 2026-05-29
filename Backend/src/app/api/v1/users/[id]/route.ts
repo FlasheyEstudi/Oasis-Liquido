@@ -39,6 +39,7 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
         phone: body.phone,
         role: body.role,
         isActive: body.isActive,
+        password: body.password,
       },
       req.user.userId,
       req.headers.get('x-forwarded-for') || undefined,

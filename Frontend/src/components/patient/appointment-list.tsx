@@ -177,7 +177,7 @@ export function AppointmentList() {
           </motion.div>
         ) : appointments.length === 0 ? (
           <motion.div key="empty" {...fadeInUp}>
-            <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 rounded-[80px_40px_32px_120px] p-6 backdrop-blur-xl">
+            <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 sm:rounded-[80px_40px_32px_120px] rounded-3xl p-6 backdrop-blur-xl">
               <div className="flex flex-col items-center py-14 text-center max-w-sm mx-auto space-y-4.5">
                 <div className="size-16 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
                   <Calendar className="size-7 text-slate-400 dark:text-zinc-550" />
@@ -210,7 +210,7 @@ export function AppointmentList() {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md overflow-hidden p-2 sm:p-4 shadow-xl"
+            className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 sm:rounded-[40px_16px_40px_16px] rounded-3xl backdrop-blur-md overflow-hidden p-2 sm:p-4 shadow-xl"
           >
             <div className="divide-y divide-dashed divide-slate-200/60 dark:divide-white/5">
               {appointments.map((apt, index) => {
@@ -306,7 +306,7 @@ export function AppointmentList() {
 
       {/* Modern High-Fidelity Appointment Detail Modal */}
       <Dialog open={!!selectedApt} onOpenChange={(open) => !open && setSelectedApt(null)}>
-        <DialogContent className="rounded-[40px_16px_40px_16px] glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center shadow-2xl">
+        <DialogContent className="sm:rounded-[40px_16px_40px_16px] rounded-3xl glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center shadow-2xl">
           <DialogHeader className="items-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <ShieldCheck className="size-5 text-teal-500 animate-pulse" />
@@ -403,7 +403,7 @@ export function AppointmentList() {
 
       {/* Cancel Confirmation Dialog */}
       <Dialog open={!!cancelDialog} onOpenChange={(open) => !open && setCancelDialog(null)}>
-        <DialogContent className="rounded-[40px_16px_40px_16px] glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center">
+        <DialogContent className="sm:rounded-[40px_16px_40px_16px] rounded-3xl glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center">
           <DialogHeader className="items-center">
             <div className="size-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-2">
               <ShieldAlert className="size-6 text-red-500 animate-pulse animate-spin-slow" />

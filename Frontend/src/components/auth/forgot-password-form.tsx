@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, ArrowRight, Droplets, Loader2 } from 'lucide-react';
+import { Mail, ArrowRight, Droplets, Loader2, MessageSquare } from 'lucide-react';
 
 import { useAuthStore } from '@/store/auth-store';
 import { post, getErrorMessage } from '@/api/client';
@@ -156,8 +156,34 @@ export function ForgotPasswordForm() {
                   </motion.div>
                 </form>
 
+                {/* Separador */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-slate-900/0 dark:bg-slate-900/0 px-2 text-muted-foreground">O TAMBIÉN</span>
+                  </div>
+                </div>
+
+                {/* Soporte WhatsApp Gratuito */}
+                <motion.div custom={3} variants={fadeInUp} className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                    ¿Prefieres asistencia directa y sin costo? Solicita la recuperación directamente a nuestro Superadministrador vía WhatsApp.
+                  </p>
+                  <a
+                    href="https://wa.me/50586011727?text=Hola%20Administrador%20de%20Oasis%20L%C3%ADquida.%20Solicito%20asistencia%20para%20recuperar%20mi%20contrase%C3%B1a."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full h-10 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Contactar Administrador (WhatsApp)
+                  </a>
+                </motion.div>
+
                 {/* Back to login */}
-                <motion.div custom={3} variants={fadeInUp} className="mt-6 text-center">
+                <motion.div custom={4} variants={fadeInUp} className="mt-6 text-center">
                   <button
                     type="button"
                     onClick={() => navigate('login')}

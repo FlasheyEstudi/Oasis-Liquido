@@ -4,6 +4,7 @@ import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-resp
 import { db } from '@/lib/db';
 import { createAuditLog } from '@/lib/services/audit.service';
 import { sendPushNotification } from '@/lib/fcm';
+import { sendWhatsAppMessage } from '@/lib/services/whatsapp.service';
 
 /**
  * POST /api/v1/patient/emergency
@@ -48,10 +49,19 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       details: JSON.stringify({ lat, lng, contact: emergencyContact }),
     });
 
-    // 4. Simulate WhatsApp/SMS (In a real app, use Twilio or WhatsApp Business API)
-    const alertMessage = `🆘 ALERTA DE EMERGENCIA: OASIS AURA\n\nPaciente: ${patient.name}\nUbicación: https://www.google.com/maps?q=${lat},${lng}\nMedicamentos actuales: ${medsList || 'Ninguno'}\n\nEste es un mensaje automático de emergencia.`;
+    // 4. Send WhatsApp/SMS alert to the emergency contact
+    const alertMessage = `🆘 ALERTA DE EMERGENCIA: OASIS AURA\n\nPaciente: ${patient.name}\nUbicación: https://www.google.com/maps?q=${lat},${lng}\nMedicamentos actuales: ${medsList || 'Ninguno'}\n\nEste es un mensaje automático de emergencia enviado desde la plataforma Oasis Líquida.`;
     
-    console.log(`[WHATSAPP/SMS to ${emergencyPhone}]: ${alertMessage}`);
+    if (emergencyPhone) {
+      try {
+        await sendWhatsAppMessage(emergencyPhone, alertMessage);
+        console.log(`[WHATSAPP EMERGENCY SENT] Alert dispatched to +${emergencyPhone}`);
+      } catch (wsError) {
+        console.error('Failed to send emergency WhatsApp/SMS alert:', wsError);
+      }
+    } else {
+      console.log('[EMERGENCY ALERT] No emergency phone registered for patient');
+    }
 
     // 5. Notify nearby clinics or system admins via FCM
     // For demo purposes, we just notify the patient that help is on the way

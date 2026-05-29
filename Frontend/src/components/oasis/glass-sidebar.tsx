@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { APP_NAME, ROLE_LABELS, ROLE_COLORS } from '@/utils/constants';
 import type { AppPage, UserRole } from '@/types';
@@ -26,6 +26,7 @@ import {
   DollarSign,
   Store,
   Settings,
+  Pin,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -116,24 +117,39 @@ export function GlassSidebar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     setMounted(true);
-  });
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('oasis_sidebar_pinned');
+      setPinned(saved === 'true');
+    }
+  }, []);
+
+  const handleTogglePin = () => {
+    const nextPinned = !pinned;
+    setPinned(nextPinned);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('oasis_sidebar_pinned', String(nextPinned));
+    }
+  };
 
   if (!user) return null;
 
   const navItems = getNavItems(user.role);
-  const expanded = true;
+  const expanded = pinned || isHovered;
 
   return (
     <aside
-      className="glass-sidebar clarity-shield sticky left-0 top-0 h-screen z-40 w-[260px] flex flex-col overflow-hidden shrink-0 border-r border-sidebar-border"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ width: expanded ? '260px' : '70px' }}
+      className="hidden lg:flex glass-sidebar clarity-shield sticky left-0 top-0 h-screen z-40 flex-col overflow-hidden shrink-0 border-r border-sidebar-border transition-all duration-300 ease-in-out"
     >
       {/* Logo Area */}
-      <div className="flex items-center h-[60px] px-4 border-b border-sidebar-border">
+      <div className="flex items-center justify-between h-[60px] px-4 border-b border-sidebar-border gap-2">
         <motion.button
           onClick={() => navigate('inicio')}
-          className="flex items-center gap-3 w-full overflow-hidden"
+          className="flex items-center gap-3 overflow-hidden flex-1"
           whileTap={{ scale: 0.95 }}
         >
           <div className="size-9 shrink-0 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
@@ -153,6 +169,16 @@ export function GlassSidebar() {
             )}
           </AnimatePresence>
         </motion.button>
+        
+        {expanded && (
+          <button
+            onClick={handleTogglePin}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-teal-500 hover:bg-slate-500/10 transition-colors shrink-0"
+            title={pinned ? "Desfijar barra lateral" : "Fijar barra lateral"}
+          >
+            <Pin className={cn("size-4 transition-transform", pinned && "rotate-45 text-teal-500 fill-teal-500/20")} />
+          </button>
+        )}
       </div>
 
       {/* Navigation Items */}

@@ -143,7 +143,7 @@ export function PrescriptionList() {
           </motion.div>
         ) : prescriptions.length === 0 ? (
           <motion.div key="empty" {...fadeInUp}>
-            <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 rounded-[80px_40px_32px_120px] p-6 backdrop-blur-xl">
+            <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 sm:rounded-[80px_40px_32px_120px] rounded-3xl p-6 backdrop-blur-xl">
               <div className="flex flex-col items-center py-14 text-center max-w-sm mx-auto space-y-4.5">
                 <div className="size-16 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
                   <FileText className="size-7 text-slate-400 dark:text-zinc-550" />
@@ -164,7 +164,7 @@ export function PrescriptionList() {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md overflow-hidden p-2 sm:p-4 shadow-xl"
+            className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 sm:rounded-[40px_16px_40px_16px] rounded-3xl backdrop-blur-md overflow-hidden p-2 sm:p-4 shadow-xl"
           >
             <div className="divide-y divide-dashed divide-slate-200/60 dark:divide-white/5">
               {prescriptions.map((presc, index) => {
@@ -182,17 +182,21 @@ export function PrescriptionList() {
                     key={presc.id}
                     variants={fadeInUp}
                     transition={{ delay: index * 0.02 }}
-                    className="py-5 px-3 sm:px-5 hover:bg-slate-500/[0.03] dark:hover:bg-white/[0.02] cursor-pointer transition-all duration-200 relative flex flex-col md:flex-row md:items-center justify-between gap-4 group rounded-2xl"
+                    className="py-5 px-3 sm:px-5 hover:bg-slate-500/[0.03] dark:hover:bg-white/[0.02] cursor-pointer transition-all duration-200 relative flex flex-col md:flex-row md:items-center justify-between gap-4 group rounded-2xl overflow-visible"
                     onClick={() => {
                       useAuthStore.getState().setPrescriptionId(presc.id);
                       navigate('prescription-detail', presc.id);
                     }}
                   >
+                    {/* Punch Hole ticket cutouts on left and right margins — blends with solid page background */}
+                    <div className="absolute left-[-11px] top-1/2 -translate-y-1/2 size-5 rounded-full bg-white dark:bg-zinc-950 border-r border-slate-200/50 dark:border-white/10 z-20 pointer-events-none" />
+                    <div className="absolute right-[-11px] top-1/2 -translate-y-1/2 size-5 rounded-full bg-white dark:bg-zinc-950 border-l border-slate-200/50 dark:border-white/10 z-20 pointer-events-none" />
+
                     {/* Glowing neon status timeline accent on the left margin */}
-                    <div className={cn("absolute left-0 top-3 bottom-3 w-1 rounded-full transition-transform duration-300 group-hover:scale-y-110", accentColor)} />
+                    <div className={cn("absolute left-1 top-3 bottom-3 w-1.5 rounded-full transition-transform duration-300 group-hover:scale-y-110", accentColor)} />
 
                     {/* Left side details */}
-                    <div className="flex items-center gap-4 min-w-0 pl-2">
+                    <div className="flex items-center gap-4 min-w-0 pl-3">
                       <Avatar className="size-11 sm:size-12 border border-slate-200 dark:border-white/5 shrink-0 shadow-sm transition-transform group-hover:scale-105">
                         <AvatarFallback className="bg-slate-100 dark:bg-zinc-900 text-slate-800 dark:text-zinc-200 text-xs font-black font-serif">
                           {presc.doctor ? getInitials(presc.doctor.name) : 'DR'}
@@ -224,7 +228,7 @@ export function PrescriptionList() {
                     </div>
 
                     {/* Right side telemetry info */}
-                    <div className="flex items-center justify-between md:justify-end gap-5 pl-2 md:pl-0 border-t md:border-t-0 border-dashed border-slate-200 dark:border-white/5 pt-3.5 md:pt-0">
+                    <div className="flex items-center justify-between md:justify-end gap-5 pl-3 md:pl-0 border-t md:border-t-0 border-dashed border-slate-200 dark:border-white/5 pt-3.5 md:pt-0">
                       <div className="text-left md:text-right font-bold text-[11px] text-slate-655 dark:text-zinc-355 space-y-0.5">
                         <div className="flex items-center md:justify-end gap-1.5">
                           <Calendar className="size-3.5 text-indigo-500 shrink-0" />
@@ -253,7 +257,7 @@ export function PrescriptionList() {
                             Surtir
                           </motion.button>
                         ) : (
-                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-450 flex items-center gap-1 group-hover:text-indigo-500 transition-colors cursor-pointer" onClick={() => {
+                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-455 flex items-center gap-1 group-hover:text-indigo-500 transition-colors cursor-pointer" onClick={() => {
                             useAuthStore.getState().setPrescriptionId(presc.id);
                             navigate('prescription-detail', presc.id);
                           }}>
@@ -282,7 +286,7 @@ export function PrescriptionList() {
 
       {/* Secure QR Dialog */}
       <Dialog open={!!qrDialog} onOpenChange={(open) => !open && setQrDialog(null)}>
-        <DialogContent className="rounded-[40px_16px_40px_16px] glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center shadow-2xl">
+        <DialogContent className="sm:rounded-[40px_16px_40px_16px] rounded-3xl glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center shadow-2xl">
           <DialogHeader className="items-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Shield className="size-5 text-indigo-500 animate-pulse" />

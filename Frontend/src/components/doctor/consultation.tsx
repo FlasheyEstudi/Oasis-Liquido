@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import apiClient from '@/api/client';
 import { checkDrugInteractions } from '@/utils/drug-interactions';
@@ -40,6 +40,7 @@ import {
   User,
   Droplets,
   AlertTriangle,
+  AlertCircle,
   FileText,
   Plus,
   Trash2,
@@ -92,6 +93,57 @@ export function Consultation() {
   const [isConfiguringPin, setIsConfiguringPin] = useState(false);
   const [accountPassword, setAccountPassword] = useState('');
   const [isSettingPinLoading, setIsSettingPinLoading] = useState(false);
+
+  // Security Lockout States (UAT-004)
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const attempts = localStorage.getItem('signature_pin_failed_attempts');
+      return attempts ? parseInt(attempts, 10) : 0;
+    }
+    return 0;
+  });
+
+  const [lockoutTime, setLockoutTime] = useState<number | null>(() => {
+    if (typeof window !== 'undefined') {
+      const time = localStorage.getItem('signature_pin_lockout_time');
+      return time ? parseInt(time, 10) : null;
+    }
+    return null;
+  });
+
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (lockoutTime) {
+      if (Date.now() > lockoutTime) {
+        setLockoutTime(null);
+        setFailedAttempts(0);
+        localStorage.removeItem('signature_pin_lockout_time');
+        localStorage.removeItem('signature_pin_failed_attempts');
+        return;
+      }
+      const interval = setInterval(() => {
+        if (Date.now() > lockoutTime) {
+          setLockoutTime(null);
+          setFailedAttempts(0);
+          localStorage.removeItem('signature_pin_lockout_time');
+          localStorage.removeItem('signature_pin_failed_attempts');
+        } else {
+          setTick((t) => t + 1);
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [lockoutTime]);
+
+  const getRemainingTimeMsg = () => {
+    if (!lockoutTime) return '';
+    const diff = lockoutTime - Date.now();
+    if (diff <= 0) return '';
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.ceil((diff % 60000) / 1000);
+    return `${mins}m ${secs}s`;
+  };
 
   const createAppointmentMutation = useCreateAppointment();
   const [isSchedulingFollowUp, setIsSchedulingFollowUp] = useState(false);
@@ -219,7 +271,18 @@ export function Consultation() {
         setIsConfiguringPin(true);
         setPinError('Parece que es tu primera receta. Configura tu PIN de firma de 4 dígitos ingresando tu contraseña de cuenta.');
       } else {
-        setPinError(errMsg);
+        const nextAttempts = failedAttempts + 1;
+        setFailedAttempts(nextAttempts);
+        localStorage.setItem('signature_pin_failed_attempts', nextAttempts.toString());
+        
+        if (nextAttempts >= 3) {
+          const lockUntil = Date.now() + 15 * 60 * 1000;
+          setLockoutTime(lockUntil);
+          localStorage.setItem('signature_pin_lockout_time', lockUntil.toString());
+          setPinError(`⚠️ BLOQUEO DE SEGURIDAD: Has ingresado el PIN incorrecto 3 veces. Tu firma digital ha sido suspendida por 15 minutos.`);
+        } else {
+          setPinError(`${errMsg}. Intento ${nextAttempts} de 3.`);
+        }
         setNotification({ type: 'error', message: errMsg });
       }
     }
@@ -699,22 +762,48 @@ export function Consultation() {
 
                 {/* Emit Prescription Button */}
                 {prescriptionLines.length > 0 && !createdPrescriptionQr && (
-                  <Button
-                    className="glass-btn-primary w-full rounded-full animate-pulse"
-                    onClick={() => {
-                      if (prescriptionLines.some((l) => !l.medicine_id)) {
-                        setNotification({ type: 'warning', message: 'Selecciona un medicamento para cada línea' });
-                        return;
-                      }
-                      setSignaturePin('');
-                      setPinError('');
-                      setPinModalOpen(true);
-                    }}
-                    disabled={createPrescriptionMutation.isPending}
-                  >
-                    <QrCodeIcon className="size-4" />
-                    Firmar y Emitir Receta
-                  </Button>
+                  <div className="space-y-2 w-full">
+                    {activeInteractions.some(i => i.severity === 'critical') && notes.trim().length < 15 && (
+                      <div className="flex items-start gap-2 text-[10px] text-amber-500 font-bold bg-amber-500/10 p-3 rounded-2xl leading-normal border border-amber-500/20 text-left">
+                        <AlertCircle className="size-4 shrink-0 mt-0.5" />
+                        <span>⚠️ ALERTA DE SEGURIDAD: Existen interacciones CRÍTICAS. Debes ingresar una Justificación Médica explícita en las Notas de Consulta (mínimo 15 caracteres) para poder firmar.</span>
+                      </div>
+                    )}
+                    <motion.button
+                      whileTap={{ scale: 0.96, y: 2 }}
+                      className={cn(
+                        "w-full py-4 rounded-3xl font-black uppercase tracking-widest text-xs transition-all duration-300 border relative overflow-hidden flex items-center justify-center gap-2 select-none shadow-xl cursor-pointer",
+                        activeInteractions.some(i => i.severity === 'critical') && notes.trim().length < 15
+                          ? "bg-slate-700 border-slate-650 text-gray-500 cursor-not-allowed shadow-none"
+                          : "bg-emerald-500 hover:brightness-110 text-white shadow-[0_6px_0_#047857,0_12px_20px_rgba(16,185,129,0.3)] active:shadow-[0_2px_0_#047857] border-emerald-400/30"
+                      )}
+                      onClick={() => {
+                        if (prescriptionLines.some((l) => !l.medicine_id)) {
+                          setNotification({ type: 'warning', message: 'Selecciona un medicamento para cada línea' });
+                          return;
+                        }
+                        if (activeInteractions.some(i => i.severity === 'critical') && notes.trim().length < 15) {
+                          setNotification({ type: 'error', message: 'Falta justificación médica en las notas para interacciones críticas' });
+                          return;
+                        }
+                        setSignaturePin('');
+                        setPinError('');
+                        setPinModalOpen(true);
+                      }}
+                      disabled={createPrescriptionMutation.isPending || (activeInteractions.some(i => i.severity === 'critical') && notes.trim().length < 15)}
+                    >
+                      {!createPrescriptionMutation.isPending && (
+                        <motion.span 
+                          initial={{ x: -100 }} 
+                          animate={{ x: '100%' }} 
+                          transition={{ repeat: Infinity, duration: 1.8, ease: 'linear' }}
+                          className="absolute top-0 bottom-0 left-0 w-8 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+                        />
+                      )}
+                      <QrCodeIcon className="size-4.5 shrink-0" />
+                      <span>✍️ Firmar y Sellar Receta MINSA</span>
+                    </motion.button>
+                  </div>
                 )}
               </div>
             </GlassCard>
@@ -788,7 +877,8 @@ export function Consultation() {
                       setSignaturePin(e.target.value.replace(/\D/g, ''));
                       if (pinError) setPinError('');
                     }}
-                    className="w-full h-12 text-center text-lg tracking-[0.5em] bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
+                    disabled={!!lockoutTime}
+                    className="w-full h-12 text-center text-lg tracking-[0.5em] bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono disabled:opacity-50"
                   />
                 </div>
 
@@ -803,13 +893,14 @@ export function Consultation() {
                         setAccountPassword(e.target.value);
                         if (pinError) setPinError('');
                       }}
-                      className="w-full h-10 px-3 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm"
+                      disabled={!!lockoutTime}
+                      className="w-full h-10 px-3 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm disabled:opacity-50"
                     />
                   </div>
                 )}
 
                 {pinError && (
-                  <div className="flex items-start gap-1.5 text-[10px] text-red-400 font-bold mt-1 bg-red-500/10 p-2.5 rounded-xl leading-normal">
+                  <div className="flex items-start gap-1.5 text-[10px] text-red-400 font-bold mt-1 bg-red-500/10 p-2.5 rounded-xl leading-normal text-left">
                     <ShieldAlert className="size-4 shrink-0 mt-0.5" />
                     <span>{pinError}</span>
                   </div>
@@ -834,6 +925,7 @@ export function Consultation() {
                 <Button 
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold"
                   disabled={
+                    !!lockoutTime ||
                     signaturePin.trim().length !== 4 || 
                     (isConfiguringPin && !accountPassword) || 
                     createPrescriptionMutation.isPending || 
@@ -841,14 +933,14 @@ export function Consultation() {
                   }
                   onClick={isConfiguringPin ? handleConfigurePin : () => handleCreatePrescription(signaturePin)}
                 >
-                  {createPrescriptionMutation.isPending || isSettingPinLoading ? (
+                  {lockoutTime ? `Bloqueado (${getRemainingTimeMsg()})` : (createPrescriptionMutation.isPending || isSettingPinLoading ? (
                     <>
                       <Loader2 className="size-4 animate-spin mr-1" />
                       Procesando...
                     </>
                   ) : (
                     isConfiguringPin ? 'Configurar y Firmar' : 'Firmar Receta'
-                  )}
+                  ))}
                 </Button>
               </div>
             </motion.div>

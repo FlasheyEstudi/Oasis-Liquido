@@ -167,9 +167,9 @@ export function NewAppointment() {
       <div className="absolute top-[20%] left-[-15%] size-80 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
       <div className="absolute bottom-[20%] right-[-15%] size-80 rounded-full bg-gradient-to-br from-indigo-500/5 to-transparent blur-3xl pointer-events-none" />
 
-      {/* Stepper Bar - Curved Glass Shield */}
-      <div className="bg-white/30 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] p-4 shadow-xl backdrop-blur-xl">
-        <div className="flex items-center justify-between gap-1 max-w-md mx-auto">
+      {/* Stepper Bar - Premium Floating Capsule */}
+      <div className="bg-white/60 dark:bg-zinc-950/40 border border-slate-250/60 dark:border-white/10 rounded-full pt-4 pb-7 px-8 shadow-xl backdrop-blur-xl max-w-xl mx-auto">
+        <div className="flex items-center justify-between gap-1">
           {STEPS.map((s, idx) => {
             const isCompleted = step > s.number;
             const isActive = step === s.number;

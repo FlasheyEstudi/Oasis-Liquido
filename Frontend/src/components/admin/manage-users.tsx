@@ -51,6 +51,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  Key,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -93,6 +94,10 @@ export function ManageUsers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [form, setForm] = useState<UserFormData>(emptyForm);
+
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resettingUser, setResettingUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   const {
     data: usersResult,
@@ -402,6 +407,19 @@ export function ManageUsers() {
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
+                              onClick={() => {
+                                setResettingUser(userItem);
+                                setNewPassword('');
+                                setResetDialogOpen(true);
+                              }}
+                              className="inline-flex size-8 items-center justify-center rounded-full hover:bg-emerald-500/10 transition-colors"
+                              title="Restaurar contraseña"
+                            >
+                              <Key className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
                               onClick={() => handleOpenEdit(userItem)}
                               className="inline-flex size-8 items-center justify-center rounded-full hover:bg-teal-500/10 transition-colors"
                               title="Editar usuario"
@@ -553,6 +571,87 @@ export function ManageUsers() {
             >
               {isSaving && <Loader2 className="size-4 animate-spin" />}
               {editingUser ? 'Guardar cambios' : 'Crear usuario'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent className="sm:max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Restaurar Contraseña</DialogTitle>
+            <DialogDescription>
+              Asigna una nueva contraseña de acceso para el usuario <strong className="text-foreground">{resettingUser?.name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Nueva Contraseña *</label>
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Nueva contraseña (mínimo 6 caracteres)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="glass-input rounded-xl px-4 py-2.5 h-auto text-sm pr-20"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tempPass = 'Oasis' + Math.floor(1000 + Math.random() * 9000) + '!';
+                    setNewPassword(tempPass);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 px-2.5 py-1 rounded-lg transition-colors"
+                >
+                  Generar
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                El usuario deberá iniciar sesión con esta contraseña provisional.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setResetDialogOpen(false)}
+              disabled={isSaving}
+              className="glass-btn-secondary rounded-full px-5 py-2 text-sm font-medium h-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (!newPassword.trim() || newPassword.length < 6) {
+                  setNotification({ type: 'warning', message: 'La contraseña debe tener al menos 6 caracteres' });
+                  return;
+                }
+                if (!resettingUser) return;
+                
+                updateUser.mutate(
+                  {
+                    id: resettingUser.id,
+                    data: {
+                      password: newPassword.trim(),
+                    },
+                  },
+                  {
+                    onSuccess: () => {
+                      setNotification({ type: 'success', message: 'Contraseña restaurada exitosamente.' });
+                      setResetDialogOpen(false);
+                    },
+                    onError: () => {
+                      setNotification({ type: 'error', message: 'No se pudo restaurar la contraseña.' });
+                    },
+                  }
+                );
+              }}
+              disabled={isSaving}
+              className="glass-btn-primary rounded-full px-5 py-2 text-sm font-medium h-auto flex items-center gap-2"
+            >
+              {updateUser.isPending && <Loader2 className="size-4 animate-spin" />}
+              Restaurar
             </Button>
           </DialogFooter>
         </DialogContent>

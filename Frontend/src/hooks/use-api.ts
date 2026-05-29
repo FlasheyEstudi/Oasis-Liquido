@@ -909,8 +909,10 @@ export function useChangeWorkerStatus() {
     mutationFn: ({ workerId, isActive }: { workerId: string; isActive: boolean }) =>
       invitationsApi.changeWorkerStatus(workerId, isActive),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clinics'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['pharmacies'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['pharmacies'] });
+      queryClient.refetchQueries({ queryKey: ['clinics'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['pharmacies'], type: 'active' });
     },
   });
 }
@@ -922,8 +924,10 @@ export function useUpdateWorker() {
     mutationFn: ({ workerId, data }: { workerId: string; data: invitationsApi.UpdateWorkerData }) =>
       invitationsApi.updateWorker(workerId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clinics'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['pharmacies'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['clinics'] });
+      queryClient.invalidateQueries({ queryKey: ['pharmacies'] });
+      queryClient.refetchQueries({ queryKey: ['clinics'], type: 'active' });
+      queryClient.refetchQueries({ queryKey: ['pharmacies'], type: 'active' });
     },
   });
 }
