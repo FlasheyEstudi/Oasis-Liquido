@@ -44,8 +44,7 @@ const FILTER_TABS: { value: string; label: string; status?: AppointmentStatus }[
   { value: 'past', label: 'Historial' },
   { value: 'cancelled', label: 'Canceladas', status: 'cancelled' },
 ];
-
-const fadeInUp = {
+const fadeInUp: any = {
   initial: { opacity: 0, scale: 0.95, y: 20 },
   animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 25 } },
   exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.2 } },
@@ -104,7 +103,7 @@ export function AppointmentList() {
             <Sparkles className="size-5.5 text-teal-500 shrink-0" />
             <span>Agenda de Consultas</span>
           </h2>
-          <p className="text-[11px] text-slate-500 dark:text-zinc-450 font-bold mt-1 tracking-wide">
+          <p className="text-[11px] text-slate-500 dark:text-zinc-455 font-bold mt-1 tracking-wide">
             Gestiona tus citas presenciales y teleconsultas médicas
           </p>
         </div>
@@ -120,9 +119,9 @@ export function AppointmentList() {
         </motion.button>
       </div>
 
-      {/* Filter Tabs — Sliding organic glass capsule bar */}
-      <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-2 bg-white/40 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 p-1.5 rounded-[24px_12px_24px_12px] w-max sm:w-full backdrop-blur-xl">
+      {/* Filter Tabs — Flowing capsule container, no horizontal scroll */}
+      <div className="w-full">
+        <div className="flex flex-wrap gap-1.5 bg-white/40 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 p-1.5 rounded-[24px_12px_24px_12px] w-full backdrop-blur-xl">
           {FILTER_TABS.map((tab, idx) => {
             const isActive = activeTab === tab.value;
             return (
@@ -136,7 +135,7 @@ export function AppointmentList() {
                     : '8px 16px 8px 14px'
                 }}
                 className={cn(
-                  'px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 select-none flex-1 text-center min-w-[110px] sm:min-w-0 border',
+                  'px-3.5 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 select-none flex-1 text-center min-w-[95px] sm:min-w-0 border',
                   isActive
                     ? 'bg-teal-500 border-teal-500 text-white shadow-md shadow-teal-500/15'
                     : 'text-slate-550 dark:text-zinc-400 border-transparent hover:bg-white/10 hover:text-slate-800 dark:hover:text-white'
