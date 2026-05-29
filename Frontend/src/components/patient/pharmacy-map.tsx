@@ -293,31 +293,31 @@ export function PharmacyMap() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end border-t md:border-t-0 border-white/5 pt-3 md:pt-0">
-          <Button
+        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end border-t md:border-t-0 border-slate-200/50 dark:border-white/5 pt-3 md:pt-0">
+          <motion.button
+            whileHover={{ scale: 1.04, y: -1 }}
+            whileTap={{ scale: 0.96 }}
             onClick={handleRecenter}
-            variant="outline"
-            size="sm"
-            className="rounded-full border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-xs gap-1.5 h-10 px-4 flex-1 sm:flex-initial transition-all duration-300 shadow-sm"
+            className="flex items-center justify-center gap-1.5 h-10 px-4 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 dark:border-emerald-500/15 hover:border-emerald-500/40 shadow-sm transition-all duration-300 flex-1 sm:flex-initial"
           >
-            <Crosshair className="size-3.5 text-emerald-500 animate-spin" />
-            <span className="font-bold">Mi Ubicación</span>
-          </Button>
+            <Crosshair className="size-3.5 text-emerald-500 animate-spin shrink-0" />
+            <span>Mi Ubicación</span>
+          </motion.button>
 
-          <Button
+          <motion.button
+            whileHover={{ scale: 1.04, y: -1 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => setShowNearbyClinics((prev) => !prev)}
-            variant="outline"
-            size="sm"
             className={cn(
-              'rounded-full border-slate-200 dark:border-white/10 text-xs gap-1.5 h-10 px-4 flex-1 sm:flex-initial transition-all duration-300 shadow-sm',
+              'flex items-center justify-center gap-1.5 h-10 px-4 rounded-full text-xs font-black uppercase tracking-wider border transition-all duration-300 shadow-sm flex-1 sm:flex-initial',
               showNearbyClinics
-                ? 'bg-teal-500/15 border-teal-500/30 text-teal-600 dark:text-teal-400 font-bold'
-                : 'text-slate-500 dark:text-zinc-400'
+                ? 'bg-teal-500/15 border-teal-500/30 text-teal-700 dark:text-teal-400 hover:bg-teal-500/25'
+                : 'bg-slate-500/[0.03] border-slate-200/50 dark:border-white/5 text-slate-500 dark:text-zinc-400 hover:bg-slate-500/[0.08]'
             )}
           >
-            <Clock className="size-3.5" />
+            <Clock className="size-3.5 text-teal-500 shrink-0" />
             <span>{showNearbyClinics ? 'Clínicas Visibles' : 'Ver Clínicas'}</span>
-          </Button>
+          </motion.button>
         </div>
       </motion.div>
 

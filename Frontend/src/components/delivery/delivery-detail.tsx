@@ -437,37 +437,37 @@ export function DeliveryDetail() {
 
       {/* Action Buttons */}
       {order.status !== 'delivered' && order.status !== 'cancelled' && (
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full">
           {order.status === 'assigned' && (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="glass-btn-primary rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center disabled:opacity-50"
+              className="w-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-lg shadow-teal-500/10 h-12 gap-2 flex items-center justify-center border-none disabled:opacity-50 transition-all duration-300"
               onClick={() => handleStatusUpdate('picked_up')}
               disabled={isUpdating}
             >
               {isUpdating ? <Loader2 className="size-5 animate-spin" /> : <PackageOpen className="size-5" />}
-              {isUpdating ? 'Actualizando...' : 'Recoger pedido'}
+              {isUpdating ? 'ACTUALIZANDO...' : 'Recoger pedido'}
             </motion.button>
           )}
           {order.status === 'picked_up' && (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="glass-btn-primary rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center disabled:opacity-50"
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-lg shadow-sky-500/10 h-12 gap-2 flex items-center justify-center border-none disabled:opacity-50 transition-all duration-300"
               onClick={() => handleStatusUpdate('in_transit')}
               disabled={isUpdating}
             >
               {isUpdating ? <Loader2 className="size-5 animate-spin" /> : <Navigation className="size-5" />}
-              {isUpdating ? 'Actualizando...' : 'Iniciar ruta'}
+              {isUpdating ? 'ACTUALIZANDO...' : 'Iniciar ruta'}
             </motion.button>
           )}
           {order.status === 'in_transit' && (
-            <div className="flex flex-col gap-2 w-full">
+            <div className="flex flex-col gap-3 w-full">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full glass rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center border border-teal-500/20 text-teal-600 dark:text-teal-400 hover:bg-teal-500/10"
+                className="w-full bg-transparent hover:bg-teal-500/10 text-teal-605 dark:text-teal-400 font-black text-xs uppercase tracking-widest rounded-full border border-teal-500/20 h-12 gap-2 flex items-center justify-center transition-all duration-300"
                 onClick={() => setConfirmDeliveryOpen(true)}
                 disabled={isUpdating}
               >
@@ -478,12 +478,12 @@ export function DeliveryDetail() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="glass-btn-primary rounded-full flex-1 h-12 gap-2 text-base font-medium flex items-center justify-center disabled:opacity-50"
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-lg shadow-emerald-500/10 h-12 gap-2 flex items-center justify-center border-none disabled:opacity-50 transition-all duration-300"
                 onClick={() => setConfirmDeliveryOpen(true)}
                 disabled={isUpdating}
               >
                 <CheckCircle2 className="size-5" />
-                Marcar como entregado
+                Confirmar Entrega
               </motion.button>
             </div>
           )}

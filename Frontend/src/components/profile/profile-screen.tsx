@@ -223,62 +223,99 @@ export function ProfileScreen() {
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto p-4 md:p-6">
-      {/* Profile Header Card */}
-      <GlassCard>
-        <div className="flex flex-col sm:flex-row items-center gap-5">
-          {/* Gradient Avatar */}
-          <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-sky-500 shadow-lg">
-            <span className="text-2xl font-bold text-white">
-              {getInitials(name || profile.name)}
-            </span>
-          </div>
+      {/* Profile Header Card — Premium 2026 Digital Healthcare Credential */}
+      <GlassCard className="relative overflow-hidden !p-6 sm:!p-8 border border-slate-200 dark:border-white/5 bg-white dark:bg-zinc-950/20 shadow-2xl rounded-[2.5rem]">
+        {/* Watermark badge of verified Minsa inside the card */}
+        <div className="absolute -right-10 -bottom-10 size-32 rounded-full bg-teal-500/[0.02] dark:bg-teal-500/[0.01] border border-teal-500/5 rotate-12 pointer-events-none select-none" />
 
-          <div className="flex-1 text-center sm:text-left min-w-0">
-            <h2 className="text-xl font-bold text-foreground">{profile.name}</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">{profile.email}</p>
-            <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start">
-              <span className={cn(
-                'text-xs px-3 py-0.5 rounded-full font-medium',
-                roleConfig?.bg,
-                roleConfig?.text,
-                roleConfig?.border,
-                'border',
-              )}>
-                {ROLE_LABELS[role]}
-              </span>
-            </div>
-          </div>
-
-          {/* Digital ID QR — Interactive Tap to Zoom */}
-          <div 
-            onClick={() => setIsQrZoomed(true)}
-            className="cursor-pointer active:scale-90 hover:scale-105 transition-all duration-300 relative group flex flex-col items-center select-none"
-            title="Tocar para ampliar Pasaporte QR"
-          >
-            <div className="absolute -inset-1 rounded-2xl bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
-            <QrCode 
-              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/pasaporte/${profile.id}`} 
-              size={64} 
-              label="Ver ID"
-              showValue={false}
-              className="!p-1 bg-white/50 dark:bg-black/30 rounded-2xl border border-white/10"
-            />
-            <span className="text-[7px] font-black tracking-widest text-teal-600 dark:text-teal-400 uppercase mt-1 opacity-60 group-hover:opacity-100 animate-pulse">
-              Ampliar 🔍
-            </span>
-          </div>
-
-          {/* Edit button */}
+        {/* Edit Button in corner */}
+        <div className="absolute top-6 right-6 z-10">
           {!isEditing && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsEditing(true)}
-              className="glass-btn-secondary rounded-full p-2.5"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-[9px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest hover:bg-teal-500/20 transition-all duration-300"
             >
-              <Pencil className="size-4" />
+              <Pencil className="size-3" />
+              <span>Editar</span>
             </motion.button>
           )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-8">
+          
+          {/* Left section: Avatar & Credentials */}
+          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left w-full sm:w-auto">
+            {/* Glowing Avatar with Dynamic breathing border */}
+            <div className="relative group/avatar">
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-teal-500 via-sky-500 to-indigo-500 opacity-60 blur-md group-hover/avatar:opacity-80 transition-opacity animate-pulse" />
+              <div className="relative flex size-24 shrink-0 items-center justify-center rounded-full bg-white dark:bg-zinc-900 p-1 border border-slate-200 dark:border-white/10 shadow-lg">
+                <div className="flex size-full items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-sky-500 shadow-inner">
+                  <span className="text-3xl font-black text-white tracking-widest">
+                    {getInitials(name || profile.name)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="min-w-0 space-y-2">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-805 dark:text-white tracking-tight leading-none">
+                  {profile.name}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-zinc-450 mt-1 font-semibold truncate max-w-[220px] sm:max-w-xs">
+                  {profile.email}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                <span className={cn(
+                  'text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm',
+                  roleConfig?.bg,
+                  roleConfig?.text,
+                  roleConfig?.border
+                )}>
+                  {ROLE_LABELS[role]}
+                </span>
+                
+                {role === 'patient' && (
+                  <span className="text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-sm flex items-center gap-1 select-none">
+                    <CheckCircle2 className="size-2.5" />
+                    <span>MINSA Acreditado</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right section: Interactive Digital QR Pasaporte */}
+          <div 
+            onClick={() => setIsQrZoomed(true)}
+            className="cursor-pointer active:scale-95 hover:scale-[1.03] transition-all duration-300 relative group flex flex-col items-center select-none bg-slate-500/[0.02] dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] w-full sm:w-auto shrink-0 shadow-inner"
+            title="Tocar para ampliar Pasaporte QR"
+          >
+            <div className="absolute -inset-1.5 rounded-[2.25rem] bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
+            <div className="relative rounded-2xl bg-white p-2.5 shadow-xl border border-zinc-200/50">
+              <QrCode 
+                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/pasaporte/${profile.id}`} 
+                size={80} 
+                label="VER ID"
+                showValue={false}
+                className="!p-0"
+              />
+              {/* Neon corner brackets */}
+              <div className="absolute top-0.5 left-0.5 size-3.5 border-t-2 border-l-2 border-teal-500 rounded-tl-lg" />
+              <div className="absolute top-0.5 right-0.5 size-3.5 border-t-2 border-r-2 border-teal-500 rounded-tr-lg" />
+              <div className="absolute bottom-0.5 left-0.5 size-3.5 border-b-2 border-l-2 border-teal-500 rounded-bl-lg" />
+              <div className="absolute bottom-0.5 right-0.5 size-3.5 border-b-2 border-r-2 border-teal-500 rounded-br-lg" />
+            </div>
+            <div className="flex items-center gap-1.5 mt-2.5 text-[9px] font-black tracking-widest text-teal-655 dark:text-teal-400 uppercase">
+              <span>Pasaporte</span>
+              <span className="animate-pulse">🔍</span>
+            </div>
+          </div>
+
         </div>
       </GlassCard>
 
@@ -419,22 +456,24 @@ export function ProfileScreen() {
               {/* Save / Cancel */}
               <div className="flex items-center gap-3 mt-6">
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.03, y: -1 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="glass-btn-primary rounded-full flex-1 h-11 gap-2 text-sm font-medium flex items-center justify-center disabled:opacity-50"
+                  className="rounded-full flex-1 h-11 gap-2 text-xs font-black uppercase tracking-widest bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center disabled:opacity-50 shadow-lg shadow-teal-500/10 transition-all duration-300"
                 >
                   {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                   {isSaving ? 'Guardando...' : 'Guardar cambios'}
                 </motion.button>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleCancelEdit}
                   disabled={isSaving}
-                  className="glass-btn-secondary rounded-full px-5 py-2 text-sm font-medium disabled:opacity-50"
+                  className="rounded-full px-6 h-11 text-xs font-black uppercase tracking-wider bg-slate-500/[0.05] hover:bg-slate-500/[0.1] text-slate-600 dark:text-zinc-300 border border-slate-200/50 dark:border-white/5 disabled:opacity-50 transition-all duration-300"
                 >
                   Cancelar
-                </button>
+                </motion.button>
               </div>
             </GlassCard>
           </motion.div>
@@ -637,14 +676,16 @@ export function ProfileScreen() {
                     <option value="tutor">Tutor Legal</option>
                     <option value="otro">Otro</option>
                   </select>
-                  <Button 
-                    className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold px-4 py-2 shrink-0 animate-pulse"
+                  <motion.button
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="bg-teal-500 hover:bg-teal-600 text-white rounded-xl text-xs font-black uppercase tracking-wider px-5 py-2.5 shrink-0 shadow-md shadow-teal-500/5 transition-all duration-300 disabled:opacity-50"
                     disabled={isLinking}
                     onClick={handleLinkFamily}
                   >
-                    {isLinking ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
+                    {isLinking ? <Loader2 className="size-3.5 animate-spin mr-1.5 inline" /> : null}
                     Vincular
-                  </Button>
+                  </motion.button>
                 </div>
               </div>
 
@@ -674,14 +715,14 @@ export function ProfileScreen() {
                               </div>
                               <p className="text-[10px] text-muted-foreground capitalize">Relación: {rel.relationship}</p>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-xl text-xs h-8"
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-3.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-black uppercase tracking-wider text-red-500 hover:bg-red-500/20 transition-all duration-300 select-none shrink-0"
                               onClick={() => handleUnlinkFamily(rel.id)}
                             >
                               Desvincular
-                            </Button>
+                            </motion.button>
                           </div>
                           
                           {/* Pending PIN instructions for Caregiver */}
@@ -730,14 +771,14 @@ export function ProfileScreen() {
                               </div>
                               <p className="text-[10px] text-muted-foreground capitalize">Relación: {rel.relationship}</p>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-xl text-xs h-8"
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-3.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-black uppercase tracking-wider text-red-500 hover:bg-red-500/20 transition-all duration-300 select-none shrink-0"
                               onClick={() => handleUnlinkFamily(rel.id)}
                             >
                               Revocar
-                            </Button>
+                            </motion.button>
                           </div>
 
                           {/* Verification Input for Dependent */}
@@ -753,18 +794,19 @@ export function ProfileScreen() {
                                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
                                   className="glass-input rounded-lg flex-1 px-3 py-1.5 text-xs font-mono text-center tracking-widest text-sky-400"
                                 />
-                                <Button
-                                  size="sm"
-                                  className="bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold px-3"
+                                <motion.button
+                                  whileHover={{ scale: 1.03 }}
+                                  whileTap={{ scale: 0.97 }}
                                   disabled={isVerifying === rel.id}
+                                  className="bg-sky-505 hover:bg-sky-600 text-white rounded-xl text-xs font-black uppercase tracking-wider px-4 py-2 shrink-0 shadow-md shadow-sky-500/10 transition-all duration-300 disabled:opacity-50"
                                   onClick={() => handleVerifyFamily(verificationCode, rel.id)}
                                 >
                                   {isVerifying === rel.id ? (
-                                    <Loader2 className="size-3 animate-spin" />
+                                    <Loader2 className="size-3.5 animate-spin" />
                                   ) : (
                                     'Verificar'
                                   )}
-                                </Button>
+                                </motion.button>
                               </div>
                             </div>
                           )}
@@ -916,12 +958,14 @@ export function ProfileScreen() {
                     <p className="text-xs text-red-500">Las contraseñas no coinciden</p>
                   )}
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   disabled={!currentPassword || !newPassword || newPassword !== confirmPassword}
-                  className="glass-btn-primary rounded-full px-5 py-2 text-sm font-medium disabled:opacity-50"
+                  className="w-full h-11 bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-lg shadow-teal-500/10 disabled:opacity-50 transition-all duration-300"
                 >
                   Actualizar contraseña
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           )}
@@ -930,10 +974,10 @@ export function ProfileScreen() {
 
       {/* Logout Button */}
       <motion.button
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: 1.02, y: 1 }}
         whileTap={{ scale: 0.98 }}
         onClick={logout}
-        className="w-full rounded-3xl p-4 glass flex items-center justify-center gap-2 text-red-600 dark:text-red-400 font-medium hover:bg-red-500/5 transition-colors"
+        className="w-full h-12 rounded-3xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 flex items-center justify-center gap-2 text-red-550 font-black text-xs uppercase tracking-widest transition-all duration-300"
       >
         <LogOut className="size-4" />
         Cerrar sesión

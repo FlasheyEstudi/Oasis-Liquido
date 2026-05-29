@@ -141,21 +141,21 @@ export function DriverHome() {
           label: 'Recoger pedido',
           icon: PackageOpen,
           newStatus: 'picked_up' as const,
-          className: 'glass-btn-primary',
+          className: 'bg-teal-500 hover:bg-teal-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-teal-500/10 h-10 rounded-full transition-all duration-300',
         };
       case 'picked_up':
         return {
           label: 'Iniciar ruta',
           icon: Navigation,
           newStatus: 'in_transit' as const,
-          className: 'glass-btn-primary',
+          className: 'bg-sky-500 hover:bg-sky-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-sky-500/10 h-10 rounded-full transition-all duration-300',
         };
       case 'in_transit':
         return {
           label: 'Marcar entregado',
           icon: CheckCircle2,
           newStatus: 'delivered' as const,
-          className: 'glass-btn-primary',
+          className: 'bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/10 h-10 rounded-full transition-all duration-300',
         };
       default:
         return null;
@@ -356,18 +356,22 @@ export function DriverHome() {
                       )}
 
                       <div className="flex gap-2 pt-1">
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.02, y: -0.5 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={(e) => handleAccept(e, order.id)}
-                          className="flex-1 py-2 px-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-bold text-xs shadow-[0_2px_10px_rgba(20,184,166,0.2)] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="flex-1 h-9 rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-teal-500/10 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer border-none"
                         >
-                          <Check className="size-3.5" /> Aceptar Pedido
-                        </button>
-                        <button
+                          <Check className="size-3.5 stroke-[3]" /> Aceptar Pedido
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={(e) => handleReject(e, order.id)}
-                          className="py-2 px-3 rounded-xl bg-slate-500/5 hover:bg-slate-500/10 text-muted-foreground hover:text-foreground font-bold text-xs border border-border/40 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          className="h-9 px-4 rounded-full bg-slate-500/10 border border-border/40 text-slate-650 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-500/20 transition-all duration-300 flex items-center justify-center gap-1 cursor-pointer"
                         >
                           <X className="size-3.5" /> Rechazar
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
                   </motion.div>
@@ -455,9 +459,8 @@ export function DriverHome() {
                               onClick={() => handleStatusUpdate(order.id, action.newStatus)}
                               disabled={updatingId === order.id}
                               className={cn(
-                                'w-full gap-2 rounded-xl px-4 py-2.5 text-xs font-black flex items-center justify-center cursor-pointer shadow-md',
-                                action.className,
-                                'disabled:opacity-50',
+                                'w-full flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 border-none',
+                                action.className
                               )}
                             >
                               {updatingId === order.id ? (
@@ -465,7 +468,7 @@ export function DriverHome() {
                               ) : (
                                 <action.icon className="size-4" />
                               )}
-                              {updatingId === order.id ? 'Actualizando...' : action.label}
+                              {updatingId === order.id ? 'ACTUALIZANDO...' : action.label}
                             </motion.button>
                           </div>
                         )}
