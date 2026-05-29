@@ -10,7 +10,6 @@ import {
 import type { Appointment, AppointmentStatus } from '@/types';
 import { formatDate, formatDuration, getInitials } from '@/utils/helpers';
 import { APPOINTMENT_STATUS_CONFIG } from '@/utils/constants';
-import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -44,10 +43,11 @@ const FILTER_TABS: { value: string; label: string; status?: AppointmentStatus }[
   { value: 'past', label: 'Historial' },
   { value: 'cancelled', label: 'Canceladas', status: 'cancelled' },
 ];
+
 const fadeInUp: any = {
-  initial: { opacity: 0, scale: 0.95, y: 20 },
-  animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 25 } },
-  exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.2 } },
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { type: 'spring', damping: 25 } },
+  exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
 };
 
 export function AppointmentList() {
@@ -88,7 +88,7 @@ export function AppointmentList() {
 
   return (
     <div className={cn(
-      "space-y-6 max-w-4xl mx-auto pb-20 relative overflow-visible",
+      "space-y-6 max-w-4xl mx-auto pb-20 relative overflow-visible px-1 sm:px-0",
       isElderlyMode && "text-base font-medium [&_h2]:text-3xl [&_h3]:text-xl [&_p]:text-sm [&_span]:text-xs [&_button]:text-sm [&_button]:h-12"
     )}>
       
@@ -151,9 +151,9 @@ export function AppointmentList() {
       {/* Content Stepper */}
       <AnimatePresence mode="wait">
         {appointmentsQuery.isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" key="loading">
+          <div className="space-y-4" key="loading">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="shimmer rounded-[2rem] h-44 border border-slate-200/30 dark:border-white/5 opacity-70" />
+              <div key={n} className="shimmer rounded-2xl h-24 border border-slate-200/30 dark:border-white/5 opacity-70" />
             ))}
           </div>
         ) : appointmentsQuery.isError ? (
@@ -163,7 +163,7 @@ export function AppointmentList() {
                 <div className="flex size-14 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20 shadow-md">
                   <AlertCircle className="size-6 text-red-500 animate-bounce" />
                 </div>
-                <p className="text-xs font-bold text-slate-500 dark:text-zinc-450 leading-relaxed">
+                <p className="text-xs font-bold text-slate-500 dark:text-zinc-455 leading-relaxed">
                   {getHookErrorMessage(appointmentsQuery.error)}
                 </p>
                 <Button
@@ -180,7 +180,7 @@ export function AppointmentList() {
             <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 rounded-[80px_40px_32px_120px] p-6 backdrop-blur-xl">
               <div className="flex flex-col items-center py-14 text-center max-w-sm mx-auto space-y-4.5">
                 <div className="size-16 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
-                  <Calendar className="size-7 text-slate-400 dark:text-zinc-500" />
+                  <Calendar className="size-7 text-slate-400 dark:text-zinc-550" />
                 </div>
                 <div className="space-y-1.5">
                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 dark:text-white font-serif">Sin consultas</h3>
@@ -204,115 +204,113 @@ export function AppointmentList() {
             </div>
           </motion.div>
         ) : (
+          /* CARDLESS TIMELINE FEED PANEL */
           <motion.div
             key={activeTab}
             initial="initial"
             animate="animate"
             exit="exit"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+            className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md overflow-hidden p-2 sm:p-4 shadow-xl"
           >
-            {appointments.map((apt, index) => {
-              const statusConfig = APPOINTMENT_STATUS_CONFIG[apt.status];
-              return (
-                <motion.div
-                  key={apt.id}
-                  variants={fadeInUp}
-                  transition={{ delay: index * 0.02 }}
-                >
-                  <div
-                    style={{
-                      borderRadius: index % 2 === 0
-                        ? '40px 16px 32px 16px'
-                        : '16px 40px 16px 32px'
-                    }}
-                    className="p-5 border border-slate-200 dark:border-white/5 bg-white/30 dark:bg-zinc-950/20 shadow-xl hover:shadow-2xl hover:scale-[1.02] cursor-pointer transition-all duration-300 relative flex flex-col justify-between h-full backdrop-blur-xl group"
+            <div className="divide-y divide-dashed divide-slate-200/60 dark:divide-white/5">
+              {appointments.map((apt, index) => {
+                const statusConfig = APPOINTMENT_STATUS_CONFIG[apt.status];
+                
+                // Set color of neon vertical accent bar
+                const accentColor = 
+                  apt.status === 'completed' ? 'bg-indigo-500' :
+                  apt.status === 'cancelled' ? 'bg-red-500' :
+                  'bg-teal-500';
+
+                return (
+                  <motion.div
+                    key={apt.id}
+                    variants={fadeInUp}
+                    transition={{ delay: index * 0.02 }}
+                    className="py-5 px-3 sm:px-5 hover:bg-slate-500/[0.03] dark:hover:bg-white/[0.02] cursor-pointer transition-all duration-200 relative flex flex-col md:flex-row md:items-center justify-between gap-4 group rounded-2xl"
                     onClick={() => setSelectedApt(apt)}
                   >
-                    <div className="space-y-4">
-                      {/* Doctor Profile Header */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="size-11 border border-teal-500/10 shrink-0 shadow-sm">
-                            <AvatarFallback className="bg-teal-550/10 text-teal-600 dark:text-teal-400 text-xs font-black font-serif">
-                              {apt.doctor ? getInitials(apt.doctor.name) : 'DR'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="text-xs font-black text-slate-805 dark:text-white truncate font-serif group-hover:text-teal-600 transition-colors">
-                              Dr. {apt.doctor?.name || 'Médico'}
-                            </p>
-                            {apt.doctor?.doctor_profile?.specialty && (
-                              <p className="text-[9px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest mt-1">
-                                {apt.doctor.doctor_profile.specialty}
-                              </p>
-                            )}
-                          </div>
+                    {/* Glowing neon status timeline accent on the left margin */}
+                    <div className={cn("absolute left-0 top-3 bottom-3 w-1 rounded-full transition-transform duration-300 group-hover:scale-y-110", accentColor)} />
+
+                    {/* Left side details */}
+                    <div className="flex items-center gap-4 min-w-0 pl-2">
+                      <Avatar className="size-11 sm:size-12 border border-slate-200 dark:border-white/5 shrink-0 shadow-sm transition-transform group-hover:scale-105">
+                        <AvatarFallback className="bg-slate-100 dark:bg-zinc-900 text-slate-800 dark:text-zinc-200 text-xs font-black font-serif">
+                          {apt.doctor ? getInitials(apt.doctor.name) : 'DR'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs sm:text-sm font-black text-slate-805 dark:text-white truncate font-serif group-hover:text-teal-500 transition-colors">
+                            Dr. {apt.doctor?.name || 'Médico'}
+                          </p>
+                          <span className={cn(
+                            'inline-flex items-center rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-wider shrink-0 border scale-95 shadow-sm',
+                            statusConfig?.bgColor,
+                            statusConfig?.color
+                          )}>
+                            {statusConfig?.label || apt.status}
+                          </span>
                         </div>
-
-                        <span className={cn(
-                          'inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider shrink-0 border shadow-sm',
-                          statusConfig?.bgColor,
-                          statusConfig?.color
-                        )}>
-                          {statusConfig?.label || apt.status}
-                        </span>
-                      </div>
-
-                      {/* Schedule details */}
-                      <div className="space-y-2.5 bg-white/40 dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-3.5 shadow-inner">
-                        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-655 dark:text-zinc-350">
-                          <Clock className="size-3.5 text-teal-500 shrink-0" />
-                          <span>{formatDate(apt.date_time, "dd MMM yyyy • HH:mm")}</span>
-                          <span className="text-slate-350 dark:text-zinc-700">•</span>
-                          <span className="font-mono text-[9px] font-black uppercase">{formatDuration(apt.duration_minutes)}</span>
-                        </div>
-
+                        {apt.doctor?.doctor_profile?.specialty && (
+                          <p className="text-[9px] sm:text-[10px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest mt-0.5">
+                            {apt.doctor.doctor_profile.specialty}
+                          </p>
+                        )}
                         {apt.clinic && (
-                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-zinc-400 truncate pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
-                            <Building2 className="size-3.5 text-indigo-400 shrink-0" />
+                          <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1.5 flex items-center gap-1">
+                            <Building2 className="size-3 text-indigo-400 shrink-0" />
                             <span className="truncate">{apt.clinic.name}</span>
-                          </div>
+                          </p>
                         )}
                       </div>
                     </div>
 
-                    {/* Secondary Actions Row */}
-                    <div className="mt-4 pt-3.5 border-t border-slate-200 dark:border-white/5 flex items-center justify-between">
-                      <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-450 flex items-center gap-1 group-hover:text-teal-655 transition-colors">
-                        Ver Detalles
-                        <ChevronRight className="size-3.5 shrink-0" />
-                      </span>
+                    {/* Right side telemetry info */}
+                    <div className="flex items-center justify-between md:justify-end gap-5 pl-2 md:pl-0 border-t md:border-t-0 border-dashed border-slate-200 dark:border-white/5 pt-3.5 md:pt-0">
+                      <div className="text-left md:text-right font-bold text-[11px] text-slate-655 dark:text-zinc-350 space-y-0.5">
+                        <div className="flex items-center md:justify-end gap-1.5">
+                          <Clock className="size-3.5 text-teal-500 shrink-0" />
+                          <span>{formatDate(apt.date_time, "dd MMM yyyy • HH:mm")}</span>
+                        </div>
+                        <p className="font-mono text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-wider">
+                          DURACIÓN: {formatDuration(apt.duration_minutes)}
+                        </p>
+                      </div>
 
-                      {canCancel(apt.status) && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/25 text-[9px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500/20 transition-all duration-300 select-none z-10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCancelDialog(apt);
-                          }}
-                        >
-                          <XCircle className="size-3 shrink-0" />
-                          Cancelar
-                        </motion.button>
-                      )}
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        {canCancel(apt.status) && (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/25 text-[9px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500/20 transition-all duration-200 cursor-pointer"
+                            onClick={() => setCancelDialog(apt)}
+                          >
+                            <XCircle className="size-3" />
+                            Cancelar
+                          </motion.button>
+                        )}
+                        <span className="size-8 rounded-full bg-slate-500/5 hover:bg-teal-500/10 text-slate-400 hover:text-teal-500 transition-colors flex items-center justify-center shrink-0" onClick={() => setSelectedApt(apt)}>
+                          <ChevronRight className="size-4.5" />
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Modern High-Fidelity Appointment Detail Modal (Organic Curve Seal) */}
+      {/* Modern High-Fidelity Appointment Detail Modal */}
       <Dialog open={!!selectedApt} onOpenChange={(open) => !open && setSelectedApt(null)}>
         <DialogContent className="rounded-[40px_16px_40px_16px] glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center shadow-2xl">
           <DialogHeader className="items-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <ShieldCheck className="size-5 text-teal-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-zinc-450">Verificación de Reserva</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-zinc-455">Verificación de Reserva</span>
             </div>
             <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-805 dark:text-white font-serif">Ticket Clínico Digital</DialogTitle>
           </DialogHeader>
@@ -370,7 +368,7 @@ export function AppointmentList() {
               </div>
 
               {/* Action Banner */}
-              <div className="flex items-center gap-2 p-3 bg-teal-500/5 rounded-2xl border border-teal-500/10 text-[10px] font-bold text-slate-650 dark:text-zinc-350 text-left w-full">
+              <div className="flex items-center gap-2 p-3 bg-teal-500/5 rounded-2xl border border-teal-500/10 text-[10px] font-bold text-slate-650 dark:text-zinc-355 text-left w-full">
                 <CheckCircle className="size-4 text-teal-500 shrink-0" />
                 <span>Presenta este ticket digital desde tu teléfono en recepción al llegar a la clínica.</span>
               </div>
@@ -380,7 +378,7 @@ export function AppointmentList() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 rounded-[16px_50px_16px_50px] bg-slate-100 hover:bg-slate-250 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-350 font-black text-[10px] uppercase tracking-widest h-11 border border-slate-200 dark:border-white/5"
+                  className="flex-1 rounded-[16px_50px_16px_50px] bg-slate-100 hover:bg-slate-250 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-355 font-black text-[10px] uppercase tracking-widest h-11 border border-slate-200 dark:border-white/5 cursor-pointer"
                   onClick={() => setSelectedApt(null)}
                 >
                   Cerrar
@@ -389,7 +387,7 @@ export function AppointmentList() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-600 text-white font-black text-[10px] uppercase tracking-widest h-11 border-none shadow-md"
+                    className="flex-1 rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-650 text-white font-black text-[10px] uppercase tracking-widest h-11 border-none shadow-md cursor-pointer"
                     onClick={() => {
                       setCancelDialog(selectedApt);
                     }}
@@ -411,7 +409,7 @@ export function AppointmentList() {
               <ShieldAlert className="size-6 text-red-500 animate-pulse animate-spin-slow" />
             </div>
             <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-805 dark:text-white font-serif">¿Cancelar Consulta?</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500 dark:text-zinc-450 leading-relaxed pt-1.5">
+            <DialogDescription className="text-xs text-slate-550 dark:text-zinc-455 leading-relaxed pt-1.5">
               ¿Confirmas la cancelación definitiva de tu consulta programada con{' '}
               <strong className="text-slate-800 dark:text-white">Dr. {cancelDialog?.doctor?.name}</strong> el{' '}
               <span className="font-bold text-teal-655 dark:text-teal-400">{cancelDialog ? formatDate(cancelDialog.date_time, "dd/MM/yyyy") : ''}</span>?
@@ -422,7 +420,7 @@ export function AppointmentList() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full rounded-[16px_50px_16px_50px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-850 dark:text-zinc-200 font-black text-[10px] h-11 border border-slate-200/50 dark:border-white/5 uppercase tracking-widest"
+              className="w-full rounded-[16px_50px_16px_50px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-850 dark:text-zinc-200 font-black text-[10px] h-11 border border-slate-200/50 dark:border-white/5 uppercase tracking-widest cursor-pointer"
               onClick={() => setCancelDialog(null)}
               disabled={cancelMutation.isPending}
             >
@@ -431,7 +429,7 @@ export function AppointmentList() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-650 text-white font-black text-[10px] h-11 uppercase tracking-widest flex items-center justify-center gap-1.5 border-none shadow-md"
+              className="w-full rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-655 text-white font-black text-[10px] h-11 uppercase tracking-widest flex items-center justify-center gap-1.5 border-none shadow-md cursor-pointer"
               onClick={handleCancel}
               disabled={cancelMutation.isPending}
             >

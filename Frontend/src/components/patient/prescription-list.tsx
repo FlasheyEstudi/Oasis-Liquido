@@ -9,7 +9,6 @@ import {
 import type { Prescription, PrescriptionStatus } from '@/types';
 import { formatDate, getInitials } from '@/utils/helpers';
 import { PRESCRIPTION_STATUS_CONFIG } from '@/utils/constants';
-import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -29,7 +28,6 @@ import {
   Calendar,
   AlertCircle,
   Sparkles,
-  ShieldCheck,
   ChevronRight,
   Shield,
 } from 'lucide-react';
@@ -43,9 +41,9 @@ const FILTER_TABS: { value: string; label: string; status?: PrescriptionStatus }
 ];
 
 const fadeInUp: any = {
-  initial: { opacity: 0, scale: 0.95, y: 20 },
-  animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 25 } },
-  exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.2 } },
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { type: 'spring', damping: 25 } },
+  exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
 };
 
 export function PrescriptionList() {
@@ -62,7 +60,7 @@ export function PrescriptionList() {
 
   return (
     <div className={cn(
-      "space-y-6 max-w-4xl mx-auto pb-20 relative overflow-visible",
+      "space-y-6 max-w-4xl mx-auto pb-20 relative overflow-visible px-1 sm:px-0",
       isElderlyMode && "text-base font-medium [&_h2]:text-3xl [&_h3]:text-xl [&_p]:text-sm [&_span]:text-xs [&_button]:text-sm [&_button]:h-12"
     )}>
       
@@ -119,9 +117,9 @@ export function PrescriptionList() {
       {/* Content Stepper */}
       <AnimatePresence mode="wait">
         {prescriptionsQuery.isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" key="loading">
+          <div className="space-y-4" key="loading">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="shimmer rounded-[2rem] h-48 border border-slate-200/30 dark:border-white/5 opacity-70" />
+              <div key={n} className="shimmer rounded-2xl h-24 border border-slate-200/30 dark:border-white/5 opacity-70" />
             ))}
           </div>
         ) : prescriptionsQuery.isError ? (
@@ -160,125 +158,124 @@ export function PrescriptionList() {
             </div>
           </motion.div>
         ) : (
+          /* CARDLESS TIMELINE FEED PANEL */
           <motion.div
             key={activeTab}
             initial="initial"
             animate="animate"
             exit="exit"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+            className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md overflow-hidden p-2 sm:p-4 shadow-xl"
           >
-            {prescriptions.map((presc, index) => {
-              const medCount = presc.lines?.length || 0;
-              const statusConfig = PRESCRIPTION_STATUS_CONFIG[presc.status];
-              return (
-                <motion.div
-                  key={presc.id}
-                  variants={fadeInUp}
-                  transition={{ delay: index * 0.02 }}
-                >
-                  <div
-                    style={{
-                      borderRadius: index % 2 === 0
-                        ? '36px 14px 28px 14px'
-                        : '14px 36px 14px 28px'
-                    }}
-                    className="p-5 border border-slate-200 dark:border-white/5 bg-white/30 dark:bg-zinc-950/20 shadow-xl hover:shadow-2xl hover:scale-[1.02] cursor-pointer transition-all duration-300 relative flex flex-col justify-between h-full backdrop-blur-xl group"
+            <div className="divide-y divide-dashed divide-slate-200/60 dark:divide-white/5">
+              {prescriptions.map((presc, index) => {
+                const medCount = presc.lines?.length || 0;
+                const statusConfig = PRESCRIPTION_STATUS_CONFIG[presc.status];
+
+                // Set color of neon vertical accent bar based on prescription status
+                const accentColor = 
+                  presc.status === 'fulfilled' ? 'bg-emerald-500' :
+                  presc.status === 'expired' ? 'bg-amber-500' :
+                  'bg-indigo-500';
+
+                return (
+                  <motion.div
+                    key={presc.id}
+                    variants={fadeInUp}
+                    transition={{ delay: index * 0.02 }}
+                    className="py-5 px-3 sm:px-5 hover:bg-slate-500/[0.03] dark:hover:bg-white/[0.02] cursor-pointer transition-all duration-200 relative flex flex-col md:flex-row md:items-center justify-between gap-4 group rounded-2xl"
                     onClick={() => {
                       useAuthStore.getState().setPrescriptionId(presc.id);
                       navigate('prescription-detail', presc.id);
                     }}
                   >
-                    <div className="space-y-4">
-                      {/* Doctor Profile Header */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="size-11 border border-teal-500/10 shrink-0 shadow-sm">
-                            <AvatarFallback className="bg-teal-550/10 text-teal-655 dark:text-teal-450 text-xs font-black font-serif">
-                              {presc.doctor ? getInitials(presc.doctor.name) : 'DR'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="text-xs font-black text-slate-805 dark:text-white truncate font-serif group-hover:text-indigo-600 transition-colors">
-                              Dr. {presc.doctor?.name || 'Médico'}
-                            </p>
-                            {presc.doctor?.doctor_profile?.specialty && (
-                              <p className="text-[9px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest mt-1">
-                                {presc.doctor.doctor_profile.specialty}
-                              </p>
-                            )}
-                          </div>
+                    {/* Glowing neon status timeline accent on the left margin */}
+                    <div className={cn("absolute left-0 top-3 bottom-3 w-1 rounded-full transition-transform duration-300 group-hover:scale-y-110", accentColor)} />
+
+                    {/* Left side details */}
+                    <div className="flex items-center gap-4 min-w-0 pl-2">
+                      <Avatar className="size-11 sm:size-12 border border-slate-200 dark:border-white/5 shrink-0 shadow-sm transition-transform group-hover:scale-105">
+                        <AvatarFallback className="bg-slate-100 dark:bg-zinc-900 text-slate-800 dark:text-zinc-200 text-xs font-black font-serif">
+                          {presc.doctor ? getInitials(presc.doctor.name) : 'DR'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs sm:text-sm font-black text-slate-805 dark:text-white truncate font-serif group-hover:text-indigo-605 transition-colors">
+                            Dr. {presc.doctor?.name || 'Médico'}
+                          </p>
+                          <span className={cn(
+                            'inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider shrink-0 border scale-95 shadow-sm',
+                            statusConfig?.bgColor,
+                            statusConfig?.color
+                          )}>
+                            {statusConfig?.label || presc.status}
+                          </span>
                         </div>
-
-                        <span className={cn(
-                          'inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider shrink-0 border shadow-sm',
-                          statusConfig?.bgColor,
-                          statusConfig?.color
-                        )}>
-                          {statusConfig?.label || presc.status}
-                        </span>
+                        {presc.doctor?.doctor_profile?.specialty && (
+                          <p className="text-[9px] sm:text-[10px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest mt-0.5">
+                            {presc.doctor.doctor_profile.specialty}
+                          </p>
+                        )}
+                        <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1.5 flex items-center gap-1">
+                          <Pill className="size-3 text-teal-500 shrink-0" />
+                          <span>{medCount} medicamento{medCount !== 1 ? 's' : ''} prescripto{medCount !== 1 ? 's' : ''}</span>
+                        </p>
                       </div>
+                    </div>
 
-                      {/* Schedule Details block */}
-                      <div className="space-y-2.5 bg-white/40 dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-3.5 shadow-inner">
-                        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-655 dark:text-zinc-350">
+                    {/* Right side telemetry info */}
+                    <div className="flex items-center justify-between md:justify-end gap-5 pl-2 md:pl-0 border-t md:border-t-0 border-dashed border-slate-200 dark:border-white/5 pt-3.5 md:pt-0">
+                      <div className="text-left md:text-right font-bold text-[11px] text-slate-655 dark:text-zinc-355 space-y-0.5">
+                        <div className="flex items-center md:justify-end gap-1.5">
                           <Calendar className="size-3.5 text-indigo-500 shrink-0" />
                           <span>Emitida: {formatDate(presc.issue_date, 'dd MMM yyyy')}</span>
                         </div>
-
-                        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-zinc-400 truncate pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
-                          <Pill className="size-3.5 text-teal-500 shrink-0" />
-                          <span>{medCount} medicamento{medCount !== 1 ? 's' : ''} prescripto{medCount !== 1 ? 's' : ''}</span>
-                        </div>
-
-                        {/* Expiration warning banner */}
                         {presc.status === 'active' && presc.expiration_date && (
-                          <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 pt-2 border-t border-slate-200/50 dark:border-white/5">
+                          <div className="flex items-center md:justify-end gap-1.5 text-[9px] font-black text-amber-600 dark:text-amber-400 pt-0.5">
                             <span className="size-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
                             <span>Vence: {formatDate(presc.expiration_date, 'dd/MM/yyyy')}</span>
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    {/* Secondary Actions Row */}
-                    <div className="mt-4 pt-3.5 border-t border-slate-200 dark:border-white/5 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                      {isActive(presc.status) ? (
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        {isActive(presc.status) ? (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full bg-teal-500 hover:bg-teal-650 text-[9px] font-black uppercase tracking-widest text-white shadow-md transition-all duration-200 select-none z-10 border-none cursor-pointer"
+                            onClick={() => {
+                              useAuthStore.getState().setPrescriptionId(presc.id);
+                              navigate('pharmacy-map', presc.id);
+                            }}
+                          >
+                            <Search className="size-3 shrink-0" />
+                            Surtir
+                          </motion.button>
+                        ) : (
+                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-450 flex items-center gap-1 group-hover:text-indigo-500 transition-colors cursor-pointer" onClick={() => {
+                            useAuthStore.getState().setPrescriptionId(presc.id);
+                            navigate('prescription-detail', presc.id);
+                          }}>
+                            Detalles
+                            <ChevronRight className="size-3.5" />
+                          </span>
+                        )}
+
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-teal-500 hover:bg-teal-600 text-[9px] font-black uppercase tracking-widest text-white shadow-md shadow-teal-500/10 transition-all duration-300 select-none z-10 border-none"
-                          onClick={() => {
-                            useAuthStore.getState().setPrescriptionId(presc.id);
-                            navigate('pharmacy-map', presc.id);
-                          }}
+                          className="size-8 rounded-full bg-slate-500/5 hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-500 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+                          onClick={() => setQrDialog(presc)}
                         >
-                          <Search className="size-3 shrink-0" />
-                          Surtir Receta
+                          <QrCodeIcon className="size-4 shrink-0" />
                         </motion.button>
-                      ) : (
-                        <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-450 flex items-center gap-1 group-hover:text-indigo-500 transition-colors cursor-pointer" onClick={() => {
-                          useAuthStore.getState().setPrescriptionId(presc.id);
-                          navigate('prescription-detail', presc.id);
-                        }}>
-                          Ver Detalles
-                          <ChevronRight className="size-3.5" />
-                        </span>
-                      )}
-
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-655 dark:text-zinc-350 transition-all duration-300 select-none z-10 cursor-pointer"
-                        onClick={() => setQrDialog(presc)}
-                      >
-                        <QrCodeIcon className="size-3.5 text-indigo-500 shrink-0" />
-                        QR
-                      </motion.button>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -310,7 +307,7 @@ export function PrescriptionList() {
                 <p className="text-xs font-black text-slate-805 dark:text-white font-serif">
                   Dr. {qrDialog.doctor?.name || 'Especialista Oasis'}
                 </p>
-                <p className="text-[9px] font-bold text-slate-500 dark:text-zinc-450">
+                <p className="text-[9px] font-bold text-slate-500 dark:text-zinc-455">
                   Emitida el {formatDate(qrDialog.issue_date, 'dd/MM/yyyy')}
                 </p>
                 <div className="pt-2">
@@ -324,7 +321,7 @@ export function PrescriptionList() {
                 </div>
               </div>
 
-              <p className="text-[9px] text-slate-400 dark:text-zinc-550 leading-relaxed font-semibold">
+              <p className="text-[9px] text-slate-400 dark:text-zinc-555 leading-relaxed font-semibold">
                 Certificación y firmas biométricas resguardadas bajo cifrado HMAC. Acreditado por farmacéuticas autorizadas por el MINSA.
               </p>
             </div>
