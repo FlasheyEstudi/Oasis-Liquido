@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth-store';
+import { MapView } from '@/components/common/map-view';
 import {
   useDeliveryOrders,
   useUpdateDeliveryStatus,
@@ -36,6 +37,12 @@ import {
   X,
   Star,
   Sparkles,
+  Maximize2,
+  Minimize2,
+  Radio,
+  Target,
+  BellRing,
+  Compass,
 } from 'lucide-react';
 import type { DeliveryStatus } from '@/types';
 
@@ -72,6 +79,105 @@ export function DriverHome() {
   } = useAssignedDeliveries(!!driverId);
 
   const updateDeliveryStatus = useUpdateDeliveryStatus();
+
+  const [mapExpanded, setMapExpanded] = useState(false);
+  const [selectedRadarOrder, setSelectedRadarOrder] = useState<any | null>(null);
+  const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Geolocation tracking for available freelance radar map
+  useEffect(() => {
+    if (!localAvailable) {
+      setDriverCoords(null);
+      return;
+    }
+
+    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+      // Fetch initial position
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setDriverCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        (err) => {
+          console.warn('Radar driver geolocation error:', err.message);
+          // Default to Managua central coordinates if GPS is unavailable
+          setDriverCoords({ lat: 12.1364, lng: -86.2514 });
+        },
+        { enableHighAccuracy: true }
+      );
+
+      // Continuous tracking
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          setDriverCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        (err) => console.warn('Radar geolocation watch error:', err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, [localAvailable]);
+
+  // Construct dynamic markers for the Tactical Radar Map
+  const radarMarkers = useMemo(() => {
+    const list: any[] = [];
+
+    // 1. Driver Current Location Marker
+    if (driverCoords) {
+      list.push({
+        id: 'driver',
+        lat: driverCoords.lat,
+        lng: driverCoords.lng,
+        type: 'driver',
+        label: 'Tu Ubicación Actual',
+      });
+    }
+
+    // 2. Available freelance orders (pharmacy pickups and patient destinations)
+    availableOrders.forEach((order: any) => {
+      const pLat = order.pickup_lat ?? order.pickupLat;
+      const pLng = order.pickup_lng ?? order.pickupLng;
+      const dLat = order.delivery_lat ?? order.deliveryLat;
+      const dLng = order.delivery_lng ?? order.deliveryLng;
+
+      // Add Pharmacy Pickup marker
+      if (pLat && pLng) {
+        list.push({
+          id: `pickup-${order.id}`,
+          lat: pLat,
+          lng: pLng,
+          type: 'pharmacy',
+          label: `Recoger en: ${order.pharmacy?.name || 'Farmacia'} (Tarifa: ${formatCurrency(order.deliveryFee || 60)})`,
+          orderRef: order,
+        });
+      }
+
+      // Add Patient Delivery marker
+      if (dLat && dLng) {
+        list.push({
+          id: `delivery-${order.id}`,
+          lat: dLat,
+          lng: dLng,
+          type: 'destination',
+          label: `Entregar a Paciente (Pedido: #${order.id.slice(-6)})`,
+          orderRef: order,
+        });
+      }
+    });
+
+    return list;
+  }, [driverCoords, availableOrders]);
+
+  const radarMapCenter = useMemo((): [number, number] => {
+    if (driverCoords) return [driverCoords.lat, driverCoords.lng];
+    return [12.1364, -86.2514]; // Managua
+  }, [driverCoords]);
+
+  const handleMarkerClick = (marker: any) => {
+    if (marker.orderRef) {
+      setSelectedRadarOrder(marker.orderRef);
+    }
+  };
 
   const isLoading = activeLoading || availableLoading;
 
@@ -278,6 +384,203 @@ export function DriverHome() {
           </div>
         </div>
       </GlassCard>
+
+      {/* Tactical Radar Map Module */}
+      <motion.div className="col-span-12" variants={fadeUp}>
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-zinc-800/80 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-xl shadow-2xl p-6 transition-all duration-500">
+          
+          {/* Card Header controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-500 shadow-inner">
+                <Radio className="size-5 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-base font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                  Radar Táctico Oasis 
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                    <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    Escaneo en Vivo
+                  </span>
+                </h3>
+                <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">
+                  Haz clic en un marcador de farmacia en el mapa para previsualizar los detalles del envío.
+                </p>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setMapExpanded(!mapExpanded)}
+              className="flex items-center justify-center gap-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-white/5 shadow-sm transition-all duration-300 cursor-pointer self-start sm:self-center"
+            >
+              {mapExpanded ? (
+                <>
+                  <Minimize2 className="size-3.5" /> Contraer
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="size-3.5" /> Ampliar Radar
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Map display */}
+          <div 
+            className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-zinc-800/80 shadow-inner transition-all duration-500 ease-out bg-slate-50 dark:bg-zinc-950"
+            style={{ height: mapExpanded ? '520px' : '280px' }}
+          >
+            {/* The actual dynamic MapView */}
+            {localAvailable ? (
+              <MapView
+                markers={radarMarkers}
+                center={radarMapCenter}
+                height="100%"
+                onMarkerClick={handleMarkerClick}
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100/50 dark:bg-zinc-950/50 backdrop-blur-sm z-[500] text-center">
+                <Bike className="size-16 text-muted-foreground/30 mb-3 animate-bounce" />
+                <h4 className="text-sm font-black uppercase tracking-wider text-muted-foreground">Repartidor Desconectado</h4>
+                <p className="text-xs text-muted-foreground/70 max-w-xs mt-1">Conéctate en la parte superior para activar el radar táctico de Managua.</p>
+              </div>
+            )}
+
+            {/* Tactical Radar Overlay Sweep Line */}
+            {localAvailable && availableOrders.length === 0 && (
+              <div className="absolute inset-0 pointer-events-none z-[400] flex items-center justify-center overflow-hidden">
+                {/* Sweep Sector */}
+                <div className="radar-sweep-line" />
+                
+                {/* Sonar rings */}
+                <div className="radar-circle w-32 h-32" />
+                <div className="radar-circle w-64 h-64 animate-ping-slow" />
+                <div className="radar-circle w-96 h-96" />
+                
+                {/* Floating status label inside map */}
+                <div className="absolute bottom-6 left-6 z-[401] rounded-2xl bg-zinc-950/85 border border-teal-500/20 px-4 py-2 text-[10px] font-black text-teal-400 uppercase tracking-widest backdrop-blur-md flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-teal-400 animate-ping" />
+                  Buscando Prescripciones Cercanas...
+                </div>
+              </div>
+            )}
+
+            {/* Custom Styles for the tactical radar effect */}
+            <style jsx global>{`
+              @keyframes radar-sweep {
+                from {
+                  transform: rotate(0deg);
+                }
+                to {
+                  transform: rotate(360deg);
+                }
+              }
+              .radar-sweep-line {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 70%;
+                height: 70%;
+                background: linear-gradient(45deg, rgba(13, 148, 136, 0.15) 0%, transparent 60%);
+                transform-origin: 0% 0%;
+                animation: radar-sweep 5s linear infinite;
+                pointer-events: none;
+                border-radius: 0 100% 0 0;
+              }
+              .radar-circle {
+                border: 1px dashed rgba(13, 148, 136, 0.2);
+                border-radius: 50%;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+              }
+              .animate-ping-slow {
+                animation: ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+              }
+            `}</style>
+
+            {/* Immersive Floating Order Detail Card inside map */}
+            <AnimatePresence>
+              {selectedRadarOrder && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto md:max-w-sm z-[1000] rounded-3xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl p-5 shadow-2xl flex flex-col gap-3"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-teal-500 bg-teal-500/10 px-2.5 py-0.5 rounded-full">
+                        Pedido de Farmacia
+                      </span>
+                      <h4 className="text-sm font-black text-foreground mt-1.5">
+                        {selectedRadarOrder.pharmacy?.name || 'Farmacia Oasis'}
+                      </h4>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-muted-foreground block">Ganancia Est.</span>
+                      <span className="text-base font-black text-emerald-500">
+                        {formatCurrency(selectedRadarOrder.deliveryFee || 60)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <hr className="border-slate-100 dark:border-white/5" />
+
+                  {/* Route points */}
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="size-3.5 text-teal-500 shrink-0" />
+                      <span className="truncate"><strong>Desde:</strong> {selectedRadarOrder.pharmacy?.address || 'Managua, Nicaragua'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Target className="size-3.5 text-rose-500 shrink-0" />
+                      <span className="truncate"><strong>Hacia:</strong> {selectedRadarOrder.deliveryAddress || 'Dirección de entrega'}</span>
+                    </div>
+                  </div>
+
+                  {/* Medicine list preview */}
+                  {selectedRadarOrder.items && selectedRadarOrder.items.length > 0 && (
+                    <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-2.5">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1">Medicamentos a entregar</p>
+                      <div className="max-h-16 overflow-y-auto space-y-1 pr-1">
+                        {selectedRadarOrder.items.map((item: any, index: number) => (
+                          <div key={index} className="flex justify-between text-[11px] font-semibold text-foreground">
+                            <span className="truncate">{item.name}</span>
+                            <span className="text-muted-foreground">x{item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      onClick={(e) => {
+                        handleAccept(e, selectedRadarOrder.id);
+                        setSelectedRadarOrder(null);
+                      }}
+                      className="flex-1 h-10 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] font-black uppercase tracking-wider shadow-lg shadow-emerald-500/10 cursor-pointer flex items-center justify-center gap-2 border-0"
+                    >
+                      <Check className="size-3.5" /> Aceptar Pedido
+                    </button>
+                    <button
+                      onClick={() => setSelectedRadarOrder(null)}
+                      className="px-3.5 h-10 rounded-2xl bg-slate-100 dark:bg-white/5 text-muted-foreground hover:text-foreground text-[10px] font-black uppercase cursor-pointer transition-colors border-0"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Column 1: Available Freelance Orders */}
       <div className="col-span-12 lg:col-span-6 space-y-4">

@@ -36,24 +36,36 @@ export async function list(params?: DeliveryListParams): Promise<PaginatedRespon
 
 /** Get delivery order by ID */
 export async function getById(id: string): Promise<DeliveryOrder> {
+  if (!id) {
+    throw new Error('ID de pedido requerido');
+  }
   const result = await get<DeliveryOrder>(`/delivery-orders/${id}`);
   return result.data;
 }
 
 /** Update delivery status */
 export async function updateStatus(id: string, data: UpdateDeliveryStatusRequest): Promise<DeliveryOrder> {
+  if (!id) {
+    throw new Error('ID de pedido requerido para actualizar estado');
+  }
   const result = await patch<DeliveryOrder>(`/delivery-orders/${id}/status`, data);
   return result.data;
 }
 
 /** Assign a driver to a delivery order */
 export async function assignDriver(id: string, data: AssignDriverRequest): Promise<DeliveryOrder> {
+  if (!id) {
+    throw new Error('ID de pedido requerido para asignar repartidor');
+  }
   const result = await patch<DeliveryOrder>(`/delivery-orders/${id}/assign`, data);
   return result.data;
 }
 
 /** Get delivery route */
 export async function getRoute(id: string): Promise<DeliveryRoute> {
+  if (!id) {
+    throw new Error('ID de pedido requerido para obtener ruta');
+  }
   const result = await get<DeliveryRoute>(`/delivery-orders/${id}/route`);
   return result.data;
 }

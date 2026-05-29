@@ -353,24 +353,27 @@ export function MapViewInner({
         if (!coords || coords.length < 2) return;
         if (!map || typeof map.getPanes !== 'function' || !map.getPanes()) return;
 
-        // Draw beautiful, logical street-aware polyline following roads
-        const polyline = L.polyline(coords, {
-          color: '#0d9488', // Teal-600
-          weight: 5,
-          opacity: 0.85,
-          lineJoin: 'round',
-          lineCap: 'round',
-        }).addTo(map);
+        // Draw polyline road routing safely when Leaflet map is fully initialized
+        map.whenReady(() => {
+          if (!mapRef.current) return;
+          try {
+            const polyline = L.polyline(coords!, {
+              color: '#0d9488', // Teal-600
+              weight: 5,
+              opacity: 0.85,
+              lineJoin: 'round',
+              lineCap: 'round',
+            }).addTo(mapRef.current);
 
-        routeLineRef.current = polyline;
+            routeLineRef.current = polyline;
 
-        // Adjust map view bounding box to fit the route perfectly
-        try {
-          const bounds = L.latLngBounds(coords);
-          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
-        } catch (err) {
-          console.warn('⚠️ MapViewInner: fitBounds failed:', err);
-        }
+            // Adjust bounding box to frame coordinates perfectly
+            const bounds = L.latLngBounds(coords!);
+            mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+          } catch (err) {
+            console.warn('⚠️ MapViewInner: Drawing in whenReady callback failed:', err);
+          }
+        });
       } catch (err) {
         console.warn('⚠️ MapViewInner: Error drawing route:', err);
       }
