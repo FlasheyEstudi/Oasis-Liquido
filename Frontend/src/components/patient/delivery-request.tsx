@@ -33,6 +33,7 @@ import {
   StickyNote,
   CheckCircle2,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import type { InventoryItem } from '@/types';
 

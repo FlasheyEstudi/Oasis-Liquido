@@ -40,6 +40,12 @@ import {
   Activity,
   Heart,
   ChevronRight,
+  Building2,
+  MapPin,
+  ShieldCheck,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -106,6 +112,50 @@ export function ProfileScreen() {
 
   // QR Zoom State
   const [isQrZoomed, setIsQrZoomed] = useState(false);
+
+  // Doctor signature PIN management
+  const [showPinPanel, setShowPinPanel] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [pinPassword, setPinPassword] = useState('');
+  const [pinSaveError, setPinSaveError] = useState('');
+  const [pinSaveLoading, setPinSaveLoading] = useState(false);
+  const [pinSaveSuccess, setPinSaveSuccess] = useState(false);
+  const [showPinValue, setShowPinValue] = useState(false);
+  const hasPin = !!(profile?.doctor_profile?.signature_pin ?? (profile as any)?.doctor_profile?.signaturePin);
+
+  const handleSavePin = async () => {
+    setPinSaveError('');
+    setPinSaveSuccess(false);
+    if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+      setPinSaveError('El PIN debe ser exactamente 4 dígitos numéricos');
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setPinSaveError('Los PINs no coinciden');
+      return;
+    }
+    if (!pinPassword.trim()) {
+      setPinSaveError('Debes ingresar tu contraseña de cuenta para confirmar');
+      return;
+    }
+    setPinSaveLoading(true);
+    try {
+      const apiClient = (await import('@/api/client')).default;
+      await apiClient.post('/v1/doctor/profile/pin', { pin: newPin, password: pinPassword });
+      setPinSaveSuccess(true);
+      setNewPin('');
+      setConfirmPin('');
+      setPinPassword('');
+      setShowPinPanel(false);
+      toast.success('PIN de firma digital actualizado correctamente');
+      refetch();
+    } catch (err: any) {
+      setPinSaveError(err?.response?.data?.message || 'Error al guardar el PIN');
+    } finally {
+      setPinSaveLoading(false);
+    }
+  };
 
   // Edit mode
   const [isEditing, setIsEditing] = useState(false);
@@ -305,87 +355,273 @@ export function ProfileScreen() {
       {/* Absolute Ambient Glow */}
       <div className="absolute top-[5%] left-[-15%] size-80 bg-gradient-to-br from-teal-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      {/* Dynamic Digital Healthcare Passport */}
-      <div className="relative overflow-hidden border border-slate-200/60 dark:border-white/5 bg-white/10 dark:bg-zinc-950/20 shadow-2xl rounded-[3rem] p-6 sm:p-8 backdrop-blur-xl">
-        <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-teal-500/[0.04] to-transparent rounded-bl-full pointer-events-none" />
-        
-        {/* Verification seal */}
-        <div className="absolute -left-10 -bottom-10 size-32 rounded-full border border-teal-500/5 bg-teal-500/[0.01] pointer-events-none" />
+      {/* ── CREDENCIAL DIGITAL DIFERENCIADA POR ROL ── */}
+      <motion.div
+        initial={{ scale: 0.97, opacity: 0, y: 16 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        whileHover={{ y: -4, scale: 1.01 }}
+        transition={{ type: 'spring', stiffness: 120, damping: 14 }}
+        className={cn(
+          'relative w-full aspect-[1.586/1] rounded-[2rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.55)] select-none group',
+          role === 'doctor'          && 'border border-sky-500/25',
+          role === 'pharmacy_manager'&& 'border border-emerald-500/25',
+          role === 'delivery_driver' && 'border border-amber-500/25',
+          (!role || role === 'patient' || role === 'receptionist') && 'border border-teal-500/25'
+        )}
+      >
+        {/* ── BG GRADIENT POR ROL ── */}
+        {role === 'doctor' && <>
+          <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-sky-950/75 to-zinc-900" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(14,165,233,0.2),transparent)] pointer-events-none" />
+          <svg className="absolute inset-0 w-full h-full opacity-[0.07] stroke-sky-400 pointer-events-none" fill="none">
+            <path d="M0 100 L100 100 L120 100 L130 60 L140 140 L150 90 L160 105 L170 100 L270 100" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M270 100 L370 100 L390 100 L400 60 L410 140 L420 90 L430 105 L440 100 L540 100" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" />
+        </>}
+        {role === 'pharmacy_manager' && <>
+          <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-emerald-950/75 to-zinc-900" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(16,185,129,0.2),transparent)] pointer-events-none" />
+          <svg className="absolute inset-0 w-full h-full opacity-10 stroke-emerald-400 pointer-events-none" fill="none">
+            <pattern id="guilloche-p" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 0 20 Q 10 5, 20 20 T 40 20" strokeWidth="0.5" />
+              <path d="M 0 10 Q 10 25, 20 10 T 40 10" strokeWidth="0.5" />
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#guilloche-p)" />
+          </svg>
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+        </>}
+        {role === 'delivery_driver' && <>
+          <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-amber-950/60 to-zinc-900" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(245,158,11,0.2),transparent)] pointer-events-none" />
+          <svg className="absolute inset-0 w-full h-full opacity-[0.04] stroke-amber-400 pointer-events-none" fill="none">
+            <pattern id="telemesh-p" width="30" height="30" patternUnits="userSpaceOnUse">
+              <path d="M 0 30 L 30 0 M 15 15 L 30 30 M 0 0 L 15 15" strokeWidth="0.75" />
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#telemesh-p)" />
+          </svg>
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+        </>}
+        {(role === 'patient' || role === 'receptionist' || !role) && <>
+          <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-teal-950/70 to-zinc-900" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(20,184,166,0.22),transparent)] pointer-events-none" />
+          <div className="absolute top-1/4 right-1/4 size-32 bg-cyan-500/10 rounded-full blur-[40px] animate-pulse pointer-events-none" />
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-teal-500/40 to-transparent" />
+        </>}
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left w-full">
-            <div className="relative group/avatar">
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-teal-500 via-emerald-400 to-indigo-500 opacity-60 blur-md group-hover/avatar:opacity-80 transition-opacity animate-pulse" />
-              <div className="relative flex size-24 shrink-0 items-center justify-center rounded-full bg-white dark:bg-zinc-900 p-1 border border-slate-200 dark:border-white/10 shadow-lg">
-                <div className="flex size-full items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-sky-500 shadow-inner">
-                  <span className="text-3xl font-black text-white tracking-widest font-serif">
-                    {getInitials(name || profile.name)}
-                  </span>
+        {/* Hologram overlay */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.02] via-transparent to-white/[0.04] mix-blend-overlay pointer-events-none" />
+
+        <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between z-10">
+          {/* HEADER */}
+          <div className="flex justify-between items-center border-b border-white/10 pb-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className={cn(
+                'w-7 h-5 sm:w-9 sm:h-6 rounded-[4px] border relative shadow-md overflow-hidden flex shrink-0',
+                role === 'doctor'           && 'bg-gradient-to-br from-sky-300 via-indigo-500 to-sky-700 border-sky-400/40',
+                role === 'pharmacy_manager' && 'bg-gradient-to-br from-emerald-300 via-teal-500 to-emerald-600 border-emerald-400/40',
+                role === 'delivery_driver'  && 'bg-gradient-to-br from-amber-300 via-orange-500 to-amber-700 border-amber-400/40',
+                (role === 'patient' || !role || role === 'receptionist') && 'bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 border-amber-400/40'
+              )}>
+                <div className="grid grid-cols-3 gap-[1px] h-full w-full opacity-60 p-0.5">
+                  {[...Array(6)].map((_,i) => <div key={i} className="border-white/20" style={{borderRight: i%3!==2?'1px solid':undefined, borderBottom: i<3?'1px solid':undefined}} />)}
                 </div>
+              </div>
+              <div>
+                <h3 className={cn(
+                  'text-sm sm:text-base font-black tracking-[0.12em] uppercase leading-none',
+                  role === 'doctor'           && 'text-sky-300',
+                  role === 'pharmacy_manager' && 'text-emerald-300',
+                  role === 'delivery_driver'  && 'text-amber-400',
+                  (role === 'patient' || !role || role === 'receptionist') && 'text-teal-300'
+                )}>
+                  {role === 'doctor' && 'OASIS CLÍNICA'}
+                  {role === 'pharmacy_manager' && 'OASIS LÍQUIDA'}
+                  {role === 'delivery_driver' && 'OASIS LOGISTICS'}
+                  {(role === 'patient' || !role || role === 'receptionist') && 'OASIS LÍQUIDA'}
+                </h3>
+                <p className={cn(
+                  'text-[6px] font-mono tracking-widest uppercase mt-0.5',
+                  role === 'doctor'           && 'text-sky-400/60',
+                  role === 'pharmacy_manager' && 'text-emerald-400/60',
+                  role === 'delivery_driver'  && 'text-amber-500/60',
+                  (role === 'patient' || !role || role === 'receptionist') && 'text-teal-400/60'
+                )}>
+                  {role === 'doctor' && 'CREDENCIAL MÉDICA OFICIAL'}
+                  {role === 'pharmacy_manager' && 'CREDENCIAL DE ESTABLECIMIENTO'}
+                  {role === 'delivery_driver' && 'ACREDITACIÓN LOGÍSTICA CRÍTICA'}
+                  {(role === 'patient' || !role || role === 'receptionist') && 'PASAPORTE DIGITAL DE SALUD'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {role === 'delivery_driver' && <span className="size-2 rounded-full bg-emerald-500 animate-ping shrink-0" />}
+              <span className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[7px] font-black tracking-widest border uppercase animate-pulse',
+                role === 'doctor'           && 'bg-sky-500/15 text-sky-400 border-sky-500/30',
+                role === 'pharmacy_manager' && 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                role === 'delivery_driver'  && 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+                (role === 'patient' || !role || role === 'receptionist') && 'bg-teal-500/15 text-teal-400 border-teal-500/30'
+              )}>MINSA ✓</span>
+            </div>
+          </div>
+
+          {/* BODY */}
+          <div className="grid grid-cols-12 gap-3 items-center my-auto py-1">
+            {/* Avatar / Icon */}
+            <div className="col-span-3 flex justify-start">
+              <div className={cn(
+                'relative size-14 sm:size-18 rounded-xl bg-zinc-950/90 border flex items-center justify-center overflow-hidden shadow-lg group-hover:opacity-90 transition-opacity',
+                role === 'doctor'           && 'border-sky-500/40 shadow-sky-500/20',
+                role === 'pharmacy_manager' && 'border-emerald-500/40 shadow-emerald-500/20',
+                role === 'delivery_driver'  && 'border-amber-500/40 shadow-amber-500/20',
+                (role === 'patient' || !role || role === 'receptionist') && 'border-teal-500/40 shadow-teal-500/20'
+              )}>
+                {role === 'doctor' && <Stethoscope className="size-7 text-sky-400/60 animate-pulse" />}
+                {role === 'pharmacy_manager' && <Building2 className="size-7 text-emerald-400/60" />}
+                {role === 'delivery_driver' && <Car className="size-7 text-amber-400/60" />}
+                {(role === 'patient' || !role || role === 'receptionist') && <UserIcon className="size-7 text-teal-400/60" />}
+                <div className={cn(
+                  'absolute left-0 top-0 w-full h-[1px] bg-gradient-to-r from-transparent to-transparent animate-scan pointer-events-none',
+                  role === 'doctor'           && 'via-sky-400 shadow-[0_0_6px_#38bdf8]',
+                  role === 'pharmacy_manager' && 'via-emerald-400 shadow-[0_0_6px_#10b981]',
+                  role === 'delivery_driver'  && 'via-amber-400 shadow-[0_0_6px_#f59e0b]',
+                  (role === 'patient' || !role || role === 'receptionist') && 'via-teal-400 shadow-[0_0_6px_#2dd4bf]'
+                )} />
               </div>
             </div>
 
-            <div className="min-w-0 space-y-2 flex-1">
+            {/* Data Fields */}
+            <div className="col-span-9 space-y-2 pl-2 sm:pl-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-805 dark:text-white tracking-tight leading-tight flex items-center justify-center sm:justify-start gap-2">
-                  <span>{profile.name}</span>
-                  {!isEditing && (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="rounded-full p-1 bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all"
-                    >
-                      <Pencil className="size-3.5" />
-                    </button>
-                  )}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-zinc-450 mt-1 font-semibold truncate max-w-[220px] sm:max-w-xs mx-auto sm:mx-0">
-                  {profile.email}
+                <p className={cn(
+                  'text-[6px] font-bold tracking-[0.2em] uppercase font-mono',
+                  role === 'doctor'           && 'text-sky-400/50',
+                  role === 'pharmacy_manager' && 'text-emerald-400/50',
+                  role === 'delivery_driver'  && 'text-amber-400/50',
+                  (role === 'patient' || !role || role === 'receptionist') && 'text-teal-400/50'
+                )}>
+                  {role === 'doctor' && 'PROFESIONAL DE MEDICINA / PHYSICIAN'}
+                  {role === 'pharmacy_manager' && 'FARMACIA CERTIFICADA / FACILITY'}
+                  {role === 'delivery_driver' && 'REPARTIDOR AUTORIZADO / COURIER'}
+                  {(role === 'patient' || !role || role === 'receptionist') && 'TITULAR DE SALUD / CITIZEN'}
                 </p>
+                <p className="text-sm sm:text-base font-black text-white uppercase tracking-wide leading-none mt-0.5 truncate">{profile.name}</p>
+              </div>
+              {/* ROW A */}
+              <div className="grid grid-cols-2 gap-2">
+                {role === 'doctor' && (<>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-sky-400/50">COLEGIADO N°</p>
+                    <p className="text-[9px] font-black font-mono text-zinc-200 uppercase tracking-wider mt-0.5">{profile.doctor_profile?.license_number || profile.id.slice(0,8).toUpperCase()}</p>
+                  </div>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-sky-400/50">ESPECIALIDAD</p>
+                    <p className="text-[9px] font-black text-sky-300 uppercase tracking-widest mt-0.5 truncate">{profile.doctor_profile?.specialty || 'Medicina General'}</p>
+                  </div>
+                </>)}
+                {role === 'pharmacy_manager' && (<>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-emerald-400/50">CÓD. REGISTRO</p>
+                    <p className="text-[9px] font-black font-mono text-zinc-200 uppercase tracking-wider mt-0.5">{profile.id.slice(0,10).toUpperCase()}</p>
+                  </div>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-emerald-400/50">ESTABLECIMIENTO</p>
+                    <p className="text-[9px] font-black text-emerald-300 uppercase tracking-wider mt-0.5 truncate">{profile.pharmacy_manager_profile?.pharmacy?.name || 'Farmacia Oasis'}</p>
+                  </div>
+                </>)}
+                {role === 'delivery_driver' && (<>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-amber-400/50">ID LOGÍSTICA</p>
+                    <p className="text-[9px] font-black font-mono text-zinc-200 uppercase tracking-wider mt-0.5">{profile.id.slice(0,10).toUpperCase()}</p>
+                  </div>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-amber-400/50">TIPO VEHÍCULO</p>
+                    <p className="text-[9px] font-black text-amber-300 uppercase tracking-wider mt-0.5">{profile.delivery_driver_profile?.vehicle_type || vehicleType}</p>
+                  </div>
+                </>)}
+                {(role === 'patient' || !role || role === 'receptionist') && (<>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-teal-400/50">EXPEDIENTE ID</p>
+                    <p className="text-[9px] font-black font-mono text-zinc-200 uppercase tracking-wider mt-0.5">{profile.id.slice(0,10).toUpperCase()}</p>
+                  </div>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-teal-400/50">GRUPO SANGUÍNEO</p>
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30 font-mono font-black text-[9px] mt-0.5">
+                      <span className="size-1.5 rounded-full bg-red-500 animate-pulse" />
+                      {profile.patient_profile?.blood_type || 'N/A'}
+                    </div>
+                  </div>
+                </>)}
               </div>
 
-              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                <span className={cn(
-                  'text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm',
-                  roleConfig?.bg,
-                  roleConfig?.text,
-                  roleConfig?.border
-                )}>
-                  {ROLE_LABELS[role]}
-                </span>
-                
-                {role === 'patient' && (
-                  <span className="text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-sm flex items-center gap-1">
-                    <CheckCircle2 className="size-2.5 text-emerald-500" />
-                    <span>MINSA Certificado</span>
-                  </span>
-                )}
+              {/* ROW B — campo exclusivo #3 por rol */}
+              <div className="grid grid-cols-2 gap-2 border-t border-white/[0.07] pt-1.5">
+                {role === 'doctor' && (<>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-sky-400/50">CLÍNICA BASE</p>
+                    <p className="text-[9px] font-black text-sky-300 uppercase tracking-wider mt-0.5 truncate">{profile.doctor_profile?.clinic?.name || 'Centro Clínico Oasis'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-sky-400/50">ESTATUS</p>
+                    <p className="text-[9px] font-black text-emerald-400 uppercase mt-0.5">ACTIVO</p>
+                  </div>
+                </>)}
+                {role === 'pharmacy_manager' && (<>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-emerald-400/50">DIRECCIÓN</p>
+                    <p className="text-[9px] font-black text-zinc-300 uppercase tracking-wider mt-0.5 truncate">{profile.pharmacy_manager_profile?.pharmacy?.address || 'Nicaragua'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-emerald-400/50">ESTATUS</p>
+                    <p className="text-[9px] font-black text-emerald-400 uppercase mt-0.5">VIGENTE</p>
+                  </div>
+                </>)}
+                {role === 'delivery_driver' && (<>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-amber-400/50">PLACA N°</p>
+                    <div className="inline-flex items-center justify-center px-2 py-0.5 bg-gradient-to-b from-yellow-300 to-yellow-500 text-zinc-950 font-mono font-black text-[9px] rounded border border-yellow-600 mt-0.5">
+                      {profile.delivery_driver_profile?.license_plate || licensePlate || 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-amber-400/50">BASE DESPACHO</p>
+                    <p className="text-[9px] font-black text-zinc-300 uppercase tracking-wider mt-0.5 truncate">{profile.delivery_driver_profile?.pharmacy?.name || 'Oasis Aura'}</p>
+                  </div>
+                </>)}
+                {(role === 'patient' || !role || role === 'receptionist') && (<>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-teal-400/50">ALERGIAS</p>
+                    <p className={cn('text-[9px] font-black uppercase tracking-wider mt-0.5', (profile.patient_profile?.allergies?.length ?? 0) > 0 ? 'text-amber-400 animate-pulse' : 'text-emerald-400')}>
+                      {(profile.patient_profile?.allergies?.length ?? 0) > 0 ? 'SÍ REGISTRA' : 'NINGUNA'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-teal-400/50">EMISIÓN</p>
+                    <p className="text-[9px] font-black font-mono text-zinc-300 mt-0.5">
+                      {profile.created_at ? new Date(profile.created_at).toLocaleDateString('es-NI') : '—'}
+                    </p>
+                  </div>
+                </>)}
               </div>
             </div>
           </div>
 
-          <button 
-            onClick={() => setIsQrZoomed(true)}
-            className="cursor-pointer active:scale-95 hover:scale-[1.03] transition-all relative flex flex-col items-center p-3 rounded-[2rem] bg-slate-500/[0.03] dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 w-full sm:w-auto shrink-0 shadow-inner"
-          >
-            <div className="relative rounded-2xl bg-white p-2 border border-zinc-200/50 shadow-md">
-              <QrCode 
-                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/pasaporte/${profile.id}`} 
-                size={70} 
-                label="VER ID"
-                showValue={false}
-                className="!p-0"
-              />
-              <div className="absolute top-0.5 left-0.5 size-3 border-t-2 border-l-2 border-teal-500" />
-              <div className="absolute top-0.5 right-0.5 size-3 border-t-2 border-r-2 border-teal-500" />
-              <div className="absolute bottom-0.5 left-0.5 size-3 border-b-2 border-l-2 border-teal-500" />
-              <div className="absolute bottom-0.5 right-0.5 size-3 border-b-2 border-r-2 border-teal-500" />
+          {/* FOOTER */}
+          <div className="flex justify-between items-end border-t border-white/10 pt-2">
+            <div className="font-mono text-[6px] text-zinc-500 tracking-wider">
+              {role === 'doctor' ? 'DOC' : role === 'pharmacy_manager' ? 'EST' : role === 'delivery_driver' ? 'DEL' : 'PAC'}-SEC: {profile.id.slice(0,20).toUpperCase()}
             </div>
-            <span className="mt-2 text-[8px] font-black tracking-widest text-teal-655 dark:text-teal-400 uppercase flex items-center gap-1">
-              Pasaporte QR <ChevronRight className="size-2.5 animate-pulse" />
-            </span>
-          </button>
+            <button
+              onClick={() => setIsQrZoomed(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/10 transition text-[8px] font-black text-zinc-300 uppercase tracking-widest cursor-pointer"
+            >
+              <QrCode value={`${typeof window !== 'undefined' ? window.location.origin : ''}/pasaporte/${profile.id}`} size={22} label="" showValue={false} className="!p-0 rounded" />
+              VER QR
+            </button>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Forms & telemetries */}
       <AnimatePresence mode="wait">
@@ -656,6 +892,137 @@ export function ProfileScreen() {
                     <p className="text-sm font-mono font-bold text-foreground mt-0.5">{profile.doctor_profile?.license_number || 'MINSA-99120'}</p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* ── DOCTOR: Firma Digital PIN ── */}
+            {role === 'doctor' && (
+              <div className="p-5 rounded-[2rem] border border-sky-500/20 dark:border-sky-500/10 bg-sky-500/[0.02] dark:bg-sky-950/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-sky-600 dark:text-sky-400 flex items-center gap-2">
+                    <KeyRound className="size-4" /> Firma Digital de Recetas
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {pinSaveSuccess && (
+                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-wider flex items-center gap-1">
+                        <CheckCircle2 className="size-3" /> Actualizado
+                      </span>
+                    )}
+                    <span className={cn(
+                      'text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border',
+                      hasPin
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 animate-pulse'
+                    )}>
+                      {hasPin ? '● PIN Configurado' : '⚠ Sin PIN'}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-relaxed">
+                  Tu PIN de 4 dígitos es requerido cada vez que emites una receta médica digital. Actúa como tu sello legal de prescripción.
+                </p>
+
+                {!showPinPanel ? (
+                  <button
+                    onClick={() => { setShowPinPanel(true); setPinSaveError(''); setPinSaveSuccess(false); }}
+                    className="w-full h-10 rounded-2xl border border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-black uppercase tracking-widest hover:bg-sky-500/20 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <KeyRound className="size-3.5" />
+                    {hasPin ? 'Cambiar PIN de Firma' : 'Configurar PIN de Firma'}
+                  </button>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-3 pt-2 border-t border-sky-500/10"
+                  >
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+                          {hasPin ? 'Nuevo PIN' : 'Crear PIN'} (4 dígitos)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPinValue ? 'text' : 'password'}
+                            inputMode="numeric"
+                            maxLength={4}
+                            value={newPin}
+                            onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                            placeholder="••••"
+                            className="glass-input rounded-xl w-full px-4 py-2.5 text-sm font-mono font-black bg-white/5 border border-sky-500/20 tracking-[0.5em] text-center"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPinValue(v => !v)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showPinValue ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400">Confirmar PIN</label>
+                        <input
+                          type="password"
+                          inputMode="numeric"
+                          maxLength={4}
+                          value={confirmPin}
+                          onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                          placeholder="••••"
+                          className={cn(
+                            'glass-input rounded-xl w-full px-4 py-2.5 text-sm font-mono font-black bg-white/5 border tracking-[0.5em] text-center',
+                            confirmPin && newPin !== confirmPin ? 'border-red-500/40' : 'border-sky-500/20'
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-wider text-slate-400">Contraseña de tu cuenta (confirmación)</label>
+                      <input
+                        type="password"
+                        value={pinPassword}
+                        onChange={(e) => setPinPassword(e.target.value)}
+                        placeholder="Tu contraseña de acceso"
+                        className="glass-input rounded-xl w-full px-4 py-2.5 text-xs bg-white/5 border border-sky-500/20"
+                      />
+                    </div>
+
+                    {pinSaveError && (
+                      <p className="text-[10px] text-red-400 font-bold flex items-center gap-1">
+                        <AlertCircle className="size-3 shrink-0" /> {pinSaveError}
+                      </p>
+                    )}
+
+                    {/* PIN strength indicator */}
+                    <div className="flex gap-1">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className={cn(
+                          'flex-1 h-1 rounded-full transition-all',
+                          newPin.length > i ? 'bg-sky-500' : 'bg-white/10'
+                        )} />
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSavePin}
+                        disabled={pinSaveLoading || newPin.length !== 4 || newPin !== confirmPin || !pinPassword}
+                        className="flex-1 h-10 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      >
+                        {pinSaveLoading ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
+                        {hasPin ? 'Actualizar PIN' : 'Guardar PIN'}
+                      </button>
+                      <button
+                        onClick={() => { setShowPinPanel(false); setNewPin(''); setConfirmPin(''); setPinPassword(''); setPinSaveError(''); }}
+                        className="px-4 h-10 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-500 text-[10px] font-black uppercase tracking-widest border border-white/5 transition-colors cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
               </div>
             )}
 
