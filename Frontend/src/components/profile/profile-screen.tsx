@@ -33,6 +33,11 @@ import {
   Clock,
   XCircle,
   AlertCircle,
+  Zap,
+  Leaf,
+  Sparkles,
+  Bike,
+  Route,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -54,6 +59,12 @@ export function ProfileScreen() {
   const [bloodType, setBloodType] = useState('');
   const [allergies, setAllergies] = useState('');
   const [medicalNotes, setMedicalNotes] = useState('');
+
+  // Delivery Driver fields
+  const [vehicleType, setVehicleType] = useState('Motocicleta');
+  const [licensePlate, setLicensePlate] = useState('M 104-582');
+  const [vehicleBrand, setVehicleBrand] = useState('Suzuki AX100');
+  const [insuranceStatus, setInsuranceStatus] = useState('Vigente');
 
   // Change password
   const [currentPassword, setCurrentPassword] = useState('');
@@ -108,6 +119,26 @@ export function ProfileScreen() {
       setAllergies(profile.patient_profile.allergies?.join(', ') || '');
       setMedicalNotes(profile.patient_profile.medical_notes || '');
     }
+    if (profile.role === 'delivery_driver') {
+      if (profile.delivery_driver_profile) {
+        setVehicleType(profile.delivery_driver_profile.vehicle_type || 'Motocicleta');
+        setLicensePlate(profile.delivery_driver_profile.license_plate || 'M 104-582');
+      }
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem('oasis_driver_profile');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed.vehicleType) setVehicleType(parsed.vehicleType);
+            if (parsed.licensePlate) setLicensePlate(parsed.licensePlate);
+            if (parsed.vehicleBrand) setVehicleBrand(parsed.vehicleBrand);
+            if (parsed.insuranceStatus) setInsuranceStatus(parsed.insuranceStatus);
+          }
+        } catch (e) {
+          console.warn('Error reading driver profile cache:', e);
+        }
+      }
+    }
     setInitialized(true);
   }
 
@@ -143,7 +174,33 @@ export function ProfileScreen() {
         });
       }
 
-      setUser({ ...updatedUser, role: profile.role });
+      const finalUser = {
+        ...updatedUser,
+        role: profile.role,
+      };
+
+      if (profile.role === 'delivery_driver') {
+        finalUser.delivery_driver_profile = {
+          user_id: profile.id,
+          vehicle_type: vehicleType,
+          license_plate: licensePlate.toUpperCase(),
+          is_available: profile.delivery_driver_profile?.is_available ?? true,
+          pharmacy_id: profile.delivery_driver_profile?.pharmacy_id,
+          current_lat: profile.delivery_driver_profile?.current_lat,
+          current_lng: profile.delivery_driver_profile?.current_lng,
+        };
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('oasis_driver_profile', JSON.stringify({
+            vehicleType,
+            licensePlate: licensePlate.toUpperCase(),
+            vehicleBrand,
+            insuranceStatus,
+          }));
+        }
+      }
+
+      setUser(finalUser);
       setNotification({ type: 'success', message: 'Perfil actualizado correctamente' });
       setIsEditing(false);
     } catch (err) {
@@ -160,6 +217,24 @@ export function ProfileScreen() {
         setBloodType(profile.patient_profile.blood_type || '');
         setAllergies(profile.patient_profile.allergies?.join(', ') || '');
         setMedicalNotes(profile.patient_profile.medical_notes || '');
+      }
+      if (profile.role === 'delivery_driver') {
+        if (profile.delivery_driver_profile) {
+          setVehicleType(profile.delivery_driver_profile.vehicle_type || 'Motocicleta');
+          setLicensePlate(profile.delivery_driver_profile.license_plate || 'M 104-582');
+        }
+        if (typeof window !== 'undefined') {
+          try {
+            const cached = localStorage.getItem('oasis_driver_profile');
+            if (cached) {
+              const parsed = JSON.parse(cached);
+              if (parsed.vehicleType) setVehicleType(parsed.vehicleType);
+              if (parsed.licensePlate) setLicensePlate(parsed.licensePlate);
+              if (parsed.vehicleBrand) setVehicleBrand(parsed.vehicleBrand);
+              if (parsed.insuranceStatus) setInsuranceStatus(parsed.insuranceStatus);
+            }
+          } catch (e) {}
+        }
       }
     }
     setIsEditing(false);
@@ -222,9 +297,9 @@ export function ProfileScreen() {
   const isSaving = updateMeMutation.isPending || updatePatientMutation.isPending;
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto p-4 md:p-6">
+    <div className="delivery-container space-y-4 sm:space-y-6 !max-w-2xl">
       {/* Profile Header Card — Premium 2026 Digital Healthcare Credential */}
-      <GlassCard className="relative overflow-hidden !p-6 sm:!p-8 border border-slate-200 dark:border-white/5 bg-white dark:bg-zinc-950/20 shadow-2xl rounded-[2.5rem]">
+      <GlassCard className="relative overflow-hidden !p-6 sm:!p-8 border border-slate-200 dark:border-white/5 bg-white dark:bg-zinc-950/20 shadow-2xl rounded-[2.5rem] no-card-mobile">
         {/* Watermark badge of verified Minsa inside the card */}
         <div className="absolute -right-10 -bottom-10 size-32 rounded-full bg-teal-500/[0.02] dark:bg-teal-500/[0.01] border border-teal-500/5 rotate-12 pointer-events-none select-none" />
 
@@ -328,7 +403,7 @@ export function ProfileScreen() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <GlassCard>
+            <GlassCard className="no-card-mobile">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                   <UserIcon className="size-4 text-teal-600 dark:text-teal-400" />
@@ -448,6 +523,69 @@ export function ProfileScreen() {
                         disabled={isSaving}
                         className="glass-input rounded-xl w-full px-4 py-2.5 text-sm resize-none"
                       />
+                    </div>
+                  </>
+                )}
+
+                {/* Delivery Driver specific edit fields */}
+                {role === 'delivery_driver' && (
+                  <>
+                    <div className="pt-4 border-t border-slate-200/50 dark:border-white/5">
+                      <h4 className="text-sm font-black text-foreground flex items-center gap-2 mb-3 uppercase tracking-wider">
+                        <Car className="size-4 text-teal-650 dark:text-teal-400" />
+                        Configuración de Vehículo
+                      </h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tipo de Vehículo</label>
+                      <select
+                        value={vehicleType}
+                        onChange={(e) => setVehicleType(e.target.value)}
+                        disabled={isSaving}
+                        className="glass-input rounded-xl w-full px-4 py-2.5 text-sm bg-background text-foreground border border-slate-200/50 dark:border-white/5"
+                      >
+                        <option value="Motocicleta">Motocicleta</option>
+                        <option value="Automóvil">Automóvil</option>
+                        <option value="Bicicleta">Bicicleta</option>
+                        <option value="Vehículo Eléctrico">Vehículo Eléctrico</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Marca / Modelo del Vehículo</label>
+                      <input
+                        value={vehicleBrand}
+                        onChange={(e) => setVehicleBrand(e.target.value)}
+                        placeholder="Ej. Suzuki AX100 o Yamaha FZ"
+                        disabled={isSaving}
+                        className="glass-input rounded-xl w-full px-4 py-2.5 text-sm border border-slate-200/50 dark:border-white/5"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Placas de Tránsito</label>
+                      <input
+                        value={licensePlate}
+                        onChange={(e) => setLicensePlate(e.target.value)}
+                        placeholder="Ej. M 184-921"
+                        disabled={isSaving}
+                        className="glass-input rounded-xl w-full px-4 py-2.5 text-sm font-mono uppercase border border-slate-200/50 dark:border-white/5"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Estado del Seguro Vehicular</label>
+                      <select
+                        value={insuranceStatus}
+                        onChange={(e) => setInsuranceStatus(e.target.value)}
+                        disabled={isSaving}
+                        className="glass-input rounded-xl w-full px-4 py-2.5 text-sm bg-background text-foreground border border-slate-200/50 dark:border-white/5"
+                      >
+                        <option value="Vigente">Vigente (Aprobado)</option>
+                        <option value="En Renovación">En Renovación</option>
+                        <option value="Vencido">Vencido (Atención)</option>
+                      </select>
                     </div>
                   </>
                 )}
@@ -863,45 +1001,205 @@ export function ProfileScreen() {
 
           {/* Delivery Driver info */}
           {role === 'delivery_driver' && profile.delivery_driver_profile && (
-            <GlassCard>
-              <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
-                <Car className="size-4 text-amber-600 dark:text-amber-400" />
-                Información de Conductor
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 rounded-2xl glass">
-                  <Car className="size-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">Tipo de vehículo</p>
-                    <p className="text-sm font-medium text-foreground">{profile.delivery_driver_profile.vehicle_type || 'N/A'}</p>
+            <div className="space-y-6">
+              {/* Telemetry Vehicle Sheet */}
+              <GlassCard className="relative overflow-hidden border border-teal-500/10 dark:border-teal-400/10 bg-slate-50 dark:bg-zinc-950/40 shadow-xl rounded-[2.2rem] no-card-mobile">
+                {/* Background Grid Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ea5e908_1px,transparent_1px),linear-gradient(to_bottom,#0ea5e908_1px,transparent_1px)] bg-[size:1.5rem_1.5rem]" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-base font-black text-foreground flex items-center gap-2.5 uppercase tracking-wider">
+                      <Car className="size-4.5 text-teal-600 dark:text-teal-400" />
+                      Ficha de Telemetría Vehicular
+                    </h3>
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-teal-500/10 text-teal-650 dark:text-teal-400 border border-teal-500/20">
+                      <Shield className="size-3" /> {insuranceStatus}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Vehicle Type Card */}
+                    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-white/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 backdrop-blur-md shadow-sm">
+                      <div className="size-11 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-605 dark:text-teal-400">
+                        {vehicleType === 'Bicicleta' ? <Bike className="size-5.5" /> : <Car className="size-5.5" />}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tipo de Vehículo</p>
+                        <p className="text-sm font-black text-foreground">{vehicleType}</p>
+                      </div>
+                    </div>
+
+                    {/* License Plate Card */}
+                    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-white/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 backdrop-blur-md shadow-sm">
+                      <div className="size-11 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400">
+                        <Hash className="size-5.5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Placas Oficiales</p>
+                        <p className="text-sm font-mono font-black text-foreground tracking-wider">{licensePlate}</p>
+                      </div>
+                    </div>
+
+                    {/* Brand Card */}
+                    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-white/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 backdrop-blur-md shadow-sm">
+                      <div className="size-11 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                        <Sparkles className="size-5.5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Marca / Modelo</p>
+                        <p className="text-sm font-black text-foreground truncate max-w-[150px]">{vehicleBrand}</p>
+                      </div>
+                    </div>
+
+                    {/* Status Card */}
+                    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-white/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 backdrop-blur-md shadow-sm">
+                      <div className={cn(
+                        "size-11 rounded-xl flex items-center justify-center transition-colors duration-300",
+                        profile.delivery_driver_profile.is_available 
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      )}>
+                        <div className={cn(
+                          "size-2.5 rounded-full animate-pulse",
+                          profile.delivery_driver_profile.is_available ? "bg-emerald-500" : "bg-amber-500"
+                        )} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Disponibilidad</p>
+                        <p className="text-sm font-black text-foreground">
+                          {profile.delivery_driver_profile.is_available ? 'Disponible en Radar' : 'Fuera de Servicio'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-2xl glass">
-                  <Hash className="size-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">Placas</p>
-                    <p className="text-sm font-medium text-foreground">{profile.delivery_driver_profile.license_plate || 'N/A'}</p>
-                  </div>
+              </GlassCard>
+
+              {/* Historical Telemetry stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                <div className="p-3.5 rounded-[1.3rem] sm:rounded-[1.8rem] bg-teal-500/5 border border-teal-500/10 dark:border-teal-500/5 text-center shadow-inner relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-teal-500/0 via-teal-500/0 to-teal-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <p className="text-[9px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-widest">Entregas</p>
+                  <p className="text-xl font-black text-foreground tracking-tight mt-1">128</p>
+                  <span className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5 block">Completadas</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-2xl glass">
-                  <div className={cn(
-                    'size-3 rounded-full',
-                    profile.delivery_driver_profile.is_available ? 'bg-emerald-500' : 'bg-amber-500',
-                  )} />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {profile.delivery_driver_profile.is_available ? 'Disponible para entregas' : 'No disponible'}
-                    </p>
-                  </div>
+ 
+                <div className="p-3.5 rounded-[1.3rem] sm:rounded-[1.8rem] bg-sky-500/5 border border-sky-500/10 dark:border-sky-500/5 text-center shadow-inner relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-sky-500/0 via-sky-500/0 to-sky-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <p className="text-[9px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">Distancia</p>
+                  <p className="text-xl font-black text-foreground tracking-tight mt-1">842</p>
+                  <span className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5 block">Kilómetros</span>
+                </div>
+ 
+                <div className="p-3.5 rounded-[1.3rem] sm:rounded-[1.8rem] bg-indigo-500/5 border border-indigo-500/10 dark:border-indigo-500/5 text-center shadow-inner relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-indigo-500/0 to-indigo-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <p className="text-[9px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">Calificación</p>
+                  <p className="text-xl font-black text-foreground tracking-tight mt-1">4.96</p>
+                  <span className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5 block">Estrellas ★</span>
+                </div>
+ 
+                <div className="p-3.5 rounded-[1.3rem] sm:rounded-[1.8rem] bg-emerald-500/5 border border-emerald-500/10 dark:border-emerald-500/5 text-center shadow-inner relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Planeta</p>
+                  <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight mt-1 flex items-center justify-center gap-0.5">
+                    <Leaf className="size-4 animate-bounce" /> 45.2
+                  </p>
+                  <span className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5 block">KG CO2 Salvo</span>
                 </div>
               </div>
-            </GlassCard>
+
+              {/* RPG Achievements & Gamification Badges */}
+              <GlassCard className="relative overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-xl rounded-[2.2rem] no-card-mobile">
+                <h3 className="text-base font-black text-foreground flex items-center gap-2 mb-5 uppercase tracking-wider">
+                  <Award className="size-4.5 text-amber-600 dark:text-amber-400 animate-pulse" />
+                  Insignias y Logros de Reparto
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Badge 1: Tornado Veloz */}
+                  <div className="relative group p-4 rounded-2xl bg-gradient-to-br from-amber-500/[0.04] to-orange-500/[0.04] border border-amber-500/10 hover:border-amber-500/30 transition-all duration-300">
+                    <div className="flex items-center gap-3">
+                      <div className="size-11 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-md">
+                        <Zap className="size-5.5 text-amber-500 animate-bounce" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">Tornado Veloz</span>
+                          <span className="text-[8px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 font-extrabold uppercase tracking-widest">Nivel 3</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Entregas urgentes de medicamentos completadas en menos de 20 minutos.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Badge 2: Escudo Oasis */}
+                  <div className="relative group p-4 rounded-2xl bg-gradient-to-br from-teal-500/[0.04] to-emerald-500/[0.04] border border-teal-500/10 hover:border-teal-500/30 transition-all duration-300">
+                    <div className="flex items-center gap-3">
+                      <div className="size-11 rounded-xl bg-teal-500/10 text-teal-650 dark:text-teal-400 flex items-center justify-center shadow-md">
+                        <Shield className="size-5.5 text-teal-500" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-teal-700 dark:text-teal-400 uppercase tracking-wider">Escudo Oasis</span>
+                          <span className="text-[8px] px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-400 font-extrabold uppercase tracking-widest">Activo</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Cero incidentes o cancelaciones registradas en tus últimas 100 entregas.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Badge 3: Guardián Nocturno (Locked) */}
+                  <div className="relative group p-4 rounded-2xl bg-slate-500/[0.02] border border-slate-200 dark:border-white/5 opacity-60">
+                    <div className="flex items-center gap-3">
+                      <div className="size-11 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
+                        <Clock className="size-5.5" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Guardián Nocturno</span>
+                          <span className="text-[8px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-extrabold uppercase tracking-widest">Bloqueado</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Completa 10 entregas durante el horario de guardia nocturna (10:00 PM a 6:00 AM).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Badge 4: Héroe de Managua (Progress) */}
+                  <div className="relative group p-4 rounded-2xl bg-gradient-to-br from-sky-500/[0.04] to-indigo-500/[0.04] border border-sky-500/10 hover:border-sky-500/30 transition-all duration-300">
+                    <div className="flex items-center gap-3">
+                      <div className="size-11 rounded-xl bg-sky-500/10 text-sky-655 dark:text-sky-400 flex items-center justify-center shadow-md">
+                        <Route className="size-5.5 text-sky-500" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-sky-750 dark:text-sky-400 uppercase tracking-wider">Ruta Dorada</span>
+                          <span className="text-[8px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-700 dark:text-sky-400 font-extrabold uppercase tracking-widest">34 / 50</span>
+                        </div>
+                        <div className="mt-1 w-full bg-slate-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-sky-500 to-teal-500" style={{ width: '68%' }} />
+                        </div>
+                        <p className="text-[9px] text-muted-foreground mt-1">
+                          Completa 50 entregas exitosas para desbloquear el nivel Maestro.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            </div>
           )}
         </>
       )}
 
       {/* Change Password Section */}
-      <GlassCard>
+      <GlassCard className="no-card-mobile">
         <button
           onClick={() => setShowPasswordSection(!showPasswordSection)}
           className="w-full flex items-center justify-between"

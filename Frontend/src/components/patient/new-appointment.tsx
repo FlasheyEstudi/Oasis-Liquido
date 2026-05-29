@@ -50,13 +50,13 @@ const TIME_SLOTS = [
 ];
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
+  initial: { opacity: 0, scale: 0.95, y: 30 },
+  animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 20 } },
+  exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.2 } },
 };
 
 export function NewAppointment() {
-  const { representedUser, navigate, setNotification } = useAuthStore();
+  const { representedUser, navigate, setNotification, isElderlyMode } = useAuthStore();
   const [step, setStep] = useState(1);
 
   // Step 1: Clinic
@@ -158,10 +158,17 @@ export function NewAppointment() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-20">
+    <div className={cn(
+      "space-y-8 max-w-4xl mx-auto pb-24 relative overflow-visible",
+      isElderlyMode && "text-base font-medium [&_h3]:text-xl [&_p]:text-sm [&_button]:text-sm [&_button]:h-12"
+    )}>
       
-      {/* High-Tech Stepper Bar */}
-      <div className="bg-white/5 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-3xl p-4 shadow-sm backdrop-blur-md">
+      {/* Dynamic Background Organic Blobs */}
+      <div className="absolute top-[20%] left-[-15%] size-80 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[-15%] size-80 rounded-full bg-gradient-to-br from-indigo-500/5 to-transparent blur-3xl pointer-events-none" />
+
+      {/* Stepper Bar - Curved Glass Shield */}
+      <div className="bg-white/30 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] p-4 shadow-xl backdrop-blur-xl">
         <div className="flex items-center justify-between gap-1 max-w-md mx-auto">
           {STEPS.map((s, idx) => {
             const isCompleted = step > s.number;
@@ -171,18 +178,20 @@ export function NewAppointment() {
                 <div className="flex flex-col items-center gap-1.5 relative">
                   <motion.button
                     type="button"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
                     disabled={step < s.number && !canProceed()}
                     onClick={() => step >= s.number && setStep(s.number)}
                     className={cn(
-                      'flex size-9 items-center justify-center rounded-full text-xs font-black transition-all duration-300 relative z-10 border',
+                      'flex size-10 items-center justify-center rounded-full text-xs font-black transition-all duration-300 relative z-10 border shadow-md',
                       isCompleted 
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/10'
                         : isActive
-                          ? 'bg-teal-500 border-teal-500 text-white shadow-lg shadow-teal-500/20 scale-105'
-                          : 'bg-white/5 border-slate-200 dark:border-white/5 text-slate-400 dark:text-zinc-550'
+                          ? 'bg-gradient-to-br from-teal-500 to-cyan-500 border-teal-500 text-white scale-110 shadow-teal-500/20'
+                          : 'bg-white/40 dark:bg-white/5 border-slate-250 dark:border-white/5 text-slate-400 dark:text-zinc-550'
                     )}
                   >
-                    {isCompleted ? <CheckCircle2 className="size-4.5" /> : s.number}
+                    {isCompleted ? <CheckCircle2 className="size-5" /> : s.number}
                   </motion.button>
                   <span className={cn(
                     'hidden sm:block text-[9px] font-black uppercase tracking-wider absolute -bottom-5 w-20 text-center truncate transition-colors duration-300',
@@ -207,95 +216,106 @@ export function NewAppointment() {
         </div>
         
         {/* Mobile current label */}
-        <div className="block sm:hidden text-center text-[10px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-widest mt-2 animate-pulse">
+        <div className="block sm:hidden text-center text-[10px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-[0.2em] mt-3 animate-pulse">
           Paso {step} de 4: {STEPS[step - 1].label}
         </div>
       </div>
 
       {/* Dynamic Step Viewport */}
-      <div className="min-h-[420px]">
+      <div className="min-h-[440px] relative">
         <AnimatePresence mode="wait">
           
-          {/* STEP 1: Clinic Selection */}
+          {/* STEP 1: Clinic Selection (Asymmetric Grid) */}
           {step === 1 && (
-            <motion.div key="step1" {...fadeInUp} className="grid grid-cols-1 md:grid-cols-12 gap-5">
+            <motion.div key="step1" {...fadeInUp} className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              
+              {/* Clinic Selection List */}
               <div className="col-span-12 md:col-span-7">
-                <GlassCard className="h-full flex flex-col justify-between border border-slate-200 dark:border-white/5 shadow-xl">
+                <div className="border border-slate-200/65 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[40px_20px_32px_120px] p-6 backdrop-blur-xl h-full flex flex-col justify-between">
                   <div>
-                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-slate-200 dark:border-white/5 mb-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-dashed border-slate-250 dark:border-white/10 mb-5">
                       Selecciona una Clínica
                     </h3>
                     
                     {clinicsQuery.isLoading ? (
                       <div className="space-y-3">
                         {[1, 2].map((i) => (
-                          <div key={i} className="shimmer rounded-2xl h-18 opacity-70" />
+                          <div key={i} className="shimmer rounded-3xl h-20 opacity-70" />
                         ))}
                       </div>
                     ) : (
-                      <div className="space-y-3.5 max-h-96 overflow-y-auto pr-1">
-                        {clinics.map((clinic) => {
+                      <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
+                        {clinics.map((clinic, idx) => {
                           const isSelected = selectedClinicId === clinic.id;
                           return (
-                            <div
+                            <motion.div
                               key={clinic.id}
+                              whileHover={{ scale: 1.01, x: 2 }}
+                              whileTap={{ scale: 0.99 }}
+                              style={{
+                                borderRadius: idx % 2 === 0 
+                                  ? '24px 12px 20px 12px' 
+                                  : '12px 24px 12px 20px'
+                              }}
                               className={cn(
-                                'flex items-center gap-3.5 p-3.5 rounded-2xl cursor-pointer border transition-all duration-300 relative overflow-hidden group shadow-sm',
+                                'flex items-center gap-3.5 p-4 cursor-pointer border transition-all duration-300 relative overflow-hidden group shadow-sm',
                                 isSelected 
-                                  ? 'bg-teal-500/10 border-teal-500/30 ring-2 ring-teal-500/10' 
-                                  : 'bg-white/5 border-slate-200/50 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-zinc-900/40'
+                                  ? 'bg-teal-500/10 border-teal-500/35 ring-4 ring-teal-550/5' 
+                                  : 'bg-white/40 dark:bg-zinc-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white/80 dark:hover:bg-zinc-900/70'
                               )}
                               onClick={() => handleClinicSelect(clinic.id)}
                             >
-                              {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500" />}
+                              {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-550 to-cyan-550" />}
                               <div className={cn(
-                                'flex size-11 items-center justify-center rounded-xl shrink-0 transition-colors',
-                                isSelected ? 'bg-teal-500/15 text-teal-600 dark:text-teal-400' : 'bg-slate-100 dark:bg-zinc-900 text-slate-400 dark:text-zinc-550'
+                                'flex size-12 items-center justify-center rounded-2xl shrink-0 transition-colors',
+                                isSelected ? 'bg-teal-550/15 text-teal-600 dark:text-teal-400' : 'bg-slate-100 dark:bg-black/10 text-slate-400 dark:text-zinc-550'
                               )}>
-                                <Building2 className="size-5" />
+                                <Building2 className="size-5.5" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
-                                  <p className="text-xs font-black text-slate-800 dark:text-white truncate">
+                                  <p className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">
                                     {clinic.name}
                                   </p>
-                                  {isSelected && <ShieldCheck className="size-3.5 text-teal-500 shrink-0" />}
+                                  {isSelected && <ShieldCheck className="size-4 text-teal-500 shrink-0" />}
                                 </div>
-                                <p className="text-[10px] font-bold text-slate-550 dark:text-zinc-450 mt-1 flex items-center gap-1">
-                                  <MapPin className="size-3 text-red-400 shrink-0" />
+                                <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-450 mt-1 flex items-center gap-1">
+                                  <MapPin className="size-3 text-red-500/70 shrink-0" />
                                   <span className="truncate">{clinic.address}</span>
                                 </p>
                               </div>
-                            </div>
+                            </motion.div>
                           );
                         })}
                       </div>
                     )}
                   </div>
-                </GlassCard>
+                </div>
               </div>
 
-              {/* Map side viewport */}
+              {/* Holographic Clinic Map Scope */}
               <div className="col-span-12 md:col-span-5 h-72 md:h-auto">
-                <GlassCard className="h-full !p-3 border border-slate-200 dark:border-white/5 shadow-xl relative overflow-hidden rounded-[2.5rem]">
-                  <MapView
-                    markers={selectedClinic 
-                      ? [{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }] 
-                      : clinics.map(c => ({ id: c.id, lat: c.latitude, lng: c.longitude, type: 'clinic', label: c.name }))}
-                    center={[selectedClinic?.latitude ?? DEFAULT_LAT, selectedClinic?.longitude ?? DEFAULT_LNG]}
-                    height="100%"
-                    zoom={selectedClinic ? 15 : 12}
-                  />
-                </GlassCard>
+                <div className="border border-slate-250 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[80px_40px_32px_120px] p-3 backdrop-blur-xl h-full relative overflow-hidden">
+                  <div className="rounded-[76px_36px_28px_116px] overflow-hidden h-full">
+                    <MapView
+                      markers={selectedClinic 
+                        ? [{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }] 
+                        : clinics.map(c => ({ id: c.id, lat: c.latitude, lng: c.longitude, type: 'clinic', label: c.name }))}
+                      center={[selectedClinic?.latitude ?? DEFAULT_LAT, selectedClinic?.longitude ?? DEFAULT_LNG]}
+                      height="100%"
+                      zoom={selectedClinic ? 15 : 12}
+                    />
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 2: Doctor Selection */}
+          {/* STEP 2: Doctor Selection (Bento Leaf Curved list) */}
           {step === 2 && (
             <motion.div key="step2" {...fadeInUp}>
-              <GlassCard className="border border-slate-200 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-950/20 rounded-[2.5rem] p-5 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-slate-200 dark:border-white/5 mb-5">
+              <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[32px_120px_20px_40px] p-6 backdrop-blur-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-dashed border-slate-250 dark:border-white/10 mb-5">
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">
                     Selecciona un Especialista
                   </h3>
@@ -306,7 +326,7 @@ export function NewAppointment() {
                       placeholder="Buscar por nombre o especialidad..."
                       value={doctorSearch}
                       onChange={(e) => setDoctorSearch(e.target.value)}
-                      className="glass-input rounded-full pl-9 h-10 text-xs font-semibold"
+                      className="glass-input rounded-full pl-9 h-10 text-xs font-bold"
                     />
                   </div>
                 </div>
@@ -314,120 +334,136 @@ export function NewAppointment() {
                 {doctorsQuery.isLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[1, 2].map((i) => (
-                      <div key={i} className="shimmer rounded-2xl h-20 opacity-70" />
+                      <div key={i} className="shimmer rounded-3xl h-24 opacity-70" />
                     ))}
                   </div>
                 ) : doctors.length === 0 ? (
-                  <div className="flex flex-col items-center py-12 text-center max-w-xs mx-auto space-y-3">
-                    <Stethoscope className="size-8 text-slate-300 dark:text-zinc-700" />
-                    <p className="text-xs text-slate-500 dark:text-zinc-450 font-bold leading-normal">
+                  <div className="flex flex-col items-center py-16 text-center max-w-xs mx-auto space-y-3.5">
+                    <Stethoscope className="size-10 text-slate-350 dark:text-zinc-800 animate-pulse" />
+                    <p className="text-xs text-slate-450 dark:text-zinc-500 font-bold leading-relaxed">
                       No se encontraron especialistas en esta clínica que coincidan con la búsqueda.
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-1">
-                    {doctors.map((doc) => {
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+                    {doctors.map((doc, idx) => {
                       const isSelected = selectedDoctorId === doc.id;
                       return (
-                        <div
+                        <motion.div
                           key={doc.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          style={{
+                            borderRadius: idx % 2 === 0 
+                              ? '32px 12px 24px 12px' 
+                              : '12px 32px 12px 24px'
+                          }}
                           className={cn(
-                            'flex items-center gap-3.5 p-3.5 rounded-2xl cursor-pointer border transition-all duration-300 relative overflow-hidden shadow-sm group',
+                            'flex items-center gap-3.5 p-4 cursor-pointer border transition-all duration-300 relative overflow-hidden shadow-sm group',
                             isSelected 
-                              ? 'bg-teal-500/10 border-teal-500/30 ring-2 ring-teal-500/10' 
-                              : 'bg-white/5 border-slate-200/50 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-zinc-900/40'
+                              ? 'bg-teal-500/10 border-teal-500/35 ring-4 ring-teal-550/5' 
+                              : 'bg-white/40 dark:bg-zinc-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white/80 dark:hover:bg-zinc-900/70'
                           )}
                           onClick={() => setSelectedDoctorId(doc.id)}
                         >
-                          {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500" />}
-                          <Avatar className="size-11 border border-teal-500/10 shrink-0">
-                            <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-xs font-black">
+                          {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-500 to-cyan-500" />}
+                          <Avatar className="size-12 border border-teal-500/15 shrink-0 shadow-sm">
+                            <AvatarFallback className="bg-teal-500/10 text-teal-650 dark:text-teal-450 text-xs font-black font-serif">
                               {getInitials(doc.name)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <p className="text-xs font-black text-slate-800 dark:text-white truncate">
+                              <p className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">
                                 Dr. {doc.name}
                               </p>
-                              {isSelected && <CheckCircle2 className="size-3.5 text-teal-500 shrink-0" />}
+                              {isSelected && <CheckCircle2 className="size-4 text-teal-500 shrink-0" />}
                             </div>
-                            <p className="text-[10px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-wider mt-0.5">
+                            <p className="text-[10px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest mt-1">
                               {doc.doctor_profile?.specialty || 'Médico General'}
                             </p>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
                 )}
-              </GlassCard>
+              </div>
             </motion.div>
           )}
 
-          {/* STEP 3: Date and Time Schedule */}
+          {/* STEP 3: Date and Time Schedule (Bubble slots) */}
           {step === 3 && (
-            <motion.div key="step3" {...fadeInUp} className="grid grid-cols-1 md:grid-cols-12 gap-5">
+            <motion.div key="step3" {...fadeInUp} className="grid grid-cols-1 md:grid-cols-12 gap-6">
               
-              {/* Date Calendar */}
+              {/* Date Calendar - Soft Shield curves */}
               <div className="col-span-12 md:col-span-6">
-                <GlassCard className="border border-slate-200 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-950/20 rounded-[2.5rem] p-5 h-full">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-slate-200 dark:border-white/5 mb-4">
+                <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[80px_40px_32px_120px] p-5 h-full backdrop-blur-xl">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-dashed border-slate-250 dark:border-white/10 mb-4">
                     Selecciona una Fecha
                   </h3>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => { 
-                      setSelectedDate(date); 
-                      setSelectedTime(null); 
-                    }}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-500/[0.01] dark:bg-zinc-900/10 p-3 mx-auto"
-                  />
-                </GlassCard>
+                  <div className="flex justify-center bg-white/40 dark:bg-black/10 rounded-[60px_20px_28px_100px] p-3 border border-slate-200/50 dark:border-white/5 shadow-inner">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => { 
+                        setSelectedDate(date); 
+                        setSelectedTime(null); 
+                      }}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      className="rounded-3xl border-none p-1 mx-auto"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Time Slots viewport */}
+              {/* Time Slots (Irregular grid buttons) */}
               <div className="col-span-12 md:col-span-6">
-                <GlassCard className="border border-slate-200 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-950/20 rounded-[2.5rem] p-5 h-full flex flex-col justify-between min-h-[360px]">
+                <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[40px_120px_20px_80px] p-5 h-full flex flex-col justify-between min-h-[380px] backdrop-blur-xl">
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-slate-200 dark:border-white/5 mb-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-dashed border-slate-250 dark:border-white/10 mb-4">
                       Horarios Disponibles
                     </h3>
                     
                     {!selectedDate ? (
-                      <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-550 py-16 text-center space-y-2">
-                        <CalendarIcon className="size-10 text-slate-350" />
-                        <p className="text-xs font-black uppercase tracking-wider">Paso previo requerido</p>
-                        <p className="text-[11px] text-slate-400 max-w-[200px]">Debes elegir una fecha en el calendario primero.</p>
+                      <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-550 py-16 text-center space-y-3">
+                        <CalendarIcon className="size-12 text-slate-350 dark:text-zinc-800 animate-bounce-slow" />
+                        <p className="text-xs font-black uppercase tracking-[0.2em] text-teal-600">Paso previo</p>
+                        <p className="text-[11px] text-slate-500 font-semibold max-w-[200px]">Elige una fecha del calendario.</p>
                       </div>
                     ) : isLoadingOccupied ? (
-                      <div className="flex-1 flex flex-col items-center justify-center py-16">
-                        <Loader2 className="size-7 text-teal-500 animate-spin" />
-                        <p className="text-[11px] font-black text-slate-500 dark:text-zinc-500 mt-2 uppercase tracking-widest">Sincronizando disponibilidad...</p>
+                      <div className="flex-1 flex flex-col items-center justify-center py-20">
+                        <Loader2 className="size-8 text-teal-500 animate-spin" />
+                        <p className="text-[10px] font-black text-slate-500 dark:text-zinc-500 mt-2.5 uppercase tracking-widest">Sincronizando consultorios...</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
-                        {availableSlots.map(({ time, isOccupied }) => {
+                      <div className="grid grid-cols-3 gap-2.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+                        {availableSlots.map(({ time, isOccupied }, idx) => {
                           const isSelected = selectedTime === time;
                           return (
-                            <button
+                            <motion.button
                               key={time}
+                              whileHover={!isOccupied ? { scale: 1.05 } : {}}
+                              whileTap={!isOccupied ? { scale: 0.95 } : {}}
                               disabled={isOccupied}
                               onClick={() => setSelectedTime(time)}
+                              style={{
+                                borderRadius: idx % 2 === 0
+                                  ? '16px 8px 12px 8px'
+                                  : '8px 16px 8px 12px'
+                              }}
                               className={cn(
-                                'flex items-center justify-center gap-1 rounded-xl py-2.5 text-xs font-black tracking-wider transition-all duration-350 relative overflow-hidden select-none border',
+                                'flex items-center justify-center gap-1.5 py-3 text-xs font-black tracking-wider transition-all duration-300 border shadow-sm select-none',
                                 isSelected
-                                  ? 'bg-teal-500 border-teal-500 text-white shadow-md'
+                                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 border-teal-500 text-white shadow-md'
                                   : isOccupied 
-                                    ? 'bg-red-500/5 border-red-500/10 text-red-500/40 cursor-not-allowed opacity-50'
-                                    : 'bg-white/5 border-slate-200/50 dark:border-white/5 text-slate-650 dark:text-zinc-350 hover:bg-slate-100 dark:hover:bg-zinc-900/50'
+                                    ? 'bg-red-500/5 border-red-500/10 text-red-550/40 cursor-not-allowed opacity-40'
+                                    : 'bg-white/40 dark:bg-zinc-900/40 border-slate-200/50 dark:border-white/5 text-slate-655 dark:text-zinc-350 hover:bg-white/80 dark:hover:bg-zinc-900/70'
                               )}
                             >
-                              <Clock className="size-3 shrink-0" />
+                              <Clock className="size-3.5 shrink-0" />
                               {time}
-                            </button>
+                            </motion.button>
                           );
                         })}
                       </div>
@@ -435,72 +471,73 @@ export function NewAppointment() {
                   </div>
 
                   {selectedDate && !isLoadingOccupied && (
-                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 flex items-center gap-3 text-[9px] uppercase font-black text-slate-400 dark:text-zinc-500 tracking-wider">
-                      <div className="flex items-center gap-1.5"><div className="size-2 rounded-full bg-teal-500" /> Disponible</div>
-                      <div className="flex items-center gap-1.5"><div className="size-2 rounded-full bg-red-500/20" /> Ocupado</div>
+                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 flex items-center gap-4 text-[9px] uppercase font-black text-slate-400 dark:text-zinc-500 tracking-widest pl-1">
+                      <div className="flex items-center gap-1.5"><div className="size-2 rounded-full bg-teal-500 shadow-sm" /> Disponible</div>
+                      <div className="flex items-center gap-1.5"><div className="size-2 rounded-full bg-red-500/30" /> Ocupado</div>
                     </div>
                   )}
-                </GlassCard>
+                </div>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 4: Confirm Appointment Details (Clinical Receipt) */}
+          {/* STEP 4: Confirm Appointment Details (Holographic Clinic Ticket) */}
           {step === 4 && (
             <motion.div key="step4" {...fadeInUp}>
-              <GlassCard className="border border-slate-200 dark:border-white/5 shadow-2xl bg-white dark:bg-zinc-950/20 rounded-[2.5rem] p-5 sm:p-6 max-w-md mx-auto">
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-400 pb-3 border-b border-slate-200 dark:border-white/5 mb-6 text-center">
+              <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[80px_40px_32px_120px] p-6 max-w-md mx-auto backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 size-24 bg-teal-500/5 rounded-full blur-xl pointer-events-none" />
+                <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-zinc-450 pb-3 border-b border-dashed border-slate-250 dark:border-white/10 mb-6 text-center">
                   Resumen de Reserva Médica
                 </h3>
                 
                 <div className="space-y-6">
                   {/* Doctor Info Card */}
-                  <div className="flex flex-col items-center text-center p-5 rounded-3xl bg-teal-500/5 border border-teal-500/15 shadow-sm">
-                    <Avatar className="size-16 mb-3 border border-teal-500/15">
-                      <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-base font-black">
+                  <div className="flex flex-col items-center text-center p-5 rounded-[40px_16px_28px_16px] bg-teal-500/5 border border-teal-500/15 shadow-sm">
+                    <Avatar className="size-16 mb-3 border border-teal-500/20 ring-4 ring-teal-500/5 shadow-md">
+                      <AvatarFallback className="bg-teal-550/10 text-teal-605 dark:text-teal-450 text-base font-black font-serif">
                         {getInitials(selectedDoctor?.name || '')}
                       </AvatarFallback>
                     </Avatar>
-                    <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none">Dr. {selectedDoctor?.name}</h4>
-                    <p className="text-[10px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-widest mt-1">{selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}</p>
+                    <h4 className="text-sm font-black text-slate-850 dark:text-white leading-none font-serif">Dr. {selectedDoctor?.name}</h4>
+                    <p className="text-[10px] font-black text-teal-650 dark:text-teal-450 uppercase tracking-widest mt-1.5">{selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}</p>
                   </div>
 
                   {/* Receipt Grid */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3.5 rounded-2xl bg-slate-500/[0.02] dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5">
+                    <div className="p-4 rounded-[24px_12px_16px_12px] bg-white/40 dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5 shadow-sm">
                       <p className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Ubicación</p>
-                      <p className="text-xs font-extrabold text-slate-850 dark:text-white truncate">{selectedClinic?.name}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate leading-relaxed">{selectedClinic?.address}</p>
+                      <p className="text-xs font-black text-slate-805 dark:text-white truncate font-serif">{selectedClinic?.name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-450 truncate leading-relaxed font-semibold">{selectedClinic?.address}</p>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-slate-500/[0.02] dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5">
+                    <div className="p-4 rounded-[12px_24px_12px_16px] bg-white/40 dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5 shadow-sm">
                       <p className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Fecha y hora</p>
-                      <p className="text-xs font-extrabold text-slate-850 dark:text-white">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-relaxed">{selectedTime} hrs • 30 mins</p>
+                      <p className="text-xs font-black text-slate-805 dark:text-white font-serif">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-450 leading-relaxed font-semibold">{selectedTime} hrs • 30 mins</p>
                     </div>
                   </div>
 
                   {/* Warning banner */}
-                  <div className="flex items-center gap-2 p-3 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-300">
-                    <Sparkles className="size-4 text-indigo-500 shrink-0 animate-pulse" />
+                  <div className="flex items-center gap-2.5 p-3.5 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 text-[10px] font-bold text-slate-650 dark:text-zinc-350 shadow-sm leading-relaxed">
+                    <Sparkles className="size-4.5 text-indigo-500 shrink-0 animate-pulse" />
                     <span>Recibirás un recordatorio seguro por notificación PWA antes del horario pactado.</span>
                   </div>
 
-                  {/* Confirm Trigger */}
+                  {/* Confirm Trigger - Capsule button */}
                   <Button 
                     onClick={handleSubmit} 
                     disabled={createMutation.isPending} 
-                    className="w-full h-13 rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2"
+                    className="w-full h-13 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2"
                   >
                     {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : (
                       <>
                         <span>Confirmar Consulta</span>
-                        <ArrowRight className="size-4" />
+                        <ArrowRight className="size-4 shrink-0" />
                       </>
                     )}
                   </Button>
                 </div>
-              </GlassCard>
+              </div>
             </motion.div>
           )}
 
@@ -508,13 +545,13 @@ export function NewAppointment() {
       </div>
 
       {/* Control Navigation Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-white/5 transition-colors duration-300">
+      <div className="flex items-center justify-between pt-5 border-t border-slate-200 dark:border-white/5 transition-colors duration-300">
         <Button 
           variant="ghost" 
-          className="rounded-full gap-1.5 px-5 text-xs font-black uppercase tracking-wider text-slate-500 hover:bg-white/5" 
+          className="rounded-full gap-1.5 px-6 text-xs font-black uppercase tracking-widest text-slate-450 hover:bg-white/5" 
           onClick={handleBack}
         >
-          <ChevronLeft className="size-4" /> 
+          <ChevronLeft className="size-4 shrink-0" /> 
           {step === 1 ? 'Volver' : 'Anterior'}
         </Button>
         
@@ -522,10 +559,10 @@ export function NewAppointment() {
           <Button 
             onClick={() => setStep(step + 1)} 
             disabled={!canProceed()} 
-            className="rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest gap-1.5 px-6 shadow-md shadow-teal-500/10"
+            className="rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest gap-1.5 px-7 shadow-md shadow-teal-500/10"
           >
             <span>Siguiente</span> 
-            <ChevronRight className="size-4" />
+            <ChevronRight className="size-4 shrink-0" />
           </Button>
         )}
       </div>

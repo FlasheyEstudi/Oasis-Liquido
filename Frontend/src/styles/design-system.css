@@ -452,3 +452,152 @@
   opacity: 0;
 }
 
+/* ==========================================================================
+   OASIS 2026 - Responsive Delivery Container & Card Optimization System
+   Specifically optimized to prevent wasted horizontal screen space on mobile
+   ========================================================================== */
+
+/* Smart responsive wrapper replacing generic inline padding */
+.delivery-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80rem; /* 1280px equivalent to max-w-7xl */
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+
+@media (min-width: 480px) {
+  .delivery-container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+@media (min-width: 768px) {
+  .delivery-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+  }
+}
+
+/* Card responsive helper to ensure maximum visual width on mobile */
+.delivery-card {
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+@media (min-width: 640px) {
+  .delivery-card {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+}
+
+/* Specific Grid layout to control gaps dynamically on mobile */
+.delivery-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px; /* Small gap on mobile to save vertical & visual space */
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .delivery-grid {
+    gap: 1.5rem;
+  }
+}
+
+/* Bento columns responsive */
+.delivery-grid-cols-2 {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .delivery-grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.delivery-grid-cols-3 {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .delivery-grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 768px) {
+  .delivery-grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Specific split columns for home */
+.delivery-home-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 1024px) {
+  .delivery-home-split {
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* ==========================================================================
+   OASIS 2026 - No-Card Fluid Section System (Premium Mobile UI)
+   Converts boxy, generic cards into elegant, borderless native sections on mobile.
+   ========================================================================== */
+
+.no-card-mobile {
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 767px) {
+  .no-card-mobile {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    position: relative;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Specular glow removal on mobile */
+  .no-card-mobile::before,
+  .no-card-mobile::after {
+    display: none !important;
+  }
+
+  /* Add an elegant, subtle separator between sections */
+  .no-card-mobile:not(:last-child) {
+    border-bottom: 1px solid rgba(226, 232, 240, 0.4) !important;
+    padding-bottom: 1.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .dark .no-card-mobile:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  }
+}
+
+
+

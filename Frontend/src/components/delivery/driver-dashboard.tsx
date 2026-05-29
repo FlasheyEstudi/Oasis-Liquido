@@ -74,7 +74,7 @@ export function DriverDashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-4">
+      <div className="delivery-container space-y-4 !max-w-2xl">
         <div className="shimmer h-32 rounded-3xl" />
         <div className="shimmer h-64 rounded-3xl" />
       </div>
@@ -83,14 +83,14 @@ export function DriverDashboard() {
 
   return (
     <motion.div 
-      className="flex flex-col gap-6 p-4 md:p-6 max-w-2xl mx-auto"
+      className="delivery-container flex flex-col gap-4 sm:gap-6 !max-w-2xl"
       variants={stagger}
       initial="initial"
       animate="animate"
     >
       {/* Driver Status Card */}
       <motion.div variants={fadeUp}>
-        <GlassCard className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 shadow-2xl relative overflow-hidden transition-colors duration-300">
+        <GlassCard className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 shadow-2xl relative overflow-hidden transition-colors duration-300 px-3 py-4 sm:p-6 no-card-mobile">
           <div className="absolute top-0 right-0 p-2">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/30">
               <div className="size-1.5 rounded-full bg-emerald-600 dark:bg-emerald-500 animate-pulse" />
@@ -134,7 +134,7 @@ export function DriverDashboard() {
                 layout
                 className="group"
               >
-                <GlassCard className="p-5 hover:border-teal-500/30 transition-all cursor-pointer">
+                <GlassCard className="px-3 py-4 sm:p-6 hover:border-teal-500/30 transition-all cursor-pointer no-card-mobile">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
                       <div className="size-10 rounded-2xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center text-teal-600">
@@ -193,7 +193,7 @@ export function DriverDashboard() {
       </div>
 
       {/* Recent Reviews */}
-      <GlassCard className="mt-4 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 transition-colors duration-300">
+      <GlassCard className="mt-4 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 transition-colors duration-300 px-3 py-4 sm:p-6 no-card-mobile">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-100 flex items-center gap-2 uppercase tracking-widest">
             <Star className="size-4 text-amber-500" />
