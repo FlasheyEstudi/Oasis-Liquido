@@ -14,14 +14,12 @@ import { DEFAULT_LAT, DEFAULT_LNG } from '@/utils/constants';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MapView } from '@/components/common/map-view';
-import type { MapMarker } from '@/components/common/map-view';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircle,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -31,14 +29,17 @@ import {
   MapPin,
   Search,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  ShieldCheck,
+  ArrowRight,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const STEPS = [
   { number: 1, label: 'Clínica' },
   { number: 2, label: 'Médico' },
-  { number: 3, label: 'Fecha y hora' },
+  { number: 3, label: 'Horario' },
   { number: 4, label: 'Confirmar' },
 ];
 
@@ -49,8 +50,9 @@ const TIME_SLOTS = [
 ];
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 16 },
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
 };
 
 export function NewAppointment() {
@@ -73,7 +75,6 @@ export function NewAppointment() {
   // Step 3: Date/Time
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Fetch occupied slots for the selected doctor/date
   const { data: occupiedAppointments, isLoading: isLoadingOccupied } = useAppointments({
@@ -103,7 +104,6 @@ export function NewAppointment() {
     }));
   }, [occupiedAppointments, selectedDate]);
 
-  // Step 4: Submit
   const createMutation = useCreateAppointment();
 
   const handleClinicSelect = (clinicId: string) => {
@@ -141,7 +141,7 @@ export function NewAppointment() {
 
       await createMutation.mutateAsync(payload);
 
-      setNotification({ type: 'success', message: 'Cita agendada correctamente' });
+      setNotification({ type: 'success', message: 'Consulta médica reservada con éxito' });
       navigate('appointments');
     } catch (error: any) {
       const msg = getHookErrorMessage(error);
@@ -158,255 +158,378 @@ export function NewAppointment() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      {/* Step Indicator */}
-      <div className="flex items-center justify-center gap-1">
-        {STEPS.map((s, idx) => (
-          <div key={s.number} className="flex items-center">
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className={cn(
-                'flex size-9 items-center justify-center rounded-full text-sm font-semibold transition-all',
-                step >= s.number
-                  ? 'glass-btn-primary text-white'
-                  : 'glass text-muted-foreground'
-              )}
-            >
-              {step > s.number ? (
-                <CheckCircle className="size-5" />
-              ) : (
-                s.number
-              )}
-            </motion.div>
-            {idx < STEPS.length - 1 && (
-              <div
-                className={cn(
-                  'mx-1 h-0.5 w-8 sm:w-12 transition-colors',
-                  step > s.number ? 'bg-teal-500' : 'bg-border'
+    <div className="space-y-6 max-w-4xl mx-auto pb-20">
+      
+      {/* High-Tech Stepper Bar */}
+      <div className="bg-white/5 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-3xl p-4 shadow-sm backdrop-blur-md">
+        <div className="flex items-center justify-between gap-1 max-w-md mx-auto">
+          {STEPS.map((s, idx) => {
+            const isCompleted = step > s.number;
+            const isActive = step === s.number;
+            return (
+              <div key={s.number} className="flex items-center flex-1 last:flex-initial">
+                <div className="flex flex-col items-center gap-1.5 relative">
+                  <motion.button
+                    type="button"
+                    disabled={step < s.number && !canProceed()}
+                    onClick={() => step >= s.number && setStep(s.number)}
+                    className={cn(
+                      'flex size-9 items-center justify-center rounded-full text-xs font-black transition-all duration-300 relative z-10 border',
+                      isCompleted 
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
+                        : isActive
+                          ? 'bg-teal-500 border-teal-500 text-white shadow-lg shadow-teal-500/20 scale-105'
+                          : 'bg-white/5 border-slate-200 dark:border-white/5 text-slate-400 dark:text-zinc-550'
+                    )}
+                  >
+                    {isCompleted ? <CheckCircle2 className="size-4.5" /> : s.number}
+                  </motion.button>
+                  <span className={cn(
+                    'hidden sm:block text-[9px] font-black uppercase tracking-wider absolute -bottom-5 w-20 text-center truncate transition-colors duration-300',
+                    isActive ? 'text-teal-650 dark:text-teal-400' : 'text-slate-400 dark:text-zinc-550'
+                  )}>
+                    {s.label}
+                  </span>
+                </div>
+                {idx < STEPS.length - 1 && (
+                  <div className="flex-1 mx-2 h-0.5 relative rounded-full overflow-hidden bg-slate-200 dark:bg-zinc-800">
+                    <motion.div 
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500"
+                      initial={{ width: '0%' }}
+                      animate={{ width: isCompleted ? '100%' : '0%' }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
                 )}
-              />
-            )}
-          </div>
-        ))}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Mobile current label */}
+        <div className="block sm:hidden text-center text-[10px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-widest mt-2 animate-pulse">
+          Paso {step} de 4: {STEPS[step - 1].label}
+        </div>
       </div>
 
-      {/* Mobile Step Name */}
-      <div className="block sm:hidden text-center text-xs font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest bg-teal-500/5 py-1 px-3 rounded-full border border-teal-500/10 w-fit mx-auto animate-pulse">
-        Paso {step} de 4: {STEPS[step - 1].label}
-      </div>
-
-      {/* Step labels - Desktop only */}
-      <div className="hidden sm:flex items-center justify-center gap-4 text-xs text-muted-foreground">
-        {STEPS.map((s) => (
-          <span
-            key={s.number}
-            className={cn(
-              'w-20 text-center transition-colors',
-              step === s.number ? 'font-bold text-teal-600 dark:text-teal-400' : ''
-            )}
-          >
-            {s.label}
-          </span>
-        ))}
-      </div>
-
-      {/* Step Content */}
-      <AnimatePresence mode="wait">
-        {step === 1 && (
-          <motion.div key="step1" {...fadeInUp} transition={{ duration: 0.25 }}>
-            <div className="bento-grid">
-              <div className="col-span-12 lg:col-span-8">
-                <GlassCard className="min-h-[300px]">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Selecciona una clínica</h3>
-                  {clinicsQuery.isLoading ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="shimmer rounded-2xl h-16" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-                      {clinics.map((clinic) => (
-                        <div
-                          key={clinic.id}
-                          className={cn(
-                            'flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all',
-                            selectedClinicId === clinic.id ? 'bg-teal-500/10 ring-2 ring-teal-500/30' : 'hover:bg-muted/50'
-                          )}
-                          onClick={() => handleClinicSelect(clinic.id)}
-                        >
-                          <div className={cn('flex size-11 items-center justify-center rounded-full', selectedClinicId === clinic.id ? 'bg-teal-500/20' : 'bg-muted')}>
-                            <Building2 className={cn('size-5', selectedClinicId === clinic.id ? 'text-teal-600 dark:text-teal-400' : 'text-muted-foreground')} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-foreground">{clinic.name}</p>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="size-3" />{clinic.address}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+      {/* Dynamic Step Viewport */}
+      <div className="min-h-[420px]">
+        <AnimatePresence mode="wait">
+          
+          {/* STEP 1: Clinic Selection */}
+          {step === 1 && (
+            <motion.div key="step1" {...fadeInUp} className="grid grid-cols-1 md:grid-cols-12 gap-5">
+              <div className="col-span-12 md:col-span-7">
+                <GlassCard className="h-full flex flex-col justify-between border border-slate-200 dark:border-white/5 shadow-xl">
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-slate-200 dark:border-white/5 mb-4">
+                      Selecciona una Clínica
+                    </h3>
+                    
+                    {clinicsQuery.isLoading ? (
+                      <div className="space-y-3">
+                        {[1, 2].map((i) => (
+                          <div key={i} className="shimmer rounded-2xl h-18 opacity-70" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-3.5 max-h-96 overflow-y-auto pr-1">
+                        {clinics.map((clinic) => {
+                          const isSelected = selectedClinicId === clinic.id;
+                          return (
+                            <div
+                              key={clinic.id}
+                              className={cn(
+                                'flex items-center gap-3.5 p-3.5 rounded-2xl cursor-pointer border transition-all duration-300 relative overflow-hidden group shadow-sm',
+                                isSelected 
+                                  ? 'bg-teal-500/10 border-teal-500/30 ring-2 ring-teal-500/10' 
+                                  : 'bg-white/5 border-slate-200/50 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-zinc-900/40'
+                              )}
+                              onClick={() => handleClinicSelect(clinic.id)}
+                            >
+                              {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500" />}
+                              <div className={cn(
+                                'flex size-11 items-center justify-center rounded-xl shrink-0 transition-colors',
+                                isSelected ? 'bg-teal-500/15 text-teal-600 dark:text-teal-400' : 'bg-slate-100 dark:bg-zinc-900 text-slate-400 dark:text-zinc-550'
+                              )}>
+                                <Building2 className="size-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-black text-slate-800 dark:text-white truncate">
+                                    {clinic.name}
+                                  </p>
+                                  {isSelected && <ShieldCheck className="size-3.5 text-teal-500 shrink-0" />}
+                                </div>
+                                <p className="text-[10px] font-bold text-slate-550 dark:text-zinc-450 mt-1 flex items-center gap-1">
+                                  <MapPin className="size-3 text-red-400 shrink-0" />
+                                  <span className="truncate">{clinic.address}</span>
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </GlassCard>
               </div>
-              <div className="col-span-12 lg:col-span-4">
-                <GlassCard className="!p-3">
+
+              {/* Map side viewport */}
+              <div className="col-span-12 md:col-span-5 h-72 md:h-auto">
+                <GlassCard className="h-full !p-3 border border-slate-200 dark:border-white/5 shadow-xl relative overflow-hidden rounded-[2.5rem]">
                   <MapView
-                    markers={selectedClinic ? [{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }] : clinics.map(c => ({ id: c.id, lat: c.latitude, lng: c.longitude, type: 'clinic', label: c.name }))}
+                    markers={selectedClinic 
+                      ? [{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }] 
+                      : clinics.map(c => ({ id: c.id, lat: c.latitude, lng: c.longitude, type: 'clinic', label: c.name }))}
                     center={[selectedClinic?.latitude ?? DEFAULT_LAT, selectedClinic?.longitude ?? DEFAULT_LNG]}
-                    height="280px"
+                    height="100%"
                     zoom={selectedClinic ? 15 : 12}
                   />
                 </GlassCard>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {step === 2 && (
-          <motion.div key="step2" {...fadeInUp} transition={{ duration: 0.25 }}>
-            <GlassCard className="min-h-[400px]">
-              <div className="flex items-center justify-between gap-4 mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Selecciona un médico</h3>
-                <Input
-                  placeholder="Buscar médico..."
-                  value={doctorSearch}
-                  onChange={(e) => setDoctorSearch(e.target.value)}
-                  className="glass-input rounded-full max-w-xs h-9 text-sm"
-                />
-              </div>
-              <div className="space-y-3">
-                {doctors.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all',
-                      selectedDoctorId === doc.id ? 'bg-teal-500/10 ring-2 ring-teal-500/30' : 'hover:bg-muted/50'
-                    )}
-                    onClick={() => setSelectedDoctorId(doc.id)}
-                  >
-                    <Avatar><AvatarFallback>{getInitials(doc.name)}</AvatarFallback></Avatar>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-foreground">Dr. {doc.name}</p>
-                      <p className="text-xs text-muted-foreground">{doc.doctor_profile?.specialty || 'Medicina General'}</p>
-                    </div>
+          {/* STEP 2: Doctor Selection */}
+          {step === 2 && (
+            <motion.div key="step2" {...fadeInUp}>
+              <GlassCard className="border border-slate-200 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-950/20 rounded-[2.5rem] p-5 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-slate-200 dark:border-white/5 mb-5">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">
+                    Selecciona un Especialista
+                  </h3>
+                  
+                  <div className="relative w-full sm:max-w-xs shrink-0">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 dark:text-zinc-550" />
+                    <Input
+                      placeholder="Buscar por nombre o especialidad..."
+                      value={doctorSearch}
+                      onChange={(e) => setDoctorSearch(e.target.value)}
+                      className="glass-input rounded-full pl-9 h-10 text-xs font-semibold"
+                    />
                   </div>
-                ))}
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
+                </div>
 
-        {step === 3 && (
-          <motion.div key="step3" {...fadeInUp} transition={{ duration: 0.25 }}>
-            <div className="bento-grid">
-              <div className="col-span-12 lg:col-span-6">
-                <GlassCard>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Fecha</h3>
+                {doctorsQuery.isLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[1, 2].map((i) => (
+                      <div key={i} className="shimmer rounded-2xl h-20 opacity-70" />
+                    ))}
+                  </div>
+                ) : doctors.length === 0 ? (
+                  <div className="flex flex-col items-center py-12 text-center max-w-xs mx-auto space-y-3">
+                    <Stethoscope className="size-8 text-slate-300 dark:text-zinc-700" />
+                    <p className="text-xs text-slate-500 dark:text-zinc-450 font-bold leading-normal">
+                      No se encontraron especialistas en esta clínica que coincidan con la búsqueda.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-1">
+                    {doctors.map((doc) => {
+                      const isSelected = selectedDoctorId === doc.id;
+                      return (
+                        <div
+                          key={doc.id}
+                          className={cn(
+                            'flex items-center gap-3.5 p-3.5 rounded-2xl cursor-pointer border transition-all duration-300 relative overflow-hidden shadow-sm group',
+                            isSelected 
+                              ? 'bg-teal-500/10 border-teal-500/30 ring-2 ring-teal-500/10' 
+                              : 'bg-white/5 border-slate-200/50 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-zinc-900/40'
+                          )}
+                          onClick={() => setSelectedDoctorId(doc.id)}
+                        >
+                          {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500" />}
+                          <Avatar className="size-11 border border-teal-500/10 shrink-0">
+                            <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-xs font-black">
+                              {getInitials(doc.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-black text-slate-800 dark:text-white truncate">
+                                Dr. {doc.name}
+                              </p>
+                              {isSelected && <CheckCircle2 className="size-3.5 text-teal-500 shrink-0" />}
+                            </div>
+                            <p className="text-[10px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-wider mt-0.5">
+                              {doc.doctor_profile?.specialty || 'Médico General'}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </GlassCard>
+            </motion.div>
+          )}
+
+          {/* STEP 3: Date and Time Schedule */}
+          {step === 3 && (
+            <motion.div key="step3" {...fadeInUp} className="grid grid-cols-1 md:grid-cols-12 gap-5">
+              
+              {/* Date Calendar */}
+              <div className="col-span-12 md:col-span-6">
+                <GlassCard className="border border-slate-200 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-950/20 rounded-[2.5rem] p-5 h-full">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-slate-200 dark:border-white/5 mb-4">
+                    Selecciona una Fecha
+                  </h3>
                   <Calendar
                     mode="single"
                     selected={selectedDate}
-                    onSelect={(date) => { setSelectedDate(date); setSelectedTime(null); }}
+                    onSelect={(date) => { 
+                      setSelectedDate(date); 
+                      setSelectedTime(null); 
+                    }}
                     disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    className="rounded-2xl border bg-white/5"
+                    className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-500/[0.01] dark:bg-zinc-900/10 p-3 mx-auto"
                   />
                 </GlassCard>
               </div>
-              <div className="col-span-12 lg:col-span-6">
-                <GlassCard className="min-h-[300px] flex flex-col">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Hora disponible</h3>
-                  {!selectedDate ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground opacity-50">
-                      <CalendarIcon className="size-10 mb-2" />
-                      <p className="text-sm">Selecciona una fecha primero</p>
-                    </div>
-                  ) : isLoadingOccupied ? (
-                    <div className="flex-1 flex flex-col items-center justify-center">
-                      <Loader2 className="size-8 text-teal-600 animate-spin" />
-                      <p className="text-xs text-muted-foreground mt-2">Buscando horarios...</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      {availableSlots.map(({ time, isOccupied }) => (
-                        <button
-                          key={time}
-                          disabled={isOccupied}
-                          className={cn(
-                            'flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all relative overflow-hidden',
-                            selectedTime === time
-                              ? 'glass-btn-primary text-white'
-                              : isOccupied 
-                                ? 'bg-red-500/10 text-red-400 cursor-not-allowed border border-red-500/20'
-                                : 'glass text-muted-foreground hover:text-foreground'
-                          )}
-                          onClick={() => setSelectedTime(time)}
-                        >
-                          {isOccupied && <div className="absolute inset-0 bg-red-500/5 backdrop-grayscale" />}
-                          <Clock className="size-3.5" />
-                          {time}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+
+              {/* Time Slots viewport */}
+              <div className="col-span-12 md:col-span-6">
+                <GlassCard className="border border-slate-200 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-950/20 rounded-[2.5rem] p-5 h-full flex flex-col justify-between min-h-[360px]">
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-slate-200 dark:border-white/5 mb-4">
+                      Horarios Disponibles
+                    </h3>
+                    
+                    {!selectedDate ? (
+                      <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-550 py-16 text-center space-y-2">
+                        <CalendarIcon className="size-10 text-slate-350" />
+                        <p className="text-xs font-black uppercase tracking-wider">Paso previo requerido</p>
+                        <p className="text-[11px] text-slate-400 max-w-[200px]">Debes elegir una fecha en el calendario primero.</p>
+                      </div>
+                    ) : isLoadingOccupied ? (
+                      <div className="flex-1 flex flex-col items-center justify-center py-16">
+                        <Loader2 className="size-7 text-teal-500 animate-spin" />
+                        <p className="text-[11px] font-black text-slate-500 dark:text-zinc-500 mt-2 uppercase tracking-widest">Sincronizando disponibilidad...</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
+                        {availableSlots.map(({ time, isOccupied }) => {
+                          const isSelected = selectedTime === time;
+                          return (
+                            <button
+                              key={time}
+                              disabled={isOccupied}
+                              onClick={() => setSelectedTime(time)}
+                              className={cn(
+                                'flex items-center justify-center gap-1 rounded-xl py-2.5 text-xs font-black tracking-wider transition-all duration-350 relative overflow-hidden select-none border',
+                                isSelected
+                                  ? 'bg-teal-500 border-teal-500 text-white shadow-md'
+                                  : isOccupied 
+                                    ? 'bg-red-500/5 border-red-500/10 text-red-500/40 cursor-not-allowed opacity-50'
+                                    : 'bg-white/5 border-slate-200/50 dark:border-white/5 text-slate-650 dark:text-zinc-350 hover:bg-slate-100 dark:hover:bg-zinc-900/50'
+                              )}
+                            >
+                              <Clock className="size-3 shrink-0" />
+                              {time}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
                   {selectedDate && !isLoadingOccupied && (
-                    <div className="mt-4 flex items-center gap-3 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                      <div className="flex items-center gap-1"><div className="size-2 rounded-full bg-teal-500" /> Disponible</div>
-                      <div className="flex items-center gap-1"><div className="size-2 rounded-full bg-red-500/30 border border-red-500/20" /> Ocupado</div>
+                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 flex items-center gap-3 text-[9px] uppercase font-black text-slate-400 dark:text-zinc-500 tracking-wider">
+                      <div className="flex items-center gap-1.5"><div className="size-2 rounded-full bg-teal-500" /> Disponible</div>
+                      <div className="flex items-center gap-1.5"><div className="size-2 rounded-full bg-red-500/20" /> Ocupado</div>
                     </div>
                   )}
                 </GlassCard>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {step === 4 && (
-          <motion.div key="step4" {...fadeInUp} transition={{ duration: 0.25 }}>
-            <GlassCard>
-              <h3 className="text-lg font-semibold text-foreground mb-6 text-center">Confirma tu cita</h3>
-              <div className="max-w-md mx-auto space-y-6">
-                <div className="flex flex-col items-center text-center p-6 rounded-3xl bg-teal-500/5 border border-teal-500/10">
-                  <Avatar className="size-20 mb-4 border-2 border-teal-500/20">
-                    <AvatarFallback className="text-xl">{getInitials(selectedDoctor?.name || '')}</AvatarFallback>
-                  </Avatar>
-                  <h4 className="text-xl font-bold text-foreground">Dr. {selectedDoctor?.name}</h4>
-                  <p className="text-teal-600 dark:text-teal-400 font-medium">{selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl glass space-y-1">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Ubicación</p>
-                    <p className="text-sm font-semibold truncate">{selectedClinic?.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{selectedClinic?.address}</p>
+          {/* STEP 4: Confirm Appointment Details (Clinical Receipt) */}
+          {step === 4 && (
+            <motion.div key="step4" {...fadeInUp}>
+              <GlassCard className="border border-slate-200 dark:border-white/5 shadow-2xl bg-white dark:bg-zinc-950/20 rounded-[2.5rem] p-5 sm:p-6 max-w-md mx-auto">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-400 pb-3 border-b border-slate-200 dark:border-white/5 mb-6 text-center">
+                  Resumen de Reserva Médica
+                </h3>
+                
+                <div className="space-y-6">
+                  {/* Doctor Info Card */}
+                  <div className="flex flex-col items-center text-center p-5 rounded-3xl bg-teal-500/5 border border-teal-500/15 shadow-sm">
+                    <Avatar className="size-16 mb-3 border border-teal-500/15">
+                      <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-base font-black">
+                        {getInitials(selectedDoctor?.name || '')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none">Dr. {selectedDoctor?.name}</h4>
+                    <p className="text-[10px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-widest mt-1">{selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}</p>
                   </div>
-                  <div className="p-4 rounded-2xl glass space-y-1">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Horario</p>
-                    <p className="text-sm font-semibold">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
-                    <p className="text-xs text-muted-foreground">{selectedTime} hrs • 30 min</p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={createMutation.isPending} 
-                  className="w-full glass-btn-primary rounded-full h-14 text-lg font-bold shadow-xl shadow-teal-500/20"
-                >
-                  {createMutation.isPending ? <Loader2 className="size-6 animate-spin" /> : 'CONFIRMAR CITA'}
-                </Button>
-              </div>
-            </GlassCard>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      <div className="flex items-center justify-between pt-4">
-        <Button variant="ghost" className="rounded-full gap-2 px-6" onClick={handleBack}>
-          <ChevronLeft className="size-4" /> {step === 1 ? 'Cancelar' : 'Anterior'}
+                  {/* Receipt Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3.5 rounded-2xl bg-slate-500/[0.02] dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5">
+                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Ubicación</p>
+                      <p className="text-xs font-extrabold text-slate-850 dark:text-white truncate">{selectedClinic?.name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate leading-relaxed">{selectedClinic?.address}</p>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-500/[0.02] dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5">
+                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Fecha y hora</p>
+                      <p className="text-xs font-extrabold text-slate-850 dark:text-white">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-relaxed">{selectedTime} hrs • 30 mins</p>
+                    </div>
+                  </div>
+
+                  {/* Warning banner */}
+                  <div className="flex items-center gap-2 p-3 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-300">
+                    <Sparkles className="size-4 text-indigo-500 shrink-0 animate-pulse" />
+                    <span>Recibirás un recordatorio seguro por notificación PWA antes del horario pactado.</span>
+                  </div>
+
+                  {/* Confirm Trigger */}
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={createMutation.isPending} 
+                    className="w-full h-13 rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2"
+                  >
+                    {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : (
+                      <>
+                        <span>Confirmar Consulta</span>
+                        <ArrowRight className="size-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+      </div>
+
+      {/* Control Navigation Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-white/5 transition-colors duration-300">
+        <Button 
+          variant="ghost" 
+          className="rounded-full gap-1.5 px-5 text-xs font-black uppercase tracking-wider text-slate-500 hover:bg-white/5" 
+          onClick={handleBack}
+        >
+          <ChevronLeft className="size-4" /> 
+          {step === 1 ? 'Volver' : 'Anterior'}
         </Button>
+        
         {step < 4 && (
-          <Button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="glass-btn-primary rounded-full gap-2 px-8">
-            Siguiente <ChevronRight className="size-4" />
+          <Button 
+            onClick={() => setStep(step + 1)} 
+            disabled={!canProceed()} 
+            className="rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest gap-1.5 px-6 shadow-md shadow-teal-500/10"
+          >
+            <span>Siguiente</span> 
+            <ChevronRight className="size-4" />
           </Button>
         )}
       </div>
+
     </div>
   );
 }

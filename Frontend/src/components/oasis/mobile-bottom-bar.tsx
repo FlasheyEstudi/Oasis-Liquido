@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuthStore } from '@/store/auth-store';
-import { ROLE_LABELS } from '@/utils/constants';
 import type { AppPage, UserRole } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -15,7 +14,6 @@ import {
   Truck,
   Shield,
   User,
-  Droplets,
   Users,
   DollarSign,
   Activity,
@@ -28,7 +26,7 @@ function getMobileNavItems(role: UserRole): { page: AppPage; label: string; icon
   switch (role) {
     case 'clinic_admin':
       return [
-        { page: 'manage-clinics', label: 'Clínica', icon: <MapPin className="size-[20px]" /> },
+        { page: 'manage-clinics', label: 'Clínica', icon: <Building2 className="size-[20px]" /> },
         { page: 'clinic-staff', label: 'Personal', icon: <Users className="size-[20px]" /> },
         { page: 'clinic-finances', label: 'Caja', icon: <DollarSign className="size-[20px]" /> },
         { page: 'clinic-analytics', label: 'Métricas', icon: <Activity className="size-[20px]" /> },
@@ -81,8 +79,11 @@ function getMobileNavItems(role: UserRole): { page: AppPage; label: string; icon
   }
 }
 
+// Fallback dummy for missing icons
+const Building2 = (props: any) => <Store {...props} />;
+
 export function MobileBottomBar() {
-  const { user, currentPage, navigate } = useAuthStore();
+  const { user, currentPage, navigate, isElderlyMode } = useAuthStore();
 
   if (!user) return null;
 
@@ -92,42 +93,67 @@ export function MobileBottomBar() {
     <motion.nav
       initial={{ y: 80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.1 }}
-      className="fixed bottom-4 left-4 right-4 z-50 lg:hidden"
+      transition={{ type: 'spring', stiffness: 350, damping: 28, delay: 0.15 }}
+      className={cn(
+        "fixed bottom-4 left-4 right-4 z-50 lg:hidden max-w-lg mx-auto transition-all duration-300",
+        isElderlyMode && "bottom-5 left-3 right-3"
+      )}
     >
-      <div className="glass-strong clarity-shield rounded-2xl px-2 py-1.5 flex items-center justify-around shadow-xl">
+      <div className={cn(
+        "bg-white/70 dark:bg-zinc-950/70 border border-slate-200/50 dark:border-white/10 rounded-[2rem] flex items-center justify-around shadow-2xl backdrop-blur-xl select-none transition-all duration-300",
+        isElderlyMode ? "py-2.5 px-3 rounded-[2.25rem] border-amber-500/25 ring-4 ring-amber-500/10" : "py-2 px-2"
+      )}>
         {navItems.map((item) => {
           const isActive = currentPage === item.page;
           return (
             <motion.button
               key={item.page}
               onClick={() => navigate(item.page)}
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.92 }}
               className={cn(
-                'relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px]',
+                'relative flex flex-col items-center justify-center rounded-2xl transition-all duration-300 flex-1 text-center',
                 isActive
-                  ? 'text-teal-700 dark:text-teal-400'
-                  : 'text-slate-400 dark:text-slate-500 active:text-slate-600 dark:active:text-slate-300'
+                  ? 'text-teal-655 dark:text-teal-400 font-extrabold'
+                  : 'text-slate-450 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300',
+                isElderlyMode ? 'py-2 gap-1.5' : 'py-1.5 gap-0.5'
               )}
             >
-              {/* Active background pill */}
+              {/* Active sliding droplet background */}
               <AnimatePresence>
                 {isActive && (
                   <motion.div
-                    layoutId="mobile-nav-active"
-                    className="absolute inset-0 rounded-xl bg-teal-500/[0.08] dark:bg-teal-400/[0.08] border border-teal-500/15 dark:border-teal-400/15 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.1),inset_2px_2px_6px_rgba(0,0,0,0.15)]"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    style={{ position: 'absolute' }}
+                    layoutId="mobile-nav-droplet"
+                    className="absolute inset-0 rounded-[1.25rem] bg-teal-500/10 border border-teal-500/20 shadow-md shadow-teal-500/5 z-0"
+                    transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                   />
                 )}
               </AnimatePresence>
-              <span className="relative z-10">{item.icon}</span>
+
+              {/* Icon container */}
               <span className={cn(
-                'relative z-10 text-[10px] font-medium leading-tight',
-                isActive && 'font-semibold'
+                "relative z-10 transition-transform duration-300",
+                isActive && "scale-105"
+              )}>
+                {item.icon}
+              </span>
+
+              {/* Label */}
+              <span className={cn(
+                'relative z-10 font-black uppercase tracking-wider leading-none',
+                isElderlyMode ? 'text-[11px]' : 'text-[9px]',
+                isActive ? 'text-teal-655 dark:text-teal-400' : 'text-slate-500 dark:text-zinc-500'
               )}>
                 {item.label}
               </span>
+
+              {/* Active bottom anchor dot */}
+              {isActive && (
+                <motion.span 
+                  layoutId="mobile-nav-active-dot"
+                  className="absolute bottom-1 size-1 rounded-full bg-teal-500" 
+                  transition={{ type: 'spring', stiffness: 385, damping: 28 }}
+                />
+              )}
             </motion.button>
           );
         })}
@@ -135,27 +161,47 @@ export function MobileBottomBar() {
         {/* Profile button */}
         <motion.button
           onClick={() => navigate('profile')}
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.92 }}
           className={cn(
-            'relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px]',
+            'relative flex flex-col items-center justify-center rounded-2xl transition-all duration-300 flex-1 text-center',
             currentPage === 'profile'
-              ? 'text-teal-700 dark:text-teal-400'
-              : 'text-slate-400 dark:text-slate-500'
+              ? 'text-teal-655 dark:text-teal-400 font-extrabold'
+              : 'text-slate-450 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-350',
+            isElderlyMode ? 'py-2 gap-1.5' : 'py-1.5 gap-0.5'
           )}
         >
           <AnimatePresence>
             {currentPage === 'profile' && (
               <motion.div
-                layoutId="mobile-nav-active"
-                className="absolute inset-0 rounded-xl bg-teal-500/[0.08] dark:bg-teal-400/[0.08] border border-teal-500/15 dark:border-teal-400/15 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.1),inset_2px_2px_6px_rgba(0,0,0,0.15)]"
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                layoutId="mobile-nav-droplet"
+                className="absolute inset-0 rounded-[1.25rem] bg-teal-500/10 border border-teal-500/20 shadow-md shadow-teal-500/5 z-0"
+                transition={{ type: 'spring', stiffness: 380, damping: 28 }}
               />
             )}
           </AnimatePresence>
-          <span className="relative z-10">
+
+          <span className={cn(
+            "relative z-10 transition-transform duration-300",
+            currentPage === 'profile' && "scale-105"
+          )}>
             <User className="size-[20px]" />
           </span>
-          <span className="relative z-10 text-[10px] font-medium leading-tight">Perfil</span>
+
+          <span className={cn(
+            'relative z-10 font-black uppercase tracking-wider leading-none',
+            isElderlyMode ? 'text-[11px]' : 'text-[9px]',
+            currentPage === 'profile' ? 'text-teal-655 dark:text-teal-400' : 'text-slate-500 dark:text-zinc-500'
+          )}>
+            Perfil
+          </span>
+
+          {currentPage === 'profile' && (
+            <motion.span 
+              layoutId="mobile-nav-active-dot"
+              className="absolute bottom-1 size-1 rounded-full bg-teal-500" 
+              transition={{ type: 'spring', stiffness: 385, damping: 28 }}
+            />
+          )}
         </motion.button>
       </div>
     </motion.nav>

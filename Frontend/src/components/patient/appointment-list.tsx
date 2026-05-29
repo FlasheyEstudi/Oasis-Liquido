@@ -31,11 +31,14 @@ import {
   XCircle,
   Building2,
   AlertCircle,
+  Sparkles,
+  ChevronRight,
+  ShieldAlert,
 } from 'lucide-react';
 
 const FILTER_TABS: { value: string; label: string; status?: AppointmentStatus }[] = [
-  { value: 'upcoming', label: 'Próximas' },
-  { value: 'past', label: 'Pasadas' },
+  { value: 'upcoming', label: 'Próximas Citas' },
+  { value: 'past', label: 'Historial' },
   { value: 'cancelled', label: 'Canceladas', status: 'cancelled' },
 ];
 
@@ -50,14 +53,12 @@ export function AppointmentList() {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [cancelDialog, setCancelDialog] = useState<Appointment | null>(null);
 
-  // Build query params based on active tab
   const params = activeTab === 'cancelled' ? { status: 'cancelled' as AppointmentStatus } : undefined;
   const appointmentsQuery = useAppointments(params);
   const cancelMutation = useUpdateAppointmentStatus();
 
   const allAppointments = appointmentsQuery.data?.data ?? [];
 
-  // Client-side filter for upcoming/past
   const appointments = activeTab === 'upcoming'
     ? allAppointments.filter((a) => a.status === 'scheduled' || a.status === 'confirmed' || a.status === 'in_progress')
     : activeTab === 'past'
@@ -71,10 +72,10 @@ export function AppointmentList() {
         id: cancelDialog.id,
         data: { status: 'cancelled' },
       });
-      setNotification({ type: 'success', message: 'Cita cancelada correctamente' });
+      setNotification({ type: 'success', message: 'Consulta médica cancelada correctamente' });
       setCancelDialog(null);
     } catch {
-      setNotification({ type: 'error', message: 'No se pudo cancelar la cita' });
+      setNotification({ type: 'error', message: 'No se pudo procesar la cancelación de la cita' });
     }
   };
 
@@ -82,72 +83,72 @@ export function AppointmentList() {
     status === 'scheduled' || status === 'confirmed';
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <motion.h2
-          {...fadeInUp}
-          className="text-xl font-bold text-foreground"
+    <div className="space-y-6 max-w-4xl mx-auto pb-16">
+      
+      {/* Header Grid */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2.5 border-b border-slate-200 dark:border-white/5 transition-colors duration-300">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
+            <Sparkles className="size-5.5 text-teal-500 animate-pulse" />
+            <span>Agenda de Consultas</span>
+          </h2>
+          <p className="text-[11px] text-slate-500 dark:text-zinc-450 font-semibold mt-0.5">
+            Gestiona tus citas presenciales y teleconsultas médicas
+          </p>
+        </div>
+
+        <Button
+          onClick={() => navigate('new-appointment')}
+          className="w-full sm:w-auto h-11 px-5 rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-teal-500/10 transition-all duration-300"
         >
-          Mis Citas
-        </motion.h2>
-        <motion.div {...fadeInUp} transition={{ delay: 0.1 }}>
-          <Button
-            onClick={() => navigate('new-appointment')}
-            className="glass-btn-primary rounded-full gap-2 h-9"
-          >
-            <Plus className="size-4" />
-            Nueva cita
-          </Button>
-        </motion.div>
+          <Plus className="size-4" />
+          Nueva cita médica
+        </Button>
       </div>
 
-      {/* Filter Tabs — Glass pills */}
-      <div className="flex gap-2">
-        {FILTER_TABS.map((tab, i) => (
-          <motion.button
-            key={tab.value}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.05 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className={cn(
-              'rounded-full px-5 py-2 text-sm font-medium transition-all',
-              activeTab === tab.value
-                ? 'glass-btn-primary text-white'
-                : 'glass text-muted-foreground hover:text-foreground'
-            )}
-            onClick={() => setActiveTab(tab.value)}
-          >
-            {tab.label}
-          </motion.button>
-        ))}
+      {/* Filter Tabs — Sliding glass bar */}
+      <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 bg-slate-500/[0.03] dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 p-1 rounded-2xl w-max sm:w-full">
+          {FILTER_TABS.map((tab) => {
+            const isActive = activeTab === tab.value;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={cn(
+                  'rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-300 select-none flex-1 text-center min-w-[110px] sm:min-w-0',
+                  isActive
+                    ? 'bg-teal-500 hover:bg-teal-600 text-white shadow-lg shadow-teal-500/10 border border-teal-500/10'
+                    : 'text-slate-500 dark:text-zinc-400 hover:bg-white/5 hover:text-slate-800 dark:hover:text-white'
+                )}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Content */}
+      {/* Content Stepper */}
       <AnimatePresence mode="wait">
         {appointmentsQuery.isLoading ? (
-          <div className="bento-grid" key="loading">
-            <div className="col-span-6"><div className="shimmer rounded-3xl h-36" /></div>
-            <div className="col-span-6"><div className="shimmer rounded-3xl h-36" /></div>
-            <div className="col-span-4"><div className="shimmer rounded-3xl h-36" /></div>
-            <div className="col-span-4"><div className="shimmer rounded-3xl h-36" /></div>
-            <div className="col-span-4"><div className="shimmer rounded-3xl h-36" /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" key="loading">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="shimmer rounded-3xl h-40 border border-slate-200/30 dark:border-white/5 opacity-70" />
+            ))}
           </div>
         ) : appointmentsQuery.isError ? (
           <motion.div key="error" {...fadeInUp}>
-            <GlassCard>
-              <div className="flex flex-col items-center py-8 text-center">
-                <div className="flex size-14 items-center justify-center rounded-full bg-red-500/10 mb-4">
-                  <AlertCircle className="size-7 text-red-500" />
+            <GlassCard className="border border-slate-200 dark:border-white/5">
+              <div className="flex flex-col items-center py-10 text-center space-y-4">
+                <div className="flex size-14 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20 shadow-md">
+                  <AlertCircle className="size-6 text-red-500 animate-bounce" />
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-xs font-bold text-slate-500 dark:text-zinc-450">
                   {getHookErrorMessage(appointmentsQuery.error)}
                 </p>
                 <Button
-                  variant="outline"
-                  className="rounded-full"
+                  className="rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs px-6"
                   onClick={() => appointmentsQuery.refetch()}
                 >
                   Reintentar
@@ -157,24 +158,28 @@ export function AppointmentList() {
           </motion.div>
         ) : appointments.length === 0 ? (
           <motion.div key="empty" {...fadeInUp}>
-            <GlassCard>
-              <div className="flex flex-col items-center py-12 text-center">
-                <Calendar className="size-12 text-muted-foreground/30 mb-3" />
-                <h3 className="text-lg font-semibold mb-1">Sin citas</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {activeTab === 'upcoming'
-                    ? 'Tu oasis de salud te espera'
-                    : activeTab === 'past'
-                    ? 'No tienes citas completadas aún'
-                    : 'No tienes citas canceladas'}
-                </p>
+            <GlassCard className="border border-slate-200 dark:border-white/5 bg-slate-500/[0.01] dark:bg-zinc-950/20">
+              <div className="flex flex-col items-center py-14 text-center max-w-sm mx-auto space-y-4.5">
+                <div className="size-16 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
+                  <Calendar className="size-7 text-slate-400 dark:text-zinc-500" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 dark:text-white">Sin consultas</h3>
+                  <p className="text-xs text-slate-500 dark:text-zinc-450 font-semibold leading-relaxed">
+                    {activeTab === 'upcoming'
+                      ? 'No tienes citas programadas pendientes en este momento.'
+                      : activeTab === 'past'
+                      ? 'Tu historial de consultas médicas completadas se encuentra vacío.'
+                      : 'No registras consultas canceladas anteriormente.'}
+                  </p>
+                </div>
                 {activeTab === 'upcoming' && (
-                  <button
+                  <Button
                     onClick={() => navigate('new-appointment')}
-                    className="glass-btn-primary rounded-full px-6 py-2 text-sm font-medium"
+                    className="rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs px-6 uppercase tracking-wider h-10 shadow-lg shadow-teal-500/10"
                   >
-                    Agendar cita
-                  </button>
+                    Agendar primera cita
+                  </Button>
                 )}
               </div>
             </GlassCard>
@@ -185,7 +190,7 @@ export function AppointmentList() {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="bento-grid"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
           >
             {appointments.map((apt, index) => {
               const statusConfig = APPOINTMENT_STATUS_CONFIG[apt.status];
@@ -193,69 +198,80 @@ export function AppointmentList() {
                 <motion.div
                   key={apt.id}
                   variants={fadeInUp}
-                  transition={{ delay: index * 0.04 }}
-                  className="col-span-12 sm:col-span-6 lg:col-span-4"
+                  transition={{ delay: index * 0.03 }}
                 >
                   <GlassCard
                     hover
-                    className="!p-4"
+                    className="!p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-zinc-950/20 shadow-xl hover:shadow-2xl transition-all duration-300 relative flex flex-col justify-between h-full rounded-[2rem]"
                     onClick={() => navigate('appointment-detail', apt.id)}
                   >
-                    <div className="flex items-start gap-3">
-                      <Avatar className="size-11 shrink-0">
-                        <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-sm font-semibold">
-                          {apt.doctor ? getInitials(apt.doctor.name) : 'DR'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">
+                    <div className="space-y-4">
+                      {/* Doctor Profile Header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-11 border border-teal-500/10 shrink-0">
+                            <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-xs font-black">
+                              {apt.doctor ? getInitials(apt.doctor.name) : 'DR'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-slate-800 dark:text-white truncate">
                               {apt.doctor?.name || 'Médico'}
                             </p>
                             {apt.doctor?.doctor_profile?.specialty && (
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-0.5 truncate">
                                 {apt.doctor.doctor_profile.specialty}
                               </p>
                             )}
                           </div>
-                          <span className={cn(
-                            'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium shrink-0',
-                            statusConfig?.bgColor,
-                            statusConfig?.color
-                          )}>
-                            {statusConfig?.label || apt.status}
-                          </span>
                         </div>
 
-                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="size-3" />
-                            {formatDate(apt.date_time, "dd MMM yyyy • HH:mm")}
-                          </span>
-                          <span>•</span>
-                          <span>{formatDuration(apt.duration_minutes)}</span>
+                        <span className={cn(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0 border',
+                          statusConfig?.bgColor,
+                          statusConfig?.color
+                        )}>
+                          {statusConfig?.label || apt.status}
+                        </span>
+                      </div>
+
+                      {/* Telemetry Schedule Details */}
+                      <div className="space-y-2 bg-slate-500/[0.02] dark:bg-zinc-950/20 border border-slate-200 dark:border-white/5 rounded-2xl p-3">
+                        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-650 dark:text-zinc-350">
+                          <Clock className="size-3.5 text-teal-500 shrink-0" />
+                          <span>{formatDate(apt.date_time, "dd MMM yyyy • HH:mm")}</span>
+                          <span className="text-slate-300 dark:text-zinc-700">•</span>
+                          <span className="font-mono">{formatDuration(apt.duration_minutes)}</span>
                         </div>
 
                         {apt.clinic && (
-                          <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                            <Building2 className="size-3" />
-                            {apt.clinic.name}
-                          </p>
-                        )}
-
-                        {canCancel(apt.status) && (
-                          <div className="mt-3" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
-                              onClick={() => setCancelDialog(apt)}
-                            >
-                              <XCircle className="size-3.5" />
-                              Cancelar cita
-                            </button>
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-zinc-400 truncate pt-1 border-t border-slate-200/50 dark:border-white/5">
+                            <Building2 className="size-3.5 text-indigo-400 shrink-0" />
+                            <span className="truncate">{apt.clinic.name}</span>
                           </div>
                         )}
                       </div>
+                    </div>
+
+                    {/* Secondary Actions Row */}
+                    <div className="mt-4 pt-3 border-t border-slate-250/20 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500 flex items-center gap-1 hover:text-teal-500">
+                        Ver Detalles
+                        <ChevronRight className="size-3.5" />
+                      </span>
+
+                      {canCancel(apt.status) && (
+                        <button
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-black uppercase tracking-wider text-red-500 hover:bg-red-500/20 transition-all duration-300 select-none z-10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCancelDialog(apt);
+                          }}
+                        >
+                          <XCircle className="size-3.5" />
+                          Cancelar
+                        </button>
+                      )}
                     </div>
                   </GlassCard>
                 </motion.div>
@@ -267,32 +283,34 @@ export function AppointmentList() {
 
       {/* Cancel Confirmation Dialog */}
       <Dialog open={!!cancelDialog} onOpenChange={(open) => !open && setCancelDialog(null)}>
-        <DialogContent className="rounded-3xl glass-strong border-border">
-          <DialogHeader>
-            <DialogTitle>¿Cancelar cita?</DialogTitle>
-            <DialogDescription>
-              ¿Estás seguro de que deseas cancelar tu cita con{' '}
-              <strong>{cancelDialog?.doctor?.name || 'el médico'}</strong> el{' '}
-              {cancelDialog ? formatDate(cancelDialog.date_time, "dd/MM/yyyy 'a las' HH:mm") : ''}?
-              Esta acción no se puede deshacer.
+        <DialogContent className="rounded-[2rem] glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center">
+          <DialogHeader className="items-center">
+            <div className="size-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-2">
+              <ShieldAlert className="size-6 text-red-500 animate-pulse" />
+            </div>
+            <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-800 dark:text-white">¿Cancelar Consulta?</DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed pt-1.5">
+              ¿Confirmas la cancelación definitiva de tu consulta programada con{' '}
+              <strong className="text-slate-700 dark:text-white">{cancelDialog?.doctor?.name}</strong> el{' '}
+              <span className="font-bold text-teal-600 dark:text-teal-400">{cancelDialog ? formatDate(cancelDialog.date_time, "dd/MM/yyyy") : ''}</span>?
+              <span className="block mt-2 font-black text-red-500">Esta acción liberará el espacio médico de forma irreversible.</span>
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="flex-col sm:flex-col gap-2 mt-6">
             <Button
-              variant="outline"
-              className="rounded-full"
+              className="w-full rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 font-black text-xs h-11 border border-slate-200 dark:border-white/5 uppercase tracking-wider"
               onClick={() => setCancelDialog(null)}
               disabled={cancelMutation.isPending}
             >
-              No, mantener
+              No, mantener consulta
             </Button>
             <Button
               variant="destructive"
-              className="rounded-full gap-2"
+              className="w-full rounded-full bg-red-500 hover:bg-red-600 text-white font-black text-xs h-11 uppercase tracking-wider flex items-center justify-center gap-1.5"
               onClick={handleCancel}
               disabled={cancelMutation.isPending}
             >
-              {cancelMutation.isPending ? 'Cancelando...' : 'Sí, cancelar'}
+              {cancelMutation.isPending ? 'Cancelando...' : 'Sí, cancelar cita'}
             </Button>
           </DialogFooter>
         </DialogContent>
