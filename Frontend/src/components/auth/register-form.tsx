@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Droplets, Loader2, Check, X, Shield, Truck, Compass, Award, Building, Phone, MapPin, ArrowLeft, ChevronDown } from 'lucide-react';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+
 import { useAuthStore } from '@/store/auth-store';
+import { auth } from '@/lib/firebase-config';
 import { APP_NAME } from '@/utils/constants';
 import { post, get, getErrorMessage } from '@/api/client';
 import { OrganicBlobs } from '@/components/oasis/organic-blobs';
@@ -98,7 +101,10 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [googleIdToken, setGoogleIdToken] = useState<string | null>(null);
+  const [isGoogleMode, setIsGoogleMode] = useState(false);
 
   // Prefill from landing page quick capture
   useEffect(() => {
@@ -184,7 +190,121 @@ export function RegisterForm() {
 
   const { navigate, login, setNotification } = useAuthStore();
 
+  const isFinalStep = isGoogleMode 
+    ? (role === 'patient' ? step === 1 : step === 2)
+    : step === 3;
 
+  async function handleGoogleLogin() {
+    setApiError(null);
+    setIsGoogleSubmitting(true);
+
+    try {
+      if (!auth) {
+        // En desarrollo local sin credenciales Firebase reales, usar el bypass seguro del backend
+        console.warn('Firebase Auth no inicializado. Usando token de desarrollo.');
+        setName('Usuario Demo Google');
+        setEmail('demo-google@oasis.com');
+        setGoogleIdToken('mock-token-wendellflashey2023');
+        setIsGoogleMode(true);
+        setNotification({ type: 'success', message: '¡Autenticado con Google (Modo Desarrollo)! Por favor, selecciona tu rol.' });
+        return;
+      }
+
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const googleName = result.user.displayName || result.user.email?.split('@')[0] || 'Usuario Oasis';
+      const googleEmail = result.user.email || '';
+
+      setName(googleName);
+      setEmail(googleEmail);
+      setGoogleIdToken(idToken);
+      setIsGoogleMode(true);
+      setNotification({ type: 'success', message: '¡Autenticado con Google con éxito! Ahora selecciona tu rol para completar tu perfil.' });
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user' || error.message?.includes('popup-closed-by-user')) {
+        return;
+      }
+      console.error('Google Register Error:', error);
+      setApiError(getErrorMessage(error));
+      setNotification({ type: 'error', message: getErrorMessage(error) });
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  }
+
+  async function handleGoogleSubmit() {
+    setApiError(null);
+
+    // Role specific form validations
+    if (role === 'pharmacy_admin' && (!entityName.trim() || !entityAddress.trim())) {
+      setApiError('Por favor ingresa el nombre y la dirección de tu farmacia.');
+      return;
+    }
+
+    if (role === 'pharmacy_manager' && !pharmacyId) {
+      setApiError('Por favor selecciona una farmacia.');
+      return;
+    }
+
+    if (role === 'clinic_admin' && (!entityName.trim() || !entityAddress.trim())) {
+      setApiError('Por favor ingresa el nombre y la dirección de tu clínica.');
+      return;
+    }
+
+    if (role === 'delivery_driver' && (!licensePlate.trim())) {
+      setApiError('Por favor ingresa el número de placa de tu vehículo.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload: Record<string, any> = {
+        idToken: googleIdToken,
+        role,
+      };
+
+      // Inject dynamic fields
+      if (role === 'pharmacy_admin') {
+        payload.entityName = entityName;
+        payload.entityAddress = entityAddress;
+        payload.entityPhone = entityPhone || undefined;
+        payload.entityLatitude = entityLat || undefined;
+        payload.entityLongitude = entityLng || undefined;
+      } else if (role === 'pharmacy_manager') {
+        payload.pharmacyId = pharmacyId;
+      } else if (role === 'clinic_admin') {
+        payload.entityName = entityName;
+        payload.entityAddress = entityAddress;
+        payload.entityPhone = entityPhone || undefined;
+        payload.entityLatitude = entityLat || undefined;
+        payload.entityLongitude = entityLng || undefined;
+      } else if (role === 'delivery_driver') {
+        payload.vehicleType = vehicleType;
+        payload.licensePlate = licensePlate;
+      }
+
+      console.log('[REGISTER-GOOGLE-FRONTEND] Completando registro federado:', payload);
+
+      const response = await post<AuthResponse['data']>('/auth/firebase-login', payload);
+
+      if (response.success && response.data) {
+        login(response.data.user, response.data.access_token);
+        setNotification({ type: 'success', message: '¡Registro con Google completado con éxito!' });
+      } else {
+        setApiError('Error al registrarse con Google.');
+      }
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      setApiError(msg);
+      setNotification({ type: 'error', message: msg });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   function handleNextStep() {
     setApiError(null);
@@ -202,7 +322,11 @@ export function RegisterForm() {
         return;
       }
       if (role === 'patient') {
-        setStep(3); // Skip step 2 for patients
+        if (isGoogleMode) {
+          handleGoogleSubmit();
+        } else {
+          setStep(3); // Skip step 2 for patients
+        }
       } else {
         setStep(2);
       }
@@ -225,7 +349,11 @@ export function RegisterForm() {
         setApiError('Por favor selecciona una farmacia.');
         return;
       }
-      setStep(3);
+      if (isGoogleMode) {
+        handleGoogleSubmit();
+      } else {
+        setStep(3);
+      }
     }
   }
 
@@ -474,10 +602,14 @@ export function RegisterForm() {
               {/* Form */}
               <form onSubmit={(e) => {
                 e.preventDefault();
-                if (step < 3) {
-                  handleNextStep();
+                if (isFinalStep) {
+                  if (isGoogleMode) {
+                    handleGoogleSubmit();
+                  } else {
+                    handleSubmit(e);
+                  }
                 } else {
-                  handleSubmit(e);
+                  handleNextStep();
                 }
               }} className="space-y-4">
                 
@@ -502,17 +634,25 @@ export function RegisterForm() {
                           Nombre completo
                         </label>
                         <div className="relative group/input">
-                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors" />
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors pointer-events-none" />
                           <input
                             id="register-name"
                             type="text"
                             placeholder="Juan Pérez"
                             autoComplete="name"
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isGoogleMode}
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 dark:focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 dark:focus:ring-teal-500/10 focus:outline-none transition-all duration-300 disabled:opacity-50"
+                            className={cn(
+                              "w-full h-11 pl-11 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 dark:focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 dark:focus:ring-teal-500/10 focus:outline-none transition-all duration-300 disabled:opacity-70",
+                              isGoogleMode ? "pr-28" : "pr-4"
+                            )}
                           />
+                          {isGoogleMode && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[8px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/20 pointer-events-none">
+                              Google ✓
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -522,17 +662,25 @@ export function RegisterForm() {
                           Correo electrónico
                         </label>
                         <div className="relative group/input">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors" />
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors pointer-events-none" />
                           <input
                             id="register-email"
                             type="email"
                             placeholder="tu@correo.com"
                             autoComplete="email"
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isGoogleMode}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 dark:focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 dark:focus:ring-teal-500/10 focus:outline-none transition-all duration-300 disabled:opacity-50"
+                            className={cn(
+                              "w-full h-11 pl-11 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-teal-500/50 dark:focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 dark:focus:ring-teal-500/10 focus:outline-none transition-all duration-300 disabled:opacity-70",
+                              isGoogleMode ? "pr-28" : "pr-4"
+                            )}
                           />
+                          {isGoogleMode && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[8px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/20 pointer-events-none">
+                              Google ✓
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -564,6 +712,40 @@ export function RegisterForm() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Separator / O TAMBIÉN */}
+                      {!isGoogleMode && (
+                        <>
+                          <div className="relative my-4">
+                            <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                              <div className="w-full border-t border-slate-200/50 dark:border-zinc-800/30" />
+                            </div>
+                            <div className="relative flex justify-center text-[9px] uppercase tracking-wider font-extrabold text-slate-400 dark:text-zinc-500">
+                              <span className="bg-transparent px-2">O TAMBIÉN</span>
+                            </div>
+                          </div>
+
+                          {/* Google Sign-in Button */}
+                          <button
+                            type="button"
+                            disabled={isSubmitting || isGoogleSubmitting}
+                            onClick={handleGoogleLogin}
+                            className="w-full h-11 rounded-xl text-xs font-bold flex items-center justify-center gap-2.5 bg-white/5 dark:bg-white/5 border border-slate-200 dark:border-zinc-800/80 hover:bg-slate-50 dark:hover:bg-zinc-900/60 text-slate-800 dark:text-zinc-200 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-sm relative overflow-hidden"
+                          >
+                            {isGoogleSubmitting ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                            ) : (
+                              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                              </svg>
+                            )}
+                            <span>Registrarse con Google</span>
+                          </button>
+                        </>
+                      )}
                     </motion.div>
                   )}
 
@@ -951,7 +1133,7 @@ export function RegisterForm() {
                     </button>
                   )}
                   
-                  {step < 3 ? (
+                  {!isFinalStep ? (
                     <button
                       type="button"
                       onClick={handleNextStep}
@@ -965,7 +1147,8 @@ export function RegisterForm() {
                     </button>
                   ) : (
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={isGoogleMode ? handleGoogleSubmit : handleSubmit}
                       disabled={isSubmitting}
                       className={cn(
                         "clay-btn-primary h-11 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 relative transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer",
@@ -979,7 +1162,7 @@ export function RegisterForm() {
                         </>
                       ) : (
                         <>
-                          Crear cuenta
+                          {isGoogleMode ? 'Completar registro con Google' : 'Crear cuenta'}
                           <ArrowRight className="h-4 w-4" />
                         </>
                       )}

@@ -133,7 +133,7 @@ export function ResetPasswordForm() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate('login')}
+                  onClick={() => navigate('entrar')}
                   className="glass-btn-primary w-full h-11 rounded-full text-sm font-semibold mt-4"
                 >
                   Ir a login
@@ -259,7 +259,7 @@ export function ResetPasswordForm() {
                 <motion.div custom={5} variants={fadeInUp} className="mt-6 text-center">
                   <button
                     type="button"
-                    onClick={() => navigate('login')}
+                    onClick={() => navigate('entrar')}
                     disabled={isSubmitting}
                     className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold transition-colors disabled:opacity-50"
                   >

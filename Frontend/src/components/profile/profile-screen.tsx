@@ -355,6 +355,23 @@ export function ProfileScreen() {
       {/* Absolute Ambient Glow */}
       <div className="absolute top-[5%] left-[-15%] size-80 bg-gradient-to-br from-teal-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
+      {/* Header with Title and Dynamic Edit Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/40 dark:border-zinc-800/30 pb-4">
+        <div>
+          <h2 className="text-xl font-black tracking-tight text-slate-800 dark:text-zinc-100 uppercase">Mi Pasaporte Oasis</h2>
+          <p className="text-[10px] text-slate-400 dark:text-zinc-500 tracking-wider font-semibold mt-0.5">CREDENCIAL DIGITAL MULTI-ROL AUTORIZADA</p>
+        </div>
+        {!isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="flex items-center justify-center gap-1.5 px-4 h-9 rounded-full text-[10px] font-black uppercase tracking-widest bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 transition-all duration-300 active:scale-95 cursor-pointer shadow-sm hover:scale-[1.01] shrink-0"
+          >
+            <Pencil className="size-3.5" />
+            <span>Editar Datos</span>
+          </button>
+        )}
+      </div>
+
       {/* ── CREDENCIAL DIGITAL DIFERENCIADA POR ROL ── */}
       <motion.div
         initial={{ scale: 0.97, opacity: 0, y: 16 }}
@@ -362,7 +379,7 @@ export function ProfileScreen() {
         whileHover={{ y: -4, scale: 1.01 }}
         transition={{ type: 'spring', stiffness: 120, damping: 14 }}
         className={cn(
-          'relative w-full aspect-[1.586/1] rounded-[2rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.55)] select-none group',
+          'relative w-full h-auto md:aspect-[1.586/1] rounded-[2.5rem] overflow-hidden text-white shadow-[0_30px_70px_rgba(0,0,0,0.55)] select-none group',
           role === 'doctor'          && 'border border-sky-500/25',
           role === 'pharmacy_manager'&& 'border border-emerald-500/25',
           role === 'delivery_driver' && 'border border-amber-500/25',
@@ -412,7 +429,7 @@ export function ProfileScreen() {
         {/* Hologram overlay */}
         <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.02] via-transparent to-white/[0.04] mix-blend-overlay pointer-events-none" />
 
-        <div className="absolute inset-0 p-3 sm:p-5 md:p-6 flex flex-col justify-between z-10">
+        <div className="relative md:absolute md:inset-0 p-5 sm:p-6 md:p-6 flex flex-col justify-between gap-6 md:gap-0 z-10">
           {/* HEADER */}
           <div className="flex justify-between items-center border-b border-white/10 pb-2.5">
             <div className="flex items-center gap-2.5">

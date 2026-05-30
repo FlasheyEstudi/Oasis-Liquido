@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, ArrowRight, Droplets, Loader2, MessageSquare } from 'lucide-react';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 import { useAuthStore } from '@/store/auth-store';
+import { auth } from '@/lib/firebase-config';
 import { post, getErrorMessage } from '@/api/client';
 import { OrganicBlobs } from '@/components/oasis/organic-blobs';
 
@@ -37,10 +39,19 @@ export function ForgotPasswordForm() {
     setIsSubmitting(true);
 
     try {
-      await post('/auth/forgot-password', { email });
+      if (auth) {
+        // Método recomendado: Enviar correo automático y gratuito vía Firebase Auth nativo
+        await sendPasswordResetEmail(auth, email);
+        console.log('✉️ Firebase recovery email dispatched natively');
+      } else {
+        // Fallback local en desarrollo/offline: Envía correo o escribe token en consola
+        await post('/auth/forgot-password', { email });
+        console.log('🔑 Backend local recovery token generated');
+      }
+      
       setIsSuccess(true);
       setNotification({ type: 'success', message: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.' });
-    } catch (error) {
+    } catch (error: any) {
       const msg = getErrorMessage(error);
       setApiError(msg);
       setNotification({ type: 'error', message: msg });
@@ -89,7 +100,7 @@ export function ForgotPasswordForm() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate('login')}
+                  onClick={() => navigate('entrar')}
                   className="glass-btn-primary w-full h-11 rounded-full text-sm font-semibold mt-4"
                 >
                   Volver al login
@@ -186,7 +197,7 @@ export function ForgotPasswordForm() {
                 <motion.div custom={4} variants={fadeInUp} className="mt-6 text-center">
                   <button
                     type="button"
-                    onClick={() => navigate('login')}
+                    onClick={() => navigate('entrar')}
                     disabled={isSubmitting}
                     className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold transition-colors disabled:opacity-50"
                   >

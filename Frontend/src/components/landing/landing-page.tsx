@@ -254,7 +254,7 @@ export function LandingPage() {
               <Button
                 variant="ghost"
                 className="text-sm text-gray-700 hover:text-emerald-600"
-                onClick={() => navigate('login')}
+                onClick={() => navigate('entrar')}
               >
                 Iniciar Sesión
               </Button>
@@ -316,7 +316,7 @@ export function LandingPage() {
                   variant="outline"
                   size="lg"
                   className="h-12 px-8 text-base border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                  onClick={() => navigate('login')}
+                  onClick={() => navigate('entrar')}
                 >
                   Ya tengo cuenta
                 </Button>
@@ -593,7 +593,7 @@ export function LandingPage() {
                 variant="outline"
                 size="lg"
                 className="h-12 px-8 text-base border-white/30 text-white hover:bg-white/10"
-                onClick={() => navigate('login')}
+                onClick={() => navigate('entrar')}
               >
                 Iniciar sesión
               </Button>

@@ -9,6 +9,16 @@ import * as authService from '@/lib/services/auth.service';
 
 const firebaseLoginSchema = z.object({
   idToken: z.string().min(10, 'El Token ID de Firebase es obligatorio'),
+  role: z.string().optional(),
+  pharmacyId: z.string().optional(),
+  clinicId: z.string().optional(),
+  vehicleType: z.string().optional(),
+  licensePlate: z.string().optional(),
+  entityName: z.string().optional(),
+  entityAddress: z.string().optional(),
+  entityPhone: z.string().optional(),
+  entityLatitude: z.number().optional(),
+  entityLongitude: z.number().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -50,8 +60,20 @@ export async function POST(req: NextRequest) {
     const result = await authService.loginWithFirebase(
       email,
       name,
+      body.role || 'patient',
       req.headers.get('x-forwarded-for') || undefined,
-      req.headers.get('user-agent') || undefined
+      req.headers.get('user-agent') || undefined,
+      {
+        pharmacyId: body.pharmacyId,
+        clinicId: body.clinicId,
+        vehicleType: body.vehicleType,
+        licensePlate: body.licensePlate,
+        entityName: body.entityName,
+        entityAddress: body.entityAddress,
+        entityPhone: body.entityPhone,
+        entityLatitude: body.entityLatitude,
+        entityLongitude: body.entityLongitude,
+      }
     );
 
     // Set refresh token in secure cookie

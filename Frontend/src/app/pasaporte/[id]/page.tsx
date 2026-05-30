@@ -123,7 +123,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           animate={{ scale: 1, opacity: 1, y: 0 }}
           whileHover={{ y: -6, rotateX: 1, rotateY: -1, scale: 1.015 }}
           transition={{ type: "spring", stiffness: 120, damping: 14 }}
-          className="relative w-full aspect-[1.586/1] rounded-[2rem] md:rounded-[2.4rem] overflow-hidden text-white shadow-[0_35px_80px_rgba(0,0,0,0.8)] border border-emerald-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
+          className="relative w-full h-auto md:aspect-[1.586/1] rounded-[2rem] md:rounded-[2.4rem] overflow-hidden text-white shadow-[0_35px_80px_rgba(0,0,0,0.8)] border border-emerald-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
         >
           {/* Sovereign Emerald Mint & Microprint Pattern */}
           <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-emerald-950/75 to-zinc-900" />
@@ -150,7 +150,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           {/* Hologram Overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 via-cyan-500/5 to-amber-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-          <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
+          <div className="relative md:absolute md:inset-0 p-5 sm:p-6 md:p-8 flex flex-col justify-between gap-6 md:gap-0 z-10">
             {/* Header */}
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
               <div className="flex items-center gap-3">
@@ -248,7 +248,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           animate={{ scale: 1, opacity: 1, y: 0 }}
           whileHover={{ y: -6, rotateX: 1, rotateY: -1, scale: 1.015 }}
           transition={{ type: "spring", stiffness: 120, damping: 14 }}
-          className="relative w-full aspect-[1.586/1] rounded-[2rem] md:rounded-[2.4rem] overflow-hidden text-white shadow-[0_35px_80px_rgba(0,0,0,0.8)] border border-sky-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
+          className="relative w-full h-auto md:aspect-[1.586/1] rounded-[2rem] md:rounded-[2.4rem] overflow-hidden text-white shadow-[0_35px_80px_rgba(0,0,0,0.8)] border border-sky-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
         >
           {/* Surgical Cobalt Blue & Precision ECG Wave Background */}
           <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-sky-950/75 to-zinc-900" />
@@ -273,7 +273,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           {/* Hologram Overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 via-indigo-500/5 to-cyan-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-          <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
+          <div className="relative md:absolute md:inset-0 p-5 sm:p-6 md:p-8 flex flex-col justify-between gap-6 md:gap-0 z-10">
             {/* Header */}
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
               <div className="flex items-center gap-3">
@@ -369,7 +369,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           animate={{ scale: 1, opacity: 1, y: 0 }}
           whileHover={{ y: -6, rotateX: 1, rotateY: -1, scale: 1.015 }}
           transition={{ type: "spring", stiffness: 120, damping: 14 }}
-          className="relative w-full aspect-[1.586/1] rounded-[2rem] md:rounded-[2.4rem] overflow-hidden text-white shadow-[0_35px_80px_rgba(0,0,0,0.8)] border border-amber-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
+          className="relative w-full h-auto md:aspect-[1.586/1] rounded-[2rem] md:rounded-[2.4rem] overflow-hidden text-white shadow-[0_35px_80px_rgba(0,0,0,0.8)] border border-amber-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
         >
           {/* Kinetic Amber Mesh & Telemetric Radar */}
           <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-amber-950/60 to-zinc-900" />
@@ -395,7 +395,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           {/* Hologram Overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 via-orange-500/5 to-yellow-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-          <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
+          <div className="relative md:absolute md:inset-0 p-5 sm:p-6 md:p-8 flex flex-col justify-between gap-6 md:gap-0 z-10">
             {/* Header */}
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
               <div className="flex items-center gap-3">
@@ -500,7 +500,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
         animate={{ scale: 1, opacity: 1, y: 0 }}
         whileHover={{ y: -6, rotateX: 1, rotateY: -1, scale: 1.015 }}
         transition={{ type: "spring", stiffness: 100, damping: 15 }}
-        className="relative w-full aspect-[1.586/1] rounded-[2rem] md:rounded-[2.4rem] overflow-hidden text-white shadow-[0_35px_80px_rgba(0,0,0,0.8)] border border-teal-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
+        className="relative w-full h-auto md:aspect-[1.586/1] rounded-[2rem] md:rounded-[2.4rem] overflow-hidden text-white shadow-[0_35px_80px_rgba(0,0,0,0.8)] border border-teal-500/25 group backdrop-blur-md bg-zinc-950/40 select-none"
       >
         {/* Caring Ocean Teal & Indigo gradient with glowing liquid blobs */}
         <div className="absolute inset-0 bg-gradient-to-tr from-zinc-950 via-teal-950/70 to-zinc-900" />
@@ -521,7 +521,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
         {/* Hologram Overlay */}
         <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 via-purple-500/5 to-emerald-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-        <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
+        <div className="relative md:absolute md:inset-0 p-5 sm:p-6 md:p-8 flex flex-col justify-between gap-6 md:gap-0 z-10">
           {/* Header */}
           <div className="flex justify-between items-center border-b border-white/10 pb-3">
             <div className="flex items-center gap-3">

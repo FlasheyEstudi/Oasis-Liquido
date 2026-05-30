@@ -5,6 +5,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, isSupported, type Messaging } from 'firebase/messaging';
+import { getAuth, type Auth } from 'firebase/auth';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -27,10 +28,12 @@ export const hasValidConfig = Boolean(
 
 let app: FirebaseApp | null = null;
 let messaging: Messaging | null = null;
+let auth: Auth | null = null;
 
 if (hasValidConfig) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
     
     // Initialize Firebase Messaging (only in browser environment)
     if (typeof window !== 'undefined') {
@@ -132,5 +135,5 @@ export function onForegroundMessage(callback: (payload: any) => void) {
   return unsubscribe;
 }
 
-export { app, messaging };
+export { app, messaging, auth };
 export default app;

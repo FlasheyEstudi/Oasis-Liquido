@@ -6,6 +6,7 @@ import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, generateResetToken, verifyResetToken, AccessTokenPayload } from '@/lib/auth/jwt';
 import { createAuditLog } from './audit.service';
 import { sendWhatsAppOTP } from './whatsapp.service';
+import { registerUser } from './user-registration.service';
 import crypto from 'crypto';
 
 /**
@@ -384,8 +385,20 @@ export async function resetPassword(token: string, newPassword: string) {
 export async function loginWithFirebase(
   email: string,
   name: string,
+  role: string = 'patient',
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
+  additionalData?: {
+    pharmacyId?: string;
+    clinicId?: string;
+    vehicleType?: string;
+    licensePlate?: string;
+    entityName?: string;
+    entityAddress?: string;
+    entityPhone?: string;
+    entityLatitude?: number;
+    entityLongitude?: number;
+  }
 ) {
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -400,21 +413,35 @@ export async function loginWithFirebase(
     },
   });
 
-  // If user does not exist, auto-register as patient
+  // If user does not exist, auto-register with selected role and link profiles via the centralized service
   if (!user) {
     // Create a random password hash since password is managed by Firebase
     const randomPassword = crypto.randomBytes(32).toString('hex');
     const randomHash = await hashPassword(randomPassword);
 
-    user = await db.user.create({
-      data: {
-        name: name || 'Paciente Oasis',
+    await registerUser(
+      {
+        name: name || 'Usuario Oasis',
         email: normalizedEmail,
         passwordHash: randomHash,
-        role: 'patient',
-        emailVerified: true,
-        patientProfile: { create: {} },
+        role: role,
+        pharmacyId: additionalData?.pharmacyId,
+        clinicId: additionalData?.clinicId,
+        vehicleType: additionalData?.vehicleType,
+        licensePlate: additionalData?.licensePlate,
+        entityName: additionalData?.entityName,
+        entityAddress: additionalData?.entityAddress,
+        entityPhone: additionalData?.entityPhone,
+        entityLatitude: additionalData?.entityLatitude,
+        entityLongitude: additionalData?.entityLongitude,
       },
+      ipAddress,
+      userAgent
+    );
+
+    // Fetch user with newly created profile included
+    user = await db.user.findUnique({
+      where: { email: normalizedEmail },
       include: {
         doctorProfile: true,
         receptionistProfile: true,
@@ -423,7 +450,11 @@ export async function loginWithFirebase(
       },
     });
 
-    console.log(`👤 Auto-registered new Firebase user as patient: ${normalizedEmail}`);
+    if (!user) {
+      throw new Error('REGISTRATION_FAILED');
+    }
+
+    console.log(`👤 Auto-registered new Firebase user with role [${role}]: ${normalizedEmail}`);
   }
 
   // Check if user is active
