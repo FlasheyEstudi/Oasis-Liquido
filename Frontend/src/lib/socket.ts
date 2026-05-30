@@ -6,7 +6,16 @@ let socket: Socket | null = null;
 export const getSocket = () => {
   if (!socket) {
     const rawUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:8000';
-    const socketUrl = getDynamicUrl(rawUrl);
+    
+    // Usar la URL directa de Render en producción para WebSockets, ya que Vercel Serverless no los soporta
+    const isProductionClient = typeof window !== 'undefined' && 
+      window.location.hostname !== 'localhost' && 
+      window.location.hostname !== '127.0.0.1';
+      
+    const socketUrl = isProductionClient
+      ? (process.env.NEXT_PUBLIC_SOCKET_URL || 'https://oasis-liquido.onrender.com')
+      : getDynamicUrl(rawUrl);
+
     socket = io(socketUrl, {
       autoConnect: true,
       reconnection: true,
