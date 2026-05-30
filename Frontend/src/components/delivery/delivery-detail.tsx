@@ -311,7 +311,7 @@ export function DeliveryDetail() {
           Volver
         </motion.button>
 
-        <span className="px-3 py-1 rounded-full bg-teal-500/10 text-teal-605 dark:text-teal-400 text-[8.5px] font-black uppercase tracking-widest">
+        <span className="px-3 py-1 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 text-[8.5px] font-black uppercase tracking-widest">
           Bitácora Reparto
         </span>
       </div>
@@ -385,7 +385,7 @@ export function DeliveryDetail() {
                     <span>{item.medicine?.name || 'Medicamento'}</span>
                     <span className="text-slate-400 font-mono text-[10px]">x{item.quantity}</span>
                   </div>
-                  <span className="font-mono text-slate-805 dark:text-white">{formatCurrency(item.quantity * item.unit_price)}</span>
+                  <span className="font-mono text-slate-800 dark:text-white">{formatCurrency(item.quantity * item.unit_price)}</span>
                 </div>
               ))}
               <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-white/5">

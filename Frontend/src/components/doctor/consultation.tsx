@@ -256,7 +256,8 @@ export function Consultation() {
         lines,
       });
 
-      const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#prescription-${prescription.id}`;
+      // OAS-007: Route the verification URL directly to the public prescription verification screen instead of family verification
+      const verifyUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/verificar-receta-${prescription.id}`;
       setCreatedPrescriptionQr(verifyUrl);
       setNotification({ type: 'success', message: 'Receta firmada y emitida correctamente' });
       setPinModalOpen(false);

@@ -906,13 +906,17 @@ export function useInviteDriver() {
 export function useChangeWorkerStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ workerId, isActive }: { workerId: string; isActive: boolean }) =>
+    mutationFn: ({ workerId, isActive }: { workerId: string; isActive: boolean; clinicId?: string; pharmacyId?: string }) =>
       invitationsApi.changeWorkerStatus(workerId, isActive),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      if (variables.clinicId) {
+        queryClient.invalidateQueries({ queryKey: ['clinics', variables.clinicId, 'workers'] });
+      }
+      if (variables.pharmacyId) {
+        queryClient.invalidateQueries({ queryKey: ['pharmacies', variables.pharmacyId, 'workers'] });
+      }
       queryClient.invalidateQueries({ queryKey: ['clinics'] });
       queryClient.invalidateQueries({ queryKey: ['pharmacies'] });
-      queryClient.refetchQueries({ queryKey: ['clinics'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['pharmacies'], type: 'active' });
     },
   });
 }
@@ -921,13 +925,17 @@ export function useChangeWorkerStatus() {
 export function useUpdateWorker() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ workerId, data }: { workerId: string; data: invitationsApi.UpdateWorkerData }) =>
+    mutationFn: ({ workerId, data }: { workerId: string; data: invitationsApi.UpdateWorkerData; clinicId?: string; pharmacyId?: string }) =>
       invitationsApi.updateWorker(workerId, data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      if (variables.clinicId) {
+        queryClient.invalidateQueries({ queryKey: ['clinics', variables.clinicId, 'workers'] });
+      }
+      if (variables.pharmacyId) {
+        queryClient.invalidateQueries({ queryKey: ['pharmacies', variables.pharmacyId, 'workers'] });
+      }
       queryClient.invalidateQueries({ queryKey: ['clinics'] });
       queryClient.invalidateQueries({ queryKey: ['pharmacies'] });
-      queryClient.refetchQueries({ queryKey: ['clinics'], type: 'active' });
-      queryClient.refetchQueries({ queryKey: ['pharmacies'], type: 'active' });
     },
   });
 }

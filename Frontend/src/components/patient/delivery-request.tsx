@@ -288,7 +288,7 @@ export function DeliveryRequest() {
         <div className="flex size-14 items-center justify-center rounded-full bg-emerald-500/10 mx-auto border border-emerald-500/20">
           <CheckCircle2 className="size-7 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h2 className="text-lg font-black text-slate-805 dark:text-white font-serif">¡Misión de Entrega Iniciada!</h2>
+        <h2 className="text-lg font-black text-slate-800 dark:text-white font-serif">¡Misión de Entrega Iniciada!</h2>
         <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-semibold">
           Tu pedido a domicilio se ha registrado en la central de Oasis. Pronto un repartidor de nuestro escuadrón tomará la ruta.
         </p>
@@ -337,7 +337,7 @@ export function DeliveryRequest() {
           Volver
         </Button>
 
-        <span className="px-3 py-1 rounded-full bg-teal-500/10 text-teal-605 dark:text-teal-400 text-[8.5px] font-black uppercase tracking-widest">
+        <span className="px-3 py-1 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 text-[8.5px] font-black uppercase tracking-widest">
           Crear Pedido Domicilio
         </span>
       </div>
@@ -399,7 +399,7 @@ export function DeliveryRequest() {
         <div className="flex items-center justify-between pb-2 border-b border-dashed border-slate-200 dark:border-white/5">
           <p className="text-[8.5px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em]">FÁRMACOS Y PRODUCTOS</p>
           <button
-            className="bg-teal-500/10 text-teal-605 border border-teal-500/20 rounded-full h-8 text-[9px] font-black uppercase tracking-widest px-4 flex items-center gap-1 cursor-pointer"
+            className="bg-teal-500/10 text-teal-600 border border-teal-500/20 rounded-full h-8 text-[9px] font-black uppercase tracking-widest px-4 flex items-center gap-1 cursor-pointer"
             onClick={() => setShowMedicineSearch(!showMedicineSearch)}
           >
             <Plus className="size-3 stroke-[3]" />
@@ -455,7 +455,7 @@ export function DeliveryRequest() {
                       disabled={alreadyAdded}
                     >
                       <div>
-                        <p className="text-xs font-black text-slate-805 dark:text-white font-serif">{item.name}</p>
+                        <p className="text-xs font-black text-slate-800 dark:text-white font-serif">{item.name}</p>
                         <p className="text-[10px] text-slate-500 dark:text-zinc-450 font-bold mt-0.5">
                           {item.dosage_form && `${item.dosage_form} · `}
                           {item.strength && `${item.strength} · `}
@@ -487,7 +487,7 @@ export function DeliveryRequest() {
             orderItems.map((item, index) => (
               <div key={item.medicine_id} className="py-3 flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <h4 className="text-xs font-black text-slate-805 dark:text-white font-serif truncate">{item.name}</h4>
+                  <h4 className="text-xs font-black text-slate-800 dark:text-white font-serif truncate">{item.name}</h4>
                   <p className="text-[10px] text-slate-500 dark:text-zinc-450 font-mono mt-0.5">
                     {formatCurrency(item.unit_price)} c/u
                   </p>
@@ -501,7 +501,7 @@ export function DeliveryRequest() {
                     >
                       <Minus className="size-3" />
                     </button>
-                    <span className="w-6 text-center text-xs font-mono font-bold text-slate-805 dark:text-white">
+                    <span className="w-6 text-center text-xs font-mono font-bold text-slate-800 dark:text-white">
                       {item.quantity}
                     </span>
                     <button
@@ -547,7 +547,7 @@ export function DeliveryRequest() {
 
       {/* Confirmation Capsule Trigger */}
       <Button
-        className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-650 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-lg shadow-teal-500/10 h-13 gap-2 flex items-center justify-center border-none disabled:opacity-50 cursor-pointer transition-all duration-300"
+        className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-lg shadow-teal-500/10 h-13 gap-2 flex items-center justify-center border-none disabled:opacity-50 cursor-pointer transition-all duration-300"
         onClick={handleSubmit}
         disabled={createSaleMutation.isPending || orderItems.length === 0 || !deliveryAddress.trim()}
       >

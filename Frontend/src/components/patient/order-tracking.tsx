@@ -338,7 +338,7 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
                 </div>
               </div>
               
-              <p className="text-[8.5px] font-black text-teal-605 dark:text-teal-400 uppercase tracking-widest mt-0.5">
+              <p className="text-[8.5px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-0.5">
                 Repartidor de Salud Oasis
               </p>
             </div>
@@ -446,7 +446,7 @@ export function OrderTracking() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-dashed border-slate-200 dark:border-white/5">
         <div>
-          <h2 className="text-lg sm:text-xl font-black text-slate-805 dark:text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
             <Sparkles className="size-5 text-teal-500 dark:text-teal-400 animate-pulse" />
             <span>Mis Pedidos Domicilio</span>
           </h2>
@@ -484,7 +484,7 @@ export function OrderTracking() {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-3">
-                          <h4 className="text-xs font-black text-slate-805 dark:text-white font-serif truncate">
+                          <h4 className="text-xs font-black text-slate-800 dark:text-white font-serif truncate">
                             {order.pharmacy?.name || 'Farmacia'}
                           </h4>
                           <StatusBadge status={order.status} type="delivery" />
@@ -613,7 +613,7 @@ export function OrderTracking() {
                             
                             <div className="flex justify-between pt-3 border-t border-dashed border-slate-200 dark:border-white/10 font-bold">
                               <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Total Facturado</span>
-                              <span className="text-xs font-black text-slate-805 dark:text-white font-mono">
+                              <span className="text-xs font-black text-slate-800 dark:text-white font-mono">
                                 {formatCurrency(orderTotal)}
                               </span>
                             </div>
@@ -623,7 +623,7 @@ export function OrderTracking() {
                         {order.status === 'delivered' && (
                           <Button
                             size="sm"
-                            className="w-full rounded-full bg-teal-500/10 dark:bg-teal-500/10 text-teal-650 dark:text-teal-400 hover:bg-teal-500/20 border border-teal-500/20 font-black h-10 transition-colors uppercase tracking-widest text-[9px]"
+                            className="w-full rounded-full bg-teal-500/10 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 border border-teal-500/20 font-black h-10 transition-colors uppercase tracking-widest text-[9px]"
                             onClick={() => setReviewOrder(order)}
                           >
                             Calificar Reparto Bioseguro

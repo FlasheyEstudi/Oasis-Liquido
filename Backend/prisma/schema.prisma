@@ -770,5 +770,19 @@ model PharmacySettings {
   @@map("pharmacy_settings")
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  isUsed    Boolean  @default(false) @map("is_used")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+
 
 

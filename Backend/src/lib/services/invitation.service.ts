@@ -397,29 +397,29 @@ export async function getClinicWorkers(clinicId: string, ownerId: string, caller
     throw new Error('FORBIDDEN');
   }
 
-  // Get doctors associated with this clinic
-  const doctors = await db.user.findMany({
-    where: {
-      role: 'doctor',
-      doctorProfile: { clinicId },
-    },
-    include: {
-      doctorProfile: true,
-    },
-    orderBy: { name: 'asc' },
-  });
-
-  // Get receptionists associated with this clinic
-  const receptionists = await db.user.findMany({
-    where: {
-      role: 'receptionist',
-      receptionistProfile: { clinicId },
-    },
-    include: {
-      receptionistProfile: true,
-    },
-    orderBy: { name: 'asc' },
-  });
+  // OAS-009: Fetch doctors and receptionists in parallel using Promise.all to avoid blocking sequential requests
+  const [doctors, receptionists] = await Promise.all([
+    db.user.findMany({
+      where: {
+        role: 'doctor',
+        doctorProfile: { clinicId },
+      },
+      include: {
+        doctorProfile: true,
+      },
+      orderBy: { name: 'asc' },
+    }),
+    db.user.findMany({
+      where: {
+        role: 'receptionist',
+        receptionistProfile: { clinicId },
+      },
+      include: {
+        receptionistProfile: true,
+      },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
 
   return {
     doctors: doctors.map(({ passwordHash, ...rest }) => rest),
@@ -437,32 +437,29 @@ export async function getPharmacyWorkers(pharmacyId: string, ownerId: string, ca
     throw new Error('FORBIDDEN');
   }
 
-  // Get cashiers (modeled as pharmacyManagerProfile with role 'cashier')
-  const cashiers = await db.user.findMany({
-    where: {
-      role: 'cashier',
-      pharmacyManagerProfile: { pharmacyId },
-    },
-    include: {
-      pharmacyManagerProfile: true,
-    },
-    orderBy: { name: 'asc' },
-  });
-
-  // Get delivery drivers (currently associated globally or we associate them via profile or deliveryOrders)
-  // Let's get drivers. Since delivery drivers are independent, we can fetch the ones in the system or associate them.
-  // Wait, let's fetch all drivers that have active/completed orders with this pharmacy, or just list all drivers.
-  // Let's return all delivery drivers for simplicity or those who have profile setup.
-  const drivers = await db.user.findMany({
-    where: {
-      role: 'delivery_driver',
-      deliveryDriverProfile: { pharmacyId },
-    },
-    include: {
-      deliveryDriverProfile: true,
-    },
-    orderBy: { name: 'asc' },
-  });
+  // OAS-009: Fetch cashiers and delivery drivers in parallel using Promise.all to avoid blocking sequential requests
+  const [cashiers, drivers] = await Promise.all([
+    db.user.findMany({
+      where: {
+        role: 'cashier',
+        pharmacyManagerProfile: { pharmacyId },
+      },
+      include: {
+        pharmacyManagerProfile: true,
+      },
+      orderBy: { name: 'asc' },
+    }),
+    db.user.findMany({
+      where: {
+        role: 'delivery_driver',
+        deliveryDriverProfile: { pharmacyId },
+      },
+      include: {
+        deliveryDriverProfile: true,
+      },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
 
   return {
     cashiers: cashiers.map(({ passwordHash, ...rest }) => rest),

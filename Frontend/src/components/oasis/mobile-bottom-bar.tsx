@@ -18,6 +18,7 @@ import {
   DollarSign,
   Activity,
   Store,
+  Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -78,9 +79,6 @@ function getMobileNavItems(role: UserRole): { page: AppPage; label: string; icon
       return [];
   }
 }
-
-// Fallback dummy for missing icons
-const Building2 = (props: any) => <Store {...props} />;
 
 export function MobileBottomBar() {
   const { user, currentPage, navigate, isElderlyMode } = useAuthStore();
@@ -210,7 +208,7 @@ export function MobileBottomBar() {
               {/* Label */}
               <span className={cn(
                 'relative z-10 font-black uppercase tracking-wider leading-none text-[9px]',
-                isActive ? 'text-teal-650 dark:text-teal-400' : 'text-slate-500 dark:text-zinc-500'
+                isActive ? 'text-teal-600 dark:text-teal-400' : 'text-slate-500 dark:text-zinc-500'
               )}>
                 {item.label}
               </span>

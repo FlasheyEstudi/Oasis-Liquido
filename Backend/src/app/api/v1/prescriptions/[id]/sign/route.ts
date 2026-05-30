@@ -23,7 +23,8 @@ export async function POST(
       include: {
         doctor: {
           include: { doctorProfile: true }
-        }
+        },
+        prescriptionLines: true // OAS-003: Include lines to secure signature
       }
     });
 
@@ -52,8 +53,15 @@ export async function POST(
     // Generate digital signature and verification code
     const verificationCode = `V-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
     
-    // Create a digital signature hash using prescription data + doctor secret
-    const signatureData = `${prescription.id}|${prescription.issuedAt}|${prescription.patientId}|${doctorProfile.licenseNumber}|${Date.now()}`;
+    // Create a digital signature hash using prescription data + lines + doctor secret
+    // OAS-003: Include a deterministic hash of prescription lines to guarantee medicine integrity
+    const serializedLines = (prescription.prescriptionLines || [])
+      .map((line: any) => `${line.medicineId}:${line.quantity}`)
+      .sort()
+      .join('|');
+    const linesHash = crypto.createHash('sha256').update(serializedLines).digest('hex');
+
+    const signatureData = `${prescription.id}|${prescription.issuedAt}|${prescription.patientId}|${doctorProfile.licenseNumber}|${linesHash}|${Date.now()}`;
     const digitalSignature = crypto.createHash('sha256')
       .update(signatureData + doctorProfile.signaturePin)
       .digest('hex');

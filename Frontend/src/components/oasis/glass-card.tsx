@@ -25,10 +25,8 @@ export function GlassCard({
   variants,
   spatial = false,
 }: GlassCardProps) {
-  // Invoca el hook reactivo de giroscopio si se requiere efecto espacial
-  if (spatial) {
-    useSpatialGyro();
-  }
+  // Invoca el hook reactivo de giroscopio de forma incondicional respetando las reglas de React Hooks
+  useSpatialGyro(spatial);
 
   const glassClass = variant === 'strong'
     ? 'glass-strong'

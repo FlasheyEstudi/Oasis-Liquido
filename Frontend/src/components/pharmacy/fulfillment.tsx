@@ -260,7 +260,11 @@ export function Fulfillment() {
             className="space-y-6"
           >
             {/* Prescription Info */}
-            <GlassCard>
+            <GlassCard className="relative overflow-visible rounded-[40px_16px_40px_16px] shadow-2xl p-6">
+              {/* Punch Hole ticket cutouts on left and right margins */}
+              <div className="absolute left-[-11px] top-1/2 -translate-y-1/2 size-5 rounded-full bg-white dark:bg-zinc-950 border-r border-slate-200/50 dark:border-white/10 z-20 pointer-events-none" />
+              <div className="absolute right-[-11px] top-1/2 -translate-y-1/2 size-5 rounded-full bg-white dark:bg-zinc-950 border-l border-slate-200/50 dark:border-white/10 z-20 pointer-events-none" />
+
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <QrCodeIcon className="size-5 text-teal-600 dark:text-teal-400" />
@@ -386,31 +390,35 @@ export function Fulfillment() {
             </GlassCard>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-3">
-              <button
+            <div className="flex items-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleDispense}
                 disabled={isFulfilling}
-                className="glass-btn-primary rounded-full flex-1 h-12 text-base font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex-1 h-12 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] border-none transition-all duration-300 cursor-pointer disabled:opacity-50"
               >
                 {isFulfilling ? (
                   <>
-                    <Loader2 className="size-5 animate-spin" />
+                    <Loader2 className="size-4.5 animate-spin" />
                     Dispensando...
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="size-5" />
+                    <CheckCircle2 className="size-4.5" />
                     Dispensar Receta
                   </>
                 )}
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleReset}
                 disabled={isFulfilling}
-                className="glass-btn-secondary rounded-full px-5 py-2.5 text-sm font-medium disabled:opacity-50"
+                className="h-12 px-6 rounded-[50px_16px_50px_16px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center border border-slate-200/50 dark:border-zinc-800 transition-all duration-300 cursor-pointer disabled:opacity-50"
               >
                 Cancelar
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         )}
@@ -433,14 +441,24 @@ export function Fulfillment() {
               <p className="text-sm text-muted-foreground mb-6">
                 La receta de {prescription.patient?.name} ha sido dispensada correctamente.
               </p>
-              <div className="flex items-center justify-center gap-3">
-                <button onClick={handleReset} className="glass-btn-primary rounded-full px-5 py-2.5 text-sm font-medium flex items-center gap-2">
+              <div className="flex items-center justify-center gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleReset}
+                  className="h-11 px-5 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] border-none transition-all duration-300 cursor-pointer"
+                >
                   <ScanLine className="size-4" />
                   Escanear otra receta
-                </button>
-                <button onClick={handleReset} className="glass-btn-secondary rounded-full px-5 py-2.5 text-sm font-medium">
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleReset}
+                  className="h-11 px-6 rounded-[50px_16px_50px_16px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center border border-slate-200/50 dark:border-zinc-800 transition-all duration-300 cursor-pointer"
+                >
                   Volver
-                </button>
+                </motion.button>
               </div>
             </GlassCard>
           </motion.div>

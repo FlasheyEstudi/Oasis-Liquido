@@ -269,54 +269,60 @@ export function Inventory() {
           {movementsLoading ? (
             <div className="py-12 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
               <LoadingAnimation size="sm" />
-              Cargando historial...
+              Cargando historial de movimientos...
             </div>
           ) : movements.length === 0 ? (
             <div className="py-12 text-center text-xs text-muted-foreground">No hay movimientos registrados aún</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-separate border-spacing-y-2">
-                <thead>
-                  <tr className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-4">
-                    <th className="pb-2 px-4">Fecha</th>
-                    <th className="pb-2 px-4">Medicamento</th>
-                    <th className="pb-2 px-4">Tipo</th>
-                    <th className="pb-2 px-4 text-right">Cantidad</th>
-                    <th className="pb-2 px-4">Motivo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {movements.map((mov: any) => (
-                    <tr key={mov.id} className="bg-white/5 hover:bg-white/10 transition-colors rounded-xl overflow-hidden group">
-                      <td className="py-3 px-4 rounded-l-xl text-xs font-medium text-muted-foreground">
-                        {formatDate(mov.createdAt, 'dd/MM/yyyy HH:mm')}
-                      </td>
-                      <td className="py-3 px-4 font-bold text-foreground">
-                        {mov.inventory?.medicine?.name}
-                      </td>
-                      <td className="py-3 px-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {movements.slice(0, 12).map((mov: any) => {
+                const isPositive = mov.quantityChange > 0;
+                return (
+                  <motion.div
+                    key={mov.id}
+                    whileHover={{ scale: 1.01 }}
+                    className={cn(
+                      "p-4 rounded-[20px_8px_20px_8px] border backdrop-blur-md transition-all duration-300 flex items-center justify-between gap-4 relative overflow-hidden",
+                      isPositive
+                        ? "bg-emerald-500/[0.02] border-emerald-500/10 hover:border-emerald-500/25"
+                        : "bg-rose-500/[0.02] border-rose-500/10 hover:border-rose-500/25"
+                    )}
+                  >
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-500">
+                          {formatDate(mov.createdAt, 'dd/MM/yyyy HH:mm')}
+                        </span>
                         <span className={cn(
-                          "text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter",
-                          mov.type === 'restock' ? "bg-emerald-500/10 text-emerald-600" :
-                          mov.type === 'sale' ? "bg-blue-500/10 text-blue-600" :
-                          "bg-amber-500/10 text-amber-600"
+                          "text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
+                          mov.type === 'restock' ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                          mov.type === 'sale' ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                          "bg-amber-500/10 text-amber-650 dark:text-amber-400"
                         )}>
                           {mov.type === 'restock' ? 'Entrada' : mov.type === 'sale' ? 'Salida' : 'Ajuste'}
                         </span>
-                      </td>
-                      <td className={cn(
-                        "py-3 px-4 text-right font-black",
-                        mov.quantityChange > 0 ? "text-emerald-500" : "text-red-500"
+                      </div>
+                      <h4 className="text-xs font-black text-slate-800 dark:text-zinc-250 truncate">
+                        {mov.inventory?.medicine?.name}
+                      </h4>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-light truncate">
+                        Motivo: {mov.reason || 'Sin motivo registrado'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className={cn(
+                        "text-sm font-black font-mono",
+                        isPositive ? "text-emerald-500" : "text-rose-500"
                       )}>
-                        {mov.quantityChange > 0 ? `+${mov.quantityChange}` : mov.quantityChange}
-                      </td>
-                      <td className="py-3 px-4 rounded-r-xl text-xs text-muted-foreground">
-                        {mov.reason || '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {isPositive ? `+${mov.quantityChange}` : mov.quantityChange}
+                      </span>
+                      <span className="text-[8px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-tighter">
+                        Unidades
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -385,22 +391,26 @@ export function Inventory() {
               </span>
             </div>
           </div>
-          <DialogFooter>
-            <button
+          <DialogFooter className="flex items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setAdjustDialogOpen(false)}
               disabled={isAdjusting}
-              className="glass-btn-secondary rounded-full px-5 py-2 text-sm font-medium"
+              className="h-10 px-5 rounded-[36px_12px_36px_12px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center border border-slate-200/50 dark:border-zinc-800 transition-all duration-300 cursor-pointer disabled:opacity-50"
             >
               Cancelar
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleAdjustStock}
               disabled={isAdjusting || quantityChange === 0}
-              className="glass-btn-primary rounded-full px-5 py-2 text-sm font-medium flex items-center gap-2"
+              className="h-10 px-5 rounded-[12px_36px_12px_36px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_8px_20px_rgba(20,184,166,0.2)] border-none transition-all duration-300 cursor-pointer disabled:opacity-50"
             >
               {isAdjusting ? <Loader2 className="size-4 animate-spin" /> : null}
               Guardar ajuste
-            </button>
+            </motion.button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

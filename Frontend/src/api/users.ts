@@ -36,6 +36,7 @@ export interface UpdateUserAdminRequest {
   phone?: string;
   role?: string;
   is_active?: boolean;
+  password?: string;
 }
 
 /** List users with optional filters (admin) */

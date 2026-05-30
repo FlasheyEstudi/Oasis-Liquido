@@ -69,81 +69,136 @@ export async function adjustInventory(
   ipAddress?: string,
   userAgent?: string
 ) {
-  // Find existing inventory item
-  let item = await db.inventory.findFirst({
-    where: {
-      pharmacyId,
-      medicineId: data.medicine_id,
-    },
-  });
-
-  if (!item) {
-    // If item doesn't exist and we're adding stock, create it
-    if (data.quantity_change > 0) {
-      item = await db.inventory.create({
-        data: {
-          pharmacyId,
-          medicineId: data.medicine_id,
-          quantity: data.quantity_change,
-          unitPrice: data.new_price || 0,
-        },
-      });
-    } else {
-      throw new Error('INSUFFICIENT_STOCK');
-    }
-  } else {
-    // Check if new quantity would be negative
-    const newQuantity = item.quantity + data.quantity_change;
-    if (newQuantity < 0) {
-      throw new Error('INSUFFICIENT_STOCK');
-    }
-
-    // Update existing item
-    const updateData: any = { quantity: newQuantity };
-    if (data.new_price !== undefined) updateData.unitPrice = data.new_price;
-
-    item = await db.inventory.update({
-      where: { id: item.id },
-      data: updateData,
+  return await db.$transaction(async (tx) => {
+    // Find existing inventory item
+    let item = await tx.inventory.findFirst({
+      where: {
+        pharmacyId,
+        medicineId: data.medicine_id,
+      },
     });
-  }
 
-  // Record precise movement for Kardex
-  if (userId) {
-    // Use any as a safety if types are lagging, but the field should exist
-    await (db as any).inventoryMovement.create({
-      data: {
-        inventoryId: item.id,
-        userId: userId,
-        quantityChange: data.quantity_change,
-        type: data.quantity_change > 0 ? 'restock' : 'adjustment',
-        reason: data.reason || 'Ajuste manual',
+    if (!item) {
+      // If item doesn't exist and we're adding stock, create it
+      if (data.quantity_change > 0) {
+        item = await tx.inventory.create({
+          data: {
+            pharmacyId,
+            medicineId: data.medicine_id,
+            quantity: data.quantity_change,
+            unitPrice: data.new_price || 0,
+          },
+        });
+        
+        // OAS-005: Create corresponding batch
+        await tx.inventoryBatch.create({
+          data: {
+            inventoryId: item.id,
+            batchNumber: `AJUSTE-${Date.now().toString().slice(-6)}`,
+            quantity: data.quantity_change,
+            sellingPrice: data.new_price || 0,
+            expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // Default 1 year expiration
+          },
+        });
+      } else {
+        throw new Error('INSUFFICIENT_STOCK');
       }
+    } else {
+      // Check if new quantity would be negative
+      const newQuantity = item.quantity + data.quantity_change;
+      if (newQuantity < 0) {
+        throw new Error('INSUFFICIENT_STOCK');
+      }
+
+      // OAS-005: Sync batches on adjustment
+      if (data.quantity_change > 0) {
+        // Restock / Adding stock: create adjustment batch
+        await tx.inventoryBatch.create({
+          data: {
+            inventoryId: item.id,
+            batchNumber: `AJUSTE-${Date.now().toString().slice(-6)}`,
+            quantity: data.quantity_change,
+            sellingPrice: data.new_price || item.unitPrice,
+            expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          },
+        });
+      } else if (data.quantity_change < 0) {
+        // Adjusting down / Removing stock: Deduct FEFO
+        let remainingToDeduct = Math.abs(data.quantity_change);
+        
+        const activeBatches = await tx.inventoryBatch.findMany({
+          where: {
+            inventoryId: item.id,
+            quantity: { gt: 0 },
+          },
+          orderBy: {
+            expirationDate: 'asc', // FEFO
+          },
+        });
+
+        for (const batch of activeBatches) {
+          if (remainingToDeduct <= 0) break;
+          const deduct = Math.min(batch.quantity, remainingToDeduct);
+          
+          await tx.inventoryBatch.update({
+            where: { id: batch.id },
+            data: { quantity: { decrement: deduct } },
+          });
+          
+          remainingToDeduct -= deduct;
+        }
+
+        if (remainingToDeduct > 0) {
+          throw new Error('INSUFFICIENT_STOCK');
+        }
+      }
+
+      // Update existing item
+      const updateData: any = { quantity: newQuantity };
+      if (data.new_price !== undefined) updateData.unitPrice = data.new_price;
+
+      item = await tx.inventory.update({
+        where: { id: item.id },
+        data: updateData,
+      });
+    }
+
+    // Record precise movement for Kardex
+    if (userId) {
+      await (tx as any).inventoryMovement.create({
+        data: {
+          inventoryId: item.id,
+          userId: userId,
+          quantityChange: data.quantity_change,
+          type: data.quantity_change > 0 ? 'restock' : 'adjustment',
+          reason: data.reason || 'Ajuste manual',
+        }
+      });
+    }
+
+    // Return with medicine info
+    const result = await tx.inventory.findUnique({
+      where: { id: item.id },
+      include: { medicine: true },
     });
-  }
 
-  // Return with medicine info
-  const result = await db.inventory.findUnique({
-    where: { id: item.id },
-    include: { medicine: true },
+    await createAuditLog({
+      userId,
+      action: 'update',
+      entityType: 'inventory',
+      entityId: item.id,
+      details: JSON.stringify({
+        medicine_id: data.medicine_id,
+        quantity_change: data.quantity_change,
+        new_quantity: item.quantity,
+        reason: data.reason,
+      }),
+      ipAddress,
+      userAgent,
+    });
+
+    return result;
   });
-
-  await createAuditLog({
-    userId,
-    action: 'update',
-    entityType: 'inventory',
-    entityId: item.id,
-    details: JSON.stringify({
-      medicine_id: data.medicine_id,
-      quantity_change: data.quantity_change,
-      new_quantity: item.quantity,
-      reason: data.reason,
-    }),
-    ipAddress,
-    userAgent,
-  });
-
-  return result;
 }
 
 /**

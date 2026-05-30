@@ -271,28 +271,45 @@ export async function refreshTokens(refreshToken: string) {
  * Forgot password - generates a reset token (in production, this would be emailed)
  */
 export async function forgotPassword(email: string) {
-  const user = await db.user.findUnique({ where: { email } });
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await db.user.findUnique({ where: { email: normalizedEmail } });
   if (!user) {
     // Don't reveal if email exists for security
     return { message: 'Se envió un correo de recuperación' };
   }
 
-  // Generate reset token
+  // Generate reset token (JWT)
   const resetToken = generateResetToken();
 
-  // Store token in user's notes or a separate table
-  // For simplicity, we store it as a detail that can be verified later
-  // In production, this would be emailed via an email service
+  // Securely hash the token for DB storage
+  const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+  
+  // Set expiration date (1 hour from now)
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+  // Store token safely with user email and state
+  await (db as any).passwordResetToken.create({
+    data: {
+      email: normalizedEmail,
+      tokenHash,
+      expiresAt,
+      isUsed: false,
+    },
+  });
+
+  // Record audit log without the sensitive token
   await createAuditLog({
     userId: user.id,
     action: 'update',
     entityType: 'user',
     entityId: user.id,
-    details: JSON.stringify({ action: 'forgot_password', token: resetToken }),
+    details: JSON.stringify({ action: 'forgot_password_requested' }),
   });
 
-  // Log recovery token securely to server console for Admin manual lookup
-  console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${email} | Recovery Token: ${resetToken}`);
+  // OAS-001: Log recovery token securely to server console ONLY in non-production environments
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${normalizedEmail} | Recovery Token: ${resetToken}`);
+  }
 
   return { 
     message: 'Solicitud registrada. Si el correo existe, recibirás instrucciones. También puedes contactar al Superadministrador directamente.', 
@@ -304,31 +321,58 @@ export async function forgotPassword(email: string) {
  * Reset password with token
  */
 export async function resetPassword(token: string, newPassword: string) {
+  // 1. Verify token signature and purpose
   const { valid } = verifyResetToken(token);
   if (!valid) {
     throw new Error('TOKEN_INVALID');
   }
 
-  // Find the audit log with this token to identify the user
-  const auditLog = await db.auditLog.findFirst({
+  // 2. Hash token to query database
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  // 3. Find valid, unused and non-expired token in DB
+  const resetRecord = await (db as any).passwordResetToken.findFirst({
     where: {
-      action: 'update',
-      entityType: 'user',
-      details: { contains: 'forgot_password' },
-      createdAt: { gte: new Date(Date.now() - 3600000) } // Token valid for 1 hour
+      tokenHash,
+      isUsed: false,
+      expiresAt: { gte: new Date() },
     },
-    orderBy: { createdAt: 'desc' },
   });
 
-  if (!auditLog || !auditLog.userId) {
+  if (!resetRecord) {
     throw new Error('TOKEN_INVALID');
   }
 
-  // Update password
+  // 4. Find the target user by the email registered in the token record
+  const user = await db.user.findUnique({
+    where: { email: resetRecord.email },
+  });
+
+  if (!user) {
+    throw new Error('TOKEN_INVALID');
+  }
+
+  // 5. Update user password and invalidate token in a transaction
   const passwordHash = await hashPassword(newPassword);
-  await db.user.update({
-    where: { id: auditLog.userId },
-    data: { passwordHash },
+
+  await db.$transaction([
+    db.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    }),
+    (db as any).passwordResetToken.update({
+      where: { id: resetRecord.id },
+      data: { isUsed: true },
+    }),
+  ]);
+
+  // Record audit log for security
+  await createAuditLog({
+    userId: user.id,
+    action: 'update',
+    entityType: 'user',
+    entityId: user.id,
+    details: JSON.stringify({ action: 'forgot_password_completed' }),
   });
 
   return { message: 'Contraseña actualizada' };

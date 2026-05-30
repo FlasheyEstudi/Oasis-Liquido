@@ -17,33 +17,39 @@ export async function GET(req: NextRequest) {
     }
 
     const osrmBaseUrl = process.env.OSRM_BASE_URL || 'http://localhost:5000';
-    // OSRM expects coordinates in format: {longitude},{latitude}
     const path = `/route/v1/driving/${origin};${destination}?overview=full&geometries=geojson`;
-    const primaryUrl = `${osrmBaseUrl}${path}`;
-    const fallbackUrl = `https://router.project-osrm.org${path}`;
 
-    let response: Response;
+    const servers = [
+      osrmBaseUrl,
+      `https://routing.openstreetmap.de/routed-car`,
+      `https://router.project-osrm.org`
+    ];
+
+    let response: Response | null = null;
     let fallbackUsed = false;
+    let success = false;
 
-    try {
-      response = await fetch(primaryUrl);
-      if (!response.ok) {
-        throw new Error(`Primary OSRM server responded with status: ${response.status}`);
-      }
-    } catch (primaryError: any) {
-      console.warn(`Primary OSRM engine failed (${primaryUrl}): ${primaryError.message}. Falling back to public OSRM...`);
+    for (let i = 0; i < servers.length; i++) {
+      const server = servers[i];
+      const url = `${server}${path}`;
       try {
-        response = await fetch(fallbackUrl);
-        fallbackUsed = true;
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Fallback OSRM Error:', errorText);
-          return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error al contactar motor de rutas fallback', 502);
+        console.log(`📡 [Route API] Trying OSRM server: ${server}`);
+        const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        if (res.ok) {
+          response = res;
+          fallbackUsed = i > 0;
+          success = true;
+          break;
+        } else {
+          console.warn(`⚠️ [Route API] Server ${server} returned status: ${res.status}`);
         }
-      } catch (fallbackError: any) {
-        console.error('Fallback OSRM also failed:', fallbackError);
-        return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Ambos motores de ruta (primario y fallback) fallaron', 502);
+      } catch (err: any) {
+        console.warn(`⚠️ [Route API] Connection to ${server} failed: ${err.message}`);
       }
+    }
+
+    if (!success || !response) {
+      return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Ambos motores de ruta (primario y fallbacks) fallaron', 502);
     }
 
     const data = await response.json();

@@ -53,7 +53,7 @@ const fadeInUp = {
   initial: { opacity: 0, scale: 0.95, y: 30 },
   animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 20 } },
   exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.2 } },
-};
+} as const;
 
 export function NewAppointment() {
   const { representedUser, navigate, setNotification, isElderlyMode } = useAuthStore();
@@ -195,7 +195,7 @@ export function NewAppointment() {
                   </motion.button>
                   <span className={cn(
                     'hidden sm:block text-[9px] font-black uppercase tracking-wider absolute -bottom-5 w-20 text-center truncate transition-colors duration-300',
-                    isActive ? 'text-teal-650 dark:text-teal-400' : 'text-slate-400 dark:text-zinc-550'
+                    isActive ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-zinc-550'
                   )}>
                     {s.label}
                   </span>
@@ -216,7 +216,7 @@ export function NewAppointment() {
         </div>
         
         {/* Mobile current label */}
-        <div className="block sm:hidden text-center text-[10px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-[0.2em] mt-3 animate-pulse">
+        <div className="block sm:hidden text-center text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-[0.2em] mt-3 animate-pulse">
           Paso {step} de 4: {STEPS[step - 1].label}
         </div>
       </div>
@@ -260,15 +260,15 @@ export function NewAppointment() {
                               className={cn(
                                 'flex items-center gap-3.5 p-4 cursor-pointer border transition-all duration-300 relative overflow-hidden group shadow-sm',
                                 isSelected 
-                                  ? 'bg-teal-500/10 border-teal-500/35 ring-4 ring-teal-550/5' 
+                                  ? 'bg-teal-500/10 border-teal-500/35 ring-4 ring-teal-500/5' 
                                   : 'bg-white/40 dark:bg-zinc-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white/80 dark:hover:bg-zinc-900/70'
                               )}
                               onClick={() => handleClinicSelect(clinic.id)}
                             >
-                              {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-550 to-cyan-550" />}
+                              {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-500 to-cyan-500" />}
                               <div className={cn(
                                 'flex size-12 items-center justify-center rounded-2xl shrink-0 transition-colors',
-                                isSelected ? 'bg-teal-550/15 text-teal-600 dark:text-teal-400' : 'bg-slate-100 dark:bg-black/10 text-slate-400 dark:text-zinc-550'
+                                isSelected ? 'bg-teal-500/15 text-teal-600 dark:text-teal-400' : 'bg-slate-100 dark:bg-black/10 text-slate-400 dark:text-zinc-550'
                               )}>
                                 <Building2 className="size-5.5" />
                               </div>
@@ -361,14 +361,14 @@ export function NewAppointment() {
                           className={cn(
                             'flex items-center gap-3.5 p-4 cursor-pointer border transition-all duration-300 relative overflow-hidden shadow-sm group',
                             isSelected 
-                              ? 'bg-teal-500/10 border-teal-500/35 ring-4 ring-teal-550/5' 
+                              ? 'bg-teal-500/10 border-teal-500/35 ring-4 ring-teal-500/5' 
                               : 'bg-white/40 dark:bg-zinc-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white/80 dark:hover:bg-zinc-900/70'
                           )}
                           onClick={() => setSelectedDoctorId(doc.id)}
                         >
                           {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-500 to-cyan-500" />}
                           <Avatar className="size-12 border border-teal-500/15 shrink-0 shadow-sm">
-                            <AvatarFallback className="bg-teal-500/10 text-teal-650 dark:text-teal-450 text-xs font-black font-serif">
+                            <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-450 text-xs font-black font-serif">
                               {getInitials(doc.name)}
                             </AvatarFallback>
                           </Avatar>
@@ -379,7 +379,7 @@ export function NewAppointment() {
                               </p>
                               {isSelected && <CheckCircle2 className="size-4 text-teal-500 shrink-0" />}
                             </div>
-                            <p className="text-[10px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest mt-1">
+                            <p className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-1">
                               {doc.doctor_profile?.specialty || 'Médico General'}
                             </p>
                           </div>
@@ -486,7 +486,7 @@ export function NewAppointment() {
             <motion.div key="step4" {...fadeInUp}>
               <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[80px_40px_32px_120px] p-6 max-w-md mx-auto backdrop-blur-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 size-24 bg-teal-500/5 rounded-full blur-xl pointer-events-none" />
-                <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-zinc-450 pb-3 border-b border-dashed border-slate-250 dark:border-white/10 mb-6 text-center">
+                <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-zinc-400 pb-3 border-b border-dashed border-slate-200 dark:border-white/10 mb-6 text-center">
                   Resumen de Reserva Médica
                 </h3>
                 
@@ -494,31 +494,31 @@ export function NewAppointment() {
                   {/* Doctor Info Card */}
                   <div className="flex flex-col items-center text-center p-5 rounded-[40px_16px_28px_16px] bg-teal-500/5 border border-teal-500/15 shadow-sm">
                     <Avatar className="size-16 mb-3 border border-teal-500/20 ring-4 ring-teal-500/5 shadow-md">
-                      <AvatarFallback className="bg-teal-550/10 text-teal-605 dark:text-teal-450 text-base font-black font-serif">
+                      <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-base font-black font-serif">
                         {getInitials(selectedDoctor?.name || '')}
                       </AvatarFallback>
                     </Avatar>
-                    <h4 className="text-sm font-black text-slate-850 dark:text-white leading-none font-serif">Dr. {selectedDoctor?.name}</h4>
-                    <p className="text-[10px] font-black text-teal-650 dark:text-teal-450 uppercase tracking-widest mt-1.5">{selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}</p>
+                    <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none font-serif">Dr. {selectedDoctor?.name}</h4>
+                    <p className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-1.5">{selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}</p>
                   </div>
 
                   {/* Receipt Grid */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-[24px_12px_16px_12px] bg-white/40 dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5 shadow-sm">
-                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Ubicación</p>
-                      <p className="text-xs font-black text-slate-805 dark:text-white truncate font-serif">{selectedClinic?.name}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-450 truncate leading-relaxed font-semibold">{selectedClinic?.address}</p>
+                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Ubicación</p>
+                      <p className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">{selectedClinic?.name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate leading-relaxed font-semibold">{selectedClinic?.address}</p>
                     </div>
 
                     <div className="p-4 rounded-[12px_24px_12px_16px] bg-white/40 dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5 shadow-sm">
-                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Fecha y hora</p>
-                      <p className="text-xs font-black text-slate-805 dark:text-white font-serif">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-450 leading-relaxed font-semibold">{selectedTime} hrs • 30 mins</p>
+                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
+                      <p className="text-xs font-black text-slate-800 dark:text-white font-serif">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-relaxed font-semibold">{selectedTime} hrs • 30 mins</p>
                     </div>
                   </div>
 
                   {/* Warning banner */}
-                  <div className="flex items-center gap-2.5 p-3.5 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 text-[10px] font-bold text-slate-650 dark:text-zinc-350 shadow-sm leading-relaxed">
+                  <div className="flex items-center gap-2.5 p-3.5 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-300 shadow-sm leading-relaxed">
                     <Sparkles className="size-4.5 text-indigo-500 shrink-0 animate-pulse" />
                     <span>Recibirás un recordatorio seguro por notificación PWA antes del horario pactado.</span>
                   </div>
@@ -527,7 +527,7 @@ export function NewAppointment() {
                   <Button 
                     onClick={handleSubmit} 
                     disabled={createMutation.isPending} 
-                    className="w-full h-13 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2"
+                    className="w-full h-13 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-550 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest shadow-[inset_0_4px_6px_rgba(255,255,255,0.35),inset_0_-2px_4px_rgba(0,0,0,0.2),0_12px_30px_rgba(20,184,166,0.25)] flex items-center justify-center gap-2 border-none transition-all duration-300"
                   >
                     {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : (
                       <>

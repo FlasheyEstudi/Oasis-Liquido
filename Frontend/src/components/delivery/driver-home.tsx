@@ -393,7 +393,7 @@ export function DriverHome() {
             className={cn(
               'size-9 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-sm',
               soundEnabled
-                ? 'bg-teal-500/10 border-teal-500/20 text-teal-650 dark:text-teal-400 hover:bg-teal-500/20'
+                ? 'bg-teal-500/10 border-teal-500/20 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20'
                 : 'bg-white/40 dark:bg-white/5 border-slate-200/50 dark:border-white/10 text-slate-400 dark:text-zinc-500 hover:bg-white/10'
             )}
           >
@@ -453,7 +453,7 @@ export function DriverHome() {
             <p className="text-sm font-black text-slate-800 dark:text-white font-mono">
               {stats?.rating ?? 5.0} ★
             </p>
-            <p className="text-[7px] text-teal-655 dark:text-teal-400 font-black uppercase tracking-wider mt-0.5">ELITE</p>
+            <p className="text-[7px] text-teal-600 dark:text-teal-400 font-black uppercase tracking-wider mt-0.5">ELITE</p>
           </div>
         </div>
       </div>
@@ -586,7 +586,7 @@ export function DriverHome() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-black text-slate-805 dark:text-white truncate font-serif">
+                          <h4 className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">
                             {order.pharmacy?.name || 'Farmacia Oasis'}
                           </h4>
                           <StatusBadge status={order.status} type="delivery" />
@@ -658,7 +658,7 @@ export function DriverHome() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs font-black text-slate-805 dark:text-white truncate font-serif">
+                        <h4 className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">
                           {order.pharmacy?.name || 'Farmacia Oasis'}
                         </h4>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-widest border border-emerald-500/10 shrink-0">
@@ -673,7 +673,7 @@ export function DriverHome() {
                   </div>
 
                   <div className="flex items-center gap-4 pl-12 md:pl-0 shrink-0 justify-between md:justify-end w-full md:w-auto" onClick={(e) => e.stopPropagation()}>
-                    <div className="text-left md:text-right font-mono font-bold text-xs space-y-0.5 text-slate-805 dark:text-white">
+                    <div className="text-left md:text-right font-mono font-bold text-xs space-y-0.5 text-slate-800 dark:text-white">
                       <p className="text-emerald-500">+{formatCurrency(order.deliveryFee || 60)} fee</p>
                       <p className="text-[8px] text-slate-400 dark:text-zinc-555 font-black uppercase tracking-wide">Recibe crédito</p>
                     </div>
@@ -683,7 +683,7 @@ export function DriverHome() {
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={(e) => handleAccept(e, order.id)}
-                        className="px-4 py-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-650 hover:to-cyan-655 text-white font-black text-[8.5px] uppercase tracking-widest cursor-pointer border-none shadow-sm flex items-center gap-1"
+                        className="px-4 py-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-[8.5px] uppercase tracking-widest cursor-pointer border-none shadow-sm flex items-center gap-1"
                       >
                         <Check className="size-3 stroke-[3]" /> Aceptar
                       </motion.button>
@@ -711,7 +711,7 @@ export function DriverHome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-zinc-950 text-slate-805 dark:text-white flex flex-col overflow-hidden font-sans select-none"
+            className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-white flex flex-col overflow-hidden font-sans select-none"
           >
             {/* Holographic grid scan lines backplate */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(rgba(18,18,18,0)_95%,rgba(0,192,255,0.8)_95%),linear-gradient(90deg,rgba(18,18,18,0)_95%,rgba(0,192,255,0.8)_95%)] bg-[size:30px_30px]" />
@@ -871,7 +871,7 @@ export function DriverHome() {
                           setSelectedRadarOrder(null);
                           setIsFullscreenRadar(false);
                         }}
-                        className="flex-1 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-605 text-white dark:text-zinc-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/20 cursor-pointer flex items-center justify-center gap-2 border-none"
+                        className="flex-1 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white dark:text-zinc-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/20 cursor-pointer flex items-center justify-center gap-2 border-none"
                       >
                         <Check className="size-4 stroke-[3]" /> ACEPTAR E INICIAR MISIÓN
                       </motion.button>
@@ -879,7 +879,7 @@ export function DriverHome() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setSelectedRadarOrder(null)}
-                        className="px-5 h-12 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-zinc-400 hover:text-slate-805 dark:hover:text-white text-xs font-black uppercase cursor-pointer transition-colors border-none"
+                        className="px-5 h-12 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white text-xs font-black uppercase cursor-pointer transition-colors border-none"
                       >
                         DESCARTAR
                       </motion.button>

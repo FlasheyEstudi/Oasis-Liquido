@@ -492,22 +492,24 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
               {isPrescriptionApplied ? "Receta Vinculada" : "Vincular Receta QR"}
             </Button>
 
-            <div className="flex items-center justify-between text-2xl font-bold text-emerald-600 pt-2">
+            <div className="flex items-center justify-between text-2xl font-black text-emerald-600 dark:text-emerald-400 pt-2 font-mono">
               <span>Total</span>
               <span>{formatCurrency(total)}</span>
             </div>
 
-            <Button 
-              className="w-full h-14 text-lg font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
+            <motion.button
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
               disabled={cart.length === 0 || isProcessing}
               onClick={() => {
                 setPaymentsList([{ method: 'cash', amount: total }]);
                 setCheckoutModalOpen(true);
               }}
+              className="w-full h-14 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-555 hover:from-emerald-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_4px_6px_rgba(255,255,255,0.35),inset_0_-2px_4px_rgba(0,0,0,0.2),0_12px_30px_rgba(16,185,129,0.25)] border-none transition-all duration-300 cursor-pointer disabled:opacity-50"
             >
-              {isProcessing ? <Loader2 className="size-6 animate-spin" /> : <Receipt className="size-6 mr-2" />}
+              {isProcessing ? <Loader2 className="size-5 animate-spin" /> : <Receipt className="size-5" />}
               PROCESAR VENTA
-            </Button>
+            </motion.button>
           </div>
         </GlassCard>
       </div>
@@ -683,22 +685,25 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
                 })()}
               </div>
 
-              <div className="flex gap-3">
-                <Button 
-                  variant="ghost" 
-                  className="flex-1 text-gray-400 hover:text-white" 
+              <div className="flex gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setCheckoutModalOpen(false)}
+                  className="flex-1 h-12 rounded-[50px_16px_50px_16px] bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center border border-slate-750 transition-all duration-300 cursor-pointer"
                 >
                   Cancelar
-                </Button>
-                <Button 
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold"
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
                   disabled={paymentsList.reduce((acc, p) => acc + p.amount, 0) < total || isProcessing}
                   onClick={() => handleCheckout(paymentsList)}
+                  className="flex-1 h-12 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-555 hover:from-emerald-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(16,185,129,0.2)] border-none transition-all duration-300 cursor-pointer disabled:opacity-50"
                 >
                   {isProcessing ? <Loader2 className="size-4 animate-spin mr-1" /> : null}
                   Confirmar Cobro
-                </Button>
+                </motion.button>
               </div>
             </motion.div>
           </div>

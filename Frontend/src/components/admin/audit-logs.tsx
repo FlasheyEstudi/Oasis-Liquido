@@ -189,28 +189,30 @@ export function AuditLogs() {
         </motion.div>
         <div className="flex items-center gap-3">
           <motion.button
+            whileHover={{ scale: 1.02, y: -1 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleExportCSV}
-            className="rounded-full px-4 py-2 text-sm font-medium flex items-center gap-2 bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all shadow-sm"
+            className="h-10 px-5 rounded-[12px_36px_12px_36px] flex items-center gap-2 bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/15 hover:to-orange-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:border-amber-500/35 shadow-[inset_0_2px_4px_rgba(255,255,255,0.05),0_4px_12px_rgba(245,158,11,0.1)] transition-all duration-300 cursor-pointer font-bold text-xs uppercase tracking-wider"
           >
             <FileText className="size-4" />
             Exportar CSV
           </motion.button>
           
           <motion.button
+            whileHover={{ scale: 1.02, y: -1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowFilters((prev) => !prev)}
             className={cn(
-              'rounded-full px-4 py-2 text-sm font-medium flex items-center gap-2 transition-all',
+              'h-10 px-5 flex items-center gap-2 transition-all duration-300 cursor-pointer font-bold text-xs uppercase tracking-wider',
               showFilters || hasActiveFilters
-                ? 'bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-500/30'
-                : 'glass-btn-secondary',
+                ? 'rounded-[36px_12px_36px_12px] bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-500/30 shadow-[inset_0_2px_4px_rgba(255,255,255,0.1),0_4px_12px_rgba(20,184,166,0.15)]'
+                : 'rounded-[36px_12px_36px_12px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/50 dark:border-zinc-800',
             )}
           >
             <Filter className="size-4" />
             Filtros
             {hasActiveFilters && (
-              <span className="flex size-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-bold text-white">
+              <span className="flex size-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-bold text-white shadow-md">
                 {(actionFilter !== 'all' ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (userQuery ? 1 : 0) + (ipQuery ? 1 : 0) + (resourceFilter !== 'all' ? 1 : 0)}
               </span>
             )}
@@ -428,12 +430,14 @@ export function AuditLogs() {
               </div>
 
               <div className="p-6 border-t border-white/10 flex justify-end bg-white/5">
-                <Button 
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedLog(null)}
-                  className="glass-btn-primary rounded-full px-8"
+                  className="h-10 px-8 rounded-[12px_36px_12px_36px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_8px_20px_rgba(20,184,166,0.2)] border-none transition-all duration-300 cursor-pointer"
                 >
                   Cerrar
-                </Button>
+                </motion.button>
               </div>
             </motion.div>
           </div>

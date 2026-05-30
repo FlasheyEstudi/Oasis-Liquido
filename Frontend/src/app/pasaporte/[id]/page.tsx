@@ -143,14 +143,14 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           {/* Institutional Watermark */}
           <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-emerald-500/[0.04] bg-emerald-500/[0.005] flex items-center justify-center rotate-12 pointer-events-none select-none">
             <span className="text-[7px] font-black text-emerald-400/[0.08] tracking-[0.25em] uppercase text-center leading-relaxed">
-              FARMACIA AUTORIZADA<br/>MINISTERIO DE SALUD<br/>REPÚBLICA DE NICARAGUA
+              FARMACIA AUTORIZADA<br/>VERIFICACIÓN PRIVADA<br/>RED DE SALUD OASIS
             </span>
           </div>
 
           {/* Hologram Overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 via-cyan-500/5 to-amber-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-          <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+          <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
             {/* Header */}
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
               <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase shadow-[0_0_15px_rgba(16,185,129,0.15)] animate-pulse">
-                  MINSA AUTORIZADO
+                  VERIFICADO OASIS
                 </span>
               </div>
             </div>
@@ -266,14 +266,14 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           {/* Medical Official Seal Watermark */}
           <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-sky-500/[0.04] bg-sky-500/[0.005] flex items-center justify-center rotate-12 pointer-events-none select-none">
             <span className="text-[7px] font-black text-sky-400/[0.08] tracking-[0.25em] uppercase text-center leading-relaxed">
-              MÉDICO COLEGIADO<br/>MINISTERIO DE SALUD<br/>REPÚBLICA DE NICARAGUA
+              MÉDICO COLEGIADO<br/>VERIFICACIÓN PRIVADA<br/>RED DE SALUD OASIS
             </span>
           </div>
 
           {/* Hologram Overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 via-indigo-500/5 to-cyan-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-          <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+          <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
             {/* Header */}
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
               <div className="flex items-center gap-3">
@@ -297,7 +297,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase shadow-[0_0_15px_rgba(14,165,233,0.15)] animate-pulse">
-                  MINSA CERTIFICADO
+                  VERIFICADO OASIS
                 </span>
               </div>
             </div>
@@ -320,7 +320,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
 
                 <div className="grid grid-cols-12 gap-2 sm:gap-4">
                   <div className="col-span-7">
-                    <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">LICENCIA SANITARIA MINSA</p>
+                    <p className="text-[6px] sm:text-[7px] text-sky-400/50 font-bold tracking-[0.2em] uppercase font-mono">LICENCIA MÉDICA OASIS</p>
                     <p className="text-[10px] sm:text-xs font-black font-mono text-zinc-200 uppercase tracking-wider mt-1">{data.licenseNumber}</p>
                   </div>
                   <div className="col-span-5">
@@ -353,7 +353,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
               {/* Digital Wax-Seal signature simulation */}
               <div className="absolute right-0 bottom-0 select-none pointer-events-none translate-y-[20%] size-11 md:size-13 rounded-full bg-gradient-to-br from-yellow-400 via-amber-500 to-amber-600 border border-yellow-300/40 flex items-center justify-center shadow-lg shadow-amber-900/50 opacity-90 overflow-hidden">
                 <div className="size-full rounded-full border border-zinc-950/20 flex items-center justify-center p-0.5">
-                  <span className="text-[5px] font-black text-zinc-950 text-center tracking-tighter uppercase leading-none font-serif">MINSA<br/>FIRMA</span>
+                  <span className="text-[5px] font-black text-zinc-950 text-center tracking-tighter uppercase leading-none font-serif">OASIS<br/>FIRMA</span>
                 </div>
               </div>
             </div>
@@ -388,14 +388,14 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           {/* Navigation Compass / GPS Rose Watermark */}
           <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-amber-500/[0.04] bg-amber-500/[0.005] flex items-center justify-center rotate-12 pointer-events-none select-none">
             <span className="text-[7px] font-black text-amber-400/[0.08] tracking-[0.25em] uppercase text-center leading-relaxed">
-              LOGÍSTICA OASIS<br/>DESPACHO CERTIFICADO<br/>MINSA NICARAGUA
+              LOGÍSTICA OASIS<br/>DESPACHO CERTIFICADO<br/>RED DE SALUD OASIS
             </span>
           </div>
 
           {/* Hologram Overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 via-orange-500/5 to-yellow-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-          <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+          <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
             {/* Header */}
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
               <div className="flex items-center gap-3">
@@ -422,7 +422,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
               <div className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-amber-500/15 text-amber-400 border border-amber-500/30 uppercase shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-                  MINSA AUTORIZADO
+                  VERIFICADO OASIS
                 </span>
               </div>
             </div>
@@ -514,14 +514,14 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
         {/* National Emblem Watermark */}
         <div className="absolute -right-16 -bottom-16 size-56 rounded-full border border-teal-500/[0.04] bg-teal-500/[0.005] flex items-center justify-center rotate-12 pointer-events-none select-none">
           <span className="text-[7px] font-black text-teal-400/[0.08] tracking-[0.25em] uppercase text-center leading-relaxed">
-            PASAPORTE DE SALUD<br/>MINISTERIO DE SALUD<br/>REPÚBLICA DE NICARAGUA
+            PASAPORTE DE SALUD<br/>VERIFICACIÓN OASIS<br/>RED DE SALUD OASIS
           </span>
         </div>
 
         {/* Hologram Overlay */}
         <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 via-purple-500/5 to-emerald-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-        <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+        <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
           {/* Header */}
           <div className="flex justify-between items-center border-b border-white/10 pb-3">
             <div className="flex items-center gap-3">
@@ -545,7 +545,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
             </div>
             <div className="text-right">
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[7px] sm:text-[8px] font-black tracking-widest bg-teal-500/15 text-teal-400 border border-teal-500/30 uppercase shadow-[0_0_15px_rgba(20,184,166,0.15)] animate-pulse">
-                MINSA ACREDITADO
+                VERIFICADO OASIS
               </span>
             </div>
           </div>
@@ -631,7 +631,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
               <div className="size-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
                 <Building2 className="size-4" />
               </div>
-              <h4 className="text-sm font-black uppercase text-white tracking-widest">Acreditación MINSA Farmacéutica</h4>
+              <h4 className="text-sm font-black uppercase text-white tracking-widest">Acreditación de Farmacia Oasis</h4>
             </div>
             <div className="space-y-4">
               <div className="flex gap-3 bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
@@ -639,7 +639,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
                 <div>
                   <p className="text-[10px] font-black text-white uppercase tracking-wide">Estatus Operativo Activo</p>
                   <p className="text-xs text-zinc-400 mt-0.5 leading-normal">
-                    Este establecimiento cuenta con licencia sanitaria vigente emitida por el MINSA para la dispensación de medicamentos controlados y generales de Oasis Líquida.
+                    Este establecimiento cuenta con acreditación vigente emitida por Oasis para la dispensación de medicamentos controlados y generales de Oasis Líquida.
                   </p>
                 </div>
               </div>
@@ -704,9 +704,9 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
               <div className="flex gap-3 bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
                 <CheckCircle2 className="size-5 text-sky-500 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-black text-white uppercase tracking-wide">Licencia MINSA Homologada</p>
-                  <p className="text-xs text-zinc-400 mt-0.5 leading-normal">
-                    Profesional médico debidamente inscrito y autorizado por el Ministerio de Salud para emitir recetas digitales y dar seguimiento a pacientes en Oasis.
+                  <p className="text-[10px] font-black text-white uppercase tracking-wide">Acreditación Médica Homologada</p>
+                  <p className="text-xs text-zinc-400 mt-0.5 leading-normal font-sans">
+                    Profesional médico debidamente inscrito y verificado por Oasis para emitir recetas digitales y dar seguimiento a pacientes en la red.
                   </p>
                 </div>
               </div>
@@ -772,8 +772,8 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
                 <CheckCircle2 className="size-5 text-amber-500 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] font-black text-white uppercase tracking-wide">Licencia Operativa Logistics</p>
-                  <p className="text-xs text-zinc-400 mt-0.5 leading-normal">
-                    Repartidor debidamente autorizado por Oasis y el MINSA para el traslado seguro y confidencial de medicamentos con receta médica.
+                  <p className="text-xs text-zinc-400 mt-0.5 leading-normal font-sans">
+                    Repartidor debidamente autorizado y verificado por Oasis para el traslado seguro y confidencial de medicamentos con receta médica.
                   </p>
                 </div>
               </div>
@@ -860,7 +860,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
                 </span>
                 <div>
                   <p className="text-xs font-black text-white">Factor Crítico Confirmado</p>
-                  <p className="text-[10px] text-zinc-400 font-medium mt-0.5">Válido para transfusiones en clínicas MINSA</p>
+                  <p className="text-[10px] text-zinc-400 font-medium mt-0.5">Válido para transfusiones en clínicas afiliadas a Oasis</p>
                 </div>
               </div>
             </div>
@@ -879,8 +879,8 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
               <CheckCircle2 className="size-5 text-emerald-500 mt-0.5 shrink-0" />
               <div>
                 <p className="text-[10px] font-black text-white uppercase tracking-wide">Estatus Homologado Activo</p>
-                <p className="text-xs text-zinc-400 mt-0.5 leading-normal">
-                  Este carnet cumple con las normativas vigentes del Ministerio de Salud (MINSA) para identificación y trazabilidad de pacientes crónicos.
+                <p className="text-xs text-zinc-400 mt-0.5 leading-normal font-sans">
+                  Este carnet cumple con los altos estándares de seguridad y protocolos internos de Oasis para identificación y trazabilidad de pacientes crónicos.
                 </p>
               </div>
             </div>
@@ -916,7 +916,7 @@ export default function PasaportePublicoPage({ params }: { params: Promise<{ id:
           className="text-center"
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.1)] mb-4">
-            <CheckCircle2 className="size-4" /> Certificación MINSA Válida
+            <CheckCircle2 className="size-4" /> Verificación OASIS Válida
           </div>
           <h1 className="text-3xl font-black tracking-tight uppercase">
             {data.type === 'pharmacy' && 'Credencial Farmacéutica'}

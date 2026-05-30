@@ -100,6 +100,17 @@ export function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Prefill from landing page quick capture
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const prefill = localStorage.getItem('oasis_prefill_auth');
+      if (prefill) {
+        setEmail(prefill);
+        localStorage.removeItem('oasis_prefill_auth');
+      }
+    }
+  }, []);
+
   // Desktop Mouse Perspective Tilt states
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {

@@ -447,7 +447,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 via-cyan-500/5 to-amber-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-              <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+              <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
                 <div className="flex justify-between items-center border-b border-white/10 pb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-emerald-300 via-teal-500 to-emerald-600 rounded-[4px] border border-emerald-400/40 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">
@@ -560,7 +560,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
               <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 via-indigo-500/5 to-cyan-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-              <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+              <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
                 <div className="flex justify-between items-center border-b border-white/10 pb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-sky-300 via-indigo-500 to-sky-700 rounded-[4px] border border-sky-400/40 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">
@@ -670,7 +670,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 via-orange-500/5 to-yellow-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-              <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+              <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
                 <div className="flex justify-between items-center border-b border-white/10 pb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-amber-300 via-orange-500 to-amber-755 rounded-[4px] border border-amber-400/40 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">
@@ -783,7 +783,7 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
               <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 via-purple-500/5 to-emerald-500/5 opacity-40 mix-blend-overlay pointer-events-none" />
 
-              <div className="absolute inset-0 p-5 sm:p-7 md:p-8 flex flex-col justify-between z-10">
+              <div className="absolute inset-0 p-3 sm:p-5 md:p-8 flex flex-col justify-between z-10">
                 <div className="flex justify-between items-center border-b border-white/10 pb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-6 sm:w-10 sm:h-7 bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 rounded-[4px] border border-amber-400/40 relative shadow-md overflow-hidden flex flex-col justify-between p-0.5 opacity-95 shrink-0">

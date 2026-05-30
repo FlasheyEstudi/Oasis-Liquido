@@ -71,7 +71,7 @@ export function PrescriptionList() {
       {/* Header Grid */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-dashed border-slate-200/50 dark:border-white/5 transition-colors duration-300">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-805 dark:text-white tracking-tight flex items-center gap-2 font-serif">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2 font-serif">
             <Sparkles className="size-5.5 text-indigo-500 shrink-0" />
             <span>Mis Recetas Digitales</span>
           </h2>
@@ -84,7 +84,7 @@ export function PrescriptionList() {
           whileHover={{ scale: 1.03, y: -1 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('pharmacy-map')}
-          className="w-full sm:w-auto h-11 px-6 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-teal-500/10 transition-all duration-300 border-none"
+          className="w-full sm:w-auto h-11 px-6 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-550 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] transition-all duration-300 border-none"
         >
           <Search className="size-4 shrink-0" />
           Buscar farmacias con stock
@@ -204,7 +204,7 @@ export function PrescriptionList() {
                       </Avatar>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-xs sm:text-sm font-black text-slate-805 dark:text-white truncate font-serif group-hover:text-indigo-605 transition-colors">
+                          <p className="text-xs sm:text-sm font-black text-slate-800 dark:text-white truncate font-serif group-hover:text-indigo-600 transition-colors">
                             Dr. {presc.doctor?.name || 'Médico'}
                           </p>
                           <span className={cn(
@@ -216,7 +216,7 @@ export function PrescriptionList() {
                           </span>
                         </div>
                         {presc.doctor?.doctor_profile?.specialty && (
-                          <p className="text-[9px] sm:text-[10px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest mt-0.5">
+                          <p className="text-[9px] sm:text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-0.5">
                             {presc.doctor.doctor_profile.specialty}
                           </p>
                         )}
@@ -247,7 +247,7 @@ export function PrescriptionList() {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full bg-teal-500 hover:bg-teal-650 text-[9px] font-black uppercase tracking-widest text-white shadow-md transition-all duration-200 select-none z-10 border-none cursor-pointer"
+                            className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full bg-teal-500 hover:bg-teal-600 text-[9px] font-black uppercase tracking-widest text-white shadow-md transition-all duration-200 select-none z-10 border-none cursor-pointer"
                             onClick={() => {
                               useAuthStore.getState().setPrescriptionId(presc.id);
                               navigate('pharmacy-map', presc.id);
@@ -292,7 +292,7 @@ export function PrescriptionList() {
               <Shield className="size-5 text-indigo-500 animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-400">Verificación de Receta</span>
             </div>
-            <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-805 dark:text-white font-serif">Código QR Seguro</DialogTitle>
+            <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-800 dark:text-white font-serif">Código QR Seguro</DialogTitle>
           </DialogHeader>
 
           {qrDialog && (
@@ -308,7 +308,7 @@ export function PrescriptionList() {
               </div>
 
               <div className="w-full space-y-1 bg-slate-500/[0.02] dark:bg-zinc-950/40 p-3.5 rounded-2xl border border-slate-200/50 dark:border-white/5 text-center shadow-inner">
-                <p className="text-xs font-black text-slate-805 dark:text-white font-serif">
+                <p className="text-xs font-black text-slate-800 dark:text-white font-serif">
                   Dr. {qrDialog.doctor?.name || 'Especialista Oasis'}
                 </p>
                 <p className="text-[9px] font-bold text-slate-500 dark:text-zinc-455">

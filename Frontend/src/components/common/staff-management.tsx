@@ -146,7 +146,7 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
   const handleToggleStatus = async (workerId: string, currentStatus: boolean) => {
     try {
       await changeWorkerStatus.mutateAsync(
-        { workerId, isActive: !currentStatus },
+        { workerId, isActive: !currentStatus, clinicId },
         {
           onSuccess: () => {
             setNotification({
@@ -511,6 +511,7 @@ export function ClinicStaffManagement({ clinicId }: { clinicId: string }) {
           onClose={() => setEditingWorker(null)}
           worker={editingWorker}
           onSuccess={() => refetch()}
+          clinicId={clinicId}
         />
       )}
     </div>
@@ -610,7 +611,7 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
   const handleToggleStatus = async (workerId: string, currentStatus: boolean) => {
     try {
       await changeWorkerStatus.mutateAsync(
-        { workerId, isActive: !currentStatus },
+        { workerId, isActive: !currentStatus, pharmacyId },
         {
           onSuccess: () => {
             setNotification({
@@ -973,6 +974,7 @@ export function PharmacyStaffManagement({ pharmacyId }: { pharmacyId: string }) 
           onClose={() => setEditingWorker(null)}
           worker={editingWorker}
           onSuccess={() => refetch()}
+          pharmacyId={pharmacyId}
         />
       )}
     </div>
@@ -986,9 +988,11 @@ interface EditStaffModalProps {
   onClose: () => void;
   worker: any;
   onSuccess: () => void;
+  clinicId?: string;
+  pharmacyId?: string;
 }
 
-export function EditStaffModal({ isOpen, onClose, worker, onSuccess }: EditStaffModalProps) {
+export function EditStaffModal({ isOpen, onClose, worker, onSuccess, clinicId, pharmacyId }: EditStaffModalProps) {
   const { setNotification } = useAuthStore();
   const [name, setName] = useState(worker?.name || '');
   const [phone, setPhone] = useState(worker?.phone || '');
@@ -1021,6 +1025,8 @@ export function EditStaffModal({ isOpen, onClose, worker, onSuccess }: EditStaff
     try {
       await updateWorker.mutateAsync({
         workerId: worker.id,
+        clinicId,
+        pharmacyId,
         data: {
           name: name.trim(),
           phone: phone.trim() || undefined,

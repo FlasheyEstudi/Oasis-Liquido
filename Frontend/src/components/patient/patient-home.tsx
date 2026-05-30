@@ -147,7 +147,7 @@ export function PatientHome() {
           <div className="flex size-16 items-center justify-center rounded-[22px_12px_20px_10px] bg-red-500/10 border border-red-500/20 shadow-lg shadow-red-500/5">
             <AlertCircle className="size-7 text-red-500" />
           </div>
-          <h3 className="text-sm font-black text-slate-805 dark:text-red-300 uppercase tracking-widest">Error de Sincronización</h3>
+          <h3 className="text-sm font-black text-slate-800 dark:text-red-300 uppercase tracking-widest">Error de Sincronización</h3>
           <p className="text-xs font-bold text-slate-500 dark:text-zinc-400 max-w-md leading-relaxed">
             {errorMessages || 'No se pudieron recuperar los datos del servidor médico.'}
           </p>
@@ -243,7 +243,7 @@ export function PatientHome() {
         </div>
         
         {/* Sync Indicator */}
-        <div className="hidden sm:flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-teal-650 dark:text-emerald-450 px-4 py-2 bg-teal-500/10 rounded-[50px] border border-teal-500/20 w-fit self-end sm:self-center shadow-sm">
+        <div className="hidden sm:flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-emerald-450 px-4 py-2 bg-teal-500/10 rounded-[50px] border border-teal-500/20 w-fit self-end sm:self-center shadow-sm">
           <span className="size-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
           <span>Telemetría Oasis Acreditada</span>
         </div>
@@ -284,12 +284,12 @@ export function PatientHome() {
               <p className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Código Expediente</p>
               <div className="flex items-center gap-1.5 mt-0.5 justify-end">
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-slate-805 dark:text-white uppercase tracking-wider">Acreditado</span>
+                <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Acreditado</span>
               </div>
             </div>
             <Avatar className="size-14 border-2 border-white/60 dark:border-white/10 shadow-lg ring-4 ring-teal-500/10">
               <AvatarImage src={user?.avatar_url} alt={user?.name} />
-              <AvatarFallback className="bg-teal-500/10 text-teal-655 dark:text-teal-450 text-base font-black font-serif">
+              <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-455 text-base font-black font-serif">
                 {getInitials(representedUser?.name || user?.name || 'Paciente')}
               </AvatarFallback>
             </Avatar>
@@ -364,11 +364,11 @@ export function PatientHome() {
                 <div className="space-y-4">
                   <div>
                     <p className="text-xs font-black text-slate-400 dark:text-zinc-550 uppercase tracking-wider">Especialista</p>
-                    <p className="text-base font-black text-slate-805 dark:text-white mt-0.5 font-serif">
+                    <p className="text-base font-black text-slate-800 dark:text-white mt-0.5 font-serif">
                       Dr. {nextAppointment.doctor?.name}
                     </p>
                     {nextAppointment.doctor?.doctor_profile?.specialty && (
-                      <p className="text-[9px] font-black text-teal-655 dark:text-teal-455 uppercase tracking-widest mt-1">
+                      <p className="text-[9px] font-black text-teal-600 dark:text-teal-455 uppercase tracking-widest mt-1">
                         {nextAppointment.doctor.doctor_profile.specialty}
                       </p>
                     )}
@@ -473,7 +473,7 @@ export function PatientHome() {
                         <QrCodeIcon className="size-4 shrink-0" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-black text-slate-805 dark:text-white truncate font-serif">
+                        <p className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">
                           Dr. {presc.doctor?.name || 'Médico'}
                         </p>
                         <p className="text-[9px] text-slate-450 dark:text-zinc-500 font-extrabold mt-0.5 uppercase tracking-wide">
@@ -506,22 +506,22 @@ export function PatientHome() {
             <div className="grid grid-cols-3 gap-2">
               {/* Total Appointments */}
               <div className="rounded-xl bg-teal-500/5 border border-teal-500/10 p-2.5 text-center shadow-inner">
-                <p className="text-[8px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest">Consultas</p>
-                <p className="text-base font-black text-slate-805 dark:text-white mt-1 font-serif">{totalAppointments}</p>
+                <p className="text-[8px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">Consultas</p>
+                <p className="text-base font-black text-slate-800 dark:text-white mt-1 font-serif">{totalAppointments}</p>
                 <p className="text-[7.5px] text-slate-450 dark:text-zinc-550 font-extrabold uppercase mt-0.5">{upcomingCount} activa{(upcomingCount) !== 1 ? 's' : ''}</p>
               </div>
 
               {/* Active Prescriptions */}
               <div className="rounded-xl bg-indigo-500/5 border border-indigo-500/10 p-2.5 text-center shadow-inner">
-                <p className="text-[8px] font-black text-indigo-655 dark:text-indigo-400 uppercase tracking-widest">Recetas</p>
-                <p className="text-base font-black text-slate-805 dark:text-white mt-1 font-serif">{activePrescriptions}</p>
+                <p className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Recetas</p>
+                <p className="text-base font-black text-slate-800 dark:text-white mt-1 font-serif">{activePrescriptions}</p>
                 <p className="text-[7.5px] text-slate-450 dark:text-zinc-550 font-extrabold uppercase mt-0.5">{prescriptions.length} emitidas</p>
               </div>
 
               {/* Pending Deliveries */}
               <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-2.5 text-center shadow-inner">
-                <p className="text-[8px] font-black text-amber-655 dark:text-amber-400 uppercase tracking-widest">Envíos</p>
-                <p className="text-base font-black text-slate-805 dark:text-white mt-1 font-serif">{pendingDeliveries.length}</p>
+                <p className="text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">Envíos</p>
+                <p className="text-base font-black text-slate-800 dark:text-white mt-1 font-serif">{pendingDeliveries.length}</p>
                 <p className="text-[7.5px] text-slate-450 dark:text-zinc-550 font-extrabold uppercase mt-0.5">Por recibir</p>
               </div>
             </div>

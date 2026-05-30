@@ -78,7 +78,7 @@ export function PrescriptionDetail() {
         </Button>
         <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 rounded-[40px_16px_32px_16px] p-6 backdrop-blur-xl">
           <div className="flex flex-col items-center py-8 text-center">
-            <AlertCircle className="size-10 text-red-505 mb-3 animate-pulse" />
+            <AlertCircle className="size-10 text-red-500 mb-3 animate-pulse" />
             <p className="text-xs font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest">No se especificó una receta</p>
           </div>
         </div>
@@ -172,7 +172,7 @@ export function PrescriptionDetail() {
                 </span>
               </div>
               {prescription.doctor?.doctor_profile?.specialty && (
-                <p className="text-[10px] font-black text-teal-655 dark:text-teal-400 uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-0.5">
                   {prescription.doctor.doctor_profile.specialty}
                 </p>
               )}
@@ -221,7 +221,7 @@ export function PrescriptionDetail() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xl font-black text-slate-805 dark:text-white leading-none font-serif">{progressPercent}%</span>
+                <span className="text-xl font-black text-slate-800 dark:text-white leading-none font-serif">{progressPercent}%</span>
                 <span className="text-[8px] font-black text-slate-400 dark:text-zinc-555 uppercase tracking-wide mt-1">surtido</span>
               </div>
             </div>
@@ -293,7 +293,7 @@ export function PrescriptionDetail() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-slate-805 dark:text-white font-serif group-hover:text-indigo-600 transition-colors">
+                      <p className="text-sm font-black text-slate-800 dark:text-white font-serif group-hover:text-indigo-600 transition-colors">
                         {line.medicine?.name || 'Medicamento'}
                       </p>
                       {line.dosage_instructions && (
@@ -331,7 +331,7 @@ export function PrescriptionDetail() {
                           setSelectedSlot('morning');
                           setIsSuccess(false);
                         }}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/25 text-[9px] font-black uppercase tracking-widest text-teal-655 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer shadow-sm"
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/25 text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-all cursor-pointer shadow-sm"
                       >
                         <Clock className="size-3 text-teal-500 shrink-0" />
                         Alarma
@@ -370,7 +370,7 @@ export function PrescriptionDetail() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full h-12 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-teal-500/15 border-none cursor-pointer"
+          className="w-full h-12 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] border-none cursor-pointer transition-all duration-300"
           onClick={() => {
             useAuthStore.getState().setPrescriptionId(prescription.id);
             navigate('pharmacy-map', prescription.id);

@@ -122,7 +122,7 @@ export function ProfileScreen() {
   const [pinSaveLoading, setPinSaveLoading] = useState(false);
   const [pinSaveSuccess, setPinSaveSuccess] = useState(false);
   const [showPinValue, setShowPinValue] = useState(false);
-  const hasPin = !!(profile?.doctor_profile?.signature_pin ?? (profile as any)?.doctor_profile?.signaturePin);
+  const hasPin = !!((profile?.doctor_profile as any)?.signature_pin ?? (profile as any)?.doctor_profile?.signaturePin);
 
   const handleSavePin = async () => {
     setPinSaveError('');
@@ -412,7 +412,7 @@ export function ProfileScreen() {
         {/* Hologram overlay */}
         <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.02] via-transparent to-white/[0.04] mix-blend-overlay pointer-events-none" />
 
-        <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between z-10">
+        <div className="absolute inset-0 p-3 sm:p-5 md:p-6 flex flex-col justify-between z-10">
           {/* HEADER */}
           <div className="flex justify-between items-center border-b border-white/10 pb-2.5">
             <div className="flex items-center gap-2.5">
@@ -527,7 +527,7 @@ export function ProfileScreen() {
                   </div>
                   <div>
                     <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-emerald-400/50">ESTABLECIMIENTO</p>
-                    <p className="text-[9px] font-black text-emerald-300 uppercase tracking-wider mt-0.5 truncate">{profile.pharmacy_manager_profile?.pharmacy?.name || 'Farmacia Oasis'}</p>
+                    <p className="text-[9px] font-black text-emerald-300 uppercase tracking-wider mt-0.5 truncate">{(profile.pharmacy_manager_profile as any)?.pharmacy?.name || 'Farmacia Oasis'}</p>
                   </div>
                 </>)}
                 {role === 'delivery_driver' && (<>
@@ -560,7 +560,7 @@ export function ProfileScreen() {
                 {role === 'doctor' && (<>
                   <div>
                     <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-sky-400/50">CLÍNICA BASE</p>
-                    <p className="text-[9px] font-black text-sky-300 uppercase tracking-wider mt-0.5 truncate">{profile.doctor_profile?.clinic?.name || 'Centro Clínico Oasis'}</p>
+                    <p className="text-[9px] font-black text-sky-300 uppercase tracking-wider mt-0.5 truncate">{(profile.doctor_profile as any)?.clinic?.name || 'Centro Clínico Oasis'}</p>
                   </div>
                   <div>
                     <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-sky-400/50">ESTATUS</p>
@@ -570,7 +570,7 @@ export function ProfileScreen() {
                 {role === 'pharmacy_manager' && (<>
                   <div>
                     <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-emerald-400/50">DIRECCIÓN</p>
-                    <p className="text-[9px] font-black text-zinc-300 uppercase tracking-wider mt-0.5 truncate">{profile.pharmacy_manager_profile?.pharmacy?.address || 'Nicaragua'}</p>
+                    <p className="text-[9px] font-black text-zinc-300 uppercase tracking-wider mt-0.5 truncate">{(profile.pharmacy_manager_profile as any)?.pharmacy?.address || 'Nicaragua'}</p>
                   </div>
                   <div>
                     <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-emerald-400/50">ESTATUS</p>
@@ -586,7 +586,7 @@ export function ProfileScreen() {
                   </div>
                   <div>
                     <p className="text-[6px] font-bold tracking-[0.2em] uppercase font-mono text-amber-400/50">BASE DESPACHO</p>
-                    <p className="text-[9px] font-black text-zinc-300 uppercase tracking-wider mt-0.5 truncate">{profile.delivery_driver_profile?.pharmacy?.name || 'Oasis Aura'}</p>
+                    <p className="text-[9px] font-black text-zinc-300 uppercase tracking-wider mt-0.5 truncate">{(profile.delivery_driver_profile as any)?.pharmacy?.name || 'Oasis Aura'}</p>
                   </div>
                 </>)}
                 {(role === 'patient' || !role || role === 'receptionist') && (<>
@@ -614,10 +614,16 @@ export function ProfileScreen() {
             </div>
             <button
               onClick={() => setIsQrZoomed(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/10 transition text-[8px] font-black text-zinc-300 uppercase tracking-widest cursor-pointer"
+              className={cn(
+                "flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 rounded-xl transition text-[9px] sm:text-[10px] font-black uppercase tracking-widest cursor-pointer active:scale-95 shadow-md shrink-0",
+                role === 'doctor' && "bg-sky-500/10 border border-sky-500/35 hover:bg-sky-500/20 text-sky-400",
+                role === 'pharmacy_manager' && "bg-emerald-500/10 border border-emerald-500/35 hover:bg-emerald-500/20 text-emerald-400",
+                role === 'delivery_driver' && "bg-amber-500/10 border border-amber-500/35 hover:bg-amber-500/20 text-amber-400",
+                (!role || role === 'patient' || role === 'receptionist') && "bg-teal-500/10 border border-teal-500/35 hover:bg-teal-500/20 text-teal-400"
+              )}
             >
-              <QrCode value={`${typeof window !== 'undefined' ? window.location.origin : ''}/pasaporte/${profile.id}`} size={22} label="" showValue={false} className="!p-0 rounded" />
-              VER QR
+              <QrCode value={`${typeof window !== 'undefined' ? window.location.origin : ''}/pasaporte/${profile.id}`} size={24} label="" showValue={false} className="!p-0.5 rounded bg-white shrink-0" />
+              <span>VER QR</span>
             </button>
           </div>
         </div>
@@ -677,7 +683,7 @@ export function ProfileScreen() {
 
               {role === 'patient' && (
                 <div className="space-y-4 pt-3 border-t border-dashed border-white/5">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-teal-650 dark:text-teal-400 flex items-center gap-1.5">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
                     <Activity className="size-4.5" /> Ficha de Salud Acreditada
                   </h4>
 
@@ -733,7 +739,7 @@ export function ProfileScreen() {
 
               {role === 'delivery_driver' && (
                 <div className="space-y-4 pt-3 border-t border-dashed border-white/5">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-teal-650 dark:text-teal-400 flex items-center gap-1.5">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
                     <Car className="size-4.5" /> Especificaciones de Telemetría
                   </h4>
 
@@ -1033,7 +1039,7 @@ export function ProfileScreen() {
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
                     <Heart className="size-4 text-rose-500 fill-rose-500/10" /> Ficha de Salud del Paciente
                   </h3>
-                  <span className="text-[8px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-650 dark:text-teal-400 px-2 py-0.5 rounded-full border border-teal-500/20">Bioseguro</span>
+                  <span className="text-[8px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full border border-teal-500/20">Bioseguro</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1250,14 +1256,14 @@ export function ProfileScreen() {
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
                       <Car className="size-4.5" /> Ficha de Telemetría Vehicular
                     </h3>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-teal-500/10 text-teal-650 dark:text-teal-400 border border-teal-500/20">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
                       SOAT {insuranceStatus}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/5 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 shadow-sm">
-                      <div className="size-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-605 dark:text-teal-400">
+                      <div className="size-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-teal-400">
                         {vehicleType === 'Bicicleta' ? <Bike className="size-5.5" /> : <Car className="size-5.5" />}
                       </div>
                       <div>
@@ -1309,7 +1315,7 @@ export function ProfileScreen() {
                 {/* Cyber stats summary */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                   <div className="p-4 rounded-[1.8rem] bg-teal-500/[0.03] border border-teal-500/10 text-center shadow-inner relative overflow-hidden group">
-                    <p className="text-[8px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-widest">Repartos</p>
+                    <p className="text-[8px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">Repartos</p>
                     <p className="text-xl font-black text-foreground tracking-tight mt-1">128</p>
                     <span className="text-[7.5px] font-black text-slate-400 uppercase mt-0.5 block">Completados</span>
                   </div>
@@ -1357,7 +1363,7 @@ export function ProfileScreen() {
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-3">
-                      <div className="size-9 rounded-xl bg-teal-500/10 text-teal-650 dark:text-teal-400 flex items-center justify-center shadow-inner shrink-0">
+                      <div className="size-9 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shadow-inner shrink-0">
                         <Shield className="size-5 text-teal-500" />
                       </div>
                       <div className="min-w-0">
@@ -1476,13 +1482,13 @@ export function ProfileScreen() {
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-400 to-indigo-500" />
               
               <div className="flex flex-col items-center mb-6">
-                <div className="size-11 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-650 dark:text-teal-400 border border-teal-500/20 mb-3">
+                <div className="size-11 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-teal-400 border border-teal-500/20 mb-3">
                   <Shield className="size-5.5 animate-pulse" />
                 </div>
                 <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-slate-100 uppercase">
                   Pasaporte Digital QR
                 </h3>
-                <p className="text-[9px] font-black text-teal-650 dark:text-teal-400 tracking-wider uppercase mt-0.5">
+                <p className="text-[9px] font-black text-teal-600 dark:text-teal-400 tracking-wider uppercase mt-0.5">
                   Verificado por MINSA
                 </p>
               </div>

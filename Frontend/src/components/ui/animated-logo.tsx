@@ -17,11 +17,11 @@ export function AnimatedLogo({ className, onClick, priority = true, showLabel = 
   const [error, setError] = useState(false);
 
   const containerSizes = {
-    sm: 'w-8 h-8 rounded-xl',
-    md: 'w-12 h-12 rounded-2xl',
-    lg: 'w-16 h-16 rounded-[1.2rem]',
-    xl: 'w-24 h-24 rounded-[1.5rem]',
-    giant: 'w-36 h-36 rounded-[2.2rem]',
+    sm: 'w-9 h-9 rounded-xl',
+    md: 'w-14 h-14 rounded-2xl',
+    lg: 'w-20 h-20 rounded-[1.2rem]',
+    xl: 'w-28 h-28 rounded-[1.5rem]',
+    giant: 'w-40 h-40 rounded-[2.2rem]',
   };
 
   const labelSizes = {

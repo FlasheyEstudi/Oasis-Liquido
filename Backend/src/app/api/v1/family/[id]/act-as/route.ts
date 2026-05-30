@@ -24,6 +24,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest, context: { params
         caregiverId,
         patientId: dependentId,
         isActive: true,
+        status: 'active', // OAS-004: Ensure relationship is formally accepted and verified
       },
       include: {
         patient: true,

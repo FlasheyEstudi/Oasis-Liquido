@@ -153,7 +153,14 @@ export async function createPrescription(
   const qrCode = verificationCode;
 
   // 5. Generate HMAC-SHA256 digital signature using the hashed PIN as the secret key
-  const messageToSign = `${doctorId}|${data.patient_id}|${data.expiration_date}`;
+  // OAS-003: Include a deterministic hash of prescription lines to guarantee medicine integrity
+  const serializedLines = data.lines
+    .map((line) => `${line.medicine_id}:${line.quantity}`)
+    .sort()
+    .join('|');
+  const linesHash = crypto.createHash('sha256').update(serializedLines).digest('hex');
+
+  const messageToSign = `${doctorId}|${data.patient_id}|${data.expiration_date}|${linesHash}`;
   const digitalSignature = crypto
     .createHmac('sha256', finalHashedPin!)
     .update(messageToSign)
@@ -374,6 +381,35 @@ export async function fulfillPrescription(
 
       if (!inventoryItem || inventoryItem.quantity < item.quantity_fulfilled) {
         throw new Error(`INSUFFICIENT_STOCK: ${line.medicineId}`);
+      }
+
+      // OAS-005: Decrement inventory batches atomically using FEFO strategy
+      let remainingToFulfill = item.quantity_fulfilled;
+      
+      const activeBatches = await tx.inventoryBatch.findMany({
+        where: {
+          inventoryId: inventoryItem.id,
+          quantity: { gt: 0 },
+        },
+        orderBy: {
+          expirationDate: 'asc', // FEFO: First Expired, First Out
+        },
+      });
+
+      for (const batch of activeBatches) {
+        if (remainingToFulfill <= 0) break;
+        const deduct = Math.min(batch.quantity, remainingToFulfill);
+        
+        await tx.inventoryBatch.update({
+          where: { id: batch.id },
+          data: { quantity: { decrement: deduct } },
+        });
+        
+        remainingToFulfill -= deduct;
+      }
+
+      if (remainingToFulfill > 0) {
+        throw new Error(`INSUFFICIENT_BATCH_STOCK: No hay suficiente stock en los lotes activos para dispensar el medicamento ${line.medicineId}`);
       }
 
       await tx.inventory.update({

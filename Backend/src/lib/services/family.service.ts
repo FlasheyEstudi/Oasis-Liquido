@@ -189,16 +189,25 @@ export async function verifyFamilyLink(
   ipAddress?: string,
   userAgent?: string
 ) {
-  // Find a pending relationship with this code for the current patient
+  // OAS-006: Find a pending relationship with this code where the current user is either patient or caregiver
   const relation = await db.familyRelationship.findFirst({
     where: {
-      patientId,
       verificationCode: code.trim(),
       status: 'pending',
       isActive: true,
+      OR: [
+        { patientId: patientId },
+        { caregiverId: patientId },
+      ],
     },
     include: {
       caregiver: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      patient: {
         select: {
           name: true,
           email: true,
@@ -236,10 +245,15 @@ export async function verifyFamilyLink(
     userAgent,
   });
 
+  // Dynamically assign names based on who accepted the link
+  const isUserCaregiver = relation.caregiverId === patientId;
+  const supervisorName = isUserCaregiver ? relation.patient.name : relation.caregiver.name;
+  const supervisorEmail = isUserCaregiver ? relation.patient.email : relation.caregiver.email;
+
   return {
     relation: updated,
-    supervisorName: relation.caregiver.name,
-    supervisorEmail: relation.caregiver.email,
+    supervisorName,
+    supervisorEmail,
   };
 }
 

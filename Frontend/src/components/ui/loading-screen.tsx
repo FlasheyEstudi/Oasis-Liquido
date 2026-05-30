@@ -91,7 +91,7 @@ export function LoadingScreen({ isVisible, tagline = 'Tu refugio de salud digita
                 transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
                 className="relative mb-2 flex items-center justify-center transition-all duration-300 z-10"
               >
-                <AnimatedLogo priority showLabel={false} />
+                <AnimatedLogo priority showLabel={false} size="xl" />
               </motion.div>
             </motion.div>
 

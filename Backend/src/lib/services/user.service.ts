@@ -83,48 +83,90 @@ export async function createUser(data: {
 
   const passwordHash = await hashPassword(data.password);
 
-  // Create user with role-specific profile
-  const user = await db.user.create({
-    data: {
-      name: data.name,
-      email: data.email,
-      passwordHash,
-      role: data.role,
-      phone: data.phone,
-      patientProfile: data.role === 'patient' ? { create: {} } : undefined,
-      doctorProfile: (data.role === 'doctor') ? { 
-        create: { 
-          licenseNumber: `LIC-${Date.now()}`,
-          clinicId: data.clinicId!
-        } 
-      } : undefined,
-      pharmacyManagerProfile: (data.role === 'pharmacy_manager' || data.role === 'pharmacy_admin') ? { 
-        create: { 
-          pharmacyId: data.pharmacyId 
-        } 
-      } : undefined,
-      deliveryDriverProfile: data.role === 'delivery_driver' ? { 
-        create: { 
-          pharmacyId: data.pharmacyId!
-        } 
-      } : undefined,
-      receptionistProfile: data.role === 'receptionist' ? { 
-        create: { 
-          clinicId: data.clinicId 
-        } 
-      } : undefined,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      phone: true,
-      role: true,
-      isActive: true,
-      emailVerified: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+  // Create user and profile in a transaction with robust fallback resolutions
+  const user = await db.$transaction(async (tx) => {
+    let resolvedClinicId = data.clinicId;
+    let resolvedPharmacyId = data.pharmacyId;
+
+    if (data.role === 'doctor' || data.role === 'receptionist') {
+      if (!resolvedClinicId) {
+        let clinic = await tx.clinic.findFirst();
+        if (!clinic) {
+          clinic = await tx.clinic.create({
+            data: {
+              name: 'Clínica Oasis Principal',
+              address: 'Managua, Nicaragua',
+              latitude: 12.1364,
+              longitude: -86.2514,
+            }
+          });
+        }
+        resolvedClinicId = clinic.id;
+      }
+    }
+
+    if (data.role === 'delivery_driver' || data.role === 'pharmacy_manager' || data.role === 'pharmacy_admin' || data.role === 'cashier') {
+      if (!resolvedPharmacyId) {
+        let pharmacy = await tx.pharmacy.findFirst();
+        if (!pharmacy) {
+          pharmacy = await tx.pharmacy.create({
+            data: {
+              name: 'Farmacia Oasis Principal',
+              address: 'Managua, Nicaragua',
+              latitude: 12.1364,
+              longitude: -86.2514,
+              deliveryFee: 29.90,
+            }
+          });
+        }
+        resolvedPharmacyId = pharmacy.id;
+      }
+    }
+
+    return await tx.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        passwordHash,
+        role: data.role,
+        phone: data.phone,
+        patientProfile: data.role === 'patient' ? { create: {} } : undefined,
+        doctorProfile: (data.role === 'doctor') ? { 
+          create: { 
+            licenseNumber: `LIC-${Date.now()}`,
+            clinicId: resolvedClinicId!
+          } 
+        } : undefined,
+        pharmacyManagerProfile: (data.role === 'pharmacy_manager' || data.role === 'pharmacy_admin' || data.role === 'cashier') ? { 
+          create: { 
+            pharmacyId: resolvedPharmacyId 
+          } 
+        } : undefined,
+        deliveryDriverProfile: data.role === 'delivery_driver' ? { 
+          create: { 
+            pharmacyId: resolvedPharmacyId!,
+            vehicleType: 'motocicleta',
+            isAvailable: true,
+          } 
+        } : undefined,
+        receptionistProfile: data.role === 'receptionist' ? { 
+          create: { 
+            clinicId: resolvedClinicId 
+          } 
+        } : undefined,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   });
 
   // Audit log

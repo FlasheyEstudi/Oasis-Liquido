@@ -7,8 +7,10 @@ import { useEffect } from 'react';
  * Escribe las coordenadas físicas calculadas en las propiedades personalizadas CSS
  * (--gyro-x, --gyro-y) en el root del documento.
  */
-export function useSpatialGyro() {
+export function useSpatialGyro(enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
+
     const handleOrientation = (event: DeviceOrientationEvent) => {
       // Gamma es el movimiento de izquierda a derecha (-90 a 90 grados)
       const x = event.gamma ? Math.min(Math.max(event.gamma / 3, -12), 12) : 0;
@@ -29,5 +31,5 @@ export function useSpatialGyro() {
         window.removeEventListener('deviceorientation', handleOrientation);
       }
     };
-  }, []);
+  }, [enabled]);
 }

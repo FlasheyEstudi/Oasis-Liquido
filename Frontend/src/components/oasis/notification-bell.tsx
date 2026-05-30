@@ -214,7 +214,7 @@ export function NotificationBell() {
                   <button
                     onClick={handleMarkAllRead}
                     disabled={markAsReadMutation.isPending}
-                    className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-teal-655 dark:text-teal-400 hover:opacity-85 select-none shrink-0"
+                    className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 hover:opacity-85 select-none shrink-0"
                   >
                     <CheckCheck className="size-3 text-teal-500" />
                     Leídas
@@ -321,7 +321,7 @@ export function NotificationBell() {
                         </p>
                         
                         {n.link && (
-                          <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-teal-655 dark:text-teal-400 mt-2 group select-none">
+                          <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 mt-2 group select-none">
                             <span>Ver expediente</span>
                             <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
                           </div>
