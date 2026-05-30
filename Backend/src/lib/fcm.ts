@@ -11,7 +11,6 @@ if (!admin.apps.length) {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
       serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     } else {
-      // Find the service account file dynamically without triggering compile-time analyzer errors
       const filePath = path.resolve(process.cwd(), 'firebase-service-account.json');
       if (fs.existsSync(filePath)) {
         const fileContent = fs.readFileSync(filePath, 'utf8');
@@ -20,6 +19,9 @@ if (!admin.apps.length) {
     }
 
     if (serviceAccount) {
+      if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      }
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
