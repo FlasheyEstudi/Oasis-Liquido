@@ -144,8 +144,41 @@ export async function sendOasisEmail({
     </html>
   `;
 
+  // --- MODO 1: RESEND HTTP API (Recomendado para producción en Render, usa puerto HTTPS 443 estándar) ---
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    try {
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+      console.log(`✉️ Intentando enviar correo mediante Resend HTTP API a ${to}...`);
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendApiKey.trim()}`
+        },
+        body: JSON.stringify({
+          from: `Oasis Líquida <${fromEmail}>`,
+          to: [to],
+          subject,
+          html: htmlContent
+        })
+      });
+
+      const data = await response.json() as any;
+      if (response.ok) {
+        console.log(`✉️ Correo enviado exitosamente vía Resend HTTP API a ${to}. ID: ${data.id}`);
+        return true;
+      } else {
+        console.error('❌ Error devuelto por la API de Resend:', data);
+      }
+    } catch (apiError) {
+      console.error('❌ Error de conexión al llamar a la API de Resend:', apiError);
+    }
+  }
+
+  // --- MODO 2: GMAIL SMTP FALLBACK (Para desarrollo local o si no hay API Key de Resend) ---
   if (!smtpPass) {
-    console.warn('⚠️ SMTP_PASS is not defined. Email dispatch was bypassed. Logging code securely to server console.');
+    console.warn('⚠️ Ni RESEND_API_KEY ni SMTP_PASS están configurados. Envío de correo omitido.');
     console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${to} | Recovery Code: ${code}`);
     return false;
   }
@@ -168,10 +201,10 @@ export async function sendOasisEmail({
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✉️ Email successfully dispatched via Pooled Gmail SMTP to ${to}. Message ID: ${info.messageId}`);
+    console.log(`✉️ Correo enviado exitosamente vía Gmail SMTP en pool a ${to}. Message ID: ${info.messageId}`);
     return true;
   } catch (error) {
-    console.error('❌ Failed to dispatch email via Gmail SMTP:', error);
+    console.error('❌ Error crítico al enviar correo vía Gmail SMTP en pool:', error);
     return false;
   }
 }
