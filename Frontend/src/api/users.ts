@@ -67,3 +67,14 @@ export async function deleteUser(id: string): Promise<User> {
   const result = await patch<User>(`/users/${id}`, { is_active: false });
   return result.data;
 }
+
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+}
+
+/** Change own password (authenticated user) */
+export async function changePassword(data: ChangePasswordRequest): Promise<{ message: string }> {
+  const result = await post<{ message: string }>('/users/me/change-password', data);
+  return result.data;
+}

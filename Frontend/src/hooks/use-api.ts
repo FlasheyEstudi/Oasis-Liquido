@@ -678,6 +678,13 @@ export function useDeleteUser() {
   });
 }
 
+/** Change own password (authenticated user) */
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (data: usersApi.ChangePasswordRequest) => usersApi.changePassword(data),
+  });
+}
+
 // ============================================
 // ADMIN HOOKS
 // ============================================

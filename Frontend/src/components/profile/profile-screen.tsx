@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
-import { useGetMe, useUpdateMe, useUpdatePatientProfile, useFamily, useCreateFamily, useDeleteFamily, useVerifyFamily, getHookErrorMessage } from '@/hooks/use-api';
+import { useGetMe, useUpdateMe, useUpdatePatientProfile, useFamily, useCreateFamily, useDeleteFamily, useVerifyFamily, useChangePassword, getHookErrorMessage } from '@/hooks/use-api';
 import { getInitials } from '@/utils/helpers';
 import { ROLE_LABELS, ROLE_COLORS } from '@/utils/constants';
 import { cn } from '@/lib/utils';
@@ -56,6 +56,33 @@ export function ProfileScreen() {
   const { data: profile, isLoading, error, refetch } = useGetMe(!!authUser);
   const updateMeMutation = useUpdateMe();
   const updatePatientMutation = useUpdatePatientProfile();
+  const changePasswordMutation = useChangePassword();
+
+  // Eye-toggle visibility states for change password
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || newPassword !== confirmPassword) return;
+    setIsChangingPassword(true);
+    try {
+      await changePasswordMutation.mutateAsync({
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      toast.success('Contraseña actualizada correctamente');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowPasswordSection(false);
+    } catch (err: any) {
+      toast.error(getHookErrorMessage(err) || 'Error al actualizar la contraseña. Verifica tu contraseña actual.');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   // Common fields
   const [name, setName] = useState('');
@@ -1426,43 +1453,79 @@ export function ProfileScreen() {
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Contraseña actual</label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="glass-input rounded-xl w-full px-4 py-2.5 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="glass-input rounded-xl w-full pl-4 pr-10 py-2.5 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5 focus:border-teal-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 bg-transparent border-none cursor-pointer p-0"
+                    >
+                      {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Nueva contraseña</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="glass-input rounded-xl w-full px-4 py-2.5 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="glass-input rounded-xl w-full pl-4 pr-10 py-2.5 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5 focus:border-teal-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 bg-transparent border-none cursor-pointer p-0"
+                    >
+                      {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Confirmar nueva contraseña</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="glass-input rounded-xl w-full px-4 py-2.5 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="glass-input rounded-xl w-full pl-4 pr-10 py-2.5 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5 focus:border-teal-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 bg-transparent border-none cursor-pointer p-0"
+                    >
+                      {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
                   {newPassword && confirmPassword && newPassword !== confirmPassword && (
                     <p className="text-xs text-red-500 font-bold">Las contraseñas no coinciden</p>
                   )}
                 </div>
               </div>
               <button
-                disabled={!currentPassword || !newPassword || newPassword !== confirmPassword}
-                className="w-full h-10 bg-teal-500 hover:bg-teal-600 text-white font-black text-[10px] uppercase tracking-widest rounded-full disabled:opacity-50 transition-colors"
+                type="button"
+                onClick={handleChangePassword}
+                disabled={isChangingPassword || changePasswordMutation.isPending || !currentPassword || !newPassword || newPassword !== confirmPassword}
+                className="w-full h-10 bg-teal-500 hover:bg-teal-600 text-white font-black text-[10px] uppercase tracking-widest rounded-full disabled:opacity-50 transition-colors flex items-center justify-center gap-2 cursor-pointer border-none"
               >
-                Actualizar contraseña
+                {(isChangingPassword || changePasswordMutation.isPending) ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    <span>Actualizando...</span>
+                  </>
+                ) : (
+                  <span>Actualizar contraseña</span>
+                )}
               </button>
             </motion.div>
           )}
