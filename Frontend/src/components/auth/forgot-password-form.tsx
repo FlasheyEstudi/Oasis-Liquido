@@ -24,8 +24,17 @@ export function ForgotPasswordForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [recoveredToken, setRecoveredToken] = useState<string | null>(null);
 
   const { navigate, setNotification } = useAuthStore();
+
+  const handleCopyAndNavigate = () => {
+    if (recoveredToken) {
+      navigator.clipboard.writeText(recoveredToken);
+      setNotification({ type: 'success', message: 'Código de recuperación copiado al portapapeles. ¡Pégalo a continuación!' });
+    }
+    navigate('cambiar-clave');
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,8 +49,12 @@ export function ForgotPasswordForm() {
 
     try {
       // Usar nuestro endpoint unificado de base de datos que cuenta con envío de correo mediante Resend
-      await post('/auth/forgot-password', { email });
-      console.log('✉️ Correo de recuperación solicitado al backend unificado de Oasis');
+      const res = await post<{ message: string; reset_token?: string }>('/auth/forgot-password', { email });
+      console.log('✉️ Correo de recuperación solicitado al backend unificado de Oasis:', res);
+      
+      if (res?.data?.reset_token) {
+        setRecoveredToken(res.data.reset_token);
+      }
       
       setIsSuccess(true);
       setNotification({ type: 'success', message: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.' });
@@ -92,10 +105,31 @@ export function ForgotPasswordForm() {
                     Si el correo existe, recibirás instrucciones para restablecer tu contraseña.
                   </p>
                 </div>
+
+                {recoveredToken && (
+                  <div className="mt-4 p-4 rounded-2xl bg-teal-500/5 border border-teal-500/10 text-center space-y-3">
+                    <p className="text-[10px] text-teal-500 font-black uppercase tracking-widest">Asistente de Recuperación</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Como estás en pruebas o por si tu servidor de correo tarda en entregar, aquí tienes tu código de recuperación:
+                    </p>
+                    <div className="text-2xl font-mono font-black tracking-widest text-teal-600 dark:text-teal-400 bg-teal-500/10 py-2.5 rounded-xl border border-teal-500/20 select-all">
+                      {recoveredToken}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyAndNavigate}
+                      className="w-full h-10 bg-teal-500 hover:bg-teal-600 text-white font-black text-[10px] uppercase tracking-widest rounded-full transition-colors cursor-pointer border-none flex items-center justify-center gap-1.5"
+                    >
+                      <span>Copiar código e ir a restablecer</span>
+                      <ArrowRight className="size-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={() => navigate('entrar')}
-                  className="glass-btn-primary w-full h-11 rounded-full text-sm font-semibold mt-4"
+                  className="glass-btn-primary w-full h-11 rounded-full text-sm font-semibold mt-2"
                 >
                   Volver al login
                 </button>
