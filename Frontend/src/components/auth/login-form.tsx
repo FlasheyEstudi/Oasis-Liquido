@@ -122,7 +122,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="relative flex h-screen max-h-screen overflow-hidden items-center justify-center px-4 py-0 bg-gradient-to-tr from-slate-50 via-zinc-100 to-teal-50/20 dark:from-[#030606] dark:via-[#010203] dark:to-[#020507] transition-colors duration-500 select-none">
+    <div className="relative flex min-h-screen md:h-screen md:max-h-screen overflow-y-auto md:overflow-hidden items-center justify-center px-4 py-8 md:py-0 bg-gradient-to-tr from-slate-50 via-zinc-100 to-teal-50/20 dark:from-[#030606] dark:via-[#010203] dark:to-[#020507] transition-colors duration-500 select-none">
       <OrganicBlobs />
 
       {/* Futuristic Floating Aura Lights */}

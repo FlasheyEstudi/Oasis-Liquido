@@ -123,7 +123,7 @@ export function AcceptInvitationForm() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 py-8 overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-8 overflow-y-auto">
       <OrganicBlobs />
 
       <motion.div
