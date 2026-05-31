@@ -446,7 +446,8 @@ export async function loginWithFirebase(
     const randomPassword = crypto.randomBytes(32).toString('hex');
     const randomHash = await hashPassword(randomPassword);
 
-    await registerUser(
+    console.log(`👤 Auto-registering new Firebase user with role [${role}]: ${normalizedEmail}`);
+    const registrationResult = await registerUser(
       {
         name: name || 'Usuario Oasis',
         email: normalizedEmail,
@@ -466,22 +467,7 @@ export async function loginWithFirebase(
       userAgent
     );
 
-    // Fetch user with newly created profile included
-    user = await db.user.findUnique({
-      where: { email: normalizedEmail },
-      include: {
-        doctorProfile: true,
-        receptionistProfile: true,
-        pharmacyManagerProfile: true,
-        deliveryDriverProfile: true,
-      },
-    });
-
-    if (!user) {
-      throw new Error('REGISTRATION_FAILED');
-    }
-
-    console.log(`👤 Auto-registered new Firebase user with role [${role}]: ${normalizedEmail}`);
+    return registrationResult;
   }
 
   // Check if user is active
