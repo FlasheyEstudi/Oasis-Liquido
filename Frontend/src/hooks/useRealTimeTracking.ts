@@ -81,6 +81,35 @@ export function useRealTimeTracking(orderId: string) {
     if (!order) return '15-30 min';
     if (order.status === 'delivered') return 'Entregado';
     if (order.status === 'cancelled') return 'Cancelado';
+
+    const driverProfile = order.driver?.delivery_driver_profile || (order.driver as any)?.deliveryDriverProfile;
+    const lat1 = driverLocation?.lat || driverProfile?.current_lat || driverProfile?.currentLat;
+    const lng1 = driverLocation?.lng || driverProfile?.current_lng || driverProfile?.currentLng;
+
+    const lat2 = order.delivery_lat;
+    const lng2 = order.delivery_lng;
+
+    if (lat1 && lng1 && lat2 && lng2 && (order.status === 'in_transit' || order.status === 'picked_up')) {
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distanceKm = R * c;
+
+      // Dynamic city transit multiplier (1.25) and average speed of 28km/h
+      const estimatedMinutes = Math.ceil((distanceKm * 1.25) / (28 / 60));
+
+      if (distanceKm < 0.25) {
+        return 'Llegando ahora';
+      }
+      if (estimatedMinutes <= 2) {
+        return 'Menos de 2 min';
+      }
+      return `${estimatedMinutes} min`;
+    }
     
     // Estimate based on OSRM route data if available
     const durationMin = (route as any)?.durationMinutes ?? Math.round(((route as any)?.duration_seconds || 0) / 60);
@@ -88,7 +117,7 @@ export function useRealTimeTracking(orderId: string) {
       return `${durationMin} min`;
     }
     return '15-30 min';
-  }, [order, route]);
+  }, [order, route, driverLocation]);
 
   return {
     order,

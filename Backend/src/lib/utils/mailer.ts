@@ -1,5 +1,7 @@
-// OASIS - Automated Mailer Utility using Native Fetch (No dependencies)
-// Supports Resend API integration securely without custom domain limits in sandbox testing
+// OASIS - Automated Mailer Utility using Nodemailer & Gmail SMTP
+// Supports secure, dependency-backed email dispatch with Google App Passwords
+
+import nodemailer from 'nodemailer';
 
 interface SendEmailParams {
   to: string;
@@ -20,8 +22,8 @@ export async function sendOasisEmail({
   buttonUrl,
   code
 }: SendEmailParams): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Oasis Líquida <onboarding@resend.dev>';
+  const smtpUser = process.env.SMTP_USER || 'wendellflashey2023@gmail.com';
+  const smtpPass = process.env.SMTP_PASS; // The 16-letter yellow App Password from Google
 
   // HTML responsive template styled with Oasis visual brand guidelines
   const htmlContent = `
@@ -142,36 +144,34 @@ export async function sendOasisEmail({
     </html>
   `;
 
-  if (!apiKey) {
-    console.warn('⚠️ RESEND_API_KEY is not defined. Email dispatch was bypassed. Storing code securely in server console.');
+  if (!smtpPass) {
+    console.warn('⚠️ SMTP_PASS is not defined. Email dispatch was bypassed. Logging code securely to server console.');
+    console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${to} | Recovery Code: ${code}`);
     return false;
   }
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [to],
-        subject: subject,
-        html: htmlContent
-      })
+    // Create Nodemailer transport using Google SMTP
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: smtpUser,
+        pass: smtpPass // Your 16-character app password (spaces will be stripped automatically by Nodemailer)
+      }
     });
 
-    if (response.ok) {
-      console.log(`✉️ Email successfully dispatched via Resend to ${to}`);
-      return true;
-    } else {
-      const errBody = await response.text();
-      console.error('❌ Resend API response error:', errBody);
-      return false;
-    }
+    const mailOptions = {
+      from: `"Oasis Líquida" <${smtpUser}>`,
+      to,
+      subject,
+      html: htmlContent
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✉️ Email successfully dispatched via Gmail SMTP to ${to}. Message ID: ${info.messageId}`);
+    return true;
   } catch (error) {
-    console.error('❌ Failed to dispatch email via Resend:', error);
+    console.error('❌ Failed to dispatch email via Gmail SMTP:', error);
     return false;
   }
 }

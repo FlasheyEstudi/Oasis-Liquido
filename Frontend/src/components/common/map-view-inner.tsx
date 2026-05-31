@@ -141,6 +141,7 @@ export function MapViewInner({
   const mapRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const markersMapRef = useRef<Record<string, L.Marker>>({});
   const userMarkerRef = useRef<L.Marker | null>(null);
   const routeLineRef = useRef<L.Polyline | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -205,6 +206,13 @@ export function MapViewInner({
     return () => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
+      Object.keys(markersMapRef.current).forEach((id) => {
+        try {
+          markersMapRef.current[id].remove();
+        } catch (e) {}
+      });
+      markersMapRef.current = {};
+
       if (userMarkerRef.current) {
         userMarkerRef.current.remove();
         userMarkerRef.current = null;
@@ -237,44 +245,96 @@ export function MapViewInner({
     if (typeof map.getPanes !== 'function' || !map.getPanes()) return;
 
     try {
-      // Remove existing markers
-      markersRef.current.forEach((m) => {
-        try {
-          m.remove();
-        } catch (e) {}
-      });
-      markersRef.current = [];
+      const newMarkerIds = new Set(markers.map(m => m.id).filter(Boolean));
 
-      // Add new markers
+      // Remove cached markers that are no longer present in the markers array
+      Object.keys(markersMapRef.current).forEach((id) => {
+        if (!newMarkerIds.has(id)) {
+          try {
+            markersMapRef.current[id].remove();
+          } catch (e) {}
+          delete markersMapRef.current[id];
+        }
+      });
+
+      // Update or add markers
       markers.forEach((marker) => {
         try {
           if (marker.lat == null || marker.lng == null || isNaN(marker.lat) || isNaN(marker.lng)) {
             console.warn('⚠️ MapViewInner: Skipped invalid marker coordinates:', marker);
             return;
           }
-          const color = marker.color || MARKER_COLORS[marker.type || ''] || DEFAULT_MARKER_COLOR;
-          const icon = createMarkerIcon(color);
 
-          const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
-            .addTo(map);
+          const markerId = marker.id || `marker-${marker.lat}-${marker.lng}`;
+          const existingMarker = markersMapRef.current[markerId];
 
-          if (marker.label) {
-            leafletMarker.bindPopup(`
-              <div class="map-popup-text" style="padding: 4px 8px; font-size: 13px; font-weight: 700; font-family: sans-serif;">
-                ${marker.label}
-              </div>
-            `);
+          if (existingMarker) {
+            // Smoothly move marker to the new position instead of destroying it!
+            const startLatLng = existingMarker.getLatLng();
+            const endLatLng = L.latLng(marker.lat, marker.lng);
+
+            // Interpolate driver position smoothly (Uber style!)
+            if (marker.type === 'driver' && typeof window !== 'undefined' && (startLatLng.lat !== endLatLng.lat || startLatLng.lng !== endLatLng.lng)) {
+              const duration = 1500; // ms transition length
+              const startTime = performance.now();
+
+              const animateStep = (now: number) => {
+                if (!markersMapRef.current[markerId]) return; // Stop if removed
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Linear interpolation (lerp) formula
+                const currentLat = startLatLng.lat + (endLatLng.lat - startLatLng.lat) * progress;
+                const currentLng = startLatLng.lng + (endLatLng.lng - startLatLng.lng) * progress;
+
+                existingMarker.setLatLng([currentLat, currentLng]);
+
+                if (progress < 1) {
+                  requestAnimationFrame(animateStep);
+                }
+              };
+              requestAnimationFrame(animateStep);
+            } else {
+              existingMarker.setLatLng(endLatLng);
+            }
+
+            // Update label popup if changed
+            if (marker.label) {
+              const popup = existingMarker.getPopup();
+              if (popup) {
+                existingMarker.setPopupContent(`
+                  <div class="map-popup-text" style="padding: 4px 8px; font-size: 13px; font-weight: 700; font-family: sans-serif;">
+                    ${marker.label}
+                  </div>
+                `);
+              }
+            }
+          } else {
+            // Create a new marker
+            const color = marker.color || MARKER_COLORS[marker.type || ''] || DEFAULT_MARKER_COLOR;
+            const icon = createMarkerIcon(color);
+
+            const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
+              .addTo(map);
+
+            if (marker.label) {
+              leafletMarker.bindPopup(`
+                <div class="map-popup-text" style="padding: 4px 8px; font-size: 13px; font-weight: 700; font-family: sans-serif;">
+                  ${marker.label}
+                </div>
+              `);
+            }
+
+            if (onMarkerClick) {
+              leafletMarker.on('click', () => {
+                onMarkerClick(marker);
+              });
+            }
+
+            markersMapRef.current[markerId] = leafletMarker;
           }
-
-          if (onMarkerClick) {
-            leafletMarker.on('click', () => {
-              onMarkerClick(marker);
-            });
-          }
-
-          markersRef.current.push(leafletMarker);
         } catch (markerErr) {
-          console.warn('⚠️ MapViewInner: Failed to add marker:', markerErr);
+          console.warn('⚠️ MapViewInner: Failed to add or update marker:', markerErr);
         }
       });
     } catch (err) {

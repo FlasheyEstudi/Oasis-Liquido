@@ -11,6 +11,7 @@ import {
   useDeliveryRoute,
   getHookErrorMessage,
 } from '@/hooks/use-api';
+import { useRealTimeTracking } from '@/hooks/useRealTimeTracking';
 import type { DeliveryOrder, DeliveryStatus } from '@/types';
 import { formatDate, formatCurrency } from '@/utils/helpers';
 import { DEFAULT_LAT, DEFAULT_LNG } from '@/utils/constants';
@@ -198,38 +199,19 @@ function normalizeOrder(order: any): any {
 
 function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
   const order = useMemo(() => normalizeOrder(rawOrder), [rawOrder]);
-  
   const isActive = order.status !== 'delivered' && order.status !== 'cancelled';
-  const trackingQuery = useDeliveryOrderTracking(isActive ? order.id : '');
-  const routeQuery = useDeliveryRoute(order.id, isActive);
+  
+  // Usar el hook de telemetría y geolocalización optimizado de Oasis
+  const tracking = useRealTimeTracking(isActive ? order.id : '');
 
   const currentOrder = useMemo(() => {
-    const raw = trackingQuery.data ?? order;
+    const raw = tracking.order ?? order;
     return normalizeOrder(raw);
-  }, [trackingQuery.data, order]);
+  }, [tracking.order, order]);
 
-  const route = routeQuery.data;
-
-  const [driverLocation, setDriverLocation] = useState<{ lat: number, lng: number } | null>(null);
-
-  useEffect(() => {
-    if (isActive) {
-      joinOrderRoom(order.id);
-      const socket = getSocket();
-
-      const handleLocationUpdate = (data: { orderId: string, lat: number, lng: number }) => {
-        if (data.orderId === order.id) {
-          setDriverLocation({ lat: data.lat, lng: data.lng });
-        }
-      };
-
-      socket.on('delivery:locationUpdate', handleLocationUpdate);
-      
-      return () => {
-        socket.off('delivery:locationUpdate', handleLocationUpdate);
-      };
-    }
-  }, [order.id, isActive]);
+  const route = tracking.route;
+  const driverLocation = tracking.driverLocation;
+  const dynamicEta = tracking.eta;
 
   const mapMarkers = useMemo(() => {
     const markers: MapMarker[] = [];
@@ -306,7 +288,7 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
           <div className="flex items-center gap-2">
             <Clock className="size-4 text-amber-600 dark:text-amber-500 animate-pulse" />
             <p className="text-xs font-black text-amber-600 dark:text-amber-500">
-              Arribo Estimado: 15-30 minutos
+              Arribo Estimado: {dynamicEta}
             </p>
           </div>
           <p className="text-[9.5px] text-amber-650/80 leading-relaxed font-semibold italic">
