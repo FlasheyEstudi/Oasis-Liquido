@@ -331,7 +331,8 @@ export async function forgotPassword(email: string) {
 
   return { 
     message: 'Solicitud registrada. Si el correo existe, recibirás un correo con las instrucciones.', 
-    reset_token: resetToken 
+    // Only return the reset token in local development for testing purposes
+    ...(process.env.NODE_ENV !== 'production' ? { reset_token: resetToken } : {})
   };
 }
 
