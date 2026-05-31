@@ -31,10 +31,18 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
     };
 
     if (userRole === 'delivery_driver') {
-      if (!driverProfile?.pharmacyId) {
-        return successResponse([]);
+      if (!driverProfile) {
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Perfil de repartidor no encontrado', 404);
       }
-      whereClause.pharmacyId = driverProfile.pharmacyId;
+      
+      // Restringir por farmacia solo si es un empleado interno (employee).
+      // Los contratistas independientes (contractor) o repartidores independientes pueden capturar pedidos de cualquier farmacia.
+      if (driverProfile.employmentType === 'employee') {
+        if (!driverProfile.pharmacyId) {
+          return successResponse([]);
+        }
+        whereClause.pharmacyId = driverProfile.pharmacyId;
+      }
     }
 
     // Traer pedidos con status 'pending' o 'ready_for_pickup' y sin repartidor asignado

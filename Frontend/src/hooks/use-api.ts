@@ -610,6 +610,7 @@ export function useDeliveryOrderTracking(id: string) {
     queryKey: ['delivery-orders', id, 'tracking'],
     queryFn: () => deliveriesApi.getById(id),
     enabled: !!id,
+    refetchInterval: 4000, // Poll every 4 seconds to get real-time delivery tracking status updates
   });
 }
 
@@ -1058,7 +1059,7 @@ export function useAvailableDeliveries(enabled = true) {
     queryKey: ['deliveries', 'available'],
     queryFn: () => deliveriesApi.getAvailableDeliveries(),
     enabled,
-    refetchInterval: 15000, // Poll every 15 seconds for new available orders
+    refetchInterval: 4000, // Poll every 4 seconds for new available orders to give snappy real-time experience
   });
 }
 
@@ -1068,6 +1069,7 @@ export function useAssignedDeliveries(enabled = true) {
     queryKey: ['deliveries', 'assigned'],
     queryFn: () => deliveriesApi.getAssignedDeliveries(),
     enabled,
+    refetchInterval: 4000, // Poll every 4 seconds to keep assigned orders and status completely in sync
   });
 }
 
