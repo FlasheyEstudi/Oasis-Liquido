@@ -184,9 +184,7 @@ function getTransporter(smtpUser: string, smtpPass: string): nodemailer.Transpor
   const cleanSmtpPass = smtpPass.replace(/\s+/g, '');
   
   cachedTransporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // SSL
+    service: 'gmail',
     pool: true,   // Reuses SMTP connections instead of creating new ones every single time!
     maxConnections: 5,
     maxMessages: 100,

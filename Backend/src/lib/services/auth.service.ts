@@ -276,6 +276,7 @@ export async function forgotPassword(email: string) {
   const normalizedEmail = email.trim().toLowerCase();
   const user = await db.user.findUnique({ where: { email: normalizedEmail } });
   if (!user) {
+    console.warn(`⚠️ [FORGOT PASSWORD] El correo ${normalizedEmail} no está registrado en la base de datos de Oasis. Se omite el envío por seguridad.`);
     // Don't reveal if email exists for security
     return { message: 'Se envió un correo de recuperación' };
   }
@@ -313,21 +314,29 @@ export async function forgotPassword(email: string) {
     console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${normalizedEmail} | Recovery Token: ${resetToken}`);
   }
 
-  // Enviar correo transaccional real automatizado en segundo plano (no bloqueante)
+  // Enviar correo transaccional real de forma segura y esperar su confirmación
   const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://oasis-liquido.vercel.app';
   const resetUrl = `${frontendUrl}/cambiar-clave`;
 
-  sendOasisEmail({
-    to: normalizedEmail,
-    subject: 'Recuperación de contraseña - Oasis Líquida',
-    title: 'Restablece tu contraseña',
-    description: `Hola ${user.name || 'Usuario'}. Recibimos una solicitud para cambiar tu contraseña en Oasis Líquida. Utiliza el siguiente código de verificación de un solo uso en la pantalla de recuperación.`,
-    buttonText: 'Ir a restablecer contraseña',
-    buttonUrl: resetUrl,
-    code: resetToken
-  }).catch(err => {
-    console.error('❌ Error enviando correo de recuperación en segundo plano:', err);
-  });
+  try {
+    const emailSent = await sendOasisEmail({
+      to: normalizedEmail,
+      subject: 'Recuperación de contraseña - Oasis Líquida',
+      title: 'Restablece tu contraseña',
+      description: `Hola ${user.name || 'Usuario'}. Recibimos una solicitud para cambiar tu contraseña en Oasis Líquida. Utiliza el siguiente código de verificación de un solo uso en la pantalla de recuperación.`,
+      buttonText: 'Ir a restablecer contraseña',
+      buttonUrl: resetUrl,
+      code: resetToken
+    });
+    
+    if (emailSent) {
+      console.log(`✉️ Correo de recuperación despachado exitosamente a ${normalizedEmail}`);
+    } else {
+      console.warn(`⚠️ El correo no se pudo enviar a ${normalizedEmail} (posiblemente SMTP_PASS faltante o error interno)`);
+    }
+  } catch (err) {
+    console.error('❌ Error crítico enviando correo de recuperación:', err);
+  }
 
   return { 
     message: 'Solicitud registrada. Si el correo existe, recibirás un correo con las instrucciones.', 
