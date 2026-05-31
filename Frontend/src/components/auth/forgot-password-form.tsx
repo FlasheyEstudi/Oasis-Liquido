@@ -39,15 +39,9 @@ export function ForgotPasswordForm() {
     setIsSubmitting(true);
 
     try {
-      if (auth) {
-        // Método recomendado: Enviar correo automático y gratuito vía Firebase Auth nativo
-        await sendPasswordResetEmail(auth, email);
-        console.log('✉️ Firebase recovery email dispatched natively');
-      } else {
-        // Fallback local en desarrollo/offline: Envía correo o escribe token en consola
-        await post('/auth/forgot-password', { email });
-        console.log('🔑 Backend local recovery token generated');
-      }
+      // Usar nuestro endpoint unificado de base de datos que cuenta con envío de correo mediante Resend
+      await post('/auth/forgot-password', { email });
+      console.log('✉️ Correo de recuperación solicitado al backend unificado de Oasis');
       
       setIsSuccess(true);
       setNotification({ type: 'success', message: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.' });

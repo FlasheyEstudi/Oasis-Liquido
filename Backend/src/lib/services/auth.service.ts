@@ -7,6 +7,7 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken, generateResetTok
 import { createAuditLog } from './audit.service';
 import { sendWhatsAppOTP } from './whatsapp.service';
 import { registerUser } from './user-registration.service';
+import { sendOasisEmail } from '@/lib/utils/mailer';
 import crypto from 'crypto';
 
 /**
@@ -312,8 +313,24 @@ export async function forgotPassword(email: string) {
     console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${normalizedEmail} | Recovery Token: ${resetToken}`);
   }
 
+  // Enviar correo transaccional real automatizado de forma segura
+  const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://oasis-liquido.vercel.app';
+  const resetUrl = `${frontendUrl}/cambiar-clave`;
+
+  await sendOasisEmail({
+    to: normalizedEmail,
+    subject: 'Recuperación de contraseña - Oasis Líquida',
+    title: 'Restablece tu contraseña',
+    description: `Hola ${user.name || 'Usuario'}. Recibimos una solicitud para cambiar tu contraseña en Oasis Líquida. Utiliza el siguiente código de verificación de un solo uso en la pantalla de recuperación.`,
+    buttonText: 'Ir a restablecer contraseña',
+    buttonUrl: resetUrl,
+    code: resetToken
+  }).catch(err => {
+    console.error('❌ Error enviando correo de recuperación:', err);
+  });
+
   return { 
-    message: 'Solicitud registrada. Si el correo existe, recibirás instrucciones. También puedes contactar al Superadministrador directamente.', 
+    message: 'Solicitud registrada. Si el correo existe, recibirás un correo con las instrucciones.', 
     reset_token: resetToken 
   };
 }

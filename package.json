@@ -10,6 +10,10 @@
     "start": "npx concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,magenta\" \"npm run start --prefix Backend\" \"npm run start --prefix Frontend\""
   },
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "nodemailer": "^8.0.10"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^8.0.0"
   }
 }
