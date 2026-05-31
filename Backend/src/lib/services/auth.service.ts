@@ -313,11 +313,11 @@ export async function forgotPassword(email: string) {
     console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${normalizedEmail} | Recovery Token: ${resetToken}`);
   }
 
-  // Enviar correo transaccional real automatizado de forma segura
+  // Enviar correo transaccional real automatizado en segundo plano (no bloqueante)
   const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://oasis-liquido.vercel.app';
   const resetUrl = `${frontendUrl}/cambiar-clave`;
 
-  await sendOasisEmail({
+  sendOasisEmail({
     to: normalizedEmail,
     subject: 'Recuperación de contraseña - Oasis Líquida',
     title: 'Restablece tu contraseña',
@@ -326,7 +326,7 @@ export async function forgotPassword(email: string) {
     buttonUrl: resetUrl,
     code: resetToken
   }).catch(err => {
-    console.error('❌ Error enviando correo de recuperación:', err);
+    console.error('❌ Error enviando correo de recuperación en segundo plano:', err);
   });
 
   return { 

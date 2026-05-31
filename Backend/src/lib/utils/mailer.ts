@@ -151,13 +151,22 @@ export async function sendOasisEmail({
   }
 
   try {
-    // Create Nodemailer transport using Google SMTP
+    // Create resilient Nodemailer transport using Google SMTP explicitly
+    const cleanSmtpPass = smtpPass.replace(/\s+/g, '');
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // true for 465, false for 587 (uses STARTTLS)
       auth: {
         user: smtpUser,
-        pass: smtpPass // Your 16-character app password (spaces will be stripped automatically by Nodemailer)
-      }
+        pass: cleanSmtpPass
+      },
+      tls: {
+        rejectUnauthorized: false // Prevents self-signed cert issues on various server environments
+      },
+      connectionTimeout: 8000, // Timeout after 8 seconds instead of hanging the thread
+      greetingTimeout: 5000,
+      socketTimeout: 10000
     });
 
     const mailOptions = {
