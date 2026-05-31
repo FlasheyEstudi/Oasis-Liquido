@@ -151,36 +151,55 @@ export async function sendOasisEmail({
   }
 
   try {
-    // Create resilient Nodemailer transport using Google SMTP explicitly
-    const cleanSmtpPass = smtpPass.replace(/\s+/g, '');
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // true for 465, false for 587 (uses STARTTLS)
-      auth: {
-        user: smtpUser,
-        pass: cleanSmtpPass
-      },
-      tls: {
-        rejectUnauthorized: false // Prevents self-signed cert issues on various server environments
-      },
-      connectionTimeout: 8000, // Timeout after 8 seconds instead of hanging the thread
-      greetingTimeout: 5000,
-      socketTimeout: 10000
-    });
+    const transporter = getTransporter(smtpUser, smtpPass);
 
     const mailOptions = {
       from: `"Oasis Líquida" <${smtpUser}>`,
       to,
       subject,
-      html: htmlContent
+      html: htmlContent,
+      headers: {
+        'X-Priority': '1', // High priority
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+        'Precedence': 'bulk',
+        'X-Auto-Response-Suppress': 'OOF, AutoReply',
+      }
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✉️ Email successfully dispatched via Gmail SMTP to ${to}. Message ID: ${info.messageId}`);
+    console.log(`✉️ Email successfully dispatched via Pooled Gmail SMTP to ${to}. Message ID: ${info.messageId}`);
     return true;
   } catch (error) {
     console.error('❌ Failed to dispatch email via Gmail SMTP:', error);
     return false;
   }
+}
+
+let cachedTransporter: nodemailer.Transporter | null = null;
+
+function getTransporter(smtpUser: string, smtpPass: string): nodemailer.Transporter {
+  if (cachedTransporter) return cachedTransporter;
+
+  const cleanSmtpPass = smtpPass.replace(/\s+/g, '');
+  
+  cachedTransporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // SSL
+    pool: true,   // Reuses SMTP connections instead of creating new ones every single time!
+    maxConnections: 5,
+    maxMessages: 100,
+    rateDelta: 1000,
+    rateLimit: 5,
+    auth: {
+      user: smtpUser,
+      pass: cleanSmtpPass
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+
+  return cachedTransporter;
 }
