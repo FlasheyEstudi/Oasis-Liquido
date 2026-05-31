@@ -184,8 +184,11 @@ function getTransporter(smtpUser: string, smtpPass: string): nodemailer.Transpor
   const cleanSmtpPass = smtpPass.replace(/\s+/g, '');
   
   cachedTransporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // false for 587 (uses STARTTLS)
     pool: true,   // Reuses SMTP connections instead of creating new ones every single time!
+    family: 4,    // Force IPv4 ONLY. This prevents Render's broken IPv6 stack from timing out!
     maxConnections: 5,
     maxMessages: 100,
     rateDelta: 1000,
@@ -195,9 +198,13 @@ function getTransporter(smtpUser: string, smtpPass: string): nodemailer.Transpor
       pass: cleanSmtpPass
     },
     tls: {
-      rejectUnauthorized: false
-    }
-  });
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2'
+    },
+    connectionTimeout: 10000, // 10s connection timeout
+    greetingTimeout: 8000,
+    socketTimeout: 15000
+  } as any);
 
   return cachedTransporter;
 }
