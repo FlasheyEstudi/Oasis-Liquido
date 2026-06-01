@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth-store';
 import { MapView } from '@/components/common/map-view';
@@ -131,6 +131,8 @@ export function DriverHome() {
   const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'high_fee'>('all');
+  const [newlyAssignedOrder, setNewlyAssignedOrder] = useState<any | null>(null);
+  const prevActiveOrdersRef = useRef<any[]>([]);
 
   const driverId = user?.id || '';
   const firstName = user?.name?.split(' ')[0] || 'Repartidor';
@@ -144,6 +146,27 @@ export function DriverHome() {
   const updateDeliveryStatus = useUpdateDeliveryStatus();
 
   const isLoading = activeLoading || availableLoading;
+
+  useEffect(() => {
+    if (!activeOrders || activeOrders.length === 0) {
+      prevActiveOrdersRef.current = [];
+      return;
+    }
+
+    // Find any order in activeOrders with status === 'assigned' that wasn't in our previous list
+    const newlyAssigned = activeOrders.find((order: any) => {
+      if (order.status !== 'assigned') return false;
+      const wasSeen = prevActiveOrdersRef.current.some((prev: any) => prev.id === order.id);
+      return !wasSeen;
+    });
+
+    if (newlyAssigned) {
+      setNewlyAssignedOrder(newlyAssigned);
+      if (soundEnabled) playRadarSound('ping');
+    }
+
+    prevActiveOrdersRef.current = activeOrders;
+  }, [activeOrders, soundEnabled]);
 
   useEffect(() => {
     if (!localAvailable) {
@@ -952,6 +975,112 @@ export function DriverHome() {
           animation: ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
       `}</style>
+
+      {/* 4. Highly responsive dynamic assignment modal overlay */}
+      <AnimatePresence>
+        {newlyAssignedOrder && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.94, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.94, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="bg-white dark:bg-zinc-905 border border-slate-200 dark:border-zinc-800 text-slate-850 dark:text-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+              
+              {/* Close Button / X to keep it waiting in queue */}
+              <button
+                onClick={() => setNewlyAssignedOrder(null)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-850 text-slate-400 dark:text-zinc-500 hover:text-slate-650 dark:hover:text-white transition-colors duration-200 cursor-pointer"
+                title="Mantener en espera"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="size-14 bg-teal-500/15 rounded-2xl flex items-center justify-center text-teal-600 dark:text-teal-400 mx-auto mb-4 border border-teal-500/20 shadow-md">
+                  <Truck className="size-8" />
+                </div>
+                <h3 className="text-base font-black uppercase tracking-wider font-serif">¡Misión Asignada!</h3>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-450 mt-2 font-semibold leading-relaxed">
+                  Se te ha asignado un nuevo pedido de entrega. ¿Qué deseas hacer?
+                </p>
+              </div>
+
+              {/* Order quick highlights */}
+              <div className="bg-slate-50 dark:bg-zinc-950 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 space-y-3.5 mb-6 text-left">
+                <div>
+                  <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest block">ID de la Orden</span>
+                  <span className="text-xs font-black text-slate-800 dark:text-white font-mono">#{newlyAssignedOrder.id.slice(-8)}</span>
+                </div>
+                <div>
+                  <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest block">Farmacia de Origen</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-zinc-200">{newlyAssignedOrder.pharmacy?.name || 'Farmacia Oasis'}</span>
+                </div>
+                <div>
+                  <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest block">Destino de Entrega</span>
+                  <p className="text-xs font-medium text-slate-700 dark:text-zinc-350 truncate">{newlyAssignedOrder.delivery_address || newlyAssignedOrder.deliveryAddress}</p>
+                </div>
+                {newlyAssignedOrder.deliveryFee && (
+                  <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
+                    <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest">Ganancia</span>
+                    <span className="text-xs font-black text-teal-600 dark:text-teal-400 font-mono">{formatCurrency(newlyAssignedOrder.deliveryFee)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={async () => {
+                    const orderId = newlyAssignedOrder.id;
+                    setNewlyAssignedOrder(null);
+                    if (soundEnabled) playRadarSound('success');
+                    try {
+                      await updateDeliveryStatus.mutateAsync({
+                        id: orderId,
+                        data: { status: 'picked_up' }
+                      });
+                      navigate('delivery-detail', orderId);
+                      setNotification({ type: 'success', message: '¡Estado cambiado a Recogido!' });
+                    } catch (err) {
+                      setNotification({ type: 'error', message: 'Error al cambiar estado' });
+                    }
+                  }}
+                  className="w-full h-11 bg-teal-650 hover:bg-teal-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <PackageOpen className="size-4 shrink-0" />
+                  Recoger en Farmacia
+                </button>
+
+                <button
+                  onClick={() => {
+                    const orderId = newlyAssignedOrder.id;
+                    setNewlyAssignedOrder(null);
+                    if (soundEnabled) playRadarSound('click');
+                    navigate('delivery-detail', orderId);
+                  }}
+                  className="w-full h-11 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-white font-black text-[10px] uppercase tracking-widest rounded-xl cursor-pointer flex items-center justify-center gap-2 border border-slate-200/50 dark:border-white/5"
+                >
+                  <Navigation className="size-4 shrink-0" />
+                  Ver Detalles
+                </button>
+
+                <button
+                  onClick={() => {
+                    setNewlyAssignedOrder(null);
+                    if (soundEnabled) playRadarSound('click');
+                  }}
+                  className="w-full h-10 bg-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-400 font-bold text-[9px] uppercase tracking-widest cursor-pointer text-center"
+                >
+                  Mantener en Espera
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </motion.div>
   );

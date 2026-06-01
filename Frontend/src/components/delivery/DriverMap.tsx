@@ -175,56 +175,52 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
   }, [order, currentLocation]);
 
   return (
-    <div className="space-y-4">
-      {/* 1. Leaflet map */}
-      <div className="relative rounded-[2rem] overflow-hidden border border-slate-200 dark:border-zinc-800 shadow-2xl bg-white dark:bg-zinc-950 transition-colors duration-300">
+    <div className="relative w-full h-full min-h-[350px]">
+      {/* 1. Leaflet map absolute container */}
+      <div className="absolute inset-0 w-full h-full z-0">
         <MapView
           markers={markers}
           center={centerCoordinates}
-          height={height}
+          height="100%"
           route={route ? { geometry: route.geometry } : null}
+          className="rounded-[2.5rem] md:rounded-[3rem] border-0"
         />
-        {/* Navigation Indicator Overlay */}
-        {isNavigating && (
-          <div className="absolute top-4 right-4 z-10 flex items-center gap-2 rounded-full bg-white/80 dark:bg-emerald-500/10 border border-slate-200 dark:border-emerald-500/20 px-3 py-1 text-emerald-600 dark:text-emerald-500 backdrop-blur-md transition-all duration-300">
-            <Compass className="size-4 animate-spin-slow" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Navegando...</span>
-          </div>
-        )}
       </div>
 
-      {/* 2. Route metadata */}
-      {route && (
-        <div className="flex items-center justify-between rounded-2xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-4 py-3 text-sm text-slate-700 dark:text-zinc-300 transition-colors duration-300">
-          <div>
-            <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">Distancia Restante</p>
-            <p className="text-sm font-black text-slate-800 dark:text-white">{route.distanceKm?.toFixed(1) || '0.0'} km</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">Tiempo Estimado</p>
-            <p className="text-sm font-black text-amber-600 dark:text-amber-500">{route.durationText || '15 min'}</p>
-          </div>
+      {/* Navigation Indicator Overlay */}
+      {isNavigating && (
+        <div className="absolute top-18 left-4 z-10 flex items-center gap-2 rounded-full bg-white/80 dark:bg-emerald-500/10 border border-slate-200 dark:border-emerald-500/20 px-3 py-1.5 text-emerald-600 dark:text-emerald-500 backdrop-blur-md transition-all duration-300">
+          <Compass className="size-4 animate-spin-slow" />
+          <span className="text-[8px] font-black uppercase tracking-widest">Navegando...</span>
         </div>
       )}
 
-      {/* 3. Navigation Controls */}
-      <div className="flex gap-3">
+      {/* Floating HUD over map for premium Uber-like controls */}
+      <div className="absolute top-18 right-4 z-10 flex flex-col gap-2.5 pointer-events-auto">
+        {/* Route Metadata floating in the top-right overlay */}
+        {route && (
+          <div className="rounded-2xl bg-white/90 dark:bg-zinc-950/90 border border-slate-200/50 dark:border-white/10 px-3 py-2 shadow-xl backdrop-blur-md flex flex-col gap-0.5 text-right max-w-[160px]">
+            <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest">Distancia / Tiempo</span>
+            <span className="text-[11px] font-black text-slate-800 dark:text-white">{route.distanceKm?.toFixed(1) || '0.0'} km ({route.durationText || '15 min'})</span>
+          </div>
+        )}
+
+        {/* GPS Trigger Toggle Button */}
         {!isNavigating ? (
           <Button
             onClick={startNavigation}
-            className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 font-bold gap-2 text-white border-0"
+            className="h-10 px-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 font-black text-[9px] uppercase tracking-widest gap-2 text-white border-0 shadow-xl cursor-pointer self-end"
           >
-            <Play className="size-4 fill-white" />
-            Iniciar Navegación GPS
+            <Play className="size-3.5 fill-white animate-pulse" />
+            Navegar GPS
           </Button>
         ) : (
           <Button
             onClick={stopNavigation}
-            variant="outline"
-            className="flex-1 h-12 rounded-2xl border-red-500/20 text-red-500 bg-red-500/5 hover:bg-red-500/10 hover:text-red-400 font-bold gap-2"
+            className="h-10 px-4 rounded-full bg-red-500 hover:bg-red-600 font-black text-[9px] uppercase tracking-widest gap-2 text-white border-0 shadow-xl cursor-pointer self-end"
           >
-            <Square className="size-4 fill-red-500/20" />
-            Detener Transmisión
+            <Square className="size-3.5 fill-white" />
+            Parar GPS
           </Button>
         )}
       </div>

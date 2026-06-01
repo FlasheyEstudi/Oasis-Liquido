@@ -1,6 +1,7 @@
 import { db as prisma } from '@/lib/db';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
+import { emitChatMessage } from '@/lib/socket';
 
 export const GET = withAuth(async (req: AuthenticatedRequest, context: { params: Promise<Record<string, string>> }) => {
   try {
@@ -47,6 +48,9 @@ export const POST = withAuth(async (req: AuthenticatedRequest, context: { params
         data: { updatedAt: new Date() }
       })
     ]);
+
+    // Emit message in real-time to active participants in room
+    emitChatMessage(id, message);
 
     return successResponse(message, 'Mensaje enviado', 201);
   } catch (error) {

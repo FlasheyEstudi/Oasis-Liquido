@@ -33,19 +33,19 @@ export function ChatOverlay() {
 
   // Poll for context-based chat opportunities matching the active profile
   const appointmentsQuery = useAppointments({ 
-    status: 'scheduled',
     patient_id: user?.role === 'patient' ? activePatientId : undefined,
     doctor_id: user?.role === 'doctor' ? user?.id : undefined,
   }, isChatAllowed === true);
 
   const deliveriesQuery = useDeliveryOrders({ 
-    status: 'in_transit',
     patient_id: user?.role === 'patient' ? activePatientId : undefined,
     delivery_driver_id: user?.role === 'delivery_driver' ? user?.id : undefined,
   }, isChatAllowed === true);
 
   const activeAppointments = (appointmentsQuery.data?.data || []).filter((appt: any) => {
     if (!user) return false;
+    const isActiveStatus = ['scheduled', 'in_progress'].includes(appt.status);
+    if (!isActiveStatus) return false;
     if (user.role === 'patient') return appt.patient_id === activePatientId;
     if (user.role === 'doctor') return appt.doctor_id === user.id;
     return false;
@@ -53,6 +53,8 @@ export function ChatOverlay() {
 
   const activeDeliveries = (deliveriesQuery.data?.data || []).filter((del: any) => {
     if (!user) return false;
+    const isActiveStatus = ['assigned', 'picked_up', 'in_transit'].includes(del.status);
+    if (!isActiveStatus) return false;
     if (user.role === 'patient') return del.patient_id === activePatientId;
     if (user.role === 'delivery_driver') return del.delivery_driver_id === user.id;
     return false;
@@ -162,7 +164,7 @@ export function ChatOverlay() {
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className="pointer-events-auto"
           >
-            <GlassCard spatial className="w-80 h-[450px] flex flex-col p-0 overflow-hidden shadow-2xl">
+            <GlassCard variant="strong" className="w-80 h-[450px] flex flex-col p-0 overflow-hidden shadow-2xl bg-white/98 dark:bg-zinc-950/98 backdrop-blur-2xl border border-slate-200/40 dark:border-white/5">
               {/* Chat Header */}
               <div className="p-4 bg-gradient-to-r from-teal-500/20 to-sky-500/20 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
