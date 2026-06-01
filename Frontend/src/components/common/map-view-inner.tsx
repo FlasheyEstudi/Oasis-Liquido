@@ -229,6 +229,17 @@ export function MapViewInner({
     };
   }, []);
 
+  // Classic Leaflet Bugfix: Invalidate size after layout/load to prevent black/grey collapsed map
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const timer = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [mapLoaded]);
+
   // Update tile layer url dynamically when isDarkMode changes
   useEffect(() => {
     if (!mapRef.current || !tileLayerRef.current) return;

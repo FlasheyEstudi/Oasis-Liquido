@@ -35,12 +35,21 @@ export async function getDeliveryOrders(filters: {
     if (profile?.pharmacyId) {
       where.pharmacyId = profile.pharmacyId;
     }
+  } else if (filters.userRole === 'pharmacy_admin' && filters.userId) {
+    // Get all pharmacies owned by this admin to enforce strict multi-tenant containment
+    const pharmacies = await db.pharmacy.findMany({
+      where: { ownerId: filters.userId },
+      select: { id: true }
+    });
+    const pharmacyIds = pharmacies.map(p => p.id);
+    where.pharmacyId = { in: pharmacyIds };
   } else {
-    // admin sees based on filters
+    // Admin sees based on filters
     if (filters.pharmacyId) where.pharmacyId = filters.pharmacyId;
     if (filters.deliveryDriverId) where.deliveryDriverId = filters.deliveryDriverId;
     if (filters.patientId) where.patientId = filters.patientId;
   }
+
 
   if (filters.status) where.status = filters.status;
 
@@ -228,3 +237,43 @@ export async function getDeliveryTracking(orderId: string) {
     route: order.deliveryRoutes,
   };
 }
+
+/**
+ * Maps a database DeliveryOrder model to the snake_case format expected by the frontend,
+ * including mapping sale.saleItems to items and setting necessary default fallbacks.
+ */
+export function mapDeliveryOrder(order: any) {
+  if (!order) return null;
+  
+  const items = order.sale?.saleItems?.map((item: any) => ({
+    id: item.id,
+    delivery_order_id: order.id,
+    medicine_id: item.medicineId,
+    medicine: item.medicine,
+    quantity: item.quantity,
+    unit_price: item.unitPrice ?? item.unit_price ?? 0,
+  })) || [];
+
+  return {
+    id: order.id,
+    pharmacy_id: order.pharmacyId,
+    patient_id: order.patientId,
+    delivery_driver_id: order.deliveryDriverId,
+    status: order.status,
+    delivery_address: order.deliveryAddress,
+    delivery_lat: order.deliveryLat,
+    delivery_lng: order.deliveryLng,
+    pickup_address: order.pickupAddress,
+    pickup_lat: order.pickupLat,
+    pickup_lng: order.pickupLng,
+    order_date: order.createdAt,
+    delivered_at: order.deliveredAt,
+    notes: order.notes,
+    pharmacy: order.pharmacy,
+    patient: order.patient,
+    driver: order.deliveryDriver || order.driver,
+    items,
+    sale: order.sale,
+  };
+}
+

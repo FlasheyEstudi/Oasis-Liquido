@@ -13,7 +13,7 @@ interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   targetName: string;
-  targetType: 'doctor' | 'pharmacy' | 'delivery';
+  targetType: 'doctor' | 'pharmacy' | 'delivery' | 'driver';
   onSubmit: (rating: number, comment: string) => void;
 }
 
@@ -42,7 +42,8 @@ export function ReviewModal({ isOpen, onClose, targetName, targetType, onSubmit 
     switch (targetType) {
       case 'doctor': return 'Tu experiencia con el Dr.';
       case 'pharmacy': return 'Tu experiencia con la farmacia';
-      case 'delivery': return 'Tu experiencia con el reparto';
+      case 'delivery':
+      case 'driver': return 'Tu experiencia con el reparto';
       default: return 'Tu experiencia';
     }
   };

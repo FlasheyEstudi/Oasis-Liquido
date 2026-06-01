@@ -66,7 +66,8 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
       return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permisos para realizar esta acción', 403);
     }
 
-    return successResponse(order);
+    const mappedOrder = deliveryService.mapDeliveryOrder(order);
+    return successResponse(mappedOrder);
   } catch (error: any) {
     if (error.message === 'NOT_FOUND') {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Orden de entrega no encontrada', 404);
@@ -74,3 +75,4 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
 });
+

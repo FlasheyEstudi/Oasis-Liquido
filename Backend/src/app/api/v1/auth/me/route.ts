@@ -14,6 +14,7 @@ export const GET = withAuth(async (req: NextRequest) => {
     }
     return successResponse(user);
   } catch (error: any) {
-    return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
+    console.error("ERROR IN GET /api/v1/auth/me:", error);
+    return errorResponse(ErrorCodes.INTERNAL_ERROR, `Error interno del servidor: ${error.message || error}`, 500);
   }
 });

@@ -264,16 +264,23 @@ export function DriverHome() {
     if (soundEnabled) playRadarSound('success');
     try {
       const orderToAccept = availableOrders.find((o: any) => o.id === id);
+      
+      // 1. Perform the API call to accept the order first to set the deliveryDriverId on the server
+      await acceptOrder(id);
+      
+      // 2. Set the query client cache for optimistic updates
       if (orderToAccept) {
         queryClient.setQueryData(['deliveries', 'assigned'], (old: any[] = []) => [
           ...old,
-          { ...orderToAccept, status: 'accepted', deliveryDriverId: driverId },
+          { ...orderToAccept, status: 'assigned', deliveryDriverId: driverId },
         ]);
       }
+      
+      // 3. Now navigate to the detail page safely without triggering a 403 Forbidden race condition
       navigate('delivery-detail', id);
-      await acceptOrder(id);
       setNotification({ type: 'success', message: '¡Misión aceptada con éxito!' });
-    } catch {
+    } catch (err) {
+      console.error('Error accepting order:', err);
       setNotification({ type: 'error', message: 'Error al aceptar el pedido' });
       navigate('inicio-repartidor');
     }
@@ -402,60 +409,57 @@ export function DriverHome() {
         </div>
       </div>
 
-      {/* 2. Flat Dashboard Stats Grid — Zero Card Borders */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* 2. Flat Dashboard Stats Grid — Unified Telemetry Board (Zero Card Borders) */}
+      <div className="bg-slate-500/[0.02] dark:bg-zinc-950/30 border border-slate-200/30 dark:border-white/5 rounded-[32px] p-4 flex items-center justify-around shadow-lg backdrop-blur-md">
         
-        {/* Availability Switch */}
-        <div className="bg-slate-500/[0.03] dark:bg-zinc-950/20 rounded-2xl p-3 border border-slate-200/40 dark:border-white/5 text-center flex flex-col justify-between items-center h-28 shadow-sm">
-          <div className="flex flex-col items-center">
-            <CircleDot className={cn('size-5 text-slate-400', localAvailable && 'text-emerald-500 animate-pulse')} />
-            <p className="text-[9px] font-black text-slate-800 dark:text-white mt-1.5 font-serif uppercase tracking-wider">
-              {localAvailable ? 'Disponible' : 'Desconectado'}
-            </p>
-          </div>
+        {/* Availability Telemetry Capsule */}
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Estado</span>
           <button
             onClick={() => {
               setLocalAvailable(!localAvailable);
               if (soundEnabled) playRadarSound('success');
             }}
             className={cn(
-              'w-full py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer border shadow-sm text-center shrink-0',
+              'h-11 px-4 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 cursor-pointer border flex items-center gap-2 shadow-md',
               localAvailable
-                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20'
-                : 'bg-emerald-500 text-white border-transparent'
+                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-emerald-500/5'
+                : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
             )}
           >
-            {localAvailable ? 'Off' : 'On'}
+            <span className={cn('size-2 rounded-full', localAvailable ? 'bg-emerald-500 animate-ping' : 'bg-rose-500')} />
+            {localAvailable ? 'ACTIVO' : 'PAUSADO'}
           </button>
         </div>
 
+        {/* Vertical Separator */}
+        <div className="w-[1px] h-10 bg-slate-200/40 dark:bg-white/5" />
+
         {/* Daily Earnings stats */}
-        <div className="bg-slate-500/[0.03] dark:bg-zinc-950/20 rounded-2xl p-3 border border-slate-200/40 dark:border-white/5 text-center flex flex-col justify-between items-center h-28 shadow-sm">
-          <div className="flex flex-col items-center">
-            <DollarSign className="size-5 text-emerald-500" />
-            <p className="text-[9px] font-black text-slate-800 dark:text-white mt-1.5 font-serif uppercase tracking-wider">Créditos</p>
-          </div>
-          <div>
-            <p className="text-sm font-black text-slate-800 dark:text-white font-mono">
+        <div className="flex flex-col items-center text-center">
+          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Créditos Hoy</span>
+          <div className="mt-1">
+            <p className="text-base font-black text-slate-800 dark:text-white font-mono tracking-tight">
               {formatCurrency(stats?.totalEarnings ?? 0)}
             </p>
-            <p className="text-[7px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase mt-0.5">{stats?.totalDeliveries ?? 0} viajes</p>
+            <p className="text-[7.5px] text-emerald-500 font-extrabold uppercase mt-0.5 tracking-wider">{stats?.totalDeliveries ?? 0} misiones</p>
           </div>
         </div>
 
+        {/* Vertical Separator */}
+        <div className="w-[1px] h-10 bg-slate-200/40 dark:bg-white/5" />
+
         {/* Reputation stats */}
-        <div className="bg-slate-500/[0.03] dark:bg-zinc-950/20 rounded-2xl p-3 border border-slate-200/40 dark:border-white/5 text-center flex flex-col justify-between items-center h-28 shadow-sm">
-          <div className="flex flex-col items-center">
-            <Star className="size-5 text-amber-500 fill-amber-500/20" />
-            <p className="text-[9px] font-black text-slate-800 dark:text-white mt-1.5 font-serif uppercase tracking-wider">Reputación</p>
-          </div>
-          <div>
-            <p className="text-sm font-black text-slate-800 dark:text-white font-mono">
-              {stats?.rating ?? 5.0} ★
+        <div className="flex flex-col items-center text-center">
+          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Rendimiento</span>
+          <div className="mt-1">
+            <p className="text-base font-black text-slate-800 dark:text-white font-mono flex items-center justify-center gap-0.5">
+              {stats?.rating ?? 5.0} <Star className="size-3 text-amber-500 fill-amber-500/20 inline shrink-0 -mt-0.5" />
             </p>
-            <p className="text-[7px] text-teal-600 dark:text-teal-400 font-black uppercase tracking-wider mt-0.5">ELITE</p>
+            <p className="text-[7.5px] text-teal-600 dark:text-teal-400 font-black uppercase tracking-wider mt-0.5">ELITE DRIVER</p>
           </div>
         </div>
+
       </div>
 
       {/* 3. The Radar Preview Panel — Floating HUD scoped Map */}
@@ -524,18 +528,18 @@ export function DriverHome() {
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Canal de Misiones</h3>
           </div>
 
-          {/* Inline filters */}
-          <div className="flex bg-slate-500/[0.04] dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/5 w-fit">
+          {/* Inline filters — Highly ergonomic and glow-styled */}
+          <div className="flex bg-slate-500/[0.04] dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/5 w-fit">
             <button
               onClick={() => {
                 setActiveTab('all');
                 if (soundEnabled) playRadarSound('click');
               }}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none',
+                'px-4 py-2.5 h-11 rounded-xl text-[9.5px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none flex items-center justify-center gap-1.5 shadow-sm',
                 activeTab === 'all'
-                  ? 'bg-white dark:bg-zinc-800 text-teal-500 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent'
+                  ? 'bg-white dark:bg-zinc-800 text-teal-500 shadow-sm border border-teal-500/10'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent shadow-none'
               )}
             >
               Disponibles ({availableOrders.length})
@@ -546,10 +550,10 @@ export function DriverHome() {
                 if (soundEnabled) playRadarSound('click');
               }}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none',
+                'px-4 py-2.5 h-11 rounded-xl text-[9.5px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none flex items-center justify-center gap-1.5 shadow-sm',
                 activeTab === 'high_fee'
-                  ? 'bg-white dark:bg-zinc-800 text-emerald-500 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent'
+                  ? 'bg-white dark:bg-zinc-800 text-emerald-500 shadow-sm border border-emerald-500/10'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent shadow-none'
               )}
             >
               Premium Pago

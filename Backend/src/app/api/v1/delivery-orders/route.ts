@@ -33,8 +33,12 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       skip,
     });
 
-    return paginatedResponse(data, page, limit, total);
+    const mappedData = data.map(order => deliveryService.mapDeliveryOrder(order));
+
+    return paginatedResponse(mappedData, page, limit, total);
   } catch (error: any) {
+    console.error('Error fetching delivery orders:', error);
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
 });
+

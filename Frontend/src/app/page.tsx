@@ -48,6 +48,7 @@ const DeliveryRequest = dynamic(() => import('@/components/patient/delivery-requ
 const OrderTracking = dynamic(() => import('@/components/patient/order-tracking').then(m => m.OrderTracking), { ssr: false });
 const DriverHome = dynamic(() => import('@/components/delivery/driver-home').then(m => m.DriverHome), { ssr: false });
 const DeliveryDetail = dynamic(() => import('@/components/delivery/delivery-detail').then(m => m.DeliveryDetail), { ssr: false });
+const DriverDashboard = dynamic(() => import('@/components/delivery/driver-dashboard').then(m => m.DriverDashboard), { ssr: false });
 
 // Profile
 const ProfileScreen = dynamic(() => import('@/components/profile/profile-screen').then(m => m.ProfileScreen), { ssr: false });
@@ -224,6 +225,8 @@ export default function Home() {
       case 'driver-home':
       case 'inicio-repartidor':
         return <DriverHome />;
+      case 'driver-dashboard':
+        return <DriverDashboard />;
       case 'delivery-detail':
       case 'detalle-envio':
         return <DeliveryDetail />;

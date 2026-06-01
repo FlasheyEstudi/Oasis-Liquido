@@ -98,6 +98,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
   ],
   delivery_driver: [
     { page: 'inicio-repartidor', label: 'Inicio', icon: Home },
+    { page: 'driver-dashboard', label: 'Rendimiento', icon: LayoutDashboard },
   ],
 };
 
@@ -331,6 +332,7 @@ export const PAGE_TITLES: Record<AppPage, string> = {
   surtimiento: 'Surtir Recetas',
   'gestion-pedidos': 'Pedidos',
   'inicio-repartidor': 'Inicio',
+  'driver-dashboard': 'Mi Rendimiento',
   'detalle-envio': 'Detalle de Entrega',
   perfil: 'Mi Perfil',
   auditoria: 'Auditoría',

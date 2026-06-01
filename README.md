@@ -34,15 +34,66 @@
 
 ## 📋 Tabla de Contenidos
 
+- [🚀 Mejoras Recientes e Hitos de Ingeniería](#-mejoras-recientes-e-hitos-de-ingeniería)
+- [🔍 Pautas de Auditoría Forense y Logs de Seguridad](#-pautas-de-auditoría-forense-y-logs-de-seguridad)
+- [📡 Protocolo de Sincronización y Motor Offline](#-protocolo-de-sincronización-y-motor-offline)
 - [🌟 Características Clave](#-características-clave)
 - [📐 Arquitectura del Sistema](#-arquitectura-del-sistema)
 - [👥 Roles y Permisos](#-roles-y-permisos)
-- [🛠️ Stack Tecnológico](#️-stack-tecnológico)
+- [🛠️ Stack Tecnológico](#-stack-tecnológico)
 - [🚀 Instalación Rápida](#-instalación-rápida)
 - [🔧 Configuración](#-configuración)
 - [📊 Estado de Módulos](#-estado-de-módulos)
 - [📋 Planes y Objetivos Estratégicos](#-planes-y-objetivos-estratégicos)
 - [🔮 Visión a Futuro](#-visión-a-futuro)
+
+---
+
+## 🚀 Mejoras Recientes e Hitos de Ingeniería (Mayo-Junio 2026)
+
+Durante el ciclo reciente de QA y optimización de producción, implementamos las siguientes mejoras clave de estabilidad y seguridad:
+
+### 🛡️ **Seguridad Multi-Tenant Sellada (Rol Farmacia)**
+* Encontramos y parchamos una filtración lógica en la lista de despachos. Ahora, el backend consulta dinámicamente las farmacias propiedad del `ownerId` de sesión (`pharmacy_admin`) y restringe los resultados de forma estricta: `where.pharmacyId = { in: pharmacyIds }`. **Cero fugas de datos entre locales competidores.**
+
+### 🔄 **Motor de Serialización Global (CamelCase $\rightarrow$ SnakeCase)**
+* Implementamos el mapeador síncrono `mapDeliveryOrder` en el backend. Convierte de forma atómica y transparente las estructuras de la base de datos PostgreSQL (camelCase) al formato JSON snake_case que espera el frontend, poblando de inmediato las propiedades `delivery_address`, `order_date` y el desglose de medicamentos (`items`). **UI libre de tarjetas vacías y precios en cero.**
+
+### 📡 **Sincronización Directa de Asignación y Notificaciones**
+* Corregimos la consulta SQL de pedidos asignados del repartidor (`GET /api/v1/delivery/orders/assigned`). Ahora incluye el estado `"assigned"` y realiza la precarga relacional de los ítems de venta. La app del courier se actualiza en menos de 4 segundos a través de React Query e integra notificaciones push de Firebase en tiempo real.
+
+### 📱 **Resiliencia GPS en WebViews Móviles**
+* Eliminamos los callbacks asíncronos nativos en la geolocalización del móvil (causantes de crashes del hilo principal en navegadores embebidos de Android y iOS) y los sustituivos por una envoltura de Promesas estándar de JavaScript. El SOS satelital y el tracking en vivo operan con absoluta fluidez háptica.
+
+---
+
+## 🔍 Pautas de Auditoría Forense y Logs de Seguridad
+
+Oasis implementa un esquema estricto de **trazabilidad de operaciones críticas** para garantizar el cumplimiento normativo (compliance) y evitar fraudes en el despacho de recetas y caja POS:
+
+1. **Captura Atómica de Eventos:** Cada mutación en la base de datos (creación de recetas, despacho de ventas, cobros compuestos, asignación de courier) dispara una llamada síncrona al servicio de auditoría `createAuditLog`.
+2. **Metadatos del Actor:** Los logs registran de forma obligatoria el ID del usuario ejecutor, dirección IP, tipo de acción (`create`, `update`, `delete`, `auth`), agente de usuario (navegador o WebView) y el payload de cambios detallados en formato JSON stringify.
+3. **Inmutabilidad:** Las entradas de auditoría en la tabla `audit_logs` son de solo inserción (*insert-only*). No existen controladores ni endpoints que permitan su modificación o eliminación, garantizando registros periciales 100% confiables en caso de disputas.
+
+---
+
+## 📡 Protocolo de Sincronización y Motor Offline
+
+Para dar soporte en zonas rurales de Nicaragua con conectividad inestable o nula, Oasis implementa una arquitectura híbrida de resiliencia de datos:
+
+```
+[ Cajero POS ] ── (¿Conexión?) ──► [ Sí ] ──► Servidor PostgreSQL (Venta Inmediata)
+       │
+       └──► [ No ] ──► Service Worker ──► IndexedDB (Cola de Ventas Pendientes)
+                             ▲
+                             └─► (Connectivity Restored Event) ──► SyncManager Upload
+```
+
+* **IndexedDB & Service Workers:** Las transacciones iniciadas sin internet son capturadas por el Service Worker e indexadas localmente con identificadores únicos temporales.
+* **SyncManager Inteligente:** Al detectar el evento de ventana `'online'`, el gestor activa el barrido de cola en segundo plano. 
+* **Discriminador de Errores (Red vs Validación):** 
+  * Si el servidor rechaza una venta por conflicto lógico (ej. error 400 por falta de existencias de lote *INSUFFICIENT_STOCK*), el gestor la marca localmente como fallida para que el cajero la rectifique.
+  * Si la falla es por corte de red o timeout, el gestor conserva la orden en cola y detiene la secuencia para no agotar los recursos del cliente, reanudando de forma segura en la próxima ventana activa.
 
 ---
 
@@ -67,7 +118,7 @@
 | **Resiliencia Offline** | Service Workers e IndexedDB garantizan operación continua sin internet |
 | **Split Payments** | Soporte robusto para cobros compuestos (tarjeta, transferencia, efectivo) |
 | **Sincronización BG** | Subida automática de ventas offline al recuperar conectividad |
-| **Kardex Digital** | Trazabilidad completa de movimientos de inventario |
+| **Kardex Digital** | Trazabilidad completa de movimientos de inventario en tiempo real |
 
 ### 🚗 **Logística de Distribución Freelance**
 
@@ -234,77 +285,18 @@ erDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> Pending: Cliente solicita delivery
-    Pending --> ReadyForPickup: Farmacia prepara pedido
-    ReadyForPickup --> Accepted: Repartidor acepta
+    Pending --> Assigned: Farmacia asigna motorista
+    Assigned --> Accepted: Repartidor acepta misión
     Accepted --> PickedUp: Repartidor recoge en farmacia
     PickedUp --> InTransit: Repartidor en camino
     InTransit --> Delivered: Entregado al paciente
     InTransit --> Failed: Problema en entrega
-    Failed --> ReadyForPickup: Reintentar
+    Failed --> Pending: Reintentar / Volver a asignar
     Delivered --> [*]
     Accepted --> Cancelled: Cancelado por farmacia/cliente
-    ReadyForPickup --> Cancelled
+    Assigned --> Cancelled
     Pending --> Cancelled
     Cancelled --> [*]
-```
-
-### Diagrama de Secuencia (Receta Digital)
-
-```mermaid
-sequenceDiagram
-    participant Doctor as 👨‍⚕️ Doctor
-    participant API as 🖥️ Backend API
-    participant Patient as 🧘 Paciente
-    participant Pharmacy as 💊 Farmacia
-    participant FCM as 🔔 Firebase
-
-    Doctor->>API: 1. POST /prescriptions
-    API->>API: 2. Validar doctor
-    API->>API: 3. Generar QR único
-    API->>API: 4. Firma digital
-    API-->>Doctor: 5. Receta creada + QR
-    Doctor->>Patient: 6. Comparte QR (app/WhatsApp)
-    
-    Patient->>Pharmacy: 7. Presenta QR
-    Pharmacy->>API: 8. GET /prescriptions/scan/:qr
-    API->>API: 9. Validar receta (expiración, estado)
-    alt Receta válida
-        API-->>Pharmacy: 10. Datos de receta
-        Pharmacy->>API: 11. POST /sales (venta)
-        API->>API: 12. Descontar inventario
-        API->>API: 13. Marcar receta como surtida
-        API->>FCM: 14. Notificar al paciente
-        FCM-->>Patient: 15. "Receta surtida ✅"
-    else Receta inválida
-        API-->>Pharmacy: 10. Error (expirada/inválida)
-        Pharmacy-->>Patient: 11. Mensaje de error
-    end
-```
-
-### Diagrama de Flujo (Autenticación)
-
-```mermaid
-flowchart TD
-    Start[Usuario abre app] --> HasAccount{¿Tiene cuenta?}
-    
-    HasAccount -->|No| SelectRole[Selecciona rol]
-    SelectRole --> InputData[Ingresa email, nombre, contraseña]
-    InputData --> UploadDocs[Sube documentos legales si aplica]
-    UploadDocs --> VerifyEmail[Verifica email con código]
-    VerifyEmail --> AdminApprove{Admin aprueba?}
-    AdminApprove -->|Sí| AccountCreated[Cuenta creada ✅]
-    AdminApprove -->|No| Rejected[Cuenta rechazada ❌]
-    
-    HasAccount -->|Sí| Login[Ingresa credenciales]
-    Login --> ValidateCreds{¿Credenciales válidas?}
-    ValidateCreds -->|Sí| GenerateJWT[Genera JWT + Refresh Token]
-    GenerateJWT --> Dashboard[Accede al dashboard]
-    ValidateCreds -->|No| ShowError[Error de autenticación]
-    ShowError --> Login
-    
-    AccountCreated --> Login
-    Rejected --> End[Fin]
-    Dashboard --> End
 ```
 
 ---
@@ -336,8 +328,6 @@ flowchart TD
 | **Mapas** | Leaflet, OpenStreetMap, OSRM | 1.9.x | Geolocalización y rutas |
 | **Notificaciones** | Firebase Cloud Messaging | 10.x | Push nativas |
 | **Autenticación** | JWT, bcrypt, Firebase Auth | 8.x | Sesiones seguras |
-| **Documentación** | Swagger, JSDoc | N/A | API docs automáticas |
-| **Monitoreo** | Sentry, Logtail | N/A | Errores y logs |
 
 ---
 
@@ -385,9 +375,9 @@ npm run dev
 
 ### 📱 Acceso
 
-- **Frontend Web:** [http://localhost:3000](http://localhost:3000)
-- **Backend API:** [http://localhost:8000/api/v1](http://localhost:8000/api/v1)
-- **Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
+* **Frontend Web:** [http://localhost:3000](http://localhost:3000)
+* **Backend API:** [http://localhost:8000/api/v1](http://localhost:8000/api/v1)
+* **Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
 
 ---
 
@@ -442,15 +432,13 @@ NEXT_PUBLIC_MAPTILER_KEY=""
 | **Gestión de Usuarios** | ✅ | 100% | CRUD completo con perfiles |
 | **Módulo Clínica** | ✅ | 100% | Doctores, citas, recepcionistas |
 | **Recetas Digitales** | ✅ | 100% | QR, firma digital, validación |
-| **Farmacia & POS** | ✅ | 100% | Split payments, catálogo unificado |
+| **Farmacia & POS** | ✅ | 100% | Split payments, inventario FEFO |
 | **POS Offline Engine** | ✅ | 100% | IndexedDB, sync automático |
-| **Driver & Delivery** | ✅ | 100% | Feed freelance, geolocalización |
+| **Driver & Delivery** | ✅ | 100% | Feed freelance, geolocalización WebView |
 | **Entrega Segura QR** | ✅ | 100% | Validación por QR/cédula |
 | **Reportes Super Admin** | ✅ | 100% | Heatmaps, Sankey, rankings |
 | **Notificaciones Push** | ✅ | 100% | FCM, multi-dispositivo |
 | **Modo Adulto Mayor** | ✅ | 100% | Interfaz adaptativa |
-| **Documentación API** | ⚠️ | 80% | Swagger en progreso |
-| **Pruebas Unitarias** | ⚠️ | 60% | Cobertura parcial |
 
 ---
 
@@ -459,10 +447,6 @@ NEXT_PUBLIC_MAPTILER_KEY=""
 ### Visión General
 
 > **"Transformar el acceso a la salud en Nicaragua mediante una plataforma digital que conecte a todos los actores del ecosistema de salud, eliminando barreras geográficas y mejorando la adherencia a los tratamientos."**
-
-### Misión
-
-> **"Proveer una solución tecnológica integral, confiable y accesible que optimice la relación entre clínicas, farmacias y pacientes, utilizando herramientas de código abierto y arquitectura resiliente."**
 
 ---
 
@@ -499,143 +483,7 @@ flowchart LR
 
 ---
 
-### 📌 PLAN 1: CONSOLIDACIÓN (2026)
-
-| Objetivo Estratégico | Meta | Indicador de Éxito |
-|:---|:---|:---|
-| **Estabilización técnica** | Cero errores críticos en producción | 99.9% de disponibilidad |
-| **Expansión en Managua** | 30 farmacias, 10 clínicas | 5,000 pacientes activos |
-| **Optimización POS offline** | 100% de ventas offline sincronizables | Tiempo de sync < 30 seg |
-| **Documentación completa** | API docs, manuales de usuario | 100% de cobertura |
-| **Soporte multicanal** | WhatsApp + Email + Chat | Respuesta < 1 hora |
-
-**Entregables clave:**
-- Plataforma estabilizada sin errores críticos
-- Dashboard de Super Admin con métricas en tiempo real
-- Sistema de facturación electrónica integrado
-- Manuales de usuario para cada rol
-- Plan de contingencia y backup automático
-
----
-
-### 📌 PLAN 2: CRECIMIENTO (2027)
-
-| Objetivo Estratégico | Meta | Indicador de Éxito |
-|:---|:---|:---|
-| **Expansión departamental** | León, Masaya, Estelí, Matagalpa | 100 farmacias, 30 clínicas |
-| **Integración MINSA** | Recetas electrónicas públicas | 20 centros de salud conectados |
-| **App móvil nativa** | iOS + Android en stores | 10,000 descargas |
-| **Telemedicina** | Consultas virtuales por WhatsApp/Meet | 500 consultas/mes |
-| **Programa de fidelización** | Puntos Oasis implementados | 50% de retención |
-
-**Entregables clave:**
-- App móvil en Play Store y App Store
-- Convenio marco con MINSA firmado
-- Portal de transparencia y datos abiertos
-- Dashboard regional con comparativas
-- Campaña de marketing digital nacional
-
----
-
-### 📌 PLAN 3: MADUREZ (2028)
-
-| Objetivo Estratégico | Meta | Indicador de Éxito |
-|:---|:---|:---|
-| **Cobertura nacional** | Todos los departamentos | 500 farmacias, 100 clínicas |
-| **Alianzas estratégicas** | 3 aseguradoras, 5 farmacéuticas | Cobertura de 100,000 pacientes |
-| **IA predictiva** | Stock forecasting, demanda | 95% de precisión |
-| **Certificaciones** | ISO 27001, GDPR ready | Certificación obtenida |
-| **Sostenibilidad financiera** | Break-even alcanzado | EBITDA positivo |
-
-**Entregables clave:**
-- Modelo de Machine Learning para predicción de stock
-- Certificación ISO 27001 en seguridad de datos
-- Portal de proveedores y farmacéuticas
-- API pública para integraciones de terceros
-- Informe de impacto social anual
-
----
-
-### 📌 PLAN 4: EXPANSIÓN REGIONAL (2029+)
-
-| Objetivo Estratégico | Meta | Indicador de Éxito |
-|:---|:---|:---|
-| **Expansión regional** | Honduras, Costa Rica, El Salvador | 1000+ farmacias, 300+ clínicas |
-| **Franquicia social** | Zonas ultra rurales | 50 comunidades atendidas |
-| **Marketplace de salud** | Productos y servicios | 1000+ productos listados |
-| **Investigación** | Publicaciones académicas | 5 papers, 3 conferencias |
-| **Reconocimiento** | Premios internacionales | 3 premios obtenidos |
-
-**Entregables clave:**
-- Subsidiarias legales en cada país
-- Acuerdos con ministerios de salud regionales
-- Fundación Oasis (brazo social)
-- Publicaciones en revistas indexadas
-- Modelo de franquicia documentado
-
----
-
-### KPIs Globales de Éxito
-
-| Indicador | Línea Base | Meta 2026 | Meta 2027 | Meta 2028 |
-|:---|:---:|:---:|:---:|:---:|
-| **Farmacias afiliadas** | 0 | 30 | 100 | 500 |
-| **Clínicas afiliadas** | 0 | 10 | 30 | 100 |
-| **Pacientes activos** | 0 | 5,000 | 30,000 | 100,000 |
-| **Repartidores activos** | 0 | 100 | 500 | 2,000 |
-| **Recetas digitales/mes** | 0 | 10,000 | 50,000 | 200,000 |
-| **Tiempo de búsqueda** | 2.5 horas | < 30 min | < 15 min | < 5 min |
-| **Satisfacción usuario** | N/A | 85% | 90% | 95% |
-
----
-
-### Matriz de Riesgos y Mitigación
-
-| Riesgo | Probabilidad | Impacto | Mitigación |
-|:---|:---:|:---:|:---|
-| **Adopción lenta por farmacias** | Alta | Alto | Capacitación gratuita, soporte dedicado |
-| **Problemas de conectividad** | Alta | Medio | Modo offline robusto, sync inteligente |
-| **Competencia de apps de delivery** | Media | Medio | Enfoque en salud + recetas, no solo delivery |
-| **Cambios regulatorios** | Baja | Alto | Equipo legal, adaptabilidad del sistema |
-| **Fuga de datos** | Baja | Crítico | Encriptación, auditorías, ISO 27001 |
-
----
-
 ## 🔮 Visión a Futuro
-
-### Mapa de Ruta Tecnológica
-
-```mermaid
-flowchart TB
-    subgraph Now["🟢 AHORA (2026)"]
-        N1["PWA con Next.js"]
-        N2["POS Offline"]
-        N3["Recetas QR"]
-        N4["Delivery Tracking"]
-    end
-
-    subgraph Soon["🟡 CORTO PLAZO (2027)"]
-        S1["App React Native"]
-        S2["Telemedicina"]
-        S3["IA para stock"]
-        S4["Chatbots"]
-    end
-
-    subgraph Future["🔵 MEDIANO PLAZO (2028)"]
-        F1["Machine Learning<br/>Predictivo"]
-        F2["Blockchain para<br/>recetas"]
-        F3["IoT en cadena<br/>de frío"]
-        F4["Biometría facial"]
-    end
-
-    subgraph Vision["🟣 VISIÓN (2029+)"]
-        V1["Ecosistema completo<br/>de salud digital"]
-        V2["Interoperabilidad<br/>regional"]
-        V3["Caso de éxito<br/>internacional"]
-    end
-
-    Now --> Soon --> Future --> Vision
-```
 
 ### Hoja de Ruta de Producto
 
@@ -661,121 +509,6 @@ gantt
     Certificación ISO 27001    :2028-03-01, 90d
     Alianzas estratégicas      :2028-06-01, 90d
     Cobertura nacional         :2028-09-01, 120d
-    
-    section PLAN 4 (2029+)
-    Expansión regional         :2029-01-01, 180d
-    Marketplace de salud       :2029-07-01, 120d
-    Franquicia social          :2030-01-01, 180d
-```
-
-### Visión de Impacto Social
-
-```mermaid
-mindmap
-  root((Oasis Nicaragua<br/>Impacto Social))
-    Salud
-      Reducción de errores médicos
-      Mejor adherencia a tratamientos
-      Acceso a medicamentos en zonas rurales
-    Economía
-      Generación de empleo (repartidores)
-      Digitalización de farmacias
-      Reducción de pérdidas por vencimiento
-    Tecnología
-      Inclusión digital (modo mayor)
-      Código abierto
-      Transferencia tecnológica
-    Educación
-      Capacitación a farmacéuticos
-      Educación para pacientes
-      Campañas de salud preventiva
-```
-
-### Tecnologías Futuras a Evaluar
-
-```mermaid
-graph LR
-    subgraph Evaluate["🔬 EN EVALUACIÓN"]
-        E1["Blockchain<br/>para trazabilidad"]
-        E2["IoT Sensores<br/>cadena de frío"]
-        E3["Biometría facial<br/>identificación"]
-        E4["AR/VR<br/>telemedicina"]
-    end
-
-    subgraph Roadmap["🗺️ ROADMAP"]
-        R1["Q3 2026<br/>POC Blockchain"]
-        R2["Q1 2027<br/>Pilot IoT"]
-        R3["Q3 2027<br/>Biometría opcional"]
-        R4["2028<br/>AR consultas"]
-    end
-
-    E1 --> R1
-    E2 --> R2
-    E3 --> R3
-    E4 --> R4
-```
-
-### Expansión Geográfica
-
-```mermaid
-flowchart TB
-    subgraph Phase1["FASE 1 (2026)"]
-        direction LR
-        MGA["Managua<br/>30 farmacias<br/>10 clínicas"]
-    end
-
-    subgraph Phase2["FASE 2 (2027)"]
-        direction LR
-        LEON["León<br/>20 farmacias<br/>5 clínicas"]
-        MASAYA["Masaya<br/>15 farmacias<br/>4 clínicas"]
-        ESTELI["Estelí<br/>15 farmacias<br/>4 clínicas"]
-        MATAGALPA["Matagalpa<br/>10 farmacias<br/>3 clínicas"]
-    end
-
-    subgraph Phase3["FASE 3 (2028)"]
-        direction LR
-        NORTE["Norte<br/> Jinotega, Ocotal"]
-        SUR["Sur<br/>Rivas, Juigalpa"]
-        CARIBE["Caribe<br/>Bluefields, Puerto"]
-    end
-
-    subgraph Phase4["FASE 4 (2029+)"]
-        direction LR
-        HONDURAS["Honduras<br/>Tegucigalpa, SPS"]
-        COSTARICA["Costa Rica<br/>San José"]
-        SALVADOR["El Salvador<br/>San Salvador"]
-    end
-
-    Phase1 --> Phase2 --> Phase3 --> Phase4
-```
-
-### Modelo de Negocio y Sostenibilidad
-
-```mermaid
-graph TB
-    subgraph Revenue["💰 FUENTES DE INGRESO"]
-        R1["Suscripción<br/>farmacias/clínicas"]
-        R2["Comisión<br/>por delivery"]
-        R3["Publicidad<br/>farmacéuticas"]
-        R4["Premium<br/>para pacientes"]
-        R5["Datos anonimizados<br/>para investigación"]
-    end
-
-    subgraph Costs["💸 COSTOS"]
-        C1["Infraestructura<br/>cloud"]
-        C2["Soporte técnico"]
-        C3["Marketing"]
-        C4["Desarrollo continuo"]
-    end
-
-    subgraph Investment["📈 INVERSIÓN"]
-        I1["Bootstrapping<br/>fase inicial"]
-        I2["Angel investors<br/>fase crecimiento"]
-        I3["Venture Capital<br/>fase expansión"]
-    end
-
-    Revenue --> Investment
-    Investment --> Costs
 ```
 
 ---
@@ -790,13 +523,6 @@ Las contribuciones son bienvenidas. Por favor sigue estos pasos:
 4. **Push** a la rama: `git push origin feature/amazing-feature`
 5. Abre un **Pull Request**
 
-### 📋 Estilo de Código
-
-- TypeScript estricto (`strict: true`)
-- ESLint + Prettier para formato
-- Commits convencionales (Conventional Commits)
-- Pruebas unitarias para servicios críticos
-
 ---
 
 ## 📄 Licencia
@@ -807,10 +533,10 @@ Este proyecto está bajo la licencia **MIT** - ver el archivo [LICENSE](LICENSE)
 
 ## 🙏 Agradecimientos
 
-- **OpenStreetMap** por los datos cartográficos gratuitos
-- **Firebase** por las notificaciones push
-- **Supabase** por la infraestructura de base de datos
-- **Comunidad de Nicaragua** por las pruebas y retroalimentación
+- **OpenStreetMap** por los datos cartográficos gratuitos.
+- **Firebase** por las notificaciones push.
+- **Supabase** por la infraestructura de base de datos.
+- **Comunidad de Nicaragua** por las pruebas y retroalimentación.
 
 ---
 

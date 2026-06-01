@@ -71,6 +71,8 @@ export const updatePatientProfileSchema = z.object({
   blood_type: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
   allergies: z.array(z.string()).optional(),
   medical_notes: z.string().optional(),
+  emergency_contact: z.string().optional(),
+  emergency_phone: z.string().optional(),
 });
 
 export const changePasswordSchema = z.object({

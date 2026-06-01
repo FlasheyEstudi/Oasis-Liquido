@@ -25,6 +25,8 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest) => {
         blood_type: body.blood_type,
         allergies: body.allergies,
         medical_notes: body.medical_notes,
+        emergency_contact: body.emergency_contact,
+        emergency_phone: body.emergency_phone,
       },
       req.headers.get('x-forwarded-for') || undefined,
       req.headers.get('user-agent') || undefined

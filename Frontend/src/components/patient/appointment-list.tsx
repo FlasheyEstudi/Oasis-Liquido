@@ -6,6 +6,7 @@ import {
   useAppointments,
   useUpdateAppointmentStatus,
   getHookErrorMessage,
+  useCreateReview,
 } from '@/hooks/use-api';
 import type { Appointment, AppointmentStatus } from '@/types';
 import { formatDate, formatDuration, getInitials } from '@/utils/helpers';
@@ -23,6 +24,8 @@ import {
 import { QrCode } from '@/components/common/qr-code';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ReviewModal } from '@/components/oasis/review-modal';
+import { toast } from 'sonner';
 import {
   Calendar,
   Plus,
@@ -55,10 +58,12 @@ export function AppointmentList() {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [cancelDialog, setCancelDialog] = useState<Appointment | null>(null);
   const [selectedApt, setSelectedApt] = useState<Appointment | null>(null);
+  const [reviewApt, setReviewApt] = useState<Appointment | null>(null);
 
   const params = activeTab === 'cancelled' ? { status: 'cancelled' as AppointmentStatus } : undefined;
   const appointmentsQuery = useAppointments(params);
   const cancelMutation = useUpdateAppointmentStatus();
+  const createReviewMutation = useCreateReview();
 
   const allAppointments = appointmentsQuery.data?.data ?? [];
 
@@ -280,6 +285,17 @@ export function AppointmentList() {
                       </div>
 
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        {apt.status === 'completed' && (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/25 text-[9px] font-black uppercase tracking-widest text-teal-600 hover:bg-teal-500/20 transition-all duration-200 cursor-pointer"
+                            onClick={() => setReviewApt(apt)}
+                          >
+                            <Sparkles className="size-3" />
+                            Calificar
+                          </motion.button>
+                        )}
                         {canCancel(apt.status) && (
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -372,9 +388,7 @@ export function AppointmentList() {
               <div className="flex items-center gap-2 p-3 bg-teal-500/5 rounded-2xl border border-teal-500/10 text-[10px] font-bold text-slate-650 dark:text-zinc-355 text-left w-full">
                 <CheckCircle className="size-4 text-teal-500 shrink-0" />
                 <span>Presenta este ticket digital desde tu teléfono en recepción al llegar a la clínica.</span>
-              </div>
-
-              {/* Actions */}
+               {/* Actions */}
               <div className="w-full flex gap-3 pt-1">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -384,11 +398,24 @@ export function AppointmentList() {
                 >
                   Cerrar
                 </motion.button>
+                {selectedApt.status === 'completed' && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 rounded-[50px_16px_50px_16px] bg-teal-500 hover:bg-teal-650 text-white font-black text-[10px] uppercase tracking-widest h-11 border-none shadow-md cursor-pointer"
+                    onClick={() => {
+                      setReviewApt(selectedApt);
+                      setSelectedApt(null);
+                    }}
+                  >
+                    Calificar Consulta
+                  </motion.button>
+                )}
                 {canCancel(selectedApt.status) && (
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-650 text-white font-black text-[10px] uppercase tracking-widest h-11 border-none shadow-md cursor-pointer"
+                    className="flex-1 rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-655 text-white font-black text-[10px] uppercase tracking-widest h-11 border-none shadow-md cursor-pointer"
                     onClick={() => {
                       setCancelDialog(selectedApt);
                     }}
@@ -396,6 +423,7 @@ export function AppointmentList() {
                     Cancelar Cita
                   </motion.button>
                 )}
+              </div>
               </div>
             </div>
           )}
@@ -439,6 +467,33 @@ export function AppointmentList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {reviewApt && (
+        <ReviewModal
+          isOpen={!!reviewApt}
+          onClose={() => setReviewApt(null)}
+          targetName={reviewApt.doctor?.name || 'Médico'}
+          targetType="doctor"
+          onSubmit={async (rating, comment) => {
+            if (!reviewApt.doctor?.id) {
+              toast.error('No se pudo encontrar el ID del médico');
+              return;
+            }
+            try {
+              await createReviewMutation.mutateAsync({
+                targetId: reviewApt.doctor.id,
+                targetType: 'doctor',
+                rating,
+                comment,
+              });
+              toast.success('¡Gracias por calificar la atención del médico!');
+            } catch (err: any) {
+              const errMsg = err?.response?.data?.message || err?.message || 'Error al enviar la calificación';
+              toast.error(errMsg);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

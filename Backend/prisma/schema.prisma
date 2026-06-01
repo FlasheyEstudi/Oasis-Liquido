@@ -61,14 +61,16 @@ model User {
 }
 
 model PatientProfile {
-  userId       String   @id @map("user_id")
-  dateOfBirth  String?
-  bloodType    String?
-  allergies    String?
-  medicalNotes String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String   @id @map("user_id")
+  dateOfBirth      String?
+  bloodType        String?
+  allergies        String?
+  medicalNotes     String?
+  emergencyContact String?  @map("emergency_contact")
+  emergencyPhone   String?  @map("emergency_phone")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("patient_profiles")
 }

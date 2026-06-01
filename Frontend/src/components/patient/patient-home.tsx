@@ -182,8 +182,8 @@ export function PatientHome() {
       <div className="absolute top-[10%] left-[-10%] size-96 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl animate-blob-pulse pointer-events-none" />
       <div className="absolute bottom-[20%] right-[-10%] size-96 rounded-full bg-gradient-to-br from-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
 
-      {/* Top Console Bar (Caregiver & System Telemetry) - Kidney-shaped curvature */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/30 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-[24px_12px_24px_12px] p-3 shadow-md backdrop-blur-xl">
+      {/* Top Console Bar (Caregiver & System Telemetry) - Spatial floating borderless tab */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-500/[0.02] dark:bg-zinc-950/20 md:bg-white/30 md:dark:bg-zinc-950/20 border border-slate-200/20 dark:border-white/5 rounded-[2rem] p-3 shadow-sm backdrop-blur-xl">
         <div className="flex flex-wrap items-center gap-2">
           {/* Elderly Mode switch - Capsule shape */}
           <motion.button
@@ -249,8 +249,8 @@ export function PatientHome() {
         </div>
       </div>
 
-      {/* SEAMLESS HEADER SECTION — Asymmetric Glowing Glass Header (Matches Design Audit DSG-PAT-001) */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-teal-500/10 via-white/[0.02] to-emerald-500/[0.03] dark:from-teal-500/10 dark:via-zinc-950/20 dark:to-emerald-500/5 p-6 sm:p-8 border border-slate-250/50 dark:border-white/5 shadow-2xl backdrop-blur-xl">
+      {/* SEAMLESS HEADER SECTION — Spatial borderless glowing area */}
+      <div className="relative overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-teal-500/10 via-white/[0.01] to-emerald-500/[0.02] dark:from-teal-500/10 dark:via-zinc-950/15 dark:to-emerald-500/[0.02] p-6 sm:p-8 border border-slate-200/20 dark:border-white/5 shadow-lg backdrop-blur-xl">
         {/* Dynamic Fluid Glowing Orbs */}
         <div className="absolute -right-16 -top-16 size-56 rounded-full bg-teal-400/15 dark:bg-teal-400/10 blur-3xl pointer-events-none animate-pulse" />
         <div className="absolute -left-16 -bottom-16 size-56 rounded-full bg-emerald-400/10 dark:bg-emerald-400/5 blur-3xl pointer-events-none" />
@@ -279,7 +279,7 @@ export function PatientHome() {
           </div>
 
           {/* Profile Avatar + Digital QR Passport Seal */}
-          <div className="flex items-center gap-4 shrink-0 bg-white/40 dark:bg-black/10 border border-slate-200/50 dark:border-white/5 rounded-[2rem] p-3 shadow-inner">
+          <div className="flex items-center gap-4 shrink-0 bg-white/10 dark:bg-white/[0.02] md:bg-white/40 md:dark:bg-black/10 border border-slate-200/20 dark:border-white/5 rounded-[2rem] p-3 shadow-sm">
             <div className="text-right">
               <p className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Código Expediente</p>
               <div className="flex items-center gap-1.5 mt-0.5 justify-end">
@@ -343,8 +343,8 @@ export function PatientHome() {
       {/* DYNAMIC SEAMLESS CLINICAL FEED — All consolidated into one beautiful unboxed workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-3">
         
-        {/* Main Column: timeline & appointments (7 cols) */}
-        <div className="lg:col-span-7 bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-4 sm:p-5 shadow-xl">
+        {/* Main Column: timeline & appointments (7 cols) - borderless mobile-first */}
+        <div className="lg:col-span-7 bg-slate-500/[0.02] dark:bg-zinc-950/[0.15] md:bg-white/10 md:dark:bg-zinc-950/10 border border-slate-200/20 dark:border-white/5 rounded-[2rem] backdrop-blur-md p-5 shadow-sm">
           <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-slate-200 dark:border-white/5 mb-4">
             <div className="flex items-center gap-2">
               <div className="flex size-7.5 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/15">
@@ -374,7 +374,7 @@ export function PatientHome() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 bg-white/30 dark:bg-zinc-950/40 p-3.5 rounded-2xl border border-slate-200/40 dark:border-white/5 shadow-inner">
+                  <div className="grid grid-cols-2 gap-4 bg-teal-500/[0.03] dark:bg-teal-500/[0.02] p-3.5 rounded-2xl border border-teal-500/10 shadow-sm">
                     <div className="space-y-0.5">
                       <p className="text-[8px] font-black text-slate-405 dark:text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
                       <p className="text-[11px] font-extrabold text-slate-800 dark:text-zinc-200 flex items-center gap-1">
@@ -433,8 +433,8 @@ export function PatientHome() {
           </div>
         </div>
 
-        {/* Right Column: recent recipes & stats (5 cols) */}
-        <div className="lg:col-span-5 bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[16px_40px_16px_40px] backdrop-blur-md p-4 sm:p-5 shadow-xl flex flex-col justify-between gap-5">
+        {/* Right Column: recent recipes & stats (5 cols) - borderless mobile-first */}
+        <div className="lg:col-span-5 bg-slate-500/[0.02] dark:bg-zinc-950/[0.15] md:bg-white/10 md:dark:bg-zinc-950/10 border border-slate-200/20 dark:border-white/5 rounded-[2rem] backdrop-blur-md p-5 shadow-sm flex flex-col justify-between gap-5">
           
           {/* Recent Prescriptions Section */}
           <div>

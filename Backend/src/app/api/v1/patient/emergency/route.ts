@@ -13,8 +13,67 @@ import { sendWhatsAppMessage } from '@/lib/services/whatsapp.service';
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const userId = req.user.userId;
+    const userRole = req.user.role;
     const { lat, lng, message: customMessage } = await req.json();
 
+    if (userRole === 'delivery_driver') {
+      // 1. Get driver profile
+      const driver = await db.user.findUnique({
+        where: { id: userId },
+        include: {
+          deliveryDriverProfile: {
+            include: { pharmacy: true }
+          }
+        }
+      });
+
+      if (!driver || !driver.deliveryDriverProfile) {
+        return errorResponse(ErrorCodes.NOT_FOUND, 'Perfil de repartidor no encontrado', 404);
+      }
+
+      // 2. Get any pending active order for this driver to include in the message!
+      const activeOrder = await db.deliveryOrder.findFirst({
+        where: { deliveryDriverId: userId, status: 'picked_up' },
+        include: { patient: true }
+      });
+
+      // 3. Log the alert
+      await createAuditLog({
+        userId,
+        action: 'emergency_alert',
+        entityType: 'delivery_driver',
+        entityId: userId,
+        details: JSON.stringify({ lat, lng, pharmacy: driver.deliveryDriverProfile.pharmacy.name }),
+      });
+
+      // 4. Send WhatsApp/SMS alert to the pharmacy phone number
+      const pharmacyPhone = driver.deliveryDriverProfile.pharmacy.phone;
+      const orderInfo = activeOrder 
+        ? `\nPedido Activo: #${activeOrder.id.slice(-6)}\nCliente: ${activeOrder.patient.name}\nDirección de Entrega: ${activeOrder.deliveryAddress}`
+        : '\nSin pedido activo en tránsito.';
+
+      const alertMessage = `🆘 AUXILIO / EMERGENCIA DE REPARTIDOR: OASIS AURA\n\nRepartidor: ${driver.name}\nVehículo: ${driver.deliveryDriverProfile.vehicleType.toUpperCase()} (Placa: ${driver.deliveryDriverProfile.licensePlate || 'N/A'})\nFarmacia Origen: ${driver.deliveryDriverProfile.pharmacy.name}\nUbicación en Vivo: https://www.google.com/maps?q=${lat},${lng}${orderInfo}\n\nEste es un mensaje automático de auxilio satelital de Oasis Líquida. Asistencia requerida de inmediato.`;
+
+      if (pharmacyPhone) {
+        try {
+          await sendWhatsAppMessage(pharmacyPhone, alertMessage);
+          console.log(`[WHATSAPP DRIVER EMERGENCY SENT] Alert dispatched to pharmacy +${pharmacyPhone}`);
+        } catch (wsError) {
+          console.error('Failed to send driver emergency WhatsApp/SMS alert:', wsError);
+        }
+      }
+
+      // Also send push notification to driver confirming help is coming
+      await sendPushNotification(userId, 'Alerta de Auxilio Satelital Enviada', 'Centro de soporte y farmacia notificados. Asistencia en camino.');
+
+      return successResponse({ 
+        success: true, 
+        message: 'Alerta de auxilio enviada correctamente',
+        debug: { alertMessage }
+      });
+    }
+
+    // Otherwise, standard patient emergency logic
     // 1. Get patient profile and emergency contact
     const patient = await db.user.findUnique({
       where: { id: userId },
@@ -63,8 +122,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       console.log('[EMERGENCY ALERT] No emergency phone registered for patient');
     }
 
-    // 5. Notify nearby clinics or system admins via FCM
-    // For demo purposes, we just notify the patient that help is on the way
+    // 5. Notify patient via FCM
     await sendPushNotification(userId, 'Alerta de Emergencia Enviada', 'Ayuda en camino. Hemos contactado a tu contacto de emergencia.');
 
     return successResponse({ 
@@ -76,4 +134,4 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     console.error('Emergency alert error:', error);
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error al enviar alerta', 500);
   }
-}, { roles: ['patient'] });
+}, { roles: ['patient', 'delivery_driver'] });

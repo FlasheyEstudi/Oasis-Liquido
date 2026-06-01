@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
 import { db } from '@/lib/db';
+import * as deliveryService from '@/lib/services/delivery.service';
 
 import { getInMemoryDeliveries, MockDeliveryOrder } from '@/lib/db/mock-deliveries';
 
@@ -38,12 +39,14 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
           include: {
             pharmacy: true,
             patient: true,
+            sale: { include: { saleItems: { include: { medicine: true } } } },
           },
         });
-        return successResponse(available);
+        const mappedAvailable = available.map(o => deliveryService.mapDeliveryOrder(o));
+        return successResponse(mappedAvailable);
       } catch (dbError) {
         console.warn('Database offline, returning available deliveries from in-memory fallback:', dbError);
-        return successResponse(inMemoryDeliveries.filter(d => d.status === 'pending'));
+        return successResponse(inMemoryDeliveries.filter(d => d.status === 'pending').map(d => deliveryService.mapDeliveryOrder(d)));
       }
     }
 
@@ -54,19 +57,23 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
         const assigned = await db.deliveryOrder.findMany({
           where: {
             deliveryDriverId: driverId,
-            status: { in: ['accepted', 'picked_up', 'in_transit'] },
+            status: { in: ['assigned', 'accepted', 'picked_up', 'in_transit'] },
           },
           include: {
             pharmacy: true,
             patient: true,
+            sale: { include: { saleItems: { include: { medicine: true } } } },
           },
         });
-        return successResponse(assigned);
+        const mappedAssigned = assigned.map(o => deliveryService.mapDeliveryOrder(o));
+        return successResponse(mappedAssigned);
       } catch (dbError) {
         console.warn('Database offline, returning assigned deliveries from in-memory fallback:', dbError);
-        return successResponse(inMemoryDeliveries.filter(d => d.deliveryDriverId === driverId && ['accepted', 'picked_up', 'in_transit'].includes(d.status)));
+        const filteredInMemory = inMemoryDeliveries.filter(d => d.deliveryDriverId === driverId && ['assigned', 'accepted', 'picked_up', 'in_transit'].includes(d.status));
+        return successResponse(filteredInMemory.map(d => deliveryService.mapDeliveryOrder(d)));
       }
     }
+
 
     // GET earnings summary
     if (actionPath === 'earnings') {

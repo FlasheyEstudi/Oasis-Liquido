@@ -292,189 +292,176 @@ export function DeliveryDetail() {
 
   return (
     <div className={cn(
-      "space-y-6 pb-24 font-sans relative overflow-visible px-1 sm:px-0 max-w-2xl mx-auto",
+      "relative w-full h-[calc(100vh-100px)] md:h-[calc(100vh-64px)] overflow-hidden font-sans select-none",
       isElderlyMode && "text-base font-medium [&_h3]:text-xl [&_p]:text-sm [&_span]:text-xs [&_button]:text-sm [&_button]:h-12"
     )}>
       
-      {/* Ambience background */}
-      <div className="absolute top-[20%] left-[-10%] size-80 bg-gradient-to-br from-teal-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-      {/* Navigation Top Action */}
-      <div className="flex items-center justify-between pb-2">
-        <motion.button
-          whileHover={{ x: -3 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => navigate('driver-home')}
-          className="rounded-full px-4 py-2 text-[8.5px] font-black uppercase tracking-widest bg-white/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 text-slate-700 dark:text-zinc-350 flex items-center gap-2 shadow-sm backdrop-blur-sm cursor-pointer"
-        >
-          <ArrowLeft className="size-3.5" />
-          Volver
-        </motion.button>
-
-        <span className="px-3 py-1 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 text-[8.5px] font-black uppercase tracking-widest">
-          Bitácora Reparto
-        </span>
-      </div>
-
-      {/* 1. Curved Top Header Panel — Cardless */}
-      <div className="bg-teal-500/10 dark:bg-zinc-950/40 border-b border-dashed border-teal-500/20 rounded-b-[40px] py-6 px-5 -mx-4 relative overflow-hidden shadow-sm">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/[0.03] rounded-full blur-2xl pointer-events-none" />
-        <div className="flex justify-between items-start gap-4 relative z-10">
-          <div>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white font-serif">
-              Orden #{order.id?.slice(0, 8) || '...'}
-            </h2>
-            <p className="text-[9px] text-slate-500 dark:text-zinc-400 font-bold mt-1">
-              Despachada: {formatDate(order.order_date, 'dd/MM/yyyy HH:mm')} hrs
-            </p>
-          </div>
-          <StatusBadge status={order.status} type="delivery" />
-        </div>
-      </div>
-
-      {/* 2. Tactical Navigation Map Preview — Floating Scope */}
-      <div className="relative rounded-[32px_12px_24px_12px] overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-md h-64 bg-zinc-950">
+      {/* 1. Immersive Full-Screen Map Canvas */}
+      <div className="absolute inset-0 z-0 w-full h-full">
         <DriverMap order={order} height="100%" />
       </div>
 
-      {/* 3. Integrated Cargo Manifest & Route timeline sheet — All Cardless */}
-      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-5 shadow-xl space-y-6">
-        
-        {/* Route Steps */}
-        <div className="space-y-4">
-          <p className="text-[8px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:border-white/5">RUTA TÁCTICA DE ENTREGA</p>
-          
-          <div className="flex items-start gap-3.5 relative">
-            <div className="flex size-9 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 shrink-0">
-              <Building2 className="size-4.5" />
-            </div>
+      {/* 2. Floating Navigation HUD Header */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center pointer-events-none">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('driver-home')}
+          className="pointer-events-auto rounded-full px-5 py-2.5 text-[9px] font-black uppercase tracking-widest bg-white/90 dark:bg-zinc-950/90 border border-slate-200/50 dark:border-white/10 text-slate-800 dark:text-zinc-200 flex items-center gap-2 shadow-xl backdrop-blur-md cursor-pointer"
+        >
+          <ArrowLeft className="size-4" />
+          Radar
+        </motion.button>
+
+        <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-200/50 dark:border-white/10 bg-white/90 dark:bg-zinc-950/90 px-4 py-2 shadow-xl backdrop-blur-md">
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75"></span>
+            <span className="relative inline-flex size-2 rounded-full bg-teal-500"></span>
+          </span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-800 dark:text-white">Misión en Curso</span>
+        </div>
+      </div>
+
+      {/* 3. Glassmorphic Pull-up Bottom Sheet (Drawer) */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 w-full max-w-xl mx-auto pointer-events-none p-4">
+        <motion.div
+          initial={{ y: 250, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="pointer-events-auto bg-white/90 dark:bg-zinc-950/90 backdrop-blur-2xl border border-slate-200/40 dark:border-white/5 rounded-[2.5rem] shadow-[0_-15px_40px_rgba(0,0,0,0.18)] p-6 space-y-6 max-h-[50vh] overflow-y-auto select-none"
+        >
+          {/* Pull indicator pill */}
+          <div className="w-12 h-1 bg-slate-300 dark:bg-zinc-800 rounded-full mx-auto -mt-2 mb-4" />
+
+          {/* Header Info */}
+          <div className="flex justify-between items-center">
             <div>
-              <p className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">ORIGEN RECOLECCIÓN</p>
-              <h4 className="text-xs font-black text-slate-800 dark:text-white font-serif mt-0.5">{order.pharmacy?.name || 'Farmacia'}</h4>
-              <p className="text-[10px] text-slate-550 dark:text-zinc-400 font-bold mt-0.5">{order.pickup_address || 'N/A'}</p>
+              <span className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">ORDEN EN SEGUIMIENTO</span>
+              <h2 className="text-sm font-black text-slate-905 dark:text-white font-serif mt-0.5">
+                Orden #{order.id?.slice(0, 8) || '...'}
+              </h2>
             </div>
+            <StatusBadge status={order.status} type="delivery" />
           </div>
 
-          <div className="flex items-start gap-3.5 relative">
-            <div className="flex size-9 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 shrink-0">
-              <MapPin className="size-4.5" />
-            </div>
-            <div>
-              <p className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">DESTINO ENTREGA</p>
-              <h4 className="text-xs font-black text-slate-800 dark:text-white font-serif mt-0.5">{order.delivery_address}</h4>
-              {order.patient && (
-                <div className="mt-1.5 flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full bg-slate-500/5 dark:bg-black/10 border border-slate-250 dark:border-white/5 text-[8.5px] font-black text-slate-700 dark:text-zinc-350">{order.patient.name}</span>
-                  {order.patient.phone && <span className="text-[9.5px] font-mono text-slate-450">{order.patient.phone}</span>}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Cargo manifest */}
-        <div className="space-y-3 pt-2">
-          <p className="text-[8px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:border-white/5">MANIFESTO DE ARTÍCULOS</p>
-          
-          {order.items && order.items.length > 0 ? (
-            <div className="space-y-2">
-              {order.items.map((item) => (
-                <div key={item.id} className="flex justify-between items-center text-xs font-bold py-1">
-                  <div className="flex items-center gap-2 text-slate-705 dark:text-zinc-300">
-                    <span className="size-1.5 rounded-full bg-teal-500/60" />
-                    <span>{item.medicine?.name || 'Medicamento'}</span>
-                    <span className="text-slate-400 font-mono text-[10px]">x{item.quantity}</span>
-                  </div>
-                  <span className="font-mono text-slate-800 dark:text-white">{formatCurrency(item.quantity * item.unit_price)}</span>
-                </div>
-              ))}
-              <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
-                <span className="text-[9px] font-black text-slate-450 uppercase tracking-widest">Valor total cargamento</span>
-                <span className="text-sm font-black text-slate-905 dark:text-white font-serif">{formatCurrency(totalAmount)}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-xs text-slate-400 text-center">Sin manifiesto especificado.</p>
-          )}
-        </div>
-
-        {/* Status Steps Tracker */}
-        <div className="space-y-4 pt-2">
-          <p className="text-[8px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:border-white/5">HISTORIAL DE ESTADO</p>
-          
-          <div className="relative pl-2 space-y-4">
-            <div className="absolute left-[13px] top-2 bottom-2 w-0.5 bg-slate-200 dark:bg-zinc-800" />
-            
+          {/* Status Steps Tracker Dot Timeline */}
+          <div className="flex items-center justify-between px-2 py-2.5 border-y border-dashed border-slate-200 dark:border-white/5">
             {STATUS_STEPS.map((step, index) => {
               const isCompleted = index <= currentStepIndex;
               const isCurrent = index === currentStepIndex;
-              const Icon = step.icon;
-
               return (
-                <div key={step.key} className="flex items-center gap-3 relative z-10">
+                <div key={step.key} className="flex flex-col items-center gap-1.5 relative">
                   <div className={cn(
-                    "size-7 rounded-full flex items-center justify-center border transition-all duration-300",
-                    isCompleted
-                      ? "bg-teal-500/10 border-teal-500/25 text-teal-600 dark:text-teal-400 shadow-sm"
-                      : "bg-white dark:bg-zinc-950 border-slate-200 dark:border-white/5 text-slate-400 dark:text-zinc-600"
+                    "size-6.5 rounded-full flex items-center justify-center border transition-all duration-300 text-[9px] font-black",
+                    isCurrent && "bg-teal-500 text-white ring-4 ring-teal-500/25",
+                    isCompleted && !isCurrent && "bg-teal-500/10 border-teal-500/25 text-teal-600 dark:text-teal-400",
+                    !isCompleted && "bg-white dark:bg-zinc-900 border-slate-200 dark:border-white/5 text-slate-400 dark:text-zinc-605"
                   )}>
-                    <Icon className="size-3.5 shrink-0" />
+                    {index + 1}
                   </div>
-                  <div>
-                    <span className={cn(
-                      "text-[10px] font-black uppercase tracking-wider",
-                      isCompleted ? "text-slate-800 dark:text-white" : "text-slate-400 dark:text-zinc-600"
-                    )}>
-                      {step.label}
-                    </span>
-                  </div>
+                  <span className={cn(
+                    "text-[8px] font-black uppercase tracking-wider scale-90",
+                    isCurrent ? "text-teal-500" : isCompleted ? "text-slate-800 dark:text-zinc-300" : "text-slate-400 dark:text-zinc-650"
+                  )}>
+                    {step.label}
+                  </span>
                 </div>
               );
             })}
           </div>
-        </div>
 
-        {/* Notes */}
-        {order.notes && (
-          <div className="p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-[10px] font-bold text-slate-650 dark:text-zinc-350 leading-relaxed shadow-sm">
-            <span className="font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider block mb-0.5">Comentarios de Recolección:</span>
-            {order.notes}
+          {/* Route Steps / Addresses */}
+          <div className="space-y-4 pt-1">
+            {/* Pharmacy Origin */}
+            <div className="flex items-start gap-3">
+              <div className="flex size-9 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Building2 className="size-4.5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[7.5px] font-black text-emerald-655 dark:text-emerald-450 uppercase tracking-widest">Punto de Retiro</span>
+                <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.pharmacy?.name || 'Farmacia'}</h4>
+                <p className="text-[10px] text-slate-550 dark:text-zinc-400 mt-0.5 truncate font-medium">{order.pickup_address || 'N/A'}</p>
+              </div>
+            </div>
+
+            {/* Patient Destination */}
+            <div className="flex items-start gap-3">
+              <div className="flex size-9 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
+                <MapPin className="size-4.5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[7.5px] font-black text-rose-655 dark:text-rose-450 uppercase tracking-widest">Destino de Entrega</span>
+                <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.delivery_address}</h4>
+                {order.patient && (
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-slate-500/5 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 text-[8.5px] font-black text-slate-700 dark:text-zinc-350">{order.patient.name}</span>
+                    {order.patient.phone && <span className="text-[9.5px] font-mono text-slate-450 dark:text-zinc-450">{order.patient.phone}</span>}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Action Buttons — Tactile driving-ergonomic Swipe Sliders */}
-      {order.status !== 'delivered' && order.status !== 'cancelled' && (
-        <div className="w-full pt-2">
-          {order.status === 'assigned' && (
-            <SwipeButton
-              onConfirm={() => handleStatusUpdate('picked_up')}
-              text={isUpdating ? 'ACTUALIZANDO...' : 'Desliza para recoger de farmacia'}
-              colorClasses="from-teal-500 to-emerald-600"
-              icon={PackageOpen}
-              disabled={isUpdating}
-            />
+          {/* Comments Note */}
+          {order.notes && (
+            <div className="p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-350 leading-relaxed shadow-sm">
+              <span className="font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider block mb-0.5">Comentarios de Recolección:</span>
+              {order.notes}
+            </div>
           )}
-          {order.status === 'picked_up' && (
-            <SwipeButton
-              onConfirm={() => handleStatusUpdate('in_transit')}
-              text={isUpdating ? 'ACTUALIZANDO...' : 'Desliza para iniciar ruta'}
-              colorClasses="from-sky-500 to-indigo-650"
-              icon={Navigation}
-              disabled={isUpdating}
-            />
+
+          {/* Cargo manifest */}
+          {order.items && order.items.length > 0 && (
+            <div className="bg-slate-500/[0.02] dark:bg-black/10 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5 space-y-2">
+              <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest block mb-1">Manifiesto de Receta</span>
+              {order.items.map((item) => (
+                <div key={item.id} className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-slate-700 dark:text-zinc-300 truncate max-w-[70%]">{item.medicine?.name || 'Medicamento'} <span className="text-slate-450 dark:text-zinc-500 font-mono text-[10px]">x{item.quantity}</span></span>
+                  <span className="font-mono text-slate-800 dark:text-zinc-200">{formatCurrency(item.quantity * item.unit_price)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-white/5 mt-2">
+                <span className="text-[8px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest">Subtotal Cargamento</span>
+                <span className="text-xs font-black text-slate-905 dark:text-white font-mono">{formatCurrency(totalAmount)}</span>
+              </div>
+            </div>
           )}
-          {order.status === 'in_transit' && (
-            <SwipeButton
-              onConfirm={() => setConfirmDeliveryOpen(true)}
-              text="Desliza para verificar paciente"
-              colorClasses="from-emerald-500 to-teal-600 animate-pulse"
-              icon={QrCode}
-              disabled={isUpdating}
-            />
+
+          {/* Dynamic Action Trigger Slider */}
+          {order.status !== 'delivered' && order.status !== 'cancelled' && (
+            <div className="pt-2">
+              {order.status === 'assigned' && (
+                <SwipeButton
+                  text={isUpdating ? 'PROCESANDO...' : 'Deslizar para confirmar Retiro'}
+                  onConfirm={() => handleStatusUpdate('picked_up')}
+                  colorClasses="from-teal-500 to-cyan-500"
+                  icon={PackageOpen}
+                  disabled={isUpdating}
+                />
+              )}
+              {order.status === 'picked_up' && (
+                <SwipeButton
+                  text={isUpdating ? 'PROCESANDO...' : 'Deslizar para iniciar Ruta'}
+                  onConfirm={() => handleStatusUpdate('in_transit')}
+                  colorClasses="from-sky-500 to-blue-600"
+                  icon={Navigation}
+                  disabled={isUpdating}
+                />
+              )}
+              {order.status === 'in_transit' && (
+                <SwipeButton
+                  text="Deslizar para entregar"
+                  onConfirm={() => setConfirmDeliveryOpen(true)}
+                  colorClasses="from-emerald-500 to-teal-600 font-bold animate-[pulse_3s_infinite]"
+                  icon={CheckCircle2}
+                  disabled={isUpdating}
+                />
+              )}
+            </div>
           )}
-        </div>
-      )}
+
+        </motion.div>
+      </div>
 
       {/* Confirmation Modal Drawer */}
       <AnimatePresence>
@@ -485,33 +472,33 @@ export function DeliveryDetail() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.94, opacity: 0, y: 30 }}
               transition={{ type: 'spring', damping: 25 }}
-              className="bg-slate-900 border border-slate-800 text-white rounded-[40px_16px_40px_16px] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden"
+              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-850 dark:text-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
               
               <div className="text-center mb-6">
-                <div className="size-14 bg-teal-500/15 rounded-2xl flex items-center justify-center text-teal-400 mx-auto mb-4 border border-teal-500/20 shadow-md">
+                <div className="size-14 bg-teal-500/15 rounded-2xl flex items-center justify-center text-teal-600 dark:text-teal-400 mx-auto mb-4 border border-teal-500/20 shadow-md">
                   <QrCode className="size-8" />
                 </div>
                 <h3 className="text-base font-black uppercase tracking-wider font-serif">Confirmar Entrega</h3>
-                <p className="text-[11px] text-gray-400 mt-2 font-semibold leading-relaxed">
-                  Escanea el ID Digital de <span className="font-black text-teal-400">{order.patient?.name}</span> para verificar.
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-2 font-semibold leading-relaxed">
+                  Escanea el ID Digital de <span className="font-black text-teal-500">{order.patient?.name}</span> para verificar.
                 </p>
               </div>
 
               <div className="space-y-4 mb-6">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">¿Quién recibe?</label>
+                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">¿Quién recibe?</label>
                   <input
                     placeholder="Ej. Paciente, Madre, Tutor"
                     value={receiverName}
                     onChange={(e) => setReceiverName(e.target.value)}
-                    className="w-full h-11 px-4 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs focus:outline-none focus:border-teal-500 font-bold placeholder:text-gray-550"
+                    className="w-full h-11 px-4 bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 text-slate-800 dark:text-white rounded-xl text-xs focus:outline-none focus:border-teal-500 font-bold placeholder:text-slate-400"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Código QR o ID Digital</label>
+                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Código QR o ID Digital</label>
                   <div className="flex gap-2">
                     <input
                       placeholder="patient-id-xxxx"
@@ -520,11 +507,11 @@ export function DeliveryDetail() {
                         setPatientQrCode(e.target.value);
                         if (verificationError) setVerificationError('');
                       }}
-                      className="flex-1 h-11 px-4 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs font-mono focus:outline-none focus:border-teal-500 placeholder:text-gray-550"
+                      className="flex-1 h-11 px-4 bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 text-slate-805 dark:text-white rounded-xl text-xs font-mono focus:outline-none focus:border-teal-500 placeholder:text-slate-400"
                     />
                     <Button
                       size="sm"
-                      className="bg-teal-600/20 hover:bg-teal-600/30 text-teal-400 text-[9px] font-black uppercase tracking-widest rounded-xl px-3 border border-teal-500/10"
+                      className="bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-[9px] font-black uppercase tracking-widest rounded-xl px-3 border border-teal-500/10 cursor-pointer"
                       onClick={() => {
                         setPatientQrCode(`patient-id-${order.patient?.id}`);
                         setReceiverName(order.patient?.name || '');
@@ -535,7 +522,7 @@ export function DeliveryDetail() {
                     </Button>
                   </div>
                   {verificationError && (
-                    <p className="text-[10px] text-red-400 font-bold mt-1">{verificationError}</p>
+                    <p className="text-[10px] text-red-500 dark:text-red-400 font-bold mt-1">{verificationError}</p>
                   )}
                 </div>
               </div>
@@ -543,7 +530,7 @@ export function DeliveryDetail() {
               <div className="flex gap-3">
                 <Button 
                   variant="ghost" 
-                  className="flex-1 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white" 
+                  className="flex-1 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-white cursor-pointer" 
                   onClick={() => {
                     setConfirmDeliveryOpen(false);
                     setVerificationError('');
@@ -552,7 +539,7 @@ export function DeliveryDetail() {
                   Cancelar
                 </Button>
                 <Button 
-                  className="flex-1 bg-teal-600 hover:bg-teal-700 font-black text-[10px] uppercase tracking-widest rounded-xl"
+                  className="flex-1 bg-teal-650 hover:bg-teal-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl cursor-pointer"
                   disabled={!receiverName.trim() || !patientQrCode.trim() || isUpdating}
                   onClick={handleConfirmDelivery}
                 >

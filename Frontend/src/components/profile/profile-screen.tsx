@@ -94,6 +94,8 @@ export function ProfileScreen() {
   const [bloodType, setBloodType] = useState('');
   const [allergies, setAllergies] = useState('');
   const [medicalNotes, setMedicalNotes] = useState('');
+  const [emergencyContact, setEmergencyContact] = useState('');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
 
   // Delivery Driver fields
   const [vehicleType, setVehicleType] = useState('Motocicleta');
@@ -198,6 +200,8 @@ export function ProfileScreen() {
         setBloodType(profile.patient_profile.blood_type || '');
         setAllergies(profile.patient_profile.allergies?.join(', ') || '');
         setMedicalNotes(profile.patient_profile.medical_notes || '');
+        setEmergencyContact(profile.patient_profile.emergency_contact || '');
+        setEmergencyPhone(profile.patient_profile.emergency_phone || '');
       }
       if (profile.role === 'delivery_driver') {
         if (profile.delivery_driver_profile) {
@@ -252,6 +256,8 @@ export function ProfileScreen() {
             ? allergies.split(',').map((a) => a.trim()).filter(Boolean)
             : [],
           medical_notes: medicalNotes.trim() || undefined,
+          emergency_contact: emergencyContact.trim() || undefined,
+          emergency_phone: emergencyPhone.trim() || undefined,
         });
       }
 
@@ -298,6 +304,8 @@ export function ProfileScreen() {
         setBloodType(profile.patient_profile.blood_type || '');
         setAllergies(profile.patient_profile.allergies?.join(', ') || '');
         setMedicalNotes(profile.patient_profile.medical_notes || '');
+        setEmergencyContact(profile.patient_profile.emergency_contact || '');
+        setEmergencyPhone(profile.patient_profile.emergency_phone || '');
       }
       if (profile.role === 'delivery_driver') {
         if (profile.delivery_driver_profile) {
@@ -778,6 +786,30 @@ export function ProfileScreen() {
                       className="glass-input rounded-2xl w-full px-4 py-3 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5 resize-none"
                     />
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Contacto de Emergencia</label>
+                      <input
+                        value={emergencyContact}
+                        onChange={(e) => setEmergencyContact(e.target.value)}
+                        placeholder="Nombre (ej. Mamá, Esposa)"
+                        disabled={isSaving}
+                        className="glass-input rounded-2xl w-full px-4 py-3 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Teléfono de Emergencia</label>
+                      <input
+                        value={emergencyPhone}
+                        onChange={(e) => setEmergencyPhone(e.target.value)}
+                        placeholder="Número (ej. 88888888)"
+                        disabled={isSaving}
+                        className="glass-input rounded-2xl w-full px-4 py-3 text-xs bg-white/5 border border-slate-200/50 dark:border-white/5"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -790,17 +822,32 @@ export function ProfileScreen() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo de Vehículo</label>
-                      <select
-                        value={vehicleType}
-                        onChange={(e) => setVehicleType(e.target.value)}
-                        disabled={isSaving}
-                        className="glass-input rounded-2xl w-full px-4 py-3 text-xs bg-zinc-900 border border-slate-200/50 dark:border-white/5 text-foreground cursor-pointer"
-                      >
-                        <option value="Motocicleta">Motocicleta</option>
-                        <option value="Automóvil">Automóvil</option>
-                        <option value="Bicicleta">Bicicleta</option>
-                        <option value="Vehículo Eléctrico">Vehículo Eléctrico</option>
-                      </select>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { value: 'Motocicleta', label: 'Moto' },
+                          { value: 'Automóvil', label: 'Carro' },
+                          { value: 'Bicicleta', label: 'Bici' },
+                          { value: 'Vehículo Eléctrico', label: 'Eléctrico' },
+                        ].map((item) => {
+                          const isSelected = vehicleType === item.value;
+                          return (
+                            <button
+                              key={item.value}
+                              type="button"
+                              disabled={isSaving}
+                              onClick={() => setVehicleType(item.value)}
+                              className={cn(
+                                "flex items-center justify-center py-2.5 px-3 rounded-2xl border text-xs font-bold transition-all duration-300",
+                                isSelected
+                                  ? "bg-teal-500/10 border-teal-500/50 text-teal-600 dark:text-teal-400 shadow-md shadow-teal-500/5"
+                                  : "bg-white/40 dark:bg-zinc-900/30 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-900/50"
+                              )}
+                            >
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <div className="space-y-1.5">
@@ -827,16 +874,35 @@ export function ProfileScreen() {
 
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Seguro Obligatorio</label>
-                      <select
-                        value={insuranceStatus}
-                        onChange={(e) => setInsuranceStatus(e.target.value)}
-                        disabled={isSaving}
-                        className="glass-input rounded-2xl w-full px-4 py-3 text-xs bg-zinc-900 border border-slate-200/50 dark:border-white/5 text-foreground cursor-pointer"
-                      >
-                        <option value="Vigente">Vigente (Aprobado)</option>
-                        <option value="En Renovación">En Renovación</option>
-                        <option value="Vencido">Vencido (Alerta)</option>
-                      </select>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: 'Vigente', label: 'Vigente', color: 'emerald' },
+                          { value: 'En Renovación', label: 'Renovación', color: 'amber' },
+                          { value: 'Vencido', label: 'Vencido', color: 'red' },
+                        ].map((item) => {
+                          const isSelected = insuranceStatus === item.value;
+                          return (
+                            <button
+                              key={item.value}
+                              type="button"
+                              disabled={isSaving}
+                              onClick={() => setInsuranceStatus(item.value)}
+                              className={cn(
+                                "flex flex-col items-center justify-center py-2.5 rounded-2xl border text-[10px] font-black uppercase tracking-wider transition-all duration-300",
+                                isSelected
+                                  ? item.color === 'emerald'
+                                    ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 shadow-md shadow-emerald-500/5"
+                                    : item.color === 'amber'
+                                      ? "bg-amber-500/15 border-amber-500/50 text-amber-600 dark:text-amber-400 shadow-md shadow-amber-500/5"
+                                      : "bg-red-500/15 border-red-500/50 text-red-600 dark:text-red-400 shadow-md shadow-red-500/5 animate-pulse"
+                                  : "bg-white/40 dark:bg-zinc-900/30 border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-900/50"
+                              )}
+                            >
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1076,37 +1142,61 @@ export function ProfileScreen() {
               </div>
             )}
 
-            {/* Patient Medical Card */}
+            {/* Patient Medical Card - Spatial curvilinear layout */}
             {role === 'patient' && profile.patient_profile && (
-              <div className="p-5 rounded-[2rem] border border-slate-200/50 dark:border-white/5 bg-slate-500/[0.01] dark:bg-zinc-950/20 space-y-4">
+              <div className="p-5 rounded-[2rem] border border-slate-200/20 dark:border-white/5 bg-slate-500/[0.02] dark:bg-zinc-950/10 space-y-4">
                 <div className="flex items-center justify-between pb-2.5 border-b border-white/5">
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
                     <Heart className="size-4 text-rose-500 fill-rose-500/10" /> Ficha de Salud del Paciente
                   </h3>
-                  <span className="text-[8px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full border border-teal-500/20">Bioseguro</span>
+                  <span className="text-[8px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-600 dark:text-teal-450 px-2 py-0.5 rounded-full border border-teal-500/10">Bioseguro</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {profile.patient_profile.blood_type && (
-                    <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5">
-                      <div className="size-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center shadow-inner">
+                    <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/10 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/5">
+                      <div className="size-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center shadow-sm">
                         <Droplets className="size-4.5 fill-current" />
                       </div>
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Grupo Sanguíneo</p>
-                        <p className="text-sm font-black text-foreground">{profile.patient_profile.blood_type}</p>
+                        <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">Grupo Sanguíneo</p>
+                        <p className="text-sm font-black text-foreground mt-0.5">{profile.patient_profile.blood_type}</p>
                       </div>
                     </div>
                   )}
 
                   {profile.patient_profile.date_of_birth && (
-                    <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5">
-                      <div className="size-9 rounded-xl bg-teal-500/10 text-teal-555 flex items-center justify-center shadow-inner">
+                    <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/10 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/5">
+                      <div className="size-9 rounded-xl bg-teal-500/10 text-teal-555 flex items-center justify-center shadow-sm">
                         <Calendar className="size-4.5" />
                       </div>
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Fecha de Nacimiento</p>
-                        <p className="text-sm font-black text-foreground">{profile.patient_profile.date_of_birth}</p>
+                        <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">Fecha de Nacimiento</p>
+                        <p className="text-sm font-black text-foreground mt-0.5">{profile.patient_profile.date_of_birth}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {profile.patient_profile.emergency_contact && (
+                    <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/10 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/5">
+                      <div className="size-9 rounded-xl bg-teal-500/10 text-teal-550 flex items-center justify-center shadow-sm">
+                        <UserIcon className="size-4.5" />
+                      </div>
+                      <div>
+                        <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">Contacto de Emergencia</p>
+                        <p className="text-sm font-black text-foreground mt-0.5">{profile.patient_profile.emergency_contact}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {profile.patient_profile.emergency_phone && (
+                    <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/10 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/5">
+                      <div className="size-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shadow-sm">
+                        <Phone className="size-4.5" />
+                      </div>
+                      <div>
+                        <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">Teléfono de Emergencia</p>
+                        <p className="text-sm font-black text-foreground mt-0.5">{profile.patient_profile.emergency_phone}</p>
                       </div>
                     </div>
                   )}
@@ -1160,14 +1250,14 @@ export function ProfileScreen() {
                       value={familyRelation}
                       onChange={(e: any) => setFamilyRelation(e.target.value)}
                       disabled={isLinking}
-                      className="bg-zinc-900 border border-slate-200/50 dark:border-white/5 text-foreground rounded-xl text-xs px-3 py-2.5 font-bold cursor-pointer"
+                      className="bg-white/40 dark:bg-zinc-900 border border-slate-200/50 dark:border-white/5 text-slate-800 dark:text-white rounded-xl text-xs px-3 py-2.5 font-bold cursor-pointer focus:border-teal-500/50 focus:outline-none transition-colors"
                     >
-                      <option value="padre">Padre</option>
-                      <option value="madre">Madre</option>
-                      <option value="hijo">Hijo/a</option>
-                      <option value="conyuge">Cónyuge</option>
-                      <option value="tutor">Tutor Legal</option>
-                      <option value="otro">Otro</option>
+                      <option value="padre" className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">Padre</option>
+                      <option value="madre" className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">Madre</option>
+                      <option value="hijo" className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">Hijo/a</option>
+                      <option value="conyuge" className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">Cónyuge</option>
+                      <option value="tutor" className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">Tutor Legal</option>
+                      <option value="otro" className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">Otro</option>
                     </select>
                     <button
                       className="bg-teal-500 hover:bg-teal-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider px-5 py-2.5 shrink-0 shadow-md shadow-teal-500/5 transition-colors disabled:opacity-50"

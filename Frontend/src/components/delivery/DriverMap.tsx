@@ -41,13 +41,15 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
         const lat = currentLocation?.lat;
         const lng = currentLocation?.lng;
         
-        // Call OSRM route API with live driver coordinates
-        const queryParams = lat && lng ? `?currentLat=${lat}&currentLng=${lng}&stage=${stage}` : `?stage=${stage}`;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/delivery-orders/${order.id}/route${queryParams}`);
-        const result = await res.json();
+        // Use the authenticated API client getRoute method, which automatically resolves the API URL and includes token headers
+        const routeData = await getRoute(order.id, {
+          currentLat: lat,
+          currentLng: lng,
+          stage,
+        });
         
-        if (result.success) {
-          setRoute(result.data);
+        if (routeData) {
+          setRoute(routeData);
         }
       } catch (err) {
         console.error('Error fetching navigation route:', err);

@@ -29,8 +29,10 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
       req.headers.get('user-agent') || undefined
     );
 
-    return successResponse(data, 'Estado de entrega actualizado');
+    const mappedData = deliveryService.mapDeliveryOrder(data);
+    return successResponse(mappedData, 'Estado de entrega actualizado');
   } catch (error: any) {
+
     if (error.message === 'NOT_FOUND') {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Orden de entrega no encontrada', 404);
     }

@@ -10,6 +10,7 @@ import {
   useDeliveryOrderTracking,
   useDeliveryRoute,
   getHookErrorMessage,
+  useCreateReview,
 } from '@/hooks/use-api';
 import { useRealTimeTracking } from '@/hooks/useRealTimeTracking';
 import type { DeliveryOrder, DeliveryStatus } from '@/types';
@@ -390,6 +391,7 @@ export function OrderTracking() {
   const [reviewOrder, setReviewOrder] = useState<DeliveryOrder | null>(null);
 
   const ordersQuery = useDeliveryOrders({});
+  const createReviewMutation = useCreateReview();
   const rawOrders = ordersQuery.data?.data ?? [];
   
   const orders = useMemo(() => rawOrders.map(normalizeOrder), [rawOrders]);
@@ -633,9 +635,23 @@ export function OrderTracking() {
           onClose={() => setReviewOrder(null)}
           targetName={reviewOrder.driver?.name || 'Repartidor'}
           targetType="delivery"
-          onSubmit={(r, c) => {
-            console.log('Delivery review:', r, c);
-            toast.success('¡Gracias por calificar al repartidor!');
+          onSubmit={async (rating, comment) => {
+            if (!reviewOrder.driver?.id) {
+              toast.error('No se pudo encontrar el ID del repartidor');
+              return;
+            }
+            try {
+              await createReviewMutation.mutateAsync({
+                targetId: reviewOrder.driver.id,
+                targetType: 'driver',
+                rating,
+                comment,
+              });
+              toast.success('¡Gracias por calificar al repartidor!');
+            } catch (err: any) {
+              const errMsg = err?.response?.data?.message || err?.message || 'Error al enviar la calificación';
+              toast.error(errMsg);
+            }
           }}
         />
       )}

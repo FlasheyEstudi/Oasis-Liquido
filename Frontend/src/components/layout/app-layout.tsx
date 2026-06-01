@@ -8,7 +8,7 @@ import { MobileBottomBar } from '@/components/oasis/mobile-bottom-bar';
 import { BottomSheetNav } from '@/components/oasis/bottom-sheet-nav';
 import { ContextualFAB } from '@/components/oasis/contextual-fab';
 import { OrganicBlobs } from '@/components/oasis/organic-blobs';
-import { CheckCircle, XCircle, AlertTriangle, Info, X, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Info, X, Loader2, AlertCircle, Radio, ShieldAlert, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
@@ -131,6 +131,105 @@ export function AppLayout({ children }: AppLayoutProps) {
   const timerRef = useRef<any>(null);
   const startTimeRef = useRef<number>(0);
   const isLongPressRef = useRef(false);
+
+  const [isAuraTriggering, setIsAuraTriggering] = useState(false);
+  const [auraCountdown, setAuraCountdown] = useState(3);
+  const [isAuraSending, setIsAuraSending] = useState(false);
+  const [auraTriggered, setAuraTriggered] = useState(false);
+  const countdownIntervalRef = useRef<any>(null);
+
+  const startAuraTrigger = () => {
+    setIsAuraTriggering(true);
+    setAuraCountdown(3);
+    setAuraTriggered(false);
+
+    countdownIntervalRef.current = setInterval(() => {
+      setAuraCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownIntervalRef.current);
+          sendAuraAlert();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const cancelAuraTrigger = () => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    setIsAuraTriggering(false);
+  };
+
+  const sendAuraAlert = async () => {
+    setIsAuraSending(true);
+    try {
+      // Get location
+      if (typeof window !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            try {
+              const res = await apiClient.post('/patient/emergency', { lat, lng });
+              if (res.data?.success || res.status === 200) {
+                setAuraTriggered(true);
+                setNotification({
+                  type: 'success',
+                  message: 'Oasis Aura: Alerta satelital y lista de medicamentos enviada a tu contacto de emergencia.',
+                });
+              } else {
+                throw new Error('No se pudo procesar la alerta');
+              }
+            } catch (err: any) {
+              console.error('Aura API Error:', err);
+              setNotification({
+                type: 'error',
+                message: 'No pudimos contactar al servidor de emergencias. Intenta de nuevo.',
+              });
+              setIsAuraTriggering(false);
+            } finally {
+              setIsAuraSending(false);
+            }
+          },
+          (error) => {
+            console.error('Geolocation Error:', error);
+            // Fallback to Managua center coords for Nicaragua demo
+            apiClient.post('/patient/emergency', { lat: 12.115, lng: -86.236 })
+              .then(() => {
+                setAuraTriggered(true);
+                setNotification({
+                  type: 'success',
+                  message: 'Oasis Aura: Alerta enviada con coordenadas aproximadas (geolocalización deshabilitada).',
+                });
+              })
+              .catch(() => {
+                setNotification({
+                  type: 'error',
+                  message: 'Por favor habilita los permisos de geolocalización para usar la alerta de emergencia.',
+                });
+                setIsAuraTriggering(false);
+              })
+              .finally(() => {
+                setIsAuraSending(false);
+              });
+          },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      } else {
+        throw new Error('Geolocalización no soportada');
+      }
+    } catch (e: any) {
+      setNotification({
+        type: 'error',
+        message: e.message || 'Error al obtener la ubicación actual.',
+      });
+      setIsAuraSending(false);
+      setIsAuraTriggering(false);
+    }
+  };
 
   const handleSosStart = (e: React.MouseEvent | React.TouchEvent) => {
     isLongPressRef.current = false;
@@ -473,6 +572,73 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </div>
 
                   <div className="space-y-3">
+                    {/* Oasis Aura Satellite Emergency Dispatch */}
+                    {isAuraTriggering ? (
+                      <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-center space-y-4">
+                        <div className="relative size-20 flex items-center justify-center">
+                          {/* Pulse waves */}
+                          <motion.div
+                            animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeOut" }}
+                            className="absolute inset-0 rounded-full bg-teal-500/30"
+                          />
+                          <motion.div
+                            animate={{ scale: [1, 1.4], opacity: [0.4, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.5, delay: 0.4, ease: "easeOut" }}
+                            className="absolute inset-0 rounded-full bg-teal-500/20"
+                          />
+                          <div className="size-16 rounded-full bg-gradient-to-tr from-teal-600 to-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-[0_0_20px_rgba(20,184,166,0.4)]">
+                            {auraCountdown > 0 ? auraCountdown : <Loader2 className="size-8 animate-spin" />}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black uppercase tracking-widest text-teal-400">Despachando Aura...</h4>
+                          <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">Enviando tu ubicación satelital y lista de medicamentos actuales.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={cancelAuraTrigger}
+                          className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-widest text-zinc-300 transition-colors"
+                        >
+                          Cancelar Alerta
+                        </button>
+                      </div>
+                    ) : auraTriggered ? (
+                      <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
+                        <div className="size-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                          <CheckCircle className="size-6" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400">¡Alerta Enviada!</h4>
+                          <p className="text-[10px] text-slate-400 mt-1">El mensaje con tu ubicación y medicamentos activos fue enviado vía WhatsApp al contacto de emergencia registrado.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAuraTriggered(false)}
+                          className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-widest text-zinc-300 transition-colors"
+                        >
+                          Entendido
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={startAuraTrigger}
+                        className="flex items-center gap-4 w-full p-4 rounded-2xl bg-gradient-to-r from-teal-500/20 via-cyan-500/10 to-transparent border border-teal-500/30 hover:border-teal-500 hover:bg-teal-500/20 text-white transition duration-300 cursor-pointer relative overflow-hidden group shadow-lg shadow-teal-500/5"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="size-10 rounded-xl bg-teal-500/20 flex items-center justify-center text-teal-400 relative z-10 shrink-0 shadow-inner">
+                          <Radio className="size-5 animate-pulse" />
+                        </div>
+                        <div className="text-left flex-1 relative z-10">
+                          <div className="text-xs font-black text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                            Oasis Aura <span className="text-[7px] bg-teal-400 text-black font-extrabold px-1 rounded">SATELITAL</span>
+                          </div>
+                          <div className="text-[10px] text-slate-300 font-medium mt-0.5 leading-tight">Alerta digital vía WhatsApp + Medicación Activa</div>
+                        </div>
+                      </button>
+                    )}
+
                     <a
                       href="tel:102"
                       className="flex items-center gap-4 w-full p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-red-500/30 hover:bg-red-500/10 text-white transition duration-200 cursor-pointer"

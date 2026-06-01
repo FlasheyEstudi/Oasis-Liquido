@@ -19,6 +19,7 @@ import {
   Activity,
   Store,
   Building2,
+  LayoutDashboard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -62,6 +63,7 @@ function getMobileNavItems(role: UserRole): { page: AppPage; label: string; icon
     case 'delivery_driver':
       return [
         { page: 'driver-home', label: 'Inicio', icon: <Home className="size-[20px]" /> },
+        { page: 'driver-dashboard', label: 'Rendimiento', icon: <LayoutDashboard className="size-[20px]" /> },
         { page: 'delivery-detail', label: 'Entregas', icon: <Truck className="size-[20px]" /> },
       ];
     case 'admin':

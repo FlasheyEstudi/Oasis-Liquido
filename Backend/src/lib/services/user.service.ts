@@ -433,6 +433,8 @@ export async function updatePatientProfile(
     blood_type?: string;
     allergies?: string[];
     medical_notes?: string;
+    emergency_contact?: string;
+    emergency_phone?: string;
   },
   ipAddress?: string,
   userAgent?: string
@@ -444,6 +446,8 @@ export async function updatePatientProfile(
       bloodType: data.blood_type,
       allergies: data.allergies ? JSON.stringify(data.allergies) : undefined,
       medicalNotes: data.medical_notes,
+      emergencyContact: data.emergency_contact,
+      emergencyPhone: data.emergency_phone,
     },
   });
 
@@ -464,6 +468,8 @@ export async function updatePatientProfile(
     blood_type: profile.bloodType,
     allergies: profile.allergies ? JSON.parse(profile.allergies) : null,
     medical_notes: profile.medicalNotes,
+    emergency_contact: profile.emergencyContact,
+    emergency_phone: profile.emergencyPhone,
     created_at: profile.createdAt,
     updated_at: profile.updatedAt,
   };

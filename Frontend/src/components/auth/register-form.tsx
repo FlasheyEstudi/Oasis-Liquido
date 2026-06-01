@@ -684,32 +684,51 @@ export function RegisterForm() {
                         </div>
                       </div>
 
-                      {/* Role */}
+                      {/* Role Selector Grid */}
                       <div>
-                        <label htmlFor="register-role" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-2">
                           Tipo de cuenta (Rol)
                         </label>
-                        <div className="relative group/input">
-                          <Shield className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors pointer-events-none" />
-                          <select
-                            id="register-role"
-                            disabled={isSubmitting}
-                            value={role}
-                            onChange={(e) => {
-                              setRole(e.target.value);
-                              setApiError(null);
-                            }}
-                            className="w-full h-11 pl-11 pr-10 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:border-teal-500/50 dark:focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 dark:focus:ring-teal-500/10 focus:outline-none transition-all duration-300 disabled:opacity-50 appearance-none bg-transparent"
-                          >
-                            <option value="patient" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Paciente</option>
-                            <option value="clinic_admin" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Administrador de Clínica</option>
-                            <option value="pharmacy_admin" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Administrador de Farmacia</option>
-                            <option value="pharmacy_manager" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Gestor de Farmacia</option>
-                            <option value="delivery_driver" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">Repartidor / Delivery</option>
-                          </select>
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <ChevronDown className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
-                          </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { value: 'patient', label: 'Paciente', desc: 'Gestiona citas y recetas', icon: <User className="size-4" /> },
+                            { value: 'delivery_driver', label: 'Repartidor', desc: 'Entregas geolocalizadas', icon: <Truck className="size-4" /> },
+                            { value: 'clinic_admin', label: 'Clínica', desc: 'Administra doctores y turnos', icon: <Building className="size-4" /> },
+                            { value: 'pharmacy_admin', label: 'Farmacia', desc: 'Administra locales y POS', icon: <Building className="size-4" /> }
+                          ].map((item) => {
+                            const isSelected = role === item.value;
+                            return (
+                              <button
+                                key={item.value}
+                                type="button"
+                                disabled={isSubmitting}
+                                onClick={() => {
+                                  setRole(item.value);
+                                  setApiError(null);
+                                }}
+                                className={cn(
+                                  "flex flex-col items-start text-left p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden group hover:scale-[1.01] active:scale-[0.99]",
+                                  isSelected
+                                    ? "bg-teal-500/10 border-teal-500/50 shadow-[0_4px_20px_rgba(20,184,166,0.15)] text-teal-700 dark:text-teal-400"
+                                    : "bg-white/40 dark:bg-zinc-900/30 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
+                                )}
+                              >
+                                {isSelected && (
+                                  <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                                )}
+                                <div className={cn(
+                                  "p-1 rounded-xl border mb-2 shrink-0 transition-colors duration-300",
+                                  isSelected
+                                    ? "bg-teal-500/20 border-teal-500/30 text-teal-600 dark:text-teal-400"
+                                    : "bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500"
+                                )}>
+                                  {item.icon}
+                                </div>
+                                <span className="text-[11px] font-black uppercase tracking-wide leading-none">{item.label}</span>
+                                <span className="text-[9px] font-light leading-snug mt-1 text-slate-500 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-400 transition-colors">{item.desc}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -880,13 +899,13 @@ export function RegisterForm() {
                                   disabled={isSubmitting}
                                   value={pharmacyId}
                                   onChange={(e) => setPharmacyId(e.target.value)}
-                                  className="w-full h-11 pl-11 pr-10 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:border-teal-500/50 focus:outline-none disabled:opacity-50 appearance-none bg-transparent"
+                                  className="w-full h-11 pl-11 pr-10 rounded-xl text-sm bg-white/45 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:border-teal-500/50 focus:outline-none disabled:opacity-50 appearance-none bg-transparent cursor-pointer font-medium"
                                 >
                                   {pharmacies.length === 0 ? (
-                                    <option value="">No hay farmacias activas</option>
+                                    <option value="" className="bg-white dark:bg-zinc-950 text-slate-500">No hay farmacias activas</option>
                                   ) : (
                                     pharmacies.map((pharmacy) => (
-                                      <option key={pharmacy.id} value={pharmacy.id} className="bg-slate-800 text-white">
+                                      <option key={pharmacy.id} value={pharmacy.id} className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">
                                         {pharmacy.name} ({pharmacy.address})
                                       </option>
                                     ))
@@ -1005,22 +1024,30 @@ export function RegisterForm() {
                             <label htmlFor="register-vehicle" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
                               Tipo de Vehículo
                             </label>
-                            <div className="relative">
-                              <Truck className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
-                              <select
-                                id="register-vehicle"
-                                disabled={isSubmitting}
-                                value={vehicleType}
-                                onChange={(e) => setVehicleType(e.target.value)}
-                                className="w-full h-11 pl-11 pr-10 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:border-teal-500/50 focus:outline-none disabled:opacity-50 appearance-none bg-transparent"
-                              >
-                                <option value="motocicleta" className="bg-slate-800 text-white">Motocicleta</option>
-                                <option value="bicicleta" className="bg-slate-800 text-white">Bicicleta / E-bike</option>
-                                <option value="automovil" className="bg-slate-800 text-white">Automóvil</option>
-                              </select>
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <ChevronDown className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
-                              </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              {[
+                                { value: 'motocicleta', label: 'Moto' },
+                                { value: 'bicicleta', label: 'Bici' },
+                                { value: 'automovil', label: 'Carro' },
+                              ].map((item) => {
+                                const isSelected = vehicleType === item.value;
+                                return (
+                                  <button
+                                    key={item.value}
+                                    type="button"
+                                    disabled={isSubmitting}
+                                    onClick={() => setVehicleType(item.value)}
+                                    className={cn(
+                                      "flex items-center justify-center py-2.5 px-3 rounded-xl border text-xs font-bold transition-all duration-300",
+                                      isSelected
+                                        ? "bg-teal-500/10 border-teal-500/50 text-teal-600 dark:text-teal-400 shadow-md shadow-teal-500/5"
+                                        : "bg-white/40 dark:bg-zinc-900/30 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-900/50"
+                                    )}
+                                  >
+                                    {item.label}
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                           <div>

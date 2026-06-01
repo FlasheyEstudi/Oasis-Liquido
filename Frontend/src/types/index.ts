@@ -95,6 +95,8 @@ export interface PatientProfile {
   blood_type?: string;
   allergies: string[];
   medical_notes?: string;
+  emergency_contact?: string;
+  emergency_phone?: string;
 }
 
 export interface ReceptionistProfile {
@@ -130,6 +132,8 @@ export interface UpdatePatientProfileRequest {
   blood_type?: string;
   allergies?: string[];
   medical_notes?: string;
+  emergency_contact?: string;
+  emergency_phone?: string;
 }
 
 // --- Clinic Types ---

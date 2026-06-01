@@ -85,8 +85,8 @@ export const ROLE_LABELS: Record<string, string> = {
   patient: 'Paciente',
   pharmacy_manager: 'Farmacéutico',
   delivery_driver: 'Repartidor',
-  clinic_admin: 'Admin Clínica',
-  pharmacy_admin: 'Admin Farmacia',
+  clinic_admin: 'Clínica',
+  pharmacy_admin: 'Farmacia',
 };
 
 export const ROLE_COLORS: Record<string, { bg: string; text: string; border: string }> = {

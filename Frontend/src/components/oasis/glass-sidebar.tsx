@@ -27,6 +27,7 @@ import {
   Store,
   Settings,
   Pin,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -84,6 +85,7 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
     case 'delivery_driver':
       return [
         { page: 'driver-home', label: 'Inicio', icon: <Home className="size-[18px]" /> },
+        { page: 'driver-dashboard', label: 'Mi Rendimiento', icon: <LayoutDashboard className="size-[18px]" /> },
         { page: 'delivery-detail', label: 'Entregas', icon: <Truck className="size-[18px]" /> },
         { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];

@@ -62,11 +62,14 @@ export async function assignDriver(id: string, data: AssignDriverRequest): Promi
 }
 
 /** Get delivery route */
-export async function getRoute(id: string): Promise<DeliveryRoute> {
+export async function getRoute(
+  id: string,
+  params?: { currentLat?: number; currentLng?: number; stage?: string }
+): Promise<any> {
   if (!id) {
     throw new Error('ID de pedido requerido para obtener ruta');
   }
-  const result = await get<DeliveryRoute>(`/delivery-orders/${id}/route`);
+  const result = await get<any>(`/delivery-orders/${id}/route`, params as Record<string, unknown>);
   return result.data;
 }
 
