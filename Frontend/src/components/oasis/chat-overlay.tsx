@@ -64,14 +64,26 @@ export function ChatOverlay() {
 
   // For demo: automatically pick first context
   const currentContext = activeDeliveries[0] 
-    ? { id: activeDeliveries[0].id, type: 'delivery', name: activeDeliveries[0].driver?.name || 'Repartidor', icon: Truck, isAvailable: true }
+    ? { 
+        id: activeDeliveries[0].id, 
+        type: 'delivery', 
+        name: user?.role === 'patient' 
+          ? (activeDeliveries[0].driver?.name || 'Repartidor') 
+          : (activeDeliveries[0].patient?.name || 'Paciente'), 
+        icon: Truck, 
+        isAvailable: true,
+        participantIds: [activeDeliveries[0].patient_id, activeDeliveries[0].delivery_driver_id].filter(Boolean) as string[]
+      }
     : activeAppointments[0]
     ? { 
         id: activeAppointments[0].id, 
         type: 'appointment', 
-        name: activeAppointments[0].doctor?.name || 'Médico', 
+        name: user?.role === 'patient' 
+          ? (activeAppointments[0].doctor?.name || 'Médico') 
+          : (activeAppointments[0].patient?.name || 'Paciente'), 
         icon: Stethoscope,
-        isAvailable: new Date().getHours() >= 9 && new Date().getHours() < 18
+        isAvailable: new Date().getHours() >= 9 && new Date().getHours() < 18,
+        participantIds: [activeAppointments[0].patient_id, activeAppointments[0].doctor_id].filter(Boolean) as string[]
       }
     : null;
 
@@ -101,7 +113,7 @@ export function ChatOverlay() {
       createSessionMutation.mutate({
         type: currentContext.type,
         targetId: currentContext.id,
-        participantIds: [] // Backend adds current user
+        participantIds: (currentContext as any).participantIds || []
       }, {
         onSuccess: (newSession) => {
           setActiveSessionId(newSession.data.id);

@@ -42,6 +42,50 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     const body = await req.json();
     const { type, targetId, participantIds } = body;
 
+    if (targetId) {
+      const existingSession = await prisma.chatSession.findFirst({
+        where: { targetId },
+        include: {
+          participants: {
+            include: {
+              user: {
+                select: { id: true, name: true, role: true }
+              }
+            }
+          }
+        }
+      });
+
+      if (existingSession) {
+        // Ensure current user is in participants
+        const isParticipant = existingSession.participants.some(p => p.userId === req.user.userId);
+        if (!isParticipant) {
+          await prisma.chatParticipant.create({
+            data: {
+              sessionId: existingSession.id,
+              userId: req.user.userId
+            }
+          });
+          
+          // Refetch to include the new participant
+          const updatedSession = await prisma.chatSession.findUnique({
+            where: { id: existingSession.id },
+            include: {
+              participants: {
+                include: {
+                  user: {
+                    select: { id: true, name: true, role: true }
+                  }
+                }
+              }
+            }
+          });
+          return successResponse(updatedSession, 'Sesión de chat existente y participante añadido', 200);
+        }
+        return successResponse(existingSession, 'Sesión de chat existente devuelta', 200);
+      }
+    }
+
     // Ensure current user is in participants
     const allParticipantIds = Array.from(new Set([...(participantIds || []), req.user.userId]));
 

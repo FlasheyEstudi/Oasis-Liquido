@@ -200,6 +200,21 @@ export async function updateDeliveryStatus(
     }
   }
 
+  // Notify pharmacy staff of the status update in their bells
+  if (updated.pharmacyId) {
+    try {
+      const { notifyPharmacyDeliveryStatus } = require('./event-notifications');
+      notifyPharmacyDeliveryStatus(
+        updated.pharmacyId,
+        updated.saleId ? updated.saleId.slice(-6) : id.slice(-6),
+        newStatus,
+        updated.deliveryDriver?.name || 'un repartidor'
+      ).catch((err: any) => console.error(err));
+    } catch (err) {
+      console.error('Error triggering pharmacy status notification:', err);
+    }
+  }
+
   if (newStatus === 'assigned' && deliveryDriverId) {
     sendPushNotification(
       deliveryDriverId,
@@ -207,6 +222,20 @@ export async function updateDeliveryStatus(
       `Se te ha asignado el pedido de entrega #${id.slice(-6)} para ${updated.patient?.name || 'un paciente'}.`,
       { type: 'delivery_assigned', orderId: id }
     );
+
+    // In-app notification in driver's bell
+    try {
+      const { NotificationService } = require('./notification.service');
+      NotificationService.createNotification({
+        userId: deliveryDriverId,
+        title: '🛒 Nuevo reparto asignado',
+        body: `Se te ha asignado el pedido #${id.slice(-6)} para ${updated.patient?.name || 'un paciente'}.`,
+        type: 'delivery_assigned',
+        link: 'inicio-repartidor',
+      }).catch((err: any) => console.error(err));
+    } catch (err) {
+      console.error('Error creating driver in-app notification:', err);
+    }
   }
 
   return updated;

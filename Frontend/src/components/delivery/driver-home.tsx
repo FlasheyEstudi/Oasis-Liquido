@@ -156,6 +156,15 @@ export function DriverHome() {
     // Find any order in activeOrders with status === 'assigned' that wasn't in our previous list
     const newlyAssigned = activeOrders.find((order: any) => {
       if (order.status !== 'assigned') return false;
+
+      // Ensure assignment hasn't already been seen/interacted with in this session
+      if (typeof window !== 'undefined') {
+        try {
+          const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
+          if (seenIds.includes(order.id)) return false;
+        } catch (e) {}
+      }
+
       const wasSeen = prevActiveOrdersRef.current.some((prev: any) => prev.id === order.id);
       return !wasSeen;
     });
@@ -991,7 +1000,19 @@ export function DriverHome() {
               
               {/* Close Button / X to keep it waiting in queue */}
               <button
-                onClick={() => setNewlyAssignedOrder(null)}
+                onClick={() => {
+                  const orderId = newlyAssignedOrder.id;
+                  if (typeof window !== 'undefined') {
+                    try {
+                      const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
+                      if (!seenIds.includes(orderId)) {
+                        seenIds.push(orderId);
+                        localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
+                      }
+                    } catch (e) {}
+                  }
+                  setNewlyAssignedOrder(null);
+                }}
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-850 text-slate-400 dark:text-zinc-500 hover:text-slate-650 dark:hover:text-white transition-colors duration-200 cursor-pointer"
                 title="Mantener en espera"
               >
@@ -1035,6 +1056,15 @@ export function DriverHome() {
                 <button
                   onClick={async () => {
                     const orderId = newlyAssignedOrder.id;
+                    if (typeof window !== 'undefined') {
+                      try {
+                        const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
+                        if (!seenIds.includes(orderId)) {
+                          seenIds.push(orderId);
+                          localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
+                        }
+                      } catch (e) {}
+                    }
                     setNewlyAssignedOrder(null);
                     if (soundEnabled) playRadarSound('success');
                     try {
@@ -1048,7 +1078,7 @@ export function DriverHome() {
                       setNotification({ type: 'error', message: 'Error al cambiar estado' });
                     }
                   }}
-                  className="w-full h-11 bg-teal-650 hover:bg-teal-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full h-11 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl cursor-pointer flex items-center justify-center gap-2 shadow-lg border-0"
                 >
                   <PackageOpen className="size-4 shrink-0" />
                   Recoger en Farmacia
@@ -1057,6 +1087,15 @@ export function DriverHome() {
                 <button
                   onClick={() => {
                     const orderId = newlyAssignedOrder.id;
+                    if (typeof window !== 'undefined') {
+                      try {
+                        const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
+                        if (!seenIds.includes(orderId)) {
+                          seenIds.push(orderId);
+                          localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
+                        }
+                      } catch (e) {}
+                    }
                     setNewlyAssignedOrder(null);
                     if (soundEnabled) playRadarSound('click');
                     navigate('delivery-detail', orderId);
@@ -1069,6 +1108,16 @@ export function DriverHome() {
 
                 <button
                   onClick={() => {
+                    const orderId = newlyAssignedOrder.id;
+                    if (typeof window !== 'undefined') {
+                      try {
+                        const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
+                        if (!seenIds.includes(orderId)) {
+                          seenIds.push(orderId);
+                          localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
+                        }
+                      } catch (e) {}
+                    }
                     setNewlyAssignedOrder(null);
                     if (soundEnabled) playRadarSound('click');
                   }}

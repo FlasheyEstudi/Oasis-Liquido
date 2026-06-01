@@ -1,6 +1,58 @@
 import { NotificationService } from './notification.service';
 import { db } from '../db';
 
+// Helpers to get all staff for multi-tenant notifications
+async function getPharmacyStaff(pharmacyId: string): Promise<string[]> {
+  try {
+    const pharmacy = await db.pharmacy.findUnique({
+      where: { id: pharmacyId },
+      select: { ownerId: true }
+    });
+    
+    const workers = await db.user.findMany({
+      where: {
+        pharmacyManagerProfile: { pharmacyId }
+      },
+      select: { id: true }
+    });
+
+    const ids = new Set<string>();
+    if (pharmacy?.ownerId) ids.add(pharmacy.ownerId);
+    workers.forEach(w => ids.add(w.id));
+    return Array.from(ids);
+  } catch (error) {
+    console.error('Error fetching pharmacy staff:', error);
+    return [];
+  }
+}
+
+async function getClinicStaff(clinicId: string): Promise<string[]> {
+  try {
+    const clinic = await db.clinic.findUnique({
+      where: { id: clinicId },
+      select: { ownerId: true }
+    });
+    
+    const workers = await db.user.findMany({
+      where: {
+        OR: [
+          { receptionistProfile: { clinicId } },
+          { doctorProfile: { clinicId } }
+        ]
+      },
+      select: { id: true }
+    });
+
+    const ids = new Set<string>();
+    if (clinic?.ownerId) ids.add(clinic.ownerId);
+    workers.forEach(w => ids.add(w.id));
+    return Array.from(ids);
+  } catch (error) {
+    console.error('Error fetching clinic staff:', error);
+    return [];
+  }
+}
+
 // ============================================
 // SUPER ADMIN NOTIFICATIONS
 // ============================================
@@ -28,13 +80,10 @@ export async function notifyDocumentUploaded(uploaderId: string, uploaderName: s
 
 export async function notifyInvitationAccepted(clinicId: string, workerName: string, role: string) {
   try {
-    const clinic = await db.clinic.findUnique({
-      where: { id: clinicId },
-      select: { ownerId: true }
-    });
-    if (clinic?.ownerId) {
+    const staffIds = await getClinicStaff(clinicId);
+    for (const userId of staffIds) {
       await NotificationService.createNotification({
-        userId: clinic.ownerId,
+        userId,
         title: '✅ Invitación Aceptada',
         body: `El ${role === 'doctor' ? 'médico' : 'recepcionista'} ${workerName} ha aceptado tu invitación y se ha unido al personal.`,
         type: 'invitation_accepted',
@@ -48,13 +97,10 @@ export async function notifyInvitationAccepted(clinicId: string, workerName: str
 
 export async function notifyAppointmentCreatedForClinic(clinicId: string, patientName: string, doctorName: string, dateStr: string) {
   try {
-    const clinic = await db.clinic.findUnique({
-      where: { id: clinicId },
-      select: { ownerId: true }
-    });
-    if (clinic?.ownerId) {
+    const staffIds = await getClinicStaff(clinicId);
+    for (const userId of staffIds) {
       await NotificationService.createNotification({
-        userId: clinic.ownerId,
+        userId,
         title: '📅 Nueva Cita Agendada',
         body: `El paciente ${patientName} ha agendado una cita con el Dr. ${doctorName} para el ${dateStr}.`,
         type: 'appointment_created',
@@ -68,13 +114,10 @@ export async function notifyAppointmentCreatedForClinic(clinicId: string, patien
 
 export async function notifyAppointmentCanceledForClinic(clinicId: string, patientName: string, doctorName: string, dateStr: string) {
   try {
-    const clinic = await db.clinic.findUnique({
-      where: { id: clinicId },
-      select: { ownerId: true }
-    });
-    if (clinic?.ownerId) {
+    const staffIds = await getClinicStaff(clinicId);
+    for (const userId of staffIds) {
       await NotificationService.createNotification({
-        userId: clinic.ownerId,
+        userId,
         title: '❌ Cita Cancelada',
         body: `El paciente ${patientName} ha cancelado su cita con el Dr. ${doctorName} del ${dateStr}.`,
         type: 'appointment_canceled',
@@ -92,13 +135,10 @@ export async function notifyAppointmentCanceledForClinic(clinicId: string, patie
 
 export async function notifyPharmacyInvitationAccepted(pharmacyId: string, workerName: string, role: string) {
   try {
-    const pharmacy = await db.pharmacy.findUnique({
-      where: { id: pharmacyId },
-      select: { ownerId: true }
-    });
-    if (pharmacy?.ownerId) {
+    const staffIds = await getPharmacyStaff(pharmacyId);
+    for (const userId of staffIds) {
       await NotificationService.createNotification({
-        userId: pharmacy.ownerId,
+        userId,
         title: '✅ Invitación Aceptada',
         body: `El ${role === 'delivery_driver' ? 'repartidor' : 'cajero'} ${workerName} ha aceptado tu invitación y se ha unido al personal.`,
         type: 'invitation_accepted',
@@ -112,13 +152,10 @@ export async function notifyPharmacyInvitationAccepted(pharmacyId: string, worke
 
 export async function notifyNewOrderReceived(pharmacyId: string, orderNumber: string, amount: number) {
   try {
-    const pharmacy = await db.pharmacy.findUnique({
-      where: { id: pharmacyId },
-      select: { ownerId: true }
-    });
-    if (pharmacy?.ownerId) {
+    const staffIds = await getPharmacyStaff(pharmacyId);
+    for (const userId of staffIds) {
       await NotificationService.createNotification({
-        userId: pharmacy.ownerId,
+        userId,
         title: '🛍️ Nuevo Pedido Recibido',
         body: `Has recibido el pedido #${orderNumber} por un monto de C$${amount.toFixed(2)}.`,
         type: 'new_order',
@@ -132,13 +169,10 @@ export async function notifyNewOrderReceived(pharmacyId: string, orderNumber: st
 
 export async function notifyLowStockAlert(pharmacyId: string, medicineName: string, currentStock: number) {
   try {
-    const pharmacy = await db.pharmacy.findUnique({
-      where: { id: pharmacyId },
-      select: { ownerId: true }
-    });
-    if (pharmacy?.ownerId) {
+    const staffIds = await getPharmacyStaff(pharmacyId);
+    for (const userId of staffIds) {
       await NotificationService.createNotification({
-        userId: pharmacy.ownerId,
+        userId,
         title: '⚠️ Alerta de Inventario Bajo',
         body: `El medicamento ${medicineName} tiene un nivel crítico de stock (${currentStock} unidades).`,
         type: 'low_stock',
@@ -152,13 +186,10 @@ export async function notifyLowStockAlert(pharmacyId: string, medicineName: stri
 
 export async function notifyExpiryAlert(pharmacyId: string, medicineName: string, batchNumber: string, expiryDateStr: string) {
   try {
-    const pharmacy = await db.pharmacy.findUnique({
-      where: { id: pharmacyId },
-      select: { ownerId: true }
-    });
-    if (pharmacy?.ownerId) {
+    const staffIds = await getPharmacyStaff(pharmacyId);
+    for (const userId of staffIds) {
       await NotificationService.createNotification({
-        userId: pharmacy.ownerId,
+        userId,
         title: '⏳ Medicamento Próximo a Vencer',
         body: `El lote ${batchNumber} de ${medicineName} vence el ${expiryDateStr}.`,
         type: 'expiry_alert',
@@ -374,5 +405,32 @@ export async function notifyDeliveryStatusChanged(patientId: string, orderNumber
     });
   } catch (error) {
     console.error('Error in notifyDeliveryStatusChanged:', error);
+  }
+}
+
+export async function notifyPharmacyDeliveryStatus(pharmacyId: string, orderNumber: string, newStatus: string, driverName: string) {
+  try {
+    const statusLabels: Record<string, string> = {
+      assigned: 'ha sido asignado al repartidor',
+      picked_up: 'ha sido recolectado de la farmacia por',
+      in_transit: 'ha iniciado ruta de entrega con',
+      delivered: 'ha sido entregado exitosamente por',
+      cancelled: 'ha sido cancelado con el repartidor',
+      failed: 'ha reportado entrega fallida con',
+    };
+    const label = statusLabels[newStatus] || newStatus;
+    const staffIds = await getPharmacyStaff(pharmacyId);
+    
+    for (const userId of staffIds) {
+      await NotificationService.createNotification({
+        userId,
+        title: '🚚 Actualización de Reparto',
+        body: `El pedido #${orderNumber} ${label} ${driverName}.`,
+        type: 'pharmacy_delivery_status',
+        link: 'order-management',
+      });
+    }
+  } catch (error) {
+    console.error('Error in notifyPharmacyDeliveryStatus:', error);
   }
 }

@@ -65,6 +65,15 @@ Durante el ciclo reciente de QA y optimización de producción, implementamos la
 ### 📱 **Resiliencia GPS en WebViews Móviles**
 * Eliminamos los callbacks asíncronos nativos en la geolocalización del móvil (causantes de crashes del hilo principal en navegadores embebidos de Android y iOS) y los sustituivos por una envoltura de Promesas estándar de JavaScript. El SOS satelital y el tracking en vivo operan con absoluta fluidez háptica.
 
+### 🔔 **Notificaciones Multi-Rol Bidireccionales (Campanitas en Tiempo Real)**
+* Rediseñamos el sistema de notificaciones in-app (`event-notifications.ts` y `NotificationService`). Anteriormente, las notificaciones de la campanita se enviaban exclusivamente a los pacientes o dueños principales (`ownerId`). Ahora, implementamos un motor de resolución de personal para farmacias y clínicas (`getPharmacyStaff` y `getClinicStaff`).
+* Al ocurrir eventos críticos (ej. recepción de un nuevo pedido, cambio de estado de un reparto, citas agendadas/canceladas, alertas de bajo stock y vencimientos), **todo el personal operativo autorizado (administradores, gerentes de farmacia, médicos y recepcionistas) recibe notificaciones visuales y en tiempo real en sus respectivas campanitas**.
+* Añadimos inserción en base de datos para la campanita de los repartidores al recibir un nuevo reparto asignado (`delivery_assigned`), garantizando visibilidad total y fluidez táctil.
+
+### 🚚 **Flujo y Redirección UX para Repartidores**
+* Corregimos el comportamiento posterior a la confirmación de entregas en `DeliveryDetail`. Al completar un reparto exitosamente mediante la firma digital o QR, el sistema redirige automáticamente al repartidor a su pantalla principal (`driver-home`).
+* Esto previene de forma absoluta la carga de estados stale o desactualizados ("Error al cargar la bitácora del pedido"), garantizando una experiencia de usuario limpia, continua y sin interrupciones lógicas.
+
 ---
 
 ## 🔍 Pautas de Auditoría Forense y Logs de Seguridad

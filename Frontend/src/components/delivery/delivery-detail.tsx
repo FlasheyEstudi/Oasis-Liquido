@@ -129,6 +129,7 @@ export function DeliveryDetail() {
   const [receiverName, setReceiverName] = useState('');
   const [patientQrCode, setPatientQrCode] = useState('');
   const [verificationError, setVerificationError] = useState('');
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const {
     data: order,
@@ -206,6 +207,9 @@ export function DeliveryDetail() {
             delivered: 'Pedido entregado',
           };
           setNotification({ type: 'success', message: statusLabels[newStatus] || 'Estado actualizado' });
+          if (newStatus === 'delivered') {
+            navigate('driver-home');
+          }
         },
         onError: () => {
           setNotification({ type: 'error', message: 'Error al actualizar estado' });
@@ -252,6 +256,7 @@ export function DeliveryDetail() {
           setConfirmDeliveryOpen(false);
           setReceiverName('');
           setPatientQrCode('');
+          navigate('driver-home');
         },
         onError: () => {
           setNotification({ type: 'error', message: 'Error al confirmar la entrega' });
@@ -326,12 +331,27 @@ export function DeliveryDetail() {
       <div className="absolute bottom-0 left-0 right-0 z-10 w-full max-w-xl mx-auto pointer-events-none p-4">
         <motion.div
           initial={{ y: 250, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          animate={{ y: isCollapsed ? "calc(100% - 76px)" : 0, opacity: 1 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="pointer-events-auto bg-white/90 dark:bg-zinc-950/90 backdrop-blur-2xl border border-slate-200/40 dark:border-white/5 rounded-[2.5rem] shadow-[0_-15px_40px_rgba(0,0,0,0.18)] p-6 space-y-6 max-h-[50vh] overflow-y-auto select-none"
+          className={cn(
+            "pointer-events-auto bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border border-slate-200/40 dark:border-white/5 rounded-[2.5rem] shadow-[0_-15px_40px_rgba(0,0,0,0.18)] p-6 select-none transition-all duration-300",
+            isCollapsed ? "max-h-[76px] overflow-hidden cursor-pointer" : "max-h-[50vh] overflow-y-auto space-y-6"
+          )}
+          onClick={isCollapsed ? () => setIsCollapsed(false) : undefined}
         >
-          {/* Pull indicator pill */}
-          <div className="w-12 h-1 bg-slate-300 dark:bg-zinc-800 rounded-full mx-auto -mt-2 mb-4" />
+          {/* Pull indicator pill & Toggle */}
+          <div 
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCollapsed(!isCollapsed);
+            }}
+            className="w-full flex flex-col items-center justify-center -mt-2 mb-4 cursor-pointer py-1 select-none"
+          >
+            <div className="w-12 h-1 bg-slate-350 dark:bg-zinc-800 rounded-full" />
+            <span className="text-[7.5px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 mt-1">
+              {isCollapsed ? "Ver Detalles (Expandir)" : "Ocultar Detalles (Colapsar)"}
+            </span>
+          </div>
 
           {/* Header Info */}
           <div className="flex justify-between items-center">
