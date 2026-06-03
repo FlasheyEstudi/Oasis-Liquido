@@ -67,6 +67,28 @@ async function main() {
     }
   });
 
+  const clinic3 = await prisma.clinic.create({
+    data: {
+      name: 'Centro Médico San Jerónimo Masaya',
+      address: 'De las Siete Esquinas 1 cuadra al sur, Masaya',
+      latitude: 11.9720,
+      longitude: -86.0980,
+      phone: '+505 2522-8888',
+      isActive: true,
+    }
+  });
+
+  const clinic4 = await prisma.clinic.create({
+    data: {
+      name: 'Clínica La Gran Sultana Granada',
+      address: 'Calle La Calzada, frente a Iglesia Guadalupe, Granada',
+      latitude: 11.9295,
+      longitude: -85.9520,
+      phone: '+505 2552-4444',
+      isActive: true,
+    }
+  });
+
   // 2. Pharmacies
   console.log('💊 Creating pharmacies...');
   const pharmacy1 = await prisma.pharmacy.create({
@@ -89,6 +111,30 @@ async function main() {
       longitude: -86.8750,
       phone: '+505 2315-8899',
       deliveryFee: 50.00,
+      isActive: true,
+    }
+  });
+
+  const pharmacy3 = await prisma.pharmacy.create({
+    data: {
+      name: 'Farmacia Oasis Granada',
+      address: 'De la Esquina de la Sirena 1/2 cuadra al este, Granada',
+      latitude: 11.9310,
+      longitude: -85.9570,
+      phone: '+505 2552-9999',
+      deliveryFee: 45.00,
+      isActive: true,
+    }
+  });
+
+  const pharmacy4 = await prisma.pharmacy.create({
+    data: {
+      name: 'Farmacia Oasis Estelí',
+      address: 'Avenida Central, contiguo a Catedral de Estelí, Estelí',
+      latitude: 13.0920,
+      longitude: -86.3540,
+      phone: '+505 2713-1111',
+      deliveryFee: 55.00,
       isActive: true,
     }
   });

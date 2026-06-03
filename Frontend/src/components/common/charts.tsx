@@ -125,7 +125,8 @@ export function RevenueHeatmapCalendar() {
 
 export function GeographicBubbleMap() {
   const mapRef = useRef<HTMLDivElement | null>(null);
-  const [mapInstance, setMapInstance] = useState<any>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const salesByRegion = [
     { region: "Managua", sales: 125000, growth: 15.2, lat: 12.1364, lng: -86.2511 },
@@ -145,54 +146,89 @@ export function GeographicBubbleMap() {
   useEffect(() => {
     if (typeof window === 'undefined' || !mapRef.current) return;
 
-    // Dynamically import Leaflet to be completely SSR-safe
-    import('leaflet').then((L) => {
-      import('leaflet/dist/leaflet.css');
+    // Load MapLibre CDN dynamically
+    const loadMapLibre = (): Promise<any> => {
+      return new Promise((resolve, reject) => {
+        if ((window as any).maplibregl) {
+          resolve((window as any).maplibregl);
+          return;
+        }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css';
+        document.head.appendChild(link);
 
-      // Check if map is already initialized on this container
-      const container = mapRef.current;
-      if (!container || (container as any)._leaflet_id) return;
-
-      const isDark = document.documentElement.classList.contains('dark');
-      const tileUrl = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-
-      const map = L.map(container, { 
-        zoomControl: false, 
-        attributionControl: false 
-      }).setView([12.6, -85.6], 7);
-
-      L.tileLayer(tileUrl, {
-        maxZoom: 18,
-      }).addTo(map);
-
-      // Add circle markers for sales
-      salesByRegion.forEach((item) => {
-        const color = item.growth >= 0 ? '#10b981' : '#ef4444';
-        const circle = L.circle([item.lat, item.lng], {
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.35,
-          radius: Math.sqrt(item.sales) * 160,
-          weight: 1.5,
-        }).addTo(map);
-
-        circle.bindPopup(`
-          <div style="font-family: sans-serif; padding: 4px; min-width: 120px;">
-            <h5 style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #14b8a6">${item.region}</h5>
-            <p style="margin: 0 0 2px 0; font-size: 13px; font-weight: 900; color: ${color}">C$ ${item.sales.toLocaleString()}</p>
-            <p style="margin: 0; font-size: 10px; font-weight: 600; color: #6b7280">Crecimiento: ${item.growth >= 0 ? '+' : ''}${item.growth}%</p>
-          </div>
-        `);
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js';
+        script.async = true;
+        script.onload = () => resolve((window as any).maplibregl);
+        script.onerror = () => reject(new Error('Failed to load MapLibre'));
+        document.body.appendChild(script);
       });
+    };
 
-      setMapInstance(map);
-    });
+    let mapInstance: any = null;
+
+    loadMapLibre()
+      .then((maplibregl) => {
+        if (!mapRef.current) return;
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const styleUrl = isDark
+          ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+          : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+
+        mapInstance = new maplibregl.Map({
+          container: mapRef.current,
+          style: styleUrl,
+          center: [-85.6, 12.6], // [lng, lat]
+          zoom: 6.2,
+          pitch: 35,
+          antialias: true
+        });
+
+        mapInstance.on('load', () => {
+          // Render bubble markers representing sales metrics
+          salesByRegion.forEach((item) => {
+            const color = item.growth >= 0 ? '#10b981' : '#ef4444';
+            const size = Math.max(12, Math.min(50, Math.sqrt(item.sales) * 0.15));
+
+            const el = document.createElement('div');
+            el.style.width = `${size}px`;
+            el.style.height = `${size}px`;
+            el.style.borderRadius = '50%';
+            el.style.backgroundColor = item.growth >= 0 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+            el.style.border = `1.5px solid ${color}`;
+            el.style.cursor = 'pointer';
+            el.style.boxShadow = `0 0 8px ${color}55`;
+
+            new maplibregl.Marker({ element: el })
+              .setLngLat([item.lng, item.lat])
+              .setPopup(
+                new maplibregl.Popup({ offset: 12 }).setHTML(`
+                  <div style="font-family: sans-serif; padding: 4px; min-width: 120px; color: #1e293b;">
+                    <h5 style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #0d9488">${item.region}</h5>
+                    <p style="margin: 0 0 2px 0; font-size: 13px; font-weight: 900; color: ${color}">C$ ${item.sales.toLocaleString()}</p>
+                    <p style="margin: 0; font-size: 10px; font-weight: 600; color: #6b7280">Crecimiento: ${item.growth >= 0 ? '+' : ''}${item.growth}%</p>
+                  </div>
+                `)
+              )
+              .addTo(mapInstance);
+          });
+        });
+
+        mapInstanceRef.current = mapInstance;
+      })
+      .catch((err) => {
+        console.error('Failed to init bubble map:', err);
+        setMapError('Error al iniciar el mapa.');
+      });
 
     return () => {
       if (mapInstance) {
-        mapInstance.remove();
+        try {
+          mapInstance.remove();
+        } catch (e) {}
       }
     };
   }, []);
@@ -207,11 +243,16 @@ export function GeographicBubbleMap() {
       </div>
 
       <div className="relative flex-1 bg-slate-50/50 dark:bg-teal-950/20 border border-slate-200 dark:border-teal-900/30 rounded-2xl overflow-hidden">
-        <div ref={mapRef} className="w-full h-full rounded-2xl" id="nicaragua-leaflet-map" />
+        {mapError ? (
+          <div className="w-full h-full flex items-center justify-center text-xs text-red-500">{mapError}</div>
+        ) : (
+          <div ref={mapRef} className="w-full h-full rounded-2xl" id="nicaragua-maplibre-map" />
+        )}
       </div>
     </div>
   );
 }
+
 
 export function SalesByEntityChart() {
   const { data: realNetwork } = useNetworkData();

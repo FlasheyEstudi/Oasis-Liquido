@@ -66,6 +66,21 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
       return;
     }
 
+    // Trigger DeviceOrientation permission request for iOS Safari (requires user gesture)
+    if (
+      typeof window !== 'undefined' &&
+      typeof (window as any).DeviceOrientationEvent !== 'undefined' &&
+      typeof (window as any).DeviceOrientationEvent.requestPermission === 'function'
+    ) {
+      (window as any).DeviceOrientationEvent.requestPermission()
+        .then((permissionState: string) => {
+          console.log('Compass permission requested:', permissionState);
+        })
+        .catch((err: any) => {
+          console.warn('Compass permission request failed on click:', err);
+        });
+    }
+
     setIsNavigating(true);
     toast.success('Navegación iniciada. Transmitiendo ubicación...');
 
@@ -176,12 +191,13 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
 
   return (
     <div className="relative w-full h-full min-h-[350px]">
-      {/* 1. Leaflet map absolute container */}
+      {/* 1. MapLibre GL 3D map absolute container */}
       <div className="absolute inset-0 w-full h-full z-0">
         <MapView
           markers={markers}
           center={centerCoordinates}
           height="100%"
+          isNavigating={isNavigating}
           route={route ? { geometry: route.geometry } : null}
           className="rounded-[2.5rem] md:rounded-[3rem] border-0"
         />

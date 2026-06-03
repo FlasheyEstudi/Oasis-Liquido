@@ -19,13 +19,14 @@ export interface MapViewProps {
   zoom?: number;
   height?: string;
   showUserLocation?: boolean;
+  isNavigating?: boolean;
   route?: { geometry?: string; origin?: string; destination?: string } | null;
   onMarkerClick?: (marker: MapMarker) => void;
   className?: string;
   theme?: 'light' | 'dark';
 }
 
-// --- Dynamic import with SSR disabled (Leaflet needs window object) ---
+// --- Dynamic import with SSR disabled (MapLibre GL JS needs window object) ---
 const MapViewInner = dynamic(
   () => import('./map-view-inner').then((mod) => mod.MapViewInner),
   {

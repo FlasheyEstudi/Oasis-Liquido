@@ -9,7 +9,7 @@ INSERT INTO "pharmacies" (
 VALUES (
   'pharmacy-test-1', 
   'Farmacia Oasis Central', 
-  'Altamira d''Este, del BCS 1c al este, Managua', 
+  'Altamira d''Este, del BCN 1c al este, Managua', 
   12.128500, 
   -86.251400, 
   '+505 2278-4000', 

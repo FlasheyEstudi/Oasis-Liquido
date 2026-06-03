@@ -56,3 +56,5 @@ server.log
 
 # database binary directories
 Backend/pgdata/
+Backend/tmp/
+**/tmp/**

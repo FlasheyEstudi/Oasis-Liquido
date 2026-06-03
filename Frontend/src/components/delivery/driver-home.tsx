@@ -133,6 +133,7 @@ export function DriverHome() {
   const [activeTab, setActiveTab] = useState<'all' | 'high_fee'>('all');
   const [newlyAssignedOrder, setNewlyAssignedOrder] = useState<any | null>(null);
   const prevActiveOrdersRef = useRef<any[]>([]);
+  const isFirstLoadRef = useRef(true);
 
   const driverId = user?.id || '';
   const firstName = user?.name?.split(' ')[0] || 'Repartidor';
@@ -150,6 +151,13 @@ export function DriverHome() {
   useEffect(() => {
     if (!activeOrders || activeOrders.length === 0) {
       prevActiveOrdersRef.current = [];
+      isFirstLoadRef.current = false;
+      return;
+    }
+
+    if (isFirstLoadRef.current) {
+      prevActiveOrdersRef.current = activeOrders;
+      isFirstLoadRef.current = false;
       return;
     }
 
@@ -297,6 +305,17 @@ export function DriverHome() {
     try {
       const orderToAccept = availableOrders.find((o: any) => o.id === id);
       
+      // Ensure the order is added to seenIds immediately to prevent assignment popup race conditions
+      if (typeof window !== 'undefined') {
+        try {
+          const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
+          if (!seenIds.includes(id)) {
+            seenIds.push(id);
+            localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
+          }
+        } catch (e) {}
+      }
+
       // 1. Perform the API call to accept the order first to set the deliveryDriverId on the server
       await acceptOrder(id);
       

@@ -87,7 +87,7 @@ export function RealTimeTrackingMap({ orderId, height = '360px', className }: Re
 
   return (
     <div className={cn('relative w-full overflow-hidden rounded-[2rem] border border-slate-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 shadow-2xl transition-colors duration-300', className)}>
-      {/* 1. Leaflet map */}
+      {/* 1. MapLibre GL Map */}
       <MapView
         markers={markers}
         center={mapCenter}

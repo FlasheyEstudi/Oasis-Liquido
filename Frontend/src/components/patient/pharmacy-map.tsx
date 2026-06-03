@@ -46,6 +46,21 @@ const fadeInUp = {
   animate: { opacity: 1, y: 0 },
 };
 
+function calculateDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3; // metres
+  const phi1 = lat1 * Math.PI/180;
+  const phi2 = lat2 * Math.PI/180;
+  const deltaPhi = (lat2-lat1) * Math.PI/180;
+  const deltaLambda = (lon2-lon1) * Math.PI/180;
+
+  const a = Math.sin(deltaPhi/2) * Math.sin(deltaPhi/2) +
+            Math.cos(phi1) * Math.cos(phi2) *
+            Math.sin(deltaLambda/2) * Math.sin(deltaLambda/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c; // in metres
+}
+
 export function PharmacyMap() {
   const { selectedItemId, prescriptionId, navigate } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,24 +135,47 @@ export function PharmacyMap() {
     userLoc.refresh();
   };
 
+  // Dynamic route calculation to the selected location
+  const mapRoute = useMemo(() => {
+    if (selectedPharmacy && userLoc.lat && userLoc.lng) {
+      return {
+        origin: `${userLoc.lng},${userLoc.lat}`,
+        destination: `${selectedPharmacy.longitude},${selectedPharmacy.latitude}`,
+      };
+    }
+    if (selectedNearbyPlace && userLoc.lat && userLoc.lng) {
+      return {
+        origin: `${userLoc.lng},${userLoc.lat}`,
+        destination: `${selectedNearbyPlace.lng},${selectedNearbyPlace.lat}`,
+      };
+    }
+    return null;
+  }, [selectedPharmacy, selectedNearbyPlace, userLoc.lat, userLoc.lng]);
+
   // Compile combined markers (DB registered + Nearby Network POIs)
   const markers = useMemo((): MapMarker[] => {
-    const dbMarkers: MapMarker[] = pharmacies.map((p) => ({
-      id: p.id,
-      lat: p.latitude,
-      lng: p.longitude,
-      type: 'pharmacy',
-      label: p.name,
-    }));
+    const dbMarkers: MapMarker[] = pharmacies.map((p) => {
+      const isSelected = selectedPharmacy?.id === p.id;
+      return {
+        id: p.id,
+        lat: p.latitude,
+        lng: p.longitude,
+        type: isSelected ? 'destination' : 'pharmacy',
+        label: p.name,
+      };
+    });
 
-    const nearbyMarkers: MapMarker[] = nearbyPlaces.map((place) => ({
-      id: `osm-${place.place_id}`,
-      lat: place.lat,
-      lng: place.lng,
-      type: place.type === 'pharmacy' ? 'pharmacy' : 'clinic',
-      label: place.display_name,
-      color: place.type === 'pharmacy' ? '#0d9488' : '#2563eb', // Teal for pharmacy, Blue for clinic
-    }));
+    const nearbyMarkers: MapMarker[] = nearbyPlaces.map((place) => {
+      const isSelected = selectedNearbyPlace?.place_id === place.place_id;
+      return {
+        id: `osm-${place.place_id}`,
+        lat: place.lat,
+        lng: place.lng,
+        type: isSelected ? 'destination' : (place.type === 'pharmacy' ? 'pharmacy' : 'clinic'),
+        label: place.display_name,
+        color: isSelected ? undefined : (place.type === 'pharmacy' ? '#0d9488' : '#2563eb'), // Teal for pharmacy, Blue for clinic
+      };
+    });
 
     // Deduplicate: if an item has the same ID or coordinate, keep the primary one
     const result: MapMarker[] = [...dbMarkers];
@@ -148,8 +186,20 @@ export function PharmacyMap() {
         result.push(marker);
       }
     }
+
+    // Add user's own location as a 'patient' type marker
+    if (userLoc.lat && userLoc.lng) {
+      result.push({
+        id: 'patient-location',
+        lat: userLoc.lat,
+        lng: userLoc.lng,
+        type: 'patient',
+        label: 'Tu ubicación',
+      });
+    }
+
     return result;
-  }, [pharmacies, nearbyPlaces]);
+  }, [pharmacies, nearbyPlaces, userLoc.lat, userLoc.lng, selectedPharmacy?.id, selectedNearbyPlace?.place_id]);
 
   // Helper: get medicine name by ID
   const getMedicineName = (id: string) => {
@@ -361,6 +411,7 @@ export function PharmacyMap() {
                 height="440px"
                 zoom={14}
                 showUserLocation
+                route={mapRoute}
                 onMarkerClick={(marker) => {
                   if (marker.id?.startsWith('osm-')) {
                     const placeId = marker.id.replace('osm-', '');
@@ -448,6 +499,12 @@ export function PharmacyMap() {
                         <Phone className="size-3.5 text-teal-500 shrink-0" />
                         <span>Contacto Directo Integrado</span>
                       </p>
+                      {userLoc.lat && userLoc.lng && (
+                        <p className="flex items-center gap-2">
+                          <Navigation className="size-3.5 text-teal-500 shrink-0 animate-pulse" />
+                          <span>Distancia: {formatDistance(calculateDistanceMeters(userLoc.lat, userLoc.lng, selectedNearbyPlace.lat, selectedNearbyPlace.lng))}</span>
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -507,12 +564,17 @@ export function PharmacyMap() {
                           <span>Teléfono: {selectedPharmacy.phone}</span>
                         </p>
                       )}
-                      {selectedPharmacy.distance_in_meters != null && (
+                      {(userLoc.lat && userLoc.lng) ? (
+                        <p className="flex items-center gap-2">
+                          <Navigation className="size-3.5 text-emerald-500 shrink-0 animate-pulse" />
+                          <span>Distancia: {formatDistance(calculateDistanceMeters(userLoc.lat, userLoc.lng, selectedPharmacy.latitude, selectedPharmacy.longitude))}</span>
+                        </p>
+                      ) : selectedPharmacy.distance_in_meters != null ? (
                         <p className="flex items-center gap-2">
                           <Navigation className="size-3.5 text-emerald-500 shrink-0 animate-pulse" />
                           <span>Distancia: {formatDistance(selectedPharmacy.distance_in_meters)}</span>
                         </p>
-                      )}
+                      ) : null}
                     </div>
                     
                     {prescription && (
@@ -594,12 +656,17 @@ export function PharmacyMap() {
                               <p className="text-xs font-extrabold text-slate-800 dark:text-white truncate">
                                 {pharmacy.name}
                               </p>
-                              {pharmacy.distance_in_meters != null && (
+                              {(userLoc.lat && userLoc.lng) ? (
+                                <span className="flex items-center gap-1 text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0 tracking-wide uppercase">
+                                  <Navigation className="size-2.5 shrink-0" />
+                                  {formatDistance(calculateDistanceMeters(userLoc.lat, userLoc.lng, pharmacy.latitude, pharmacy.longitude))}
+                                </span>
+                              ) : pharmacy.distance_in_meters != null ? (
                                 <span className="flex items-center gap-1 text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0 tracking-wide uppercase">
                                   <Navigation className="size-2.5 shrink-0" />
                                   {formatDistance(pharmacy.distance_in_meters)}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
 
                             {/* Address */}

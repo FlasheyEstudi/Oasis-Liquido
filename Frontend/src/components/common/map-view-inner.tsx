@@ -1,61 +1,65 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM } from '@/utils/constants';
 import { cn } from '@/lib/utils';
-import { MapPin } from 'lucide-react';
-
+import { MapPin, Loader2 } from 'lucide-react';
 import type { MapMarker, MapViewProps } from './map-view';
 
-// --- Marker color map by type ---
-const MARKER_COLORS: Record<string, string> = {
-  clinic: '#059669',    // emerald-600
-  pharmacy: '#0d9488',  // teal-600
-  driver: '#d97706',    // amber-600
-  patient: '#2563eb',   // blue-600
-  destination: '#dc2626', // red-600
+// Dynamic loader for MapLibre GL JS from CDN to prevent bundle bloating and allow execution in sandbox
+const loadMapLibre = (): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') {
+      reject(new Error('Cannot load MapLibre on server side'));
+      return;
+    }
+    if ((window as any).maplibregl) {
+      resolve((window as any).maplibregl);
+      return;
+    }
+
+    // Load CSS
+    const cssId = 'maplibre-css';
+    if (!document.getElementById(cssId)) {
+      const link = document.createElement('link');
+      link.id = cssId;
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css';
+      document.head.appendChild(link);
+    }
+
+    // Load JS
+    const jsId = 'maplibre-js';
+    if (!document.getElementById(jsId)) {
+      const script = document.createElement('script');
+      script.id = jsId;
+      script.src = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js';
+      script.async = true;
+      script.onload = () => {
+        if ((window as any).maplibregl) {
+          resolve((window as any).maplibregl);
+        } else {
+          reject(new Error('MapLibre GL failed to load into window object'));
+        }
+      };
+      script.onerror = () => reject(new Error('Failed to load MapLibre GL script'));
+      document.body.appendChild(script);
+    } else {
+      const interval = setInterval(() => {
+        if ((window as any).maplibregl) {
+          clearInterval(interval);
+          resolve((window as any).maplibregl);
+        }
+      }, 100);
+      setTimeout(() => {
+        clearInterval(interval);
+        reject(new Error('Timeout loading MapLibre GL'));
+      }, 10000);
+    }
+  });
 };
 
-const DEFAULT_MARKER_COLOR = '#6b7280'; // gray-500
-
-// --- Custom Leaflet Marker Icon ---
-function createMarkerIcon(color: string): L.DivIcon {
-  const html = `
-    <div style="position: relative; width: 28px; height: 36px; display: flex; align-items: center; justify-content: center;">
-      <svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="${color}"/>
-        <circle cx="14" cy="14" r="6" fill="white"/>
-      </svg>
-    </div>
-  `;
-  return L.divIcon({
-    html,
-    className: 'custom-map-marker',
-    iconSize: [28, 36],
-    iconAnchor: [14, 36],
-    popupAnchor: [0, -32],
-  });
-}
-
-// --- Pulsing Leaflet Icon for user location ---
-function createUserLocationIcon(): L.DivIcon {
-  const html = `
-    <div style="position:relative;width:24px;height:24px;">
-      <div style="position:absolute;inset:0;border-radius:50%;background:rgba(59,130,246,0.25);animation:user-pulse 2s ease-in-out infinite;"></div>
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#3b82f6;border:3px solid white;box-shadow:0 0 6px rgba(59,130,246,0.5);"></div>
-    </div>
-  `;
-  return L.divIcon({
-    html,
-    className: 'custom-user-location',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-}
-
-// --- Polyline decoder (Google encoded polyline format) ---
+// Polyline decoder (returns [lng, lat] for MapLibre compatibility)
 function decodePolyline(encoded: string): [number, number][] {
   const points: [number, number][] = [];
   let index = 0;
@@ -88,43 +92,264 @@ function decodePolyline(encoded: string): [number, number][] {
     const dlng = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
     lng += dlng;
 
-    points.push([lat / 1e5, lng / 1e5]);
+    points.push([lng / 1e5, lat / 1e5]);
   }
 
   return points;
 }
 
-// --- Parse route geometry ---
+// Parse route geometry
 function parseRouteGeometry(geometry: any): [number, number][] | null {
   if (typeof geometry === 'object' && geometry !== null) {
     if (geometry.type === 'LineString' && Array.isArray(geometry.coordinates)) {
-      return geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]);
+      return geometry.coordinates as [number, number][];
     }
   }
-  // Try GeoJSON parsing if it's a string
   try {
     const parsed = typeof geometry === 'string' ? JSON.parse(geometry) : geometry;
     if (parsed.type === 'LineString' && Array.isArray(parsed.coordinates)) {
-      return parsed.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]);
+      return parsed.coordinates as [number, number][];
     }
-  } catch {
-    // Not JSON
-  }
+  } catch {}
 
   if (typeof geometry === 'string') {
-    // Try polyline decoding
     try {
       const decoded = decodePolyline(geometry);
       if (decoded.length >= 2) {
         return decoded;
       }
-    } catch {
-      // Failed
-    }
+    } catch {}
   }
-
   return null;
 }
+
+// Calculate Bearing (heading direction) between two coordinate points
+function calculateBearing(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const lat1Rad = lat1 * Math.PI / 180;
+  const lat2Rad = lat2 * Math.PI / 180;
+  const y = Math.sin(dLng) * Math.cos(lat2Rad);
+  const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
+  const brng = Math.atan2(y, x) * 180 / Math.PI;
+  return (brng + 360) % 360;
+}
+
+// Calculate distance between points in meters
+function distanceBetweenPoints(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Check if driver location is off path (deviated)
+function isPointOffRoute(lat: number, lng: number, routeCoords: [number, number][], thresholdMeters = 60): boolean {
+  if (!routeCoords || routeCoords.length < 2) return false;
+  let minDistance = Infinity;
+  for (const coord of routeCoords) {
+    const dist = distanceBetweenPoints(lat, lng, coord[1], coord[0]); // coord is [lng, lat]
+    if (dist < minDistance) {
+      minDistance = dist;
+    }
+  }
+  return minDistance > thresholdMeters;
+}
+
+// Detailed Nicaragua Features GeoJSON (OSM enrichment)
+const NICARAGUA_DETAIL_GEOJSON = {
+  type: 'FeatureCollection',
+  features: [
+    // --- CIUDADES PRINCIPALES ---
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Managua' },
+      geometry: { type: 'Point', coordinates: [-86.2514, 12.1364] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'León' },
+      geometry: { type: 'Point', coordinates: [-86.8780, 12.4379] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Masaya' },
+      geometry: { type: 'Point', coordinates: [-86.0960, 11.9740] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Granada' },
+      geometry: { type: 'Point', coordinates: [-85.9560, 11.9300] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Estelí' },
+      geometry: { type: 'Point', coordinates: [-86.3530, 13.0910] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Matagalpa' },
+      geometry: { type: 'Point', coordinates: [-85.9180, 12.9250] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Chinandega' },
+      geometry: { type: 'Point', coordinates: [-87.1290, 12.6290] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Jinotega' },
+      geometry: { type: 'Point', coordinates: [-86.0020, 13.1010] }
+    },
+
+    // --- BARRIOS Y COLONIAS (MANAGUA) ---
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Altamira d\'Este' },
+      geometry: { type: 'Point', coordinates: [-86.2550, 12.1220] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Los Robles' },
+      geometry: { type: 'Point', coordinates: [-86.2640, 12.1240] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Bello Horizonte' },
+      geometry: { type: 'Point', coordinates: [-86.2350, 12.1440] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Colonia Centroamérica' },
+      geometry: { type: 'Point', coordinates: [-86.2420, 12.1060] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Linda Vista' },
+      geometry: { type: 'Point', coordinates: [-86.2950, 12.1520] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Bolonia' },
+      geometry: { type: 'Point', coordinates: [-86.2820, 12.1330] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Villa Fontana' },
+      geometry: { type: 'Point', coordinates: [-86.2710, 12.0990] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Las Colinas' },
+      geometry: { type: 'Point', coordinates: [-86.2430, 12.0880] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'neighborhood', name: 'Reparto Schick' },
+      geometry: { type: 'Point', coordinates: [-86.2280, 12.1090] }
+    },
+
+    // --- PUNTOS DE REFERENCIA Y LUGARES DE INTERÉS ---
+    {
+      type: 'Feature',
+      properties: { type: 'landmark', name: 'Rotonda Rubén Darío' },
+      geometry: { type: 'Point', coordinates: [-86.2655, 12.1267] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'landmark', name: 'Metrocentro Managua' },
+      geometry: { type: 'Point', coordinates: [-86.2658, 12.1255] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'landmark', name: 'Plaza España' },
+      geometry: { type: 'Point', coordinates: [-86.2790, 12.1340] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'landmark', name: 'Rotonda El Periodista' },
+      geometry: { type: 'Point', coordinates: [-86.2890, 12.1245] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'landmark', name: 'Catedral Metropolitana' },
+      geometry: { type: 'Point', coordinates: [-86.2590, 12.1290] }
+    },
+
+    // --- CLÍNICAS Y FARMACIAS (MATCHING DB SEED) ---
+    {
+      type: 'Feature',
+      properties: { type: 'clinic', name: 'Clínica Metropolitana de Nicaragua' },
+      geometry: { type: 'Point', coordinates: [-86.2654, 12.1264] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'clinic', name: 'Clínica San Lucas León' },
+      geometry: { type: 'Point', coordinates: [-86.8780, 12.4379] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'pharmacy', name: 'Farmacia Oasis Principal' },
+      geometry: { type: 'Point', coordinates: [-86.2798, 12.1345] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'pharmacy', name: 'Farmacia Oasis León' },
+      geometry: { type: 'Point', coordinates: [-86.8750, 12.4350] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'pharmacy', name: 'FarmaValue Altamira' },
+      geometry: { type: 'Point', coordinates: [-86.2514, 12.1285] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'pharmacy', name: 'Farmacia Kielsa Los Robles' },
+      geometry: { type: 'Point', coordinates: [-86.2580, 12.1310] }
+    },
+
+    // --- MERCADOS ---
+    {
+      type: 'Feature',
+      properties: { type: 'market', name: 'Mercado Central Roberto Huembes' },
+      geometry: { type: 'Point', coordinates: [-86.2440, 12.1150] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'market', name: 'Mercado Oriental' },
+      geometry: { type: 'Point', coordinates: [-86.2650, 12.1420] }
+    },
+
+    // --- VÍAS Y ACCESOS PEATONALES ---
+    {
+      type: 'Feature',
+      properties: { type: 'path', name: 'Andén Peatonal Oasis - Zona 1' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-86.251, 12.138],
+          [-86.250, 12.139],
+          [-86.248, 12.140]
+        ]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'path', name: 'Andén Peatonal Oasis - Zona Centro' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-86.273, 12.122],
+          [-86.271, 12.124],
+          [-86.269, 12.125]
+        ]
+      }
+    }
+  ]
+};
 
 export function MapViewInner({
   markers = [],
@@ -132,26 +357,27 @@ export function MapViewInner({
   zoom = DEFAULT_ZOOM,
   height = '400px',
   showUserLocation = false,
+  isNavigating = false,
   route = null,
   onMarkerClick,
   className,
   theme = 'light',
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
-  const markersMapRef = useRef<Record<string, L.Marker>>({});
-  const userMarkerRef = useRef<L.Marker | null>(null);
-  const routeLineRef = useRef<L.Polyline | null>(null);
+  const mapRef = useRef<any>(null); // MapLibre GL map instance
+  const activeMarkersRef = useRef<Record<string, any>>({}); // MapLibre GL marker references
+  const routeCoordsRef = useRef<[number, number][]>([]);
+  const lastDriverPosRef = useRef<{ lat: number; lng: number } | null>(null);
+
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [driverBearing, setDriverBearing] = useState<number>(0);
+  const [etaText, setEtaText] = useState<string | null>(null);
 
-  // Dynamic theme detection checking Tailwind class changes on html element
+  // Dynamic theme detection checking Tailwind dark class
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
     const checkDark = () => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
     };
@@ -166,363 +392,688 @@ export function MapViewInner({
     return () => observer.disconnect();
   }, []);
 
-  // Default coordinate center (Leaflet expects [lat, lng])
-  const mapCenter: [number, number] = center || [DEFAULT_LAT, DEFAULT_LNG];
+  // Center coordinate handling
+  const defaultCenter: [number, number] = center 
+    ? [center[1], center[0]] // maplibre expects [lng, lat]
+    : [DEFAULT_LNG, DEFAULT_LAT];
 
-  // Initialize Leaflet Map
+  // OSRM Direct Street Routing engine with moto efficiency factors
+  const fetchOSRMRoute = async (start: [number, number], end: [number, number]) => {
+    try {
+      console.log(`📡 [OSRM Client] Querying OSRM street route from ${start} to ${end}`);
+      const publicUrl = `https://router.project-osrm.org/route/v1/driving/${start[0]},${start[1]};${end[0]},${end[1]}?overview=full&geometries=geojson`;
+      const res = await fetch(publicUrl);
+      const data = await res.json();
+      
+      if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+        const osrmRoute = data.routes[0];
+        const coordinates = osrmRoute.geometry.coordinates as [number, number][];
+        
+        // Dynamic vehicle speed/time calibration (car vs motorcycle)
+        // Motorcycles navigate urban Nicaragua traffic roughly 25% faster
+        const baseDurationSeconds = osrmRoute.duration;
+        const vehicleType = 'motorcycle'; // Default vehicle type
+        const speedMultiplier = vehicleType === 'motorcycle' ? 0.75 : 1.0;
+        const finalDurationMinutes = Math.max(1, Math.round((baseDurationSeconds * speedMultiplier) / 60));
+        
+        setEtaText(`${finalDurationMinutes} min`);
+        return coordinates;
+      }
+    } catch (err) {
+      console.error('⚠️ Failed to fetch direct OSRM street route:', err);
+    }
+    return null;
+  };
+
+  // Initialize MapLibre GL JS Map
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    let map: L.Map;
+    let mapInstance: any = null;
 
-    try {
-      map = L.map(mapContainer.current, {
-        zoomControl: false,
-        attributionControl: false,
-      }).setView(mapCenter, zoom);
+    loadMapLibre()
+      .then((maplibregl) => {
+        if (!mapContainer.current) return;
 
-      // Positioning control on top-right to preserve visual cleanliness
-      L.control.zoom({
-        position: 'topright',
-      }).addTo(map);
+        // CARTO Vector Styles with CORS support
+        const styleUrl = document.documentElement.classList.contains('dark')
+          ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+          : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 
-      // CartoDB Voyager (light) and Dark Matter (dark) tiles feel extremely premium
-      const tileUrl = document.documentElement.classList.contains('dark')
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+        mapInstance = new maplibregl.Map({
+          container: mapContainer.current,
+          style: styleUrl,
+          center: defaultCenter,
+          zoom: zoom,
+          pitch: isNavigating ? 58 : 0,
+          bearing: 0,
+          antialias: true,
+        });
 
-      const tileLayer = L.tileLayer(tileUrl, {
-        maxZoom: 19,
-      }).addTo(map);
+        // Add standard navigation control (top-right)
+        mapInstance.addControl(new maplibregl.NavigationControl({
+          showCompass: true,
+          showZoom: true,
+        }), 'top-right');
 
-      tileLayerRef.current = tileLayer;
-      mapRef.current = map;
-      setMapLoaded(true);
-    } catch (err) {
-      console.error('Failed to initialize Leaflet map:', err);
-      setTimeout(() => setMapError('No se pudo inicializar el mapa'), 0);
-    }
+        mapInstance.on('load', () => {
+          setMapLoaded(true);
+          mapRef.current = mapInstance;
+
+          // 1. Add 3D Extruded Buildings Layer dynamically
+          const layers = mapInstance.getStyle().layers;
+          let labelLayerId;
+          for (let i = 0; i < layers.length; i++) {
+            if (layers[i].type === 'symbol' && layers[i].layout && layers[i].layout['text-field']) {
+              labelLayerId = layers[i].id;
+              break;
+            }
+          }
+
+          if (mapInstance.getSource('openmaptiles')) {
+            mapInstance.addLayer({
+              'id': '3d-buildings',
+              'source': 'openmaptiles',
+              'source-layer': 'building',
+              'type': 'fill-extrusion',
+              'minzoom': 15,
+              'paint': {
+                'fill-extrusion-color': document.documentElement.classList.contains('dark') ? '#252529' : '#e2e8f0',
+                'fill-extrusion-height': [
+                  'interpolate', ['linear'], ['zoom'],
+                  15, 0,
+                  15.05, ['*', ['coalesce', ['get', 'render_height'], 12], 3.5]
+                ],
+                'fill-extrusion-base': [
+                  'interpolate', ['linear'], ['zoom'],
+                  15, 0,
+                  15.05, ['*', ['coalesce', ['get', 'render_min_height'], 0], 3.5]
+                ],
+                'fill-extrusion-opacity': 0.65
+              }
+            }, labelLayerId);
+          }
+
+          // 2. Add Nicaragua Detailed Pedestrian and POI layers (OSM Enrichment)
+          mapInstance.addSource('nicaragua-detail', {
+            type: 'geojson',
+            data: NICARAGUA_DETAIL_GEOJSON
+          });
+
+          // Pedestrian Paths (Andenes)
+          mapInstance.addLayer({
+            id: 'nicaragua-paths-layer',
+            type: 'line',
+            source: 'nicaragua-detail',
+            filter: ['==', ['get', 'type'], 'path'],
+            paint: {
+              'line-color': '#10b981', // green emerald
+              'line-width': 3,
+              'line-dasharray': [2, 2],
+              'line-opacity': 0.8
+            }
+          });
+
+          // Detailed clinics/pharmacies/markets circles
+          mapInstance.addLayer({
+            id: 'nicaragua-pois-layer',
+            type: 'circle',
+            source: 'nicaragua-detail',
+            filter: ['!=', ['get', 'type'], 'path'],
+            paint: {
+              'circle-radius': [
+                'match',
+                ['get', 'type'],
+                'city', 8,
+                'neighborhood', 5,
+                6
+              ],
+              'circle-color': [
+                'match',
+                ['get', 'type'],
+                'clinic', '#10b981',
+                'pharmacy', '#0d9488',
+                'market', '#f59e0b',
+                'city', '#3b82f6',
+                'neighborhood', '#8b5cf6',
+                'landmark', '#ec4899',
+                '#6b7280'
+              ],
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#ffffff'
+            }
+          });
+
+          // Text labels for POIs
+          mapInstance.addLayer({
+            id: 'nicaragua-labels-layer',
+            type: 'symbol',
+            source: 'nicaragua-detail',
+            filter: ['!=', ['get', 'type'], 'path'],
+            layout: {
+              'text-field': ['get', 'name'],
+              'text-size': [
+                'match',
+                ['get', 'type'],
+                'city', 12,
+                'neighborhood', 10,
+                9
+              ],
+              'text-offset': [0, 1.3],
+              'text-anchor': 'top',
+              'text-font': ['Noto Sans Regular']
+            },
+            paint: {
+              'text-color': document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#1f2937',
+              'text-halo-color': document.documentElement.classList.contains('dark') ? '#09090b' : '#ffffff',
+              'text-halo-width': 1.5
+            }
+          });
+        });
+      })
+      .catch((err) => {
+        console.error('Failed to load MapLibre GL:', err);
+        setMapError('Error al inicializar motor de mapas vectorial.');
+      });
 
     return () => {
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
-      Object.keys(markersMapRef.current).forEach((id) => {
+      // Clear markers
+      Object.keys(activeMarkersRef.current).forEach((key) => {
         try {
-          markersMapRef.current[id].remove();
+          activeMarkersRef.current[key].remove();
         } catch (e) {}
       });
-      markersMapRef.current = {};
+      activeMarkersRef.current = {};
 
-      if (userMarkerRef.current) {
-        userMarkerRef.current.remove();
-        userMarkerRef.current = null;
-      }
-      if (routeLineRef.current) {
-        routeLineRef.current.remove();
-        routeLineRef.current = null;
-      }
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
+      // Destroy MapLibre instance
+      if (mapInstance) {
+        try {
+          mapInstance.remove();
+        } catch (e) {}
       }
       setMapLoaded(false);
     };
   }, []);
 
-  // Classic Leaflet Bugfix: Invalidate size after layout/load to prevent black/grey collapsed map
+  // Update theme style dynamically
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
-    const timer = setTimeout(() => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [mapLoaded]);
-
-  // Update tile layer url dynamically when isDarkMode changes
-  useEffect(() => {
-    if (!mapRef.current || !tileLayerRef.current) return;
-    const newUrl = isDarkMode
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    tileLayerRef.current.setUrl(newUrl);
-  }, [isDarkMode]);
-
-  // Update Markers when prop changes
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded) return;
-    if (typeof map.getPanes !== 'function' || !map.getPanes()) return;
-
+    const styleUrl = isDarkMode
+      ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+      : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
     try {
+      mapRef.current.setStyle(styleUrl);
+    } catch (e) {
+      console.warn('Failed to switch style dynamically:', e);
+    }
+  }, [isDarkMode, mapLoaded]);
+
+  // Handle Markers addition and smooth interpolation
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+
+    loadMapLibre().then((maplibregl) => {
+      const map = mapRef.current;
       const newMarkerIds = new Set(markers.map(m => m.id).filter(Boolean));
 
-      // Remove cached markers that are no longer present in the markers array
-      Object.keys(markersMapRef.current).forEach((id) => {
+      // Remove obsolete markers
+      Object.keys(activeMarkersRef.current).forEach((id) => {
         if (!newMarkerIds.has(id)) {
           try {
-            markersMapRef.current[id].remove();
+            activeMarkersRef.current[id].remove();
           } catch (e) {}
-          delete markersMapRef.current[id];
+          delete activeMarkersRef.current[id];
         }
       });
 
-      // Update or add markers
       markers.forEach((marker) => {
-        try {
-          if (marker.lat == null || marker.lng == null || isNaN(marker.lat) || isNaN(marker.lng)) {
-            console.warn('⚠️ MapViewInner: Skipped invalid marker coordinates:', marker);
-            return;
+        if (marker.lat == null || marker.lng == null || isNaN(marker.lat) || isNaN(marker.lng)) return;
+
+        const markerId = marker.id || `marker-${marker.lat}-${marker.lng}`;
+        const existingMarker = activeMarkersRef.current[markerId];
+
+        // Custom marker DOM creator
+        const createDOMElement = (type: string, bearing: number = 0) => {
+          const el = document.createElement('div');
+          el.className = `custom-maplibre-marker-${type}`;
+
+          if (type === 'driver') {
+            el.innerHTML = `
+              <div style="position: relative; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.25); border-radius: 50%; border: 2px solid #f59e0b; box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);">
+                <div id="driver-compass" style="width: 20px; height: 20px; transform: rotate(${bearing}deg); transition: transform 0.25s ease-out; display: flex; align-items: center; justify-content: center;">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="#f59e0b" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 22l10-6 10 6L12 2z"/>
+                  </svg>
+                </div>
+              </div>
+            `;
+          } else if (type === 'pharmacy') {
+            el.innerHTML = `
+              <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(13, 148, 136, 0.25); border-radius: 50%; border: 2px solid #0d9488; box-shadow: 0 0 12px rgba(13, 148, 136, 0.4);">
+                <div style="width: 14px; height: 14px; background: #0d9488; border-radius: 50%; border: 2.5px solid white;"></div>
+              </div>
+            `;
+          } else if (type === 'clinic') {
+            el.innerHTML = `
+              <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(5, 150, 105, 0.25); border-radius: 50%; border: 2px solid #059669; box-shadow: 0 0 12px rgba(5, 150, 105, 0.4);">
+                <div style="width: 14px; height: 14px; background: #059669; border-radius: 50%; border: 2.5px solid white;"></div>
+              </div>
+            `;
+          } else if (type === 'destination' || type === 'patient') {
+            el.innerHTML = `
+              <div style="position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <div style="position: absolute; width: 32px; height: 32px; border-radius: 50%; background: rgba(239, 68, 68, 0.25); animation: dest-pulse 2s infinite;"></div>
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="#ef4444" style="filter: drop-shadow(0 2.5px 5px rgba(0,0,0,0.35));">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+              </div>
+            `;
+          } else {
+            el.innerHTML = `
+              <div style="width: 14px; height: 14px; background: #6b7280; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.3);"></div>
+            `;
           }
+          return el;
+        };
 
-          const markerId = marker.id || `marker-${marker.lat}-${marker.lng}`;
-          const existingMarker = markersMapRef.current[markerId];
+        if (existingMarker) {
+          // Smooth location interpolation & dynamic camera tracking
+          const startCoords = existingMarker.getLngLat();
+          const targetLng = marker.lng;
+          const targetLat = marker.lat;
 
-          if (existingMarker) {
-            // Smoothly move marker to the new position instead of destroying it!
-            const startLatLng = existingMarker.getLatLng();
-            const endLatLng = L.latLng(marker.lat, marker.lng);
+          if (startCoords.lng !== targetLng || startCoords.lat !== targetLat) {
+            // Update driver bearing dynamically on movement
+            if (marker.type === 'driver') {
+              const computedBearing = calculateBearing(startCoords.lat, startCoords.lng, targetLat, targetLng);
+              setDriverBearing(computedBearing);
+              lastDriverPosRef.current = { lat: targetLat, lng: targetLng };
 
-            // Interpolate driver position smoothly (Uber style!)
-            if (marker.type === 'driver' && typeof window !== 'undefined' && (startLatLng.lat !== endLatLng.lat || startLatLng.lng !== endLatLng.lng)) {
-              const duration = 1500; // ms transition length
-              const startTime = performance.now();
+              // Rotate compass DOM arrow dynamically
+              const compass = existingMarker.getElement().querySelector('#driver-compass');
+              if (compass) {
+                (compass as HTMLElement).style.transform = `rotate(${computedBearing}deg)`;
+              }
 
-              const animateStep = (now: number) => {
-                if (!markersMapRef.current[markerId]) return; // Stop if removed
-                const elapsed = now - startTime;
-                const progress = Math.min(elapsed / duration, 1);
+              // CAMERA TRACKING IN FIRST PERSON: ease camera in Waze 3D style
+              // Using bearing, center, and pitch of 58 degrees
+              if (isNavigating) {
+                map.easeTo({
+                  center: [targetLng, targetLat],
+                  pitch: 68,
+                  bearing: computedBearing,
+                  zoom: 19.0,
+                  duration: 1200,
+                  essential: true
+                });
+              }
 
-                // Linear interpolation (lerp) formula
-                const currentLat = startLatLng.lat + (endLatLng.lat - startLatLng.lat) * progress;
-                const currentLng = startLatLng.lng + (endLatLng.lng - startLatLng.lng) * progress;
-
-                existingMarker.setLatLng([currentLat, currentLng]);
-
-                if (progress < 1) {
-                  requestAnimationFrame(animateStep);
-                }
-              };
-              requestAnimationFrame(animateStep);
-            } else {
-              existingMarker.setLatLng(endLatLng);
-            }
-
-            // Update label popup if changed
-            if (marker.label) {
-              const popup = existingMarker.getPopup();
-              if (popup) {
-                existingMarker.setPopupContent(`
-                  <div class="map-popup-text" style="padding: 4px 8px; font-size: 13px; font-weight: 700; font-family: sans-serif;">
-                    ${marker.label}
-                  </div>
-                `);
+              // Dynamic Rerouting trigger: check if driver went off path by > 60 meters
+              if (routeCoordsRef.current.length > 2 && isPointOffRoute(targetLat, targetLng, routeCoordsRef.current, 60)) {
+                console.log('🔄 [Rerouting] Driver deviated from route. Re-calculating path from current location.');
+                const lastPoint = routeCoordsRef.current[routeCoordsRef.current.length - 1];
+                fetchOSRMRoute([targetLng, targetLat], lastPoint).then((newCoords) => {
+                  if (newCoords && map.getSource('route')) {
+                    routeCoordsRef.current = newCoords;
+                    (map.getSource('route') as any).setData({
+                      type: 'Feature',
+                      properties: {},
+                      geometry: {
+                        type: 'LineString',
+                        coordinates: newCoords
+                      }
+                    });
+                  }
+                });
               }
             }
-          } else {
-            // Create a new marker
-            const color = marker.color || MARKER_COLORS[marker.type || ''] || DEFAULT_MARKER_COLOR;
-            const icon = createMarkerIcon(color);
 
-            const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
-              .addTo(map);
+            existingMarker.setLngLat([targetLng, targetLat]);
+          }
+        } else {
+          // Add brand new marker
+          const type = marker.type || 'default';
+          const el = createDOMElement(type, type === 'driver' ? driverBearing : 0);
+          
+          const glMarker = new maplibregl.Marker({ element: el })
+            .setLngLat([marker.lng, marker.lat])
+            .addTo(map);
 
-            if (marker.label) {
-              leafletMarker.bindPopup(`
-                <div class="map-popup-text" style="padding: 4px 8px; font-size: 13px; font-weight: 700; font-family: sans-serif;">
+          if (marker.label) {
+            glMarker.setPopup(
+              new maplibregl.Popup({ offset: 28 }).setHTML(`
+                <div style="font-size: 11px; font-weight: 800; font-family: sans-serif; color: #1e293b; padding: 2px 4px;">
                   ${marker.label}
                 </div>
-              `);
-            }
-
-            if (onMarkerClick) {
-              leafletMarker.on('click', () => {
-                onMarkerClick(marker);
-              });
-            }
-
-            markersMapRef.current[markerId] = leafletMarker;
+              `)
+            );
           }
-        } catch (markerErr) {
-          console.warn('⚠️ MapViewInner: Failed to add or update marker:', markerErr);
+
+          if (onMarkerClick) {
+            el.addEventListener('click', () => onMarkerClick(marker));
+          }
+
+          activeMarkersRef.current[markerId] = glMarker;
         }
       });
-    } catch (err) {
-      console.warn('⚠️ MapViewInner: Error updating markers:', err);
-    }
-  }, [markers, mapLoaded, onMarkerClick]);
+    });
+  }, [markers, mapLoaded, onMarkerClick, isNavigating]);
 
-  // Update Route Polyline
+  // Handle Route drawing & dynamic OSRM recalculation
   useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
-    if (!map || !mapLoaded) return;
-    if (typeof map.getPanes !== 'function' || !map.getPanes()) return;
 
-    const drawRoute = async () => {
-      try {
-        // Remove existing polyline
-        if (routeLineRef.current) {
-          try {
-            routeLineRef.current.remove();
-          } catch (e) {}
-          routeLineRef.current = null;
-        }
+    const drawRouteLayer = async () => {
+      let coords = route?.geometry ? parseRouteGeometry(route.geometry) : null;
 
-        if (!route && markers.length < 2) return;
+      // OSRM street route calculator
+      if (!coords || coords.length <= 2) {
+        let originLng: number | undefined;
+        let originLat: number | undefined;
+        let destLng: number | undefined;
+        let destLat: number | undefined;
 
-        let geometry = route?.geometry;
+        if (route?.origin && route?.destination) {
+          const [origLng, origLat] = route.origin.split(',').map(Number);
+          const [dLng, dLat] = route.destination.split(',').map(Number);
+          originLng = origLng;
+          originLat = origLat;
+          destLng = dLng;
+          destLat = dLat;
+        } else if (markers.length >= 2) {
+          const hasExplicitOrigin = markers.some(m => m.type === 'driver' || m.type === 'patient');
+          const hasExplicitDest = markers.some(m => m.type === 'destination');
 
-        if (!geometry && route?.origin && route?.destination) {
-          try {
-            const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/routes/driving?origin=${route.origin}&destination=${route.destination}`
-            );
-            const result = await res.json();
-            if (result.success) {
-              geometry = result.data.geometry;
-            }
-          } catch (err) {
-            console.error('Failed to fetch OSRM route:', err);
-          }
-        }
-
-        // Try to parse the coordinates
-        let coords = geometry ? parseRouteGeometry(geometry) : null;
-        const isStraightLine = coords && coords.length <= 2;
-
-        // CLIENT-SIDE BROWSER ROUTING FALLBACK:
-        if ((!coords || isStraightLine) && markers.length >= 2) {
-          const originMarker = markers.find(m => m.type === 'driver') || markers.find(m => m.type === 'pharmacy') || markers[0];
-          const destMarker = markers.find(m => m.type === 'destination') || markers[markers.length - 1];
-
-          if (originMarker && destMarker && 
-              originMarker.lat != null && originMarker.lng != null && !isNaN(originMarker.lat) && !isNaN(originMarker.lng) &&
-              destMarker.lat != null && destMarker.lng != null && !isNaN(destMarker.lat) && !isNaN(destMarker.lng)) {
-            try {
-              console.log("📡 Frontend: Fetching street route directly from browser network...");
-              const publicUrl = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${originMarker.lng},${originMarker.lat};${destMarker.lng},${destMarker.lat}?overview=full&geometries=polyline`;
-              const res = await fetch(publicUrl);
-              const data = await res.json();
-              if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-                const publicCoords = parseRouteGeometry(data.routes[0].geometry);
-                if (publicCoords && publicCoords.length > 2) {
-                  console.log("✅ Frontend: Street-aware route loaded successfully in browser!");
-                  coords = publicCoords;
-                }
-              }
-            } catch (err) {
-              console.warn("⚠️ Frontend failed to fetch route directly:", err);
+          if (hasExplicitOrigin || hasExplicitDest) {
+            const originMarker = markers.find(m => m.type === 'patient') || markers.find(m => m.type === 'driver') || markers.find(m => m.type === 'pharmacy') || markers[0];
+            const destMarker = markers.find(m => m.type === 'destination') || markers[markers.length - 1];
+            if (originMarker && destMarker) {
+              originLng = originMarker.lng;
+              originLat = originMarker.lat;
+              destLng = destMarker.lng;
+              destLat = destMarker.lat;
             }
           }
         }
 
-        if (coords) {
-          coords = coords.filter(c => c && c[0] != null && c[1] != null && !isNaN(c[0]) && !isNaN(c[1]));
+        if (originLng !== undefined && originLat !== undefined && destLng !== undefined && destLat !== undefined) {
+          const directCoords = await fetchOSRMRoute(
+            [originLng, originLat],
+            [destLng, destLat]
+          );
+          if (directCoords) {
+            coords = directCoords;
+          }
         }
+      }
 
-        if (!coords || coords.length < 2) return;
-        if (!map || typeof map.getPanes !== 'function' || !map.getPanes()) return;
+      if (!coords || coords.length < 2) {
+        // Clear existing route if any
+        if (map.getSource('route')) {
+          (map.getSource('route') as any).setData({
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: []
+            }
+          });
+        }
+        return;
+      }
+      routeCoordsRef.current = coords;
 
-        // Draw polyline road routing safely when Leaflet map is fully initialized
-        map.whenReady(() => {
-          if (!mapRef.current) return;
-          try {
-            const polyline = L.polyline(coords!, {
-              color: '#0d9488', // Teal-600
-              weight: 5,
-              opacity: 0.85,
-              lineJoin: 'round',
-              lineCap: 'round',
-            }).addTo(mapRef.current);
-
-            routeLineRef.current = polyline;
-
-            // Adjust bounding box to frame coordinates perfectly
-            const bounds = L.latLngBounds(coords!);
-            mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
-          } catch (err) {
-            console.warn('⚠️ MapViewInner: Drawing in whenReady callback failed:', err);
+      // Safe update or addition of route GeoJSON source and layer
+      if (map.getSource('route')) {
+        (map.getSource('route') as any).setData({
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: coords
           }
         });
-      } catch (err) {
-        console.warn('⚠️ MapViewInner: Error drawing route:', err);
+      } else {
+        map.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: coords
+            }
+          }
+        });
+
+        // Add thick premium blue route line (grosor 5)
+        map.addLayer({
+          id: 'route-layer',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#2563eb', // Indigo Blue
+            'line-width': 5,
+            'line-opacity': 0.85
+          }
+        });
+      }
+
+      // Frame map view to fit route boundary bounds perfectly if not navigating
+      // Frame map view to fit route boundary bounds perfectly if not navigating
+      if (!isNavigating) {
+        loadMapLibre().then((maplibregl) => {
+          const bounds = new maplibregl.LngLatBounds();
+          
+          if (coords && coords.length > 0) {
+            coords.forEach(c => bounds.extend(c));
+          }
+
+          markers.forEach((m) => {
+            if (m.lat != null && m.lng != null) {
+              bounds.extend([m.lng, m.lat]);
+            }
+          });
+
+          if (!bounds.isEmpty()) {
+            map.fitBounds(bounds, {
+              padding: { top: 60, bottom: 60, left: 60, right: 60 },
+              linear: false,
+              duration: 1000
+            });
+            map.easeTo({
+              pitch: 0,
+              bearing: 0,
+              duration: 1000
+            });
+          }
+        });
       }
     };
 
-    drawRoute();
-  }, [route, mapLoaded, markers]);
+    drawRouteLayer();
+  }, [route, mapLoaded, markers, isNavigating]);
 
-  // Handle Geolocation for user marker
+  // Handle Geolocation user tracking
   useEffect(() => {
     if (!mapRef.current || !mapLoaded || !showUserLocation) return;
-
-    if (userMarkerRef.current) {
-      userMarkerRef.current.remove();
-      userMarkerRef.current = null;
-    }
+    const map = mapRef.current;
 
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (!mapRef.current) return;
-        const { latitude, longitude } = position.coords;
-
-        const icon = createUserLocationIcon();
-        const marker = L.marker([latitude, longitude], { icon }).addTo(mapRef.current);
-
-        userMarkerRef.current = marker;
-
-        try {
-          mapRef.current.flyTo([latitude, longitude], zoom, {
-            animate: true,
-            duration: 1.5,
-          });
-        } catch (err) {
-          console.warn('⚠️ MapViewInner: flyTo failed (map might be unmounted):', err);
-        }
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        map.flyTo({
+          center: [longitude, latitude],
+          zoom: 16.5,
+          pitch: 58,
+          duration: 1500
+        });
       },
-      (err) => {
-        console.warn('Geolocation error:', err);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      (err) => console.warn('User Location failed:', err),
+      { enableHighAccuracy: true, timeout: 10000 }
     );
+  }, [showUserLocation, mapLoaded]);
 
-    return () => {
-      if (userMarkerRef.current) {
-        userMarkerRef.current.remove();
-        userMarkerRef.current = null;
-      }
-    };
-  }, [showUserLocation, mapLoaded, zoom]);
-
-  // Handle Center coordinate updates
+  // Center panning
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || !center) return;
-    if (typeof map.getPanes !== 'function' || !map.getPanes()) return;
-
-    try {
-      map.panTo(center, { animate: true, duration: 1.0 });
-    } catch (err) {
-      console.warn('⚠️ MapViewInner: panTo failed:', err);
-    }
+    if (!mapRef.current || !mapLoaded || !center) return;
+    mapRef.current.panTo([center[1], center[0]], { duration: 800 });
   }, [center?.[0], center?.[1], mapLoaded]);
 
-  // Error overlay
+  // Handle transition between overview and first-person navigation mode
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+
+    if (isNavigating) {
+      // Find driver marker or center
+      const driverMarker = markers.find(m => m.type === 'driver');
+      const targetLat = driverMarker?.lat ?? center?.[0] ?? DEFAULT_LAT;
+      const targetLng = driverMarker?.lng ?? center?.[1] ?? DEFAULT_LNG;
+
+      // Calculate initial bearing along the route if available
+      let initialBearing = driverBearing || 0;
+      if (!driverBearing && routeCoordsRef.current.length >= 2) {
+        const firstPoint = routeCoordsRef.current[0];
+        const secondPoint = routeCoordsRef.current[1];
+        initialBearing = calculateBearing(firstPoint[1], firstPoint[0], secondPoint[1], secondPoint[0]);
+      }
+
+      // Animate camera into 3D navigation perspective
+      map.flyTo({
+        center: [targetLng, targetLat],
+        zoom: 19.0,
+        pitch: 68,
+        bearing: initialBearing,
+        duration: 1500,
+        essential: true
+      });
+    } else {
+      // Overview mode: Fit bounds to all markers and route coordinates
+      loadMapLibre().then((maplibregl) => {
+        const bounds = new maplibregl.LngLatBounds();
+        
+        if (routeCoordsRef.current.length > 0) {
+          routeCoordsRef.current.forEach(c => bounds.extend(c));
+        }
+
+        markers.forEach((m) => {
+          if (m.lat != null && m.lng != null) {
+            bounds.extend([m.lng, m.lat]);
+          }
+        });
+
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds, {
+            padding: { top: 60, bottom: 60, left: 60, right: 60 },
+            linear: false,
+            duration: 1500
+          });
+          map.easeTo({
+            pitch: 0,
+            bearing: 0,
+            duration: 1500
+          });
+        }
+      });
+    }
+  }, [isNavigating, mapLoaded, markers]);
+
+  // Listen to physical device orientation (mobile compass) to rotate map dynamically
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded || !isNavigating) return;
+    const map = mapRef.current;
+
+    let lastHeading = 0;
+    const threshold = 1.5; // Avoid jitter below 1.5 degrees change
+
+    const handleOrientation = (event: any) => {
+      let heading: number | null = null;
+
+      // iOS compass heading
+      if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+        heading = event.webkitCompassHeading;
+      }
+      // Absolute alpha heading (standard deviceorientationabsolute or if event.absolute is true)
+      else if (event.alpha !== null) {
+        // alpha increases counter-clockwise, so compass bearing is 360 - alpha
+        heading = (360 - event.alpha) % 360;
+      }
+
+      if (heading !== null) {
+        if (Math.abs(heading - lastHeading) > threshold) {
+          lastHeading = heading;
+          setDriverBearing(heading);
+
+          // Find driver coordinates to ease to them with the new heading
+          const driverMarker = markers.find(m => m.type === 'driver');
+          const lat = driverMarker?.lat ?? center?.[0] ?? DEFAULT_LAT;
+          const lng = driverMarker?.lng ?? center?.[1] ?? DEFAULT_LNG;
+
+          map.easeTo({
+            bearing: heading,
+            center: [lng, lat],
+            pitch: 68,
+            zoom: 19.0,
+            duration: 350,
+            essential: true
+          });
+        }
+      }
+    };
+
+    const registerOrientation = () => {
+      if (typeof window !== 'undefined') {
+        if ('ondeviceorientationabsolute' in window) {
+          (window as any).addEventListener('deviceorientationabsolute', handleOrientation, true);
+        } else {
+          (window as any).addEventListener('deviceorientation', handleOrientation, true);
+        }
+      }
+    };
+
+    const unregisterOrientation = () => {
+      if (typeof window !== 'undefined') {
+        (window as any).removeEventListener('deviceorientationabsolute', handleOrientation, true);
+        (window as any).removeEventListener('deviceorientation', handleOrientation, true);
+      }
+    };
+
+    // Safe permission request check for iOS Safari
+    if (
+      typeof window !== 'undefined' &&
+      typeof (window as any).DeviceOrientationEvent !== 'undefined' &&
+      typeof (window as any).DeviceOrientationEvent.requestPermission === 'function'
+    ) {
+      (window as any).DeviceOrientationEvent.requestPermission()
+        .then((permissionState: string) => {
+          if (permissionState === 'granted') {
+            registerOrientation();
+          }
+        })
+        .catch((err) => console.warn('Compass permission rejected:', err));
+    } else if (typeof window !== 'undefined') {
+      registerOrientation();
+    }
+
+    return () => {
+      unregisterOrientation();
+    };
+  }, [isNavigating, mapLoaded, markers, center]);
+
   if (mapError) {
     return (
-      <div
-        className={cn(
-          'flex flex-col items-center justify-center bg-red-950/20 rounded-2xl border border-red-900/30',
-          className
-        )}
-        style={{ height }}
-      >
+      <div className={cn('flex flex-col items-center justify-center bg-red-950/20 rounded-3xl border border-red-900/30 p-6', className)} style={{ height }}>
         <MapPin className="size-10 text-red-500/50 mb-2 animate-bounce" />
         <p className="text-sm font-medium text-red-400">{mapError}</p>
-        <p className="text-xs text-red-500/70 mt-1">Verifica tu conexión y permisos de geolocalización</p>
+        <p className="text-xs text-red-500/70 mt-1">Verifica tu conexión y permisos de ubicación</p>
       </div>
     );
   }
@@ -530,118 +1081,43 @@ export function MapViewInner({
   return (
     <div
       className={cn(
-        'relative rounded-2xl overflow-hidden border shadow-2xl transition-all duration-300',
-        isDarkMode ? 'map-theme-dark border-white/5 bg-zinc-950 shadow-black/50' : 'map-theme-light border-slate-200 bg-white shadow-slate-100',
+        'relative rounded-3xl overflow-hidden border shadow-2xl transition-all duration-300',
+        isDarkMode ? 'border-white/5 bg-zinc-950 shadow-black/50' : 'border-slate-200 bg-white shadow-slate-100',
         className
       )}
       style={{ height }}
     >
+      {/* 3. Floating HUD for live OSRM Route statistics and ETA metadata */}
+      {etaText && (
+        <div className="absolute top-4 left-4 z-10 rounded-full border border-slate-200/50 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 px-3 py-1.5 shadow-xl backdrop-blur-md flex items-center gap-2">
+          <span className="relative flex size-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex size-2 rounded-full bg-blue-500"></span>
+          </span>
+          <span className="text-[9px] font-black uppercase tracking-wider text-slate-800 dark:text-white">ETA: {etaText}</span>
+        </div>
+      )}
+
+      {/* Embedded pulses */}
       <style jsx global>{`
-        /* Custom pulses for geolocation */
-        @keyframes user-pulse {
+        @keyframes dest-pulse {
           0% {
-            transform: scale(0.6);
-            opacity: 0.8;
+            transform: scale(0.65);
+            opacity: 0.85;
           }
           100% {
-            transform: scale(2.4);
+            transform: scale(2.2);
             opacity: 0;
           }
         }
-        /* Override default leaflet styling for clean UI */
-        .map-theme-dark .leaflet-container {
-          background: #09090b !important; /* zinc-950 background */
-          font-family: inherit;
-        }
-        .map-theme-light .leaflet-container {
-          background: #f8fafc !important; /* slate-50 background */
-          font-family: inherit;
-        }
-        .map-theme-dark .leaflet-bar {
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-          border-radius: 12px !important;
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
-          background: rgba(15, 23, 42, 0.7) !important;
-          backdrop-filter: blur(12px) !important;
-          overflow: hidden;
-        }
-        .map-theme-light .leaflet-bar {
-          border: 1px solid rgba(0, 0, 0, 0.08) !important;
-          border-radius: 12px !important;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-          background: rgba(255, 255, 255, 0.85) !important;
-          backdrop-filter: blur(12px) !important;
-          overflow: hidden;
-        }
-        .map-theme-dark .leaflet-bar a {
-          background: transparent !important;
-          color: rgba(255, 255, 255, 0.7) !important;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-          font-weight: bold;
-          transition: all 0.2s;
-        }
-        .map-theme-light .leaflet-bar a {
-          background: transparent !important;
-          color: rgba(15, 23, 42, 0.7) !important;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-          font-weight: bold;
-          transition: all 0.2s;
-        }
-        .map-theme-dark .leaflet-bar a:hover {
-          color: #ffffff !important;
-          background: rgba(255, 255, 255, 0.1) !important;
-        }
-        .map-theme-light .leaflet-bar a:hover {
-          color: #0f172a !important;
-          background: rgba(0, 0, 0, 0.05) !important;
-        }
-        .map-theme-dark .leaflet-bar a:last-child {
-          border-bottom: none !important;
-        }
-        .map-theme-light .leaflet-bar a:last-child {
-          border-bottom: none !important;
-        }
-        .map-theme-dark .leaflet-popup-content-wrapper {
-          background: rgba(15, 23, 42, 0.9) !important;
-          backdrop-filter: blur(12px) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-          border-radius: 16px !important;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
-        }
-        .map-theme-light .leaflet-popup-content-wrapper {
-          background: rgba(255, 255, 255, 0.98) !important;
-          backdrop-filter: blur(12px) !important;
-          border: 1px solid rgba(0, 0, 0, 0.08) !important;
-          border-radius: 16px !important;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
-        }
-        .map-theme-dark .leaflet-popup-content {
-          color: #ffffff !important;
-          font-family: sans-serif;
-        }
-        .map-theme-light .leaflet-popup-content {
-          color: #0f172a !important;
-          font-family: sans-serif;
-        }
-        .map-theme-dark .leaflet-popup-tip {
-          background: rgba(15, 23, 42, 0.9) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-        .map-theme-light .leaflet-popup-tip {
-          background: rgba(255, 255, 255, 0.98) !important;
-          border: 1px solid rgba(0, 0, 0, 0.08) !important;
-        }
-        /* Popup text classes */
-        .map-theme-dark .map-popup-text {
-          color: #ffffff !important;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
-        .map-theme-light .map-popup-text {
-          color: #0f172a !important;
+        .maplibregl-popup-content {
+          border-radius: 14px !important;
+          border: 1px solid rgba(0,0,0,0.06) !important;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
         }
       `}</style>
 
-      {/* Premium Cinematic Loading overlay */}
+      {/* Cinematic vector spinner loading screen */}
       {!mapLoaded && (
         <div className={cn(
           "absolute inset-0 z-[1000] flex flex-col items-center justify-center backdrop-blur-md transition-all duration-300",
@@ -653,15 +1129,12 @@ export function MapViewInner({
             <MapPin className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-6 animate-pulse", isDarkMode ? "text-white" : "text-zinc-800")} />
           </div>
           <p className={cn("mt-6 text-sm font-black uppercase tracking-[0.3em] animate-pulse", isDarkMode ? "text-white" : "text-zinc-800")}>
-            Localizando Oasis...
+            Cargando Red Oasis...
           </p>
-          <div className="mt-2 w-32 h-1 bg-neutral-500/10 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 animate-shimmer" style={{ width: '100%' }} />
-          </div>
         </div>
       )}
 
-      {/* Leaflet Map container */}
+      {/* MapLibre GL Canvas Container */}
       <div
         ref={mapContainer}
         className="absolute inset-0 z-0"

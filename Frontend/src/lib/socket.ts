@@ -28,6 +28,19 @@ export const getSocket = () => {
     
     socket.on('connect', () => {
       console.log('⚡ Connected to Oasis Socket Server');
+      // Auto re-join active rooms on connection / reconnection
+      if (activeUserId && socket) {
+        socket.emit('join:user', activeUserId);
+        console.log(`📡 [Socket.io] Auto-rejoined personal room for user: ${activeUserId}`);
+      }
+      if (activeOrderId && socket) {
+        socket.emit('join:order', activeOrderId);
+        console.log(`📡 [Socket.io] Auto-rejoined order room: ${activeOrderId}`);
+      }
+      if (activeChatSessionId && socket) {
+        socket.emit('join:chat', activeChatSessionId);
+        console.log(`📡 [Socket.io] Auto-rejoined chat room: ${activeChatSessionId}`);
+      }
     });
 
     socket.on('disconnect', () => {
@@ -37,24 +50,35 @@ export const getSocket = () => {
   return socket;
 };
 
+let activeUserId: string | null = null;
+let activeOrderId: string | null = null;
+let activeChatSessionId: string | null = null;
+
 export const joinOrderRoom = (orderId: string) => {
+  activeOrderId = orderId;
   const s = getSocket();
   s.emit('join:order', orderId);
 };
 
 export const joinChatRoom = (sessionId: string) => {
+  activeChatSessionId = sessionId;
   const s = getSocket();
   s.emit('join:chat', sessionId);
 };
 
 export const joinUserRoom = (userId: string) => {
+  activeUserId = userId;
   const s = getSocket();
   s.emit('join:user', userId);
 };
 
 export const disconnectSocket = () => {
+  activeUserId = null;
+  activeOrderId = null;
+  activeChatSessionId = null;
   if (socket) {
     socket.disconnect();
     socket = null;
   }
 };
+

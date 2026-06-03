@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { getNotifications, markNotificationsAsRead, type Notification } from '@/api/notifications';
 import { getSocket, joinUserRoom } from '@/lib/socket';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { 
   Bell, 
   CheckCheck, 
@@ -117,7 +118,23 @@ export function NotificationBell() {
           audio.volume = 0.35;
           audio.play().catch(() => {});
         } catch {}
+        
+        // Show premium in-app toast notification
+        toast.info(newNotification.title, {
+          description: newNotification.body,
+          action: newNotification.link ? {
+            label: 'Ver',
+            onClick: () => navigate(newNotification.link as any)
+          } : undefined
+        });
+
+        // Invalidate notifications query
         queryClient.invalidateQueries({ queryKey: ['notifications', user?.id, user?.role] });
+
+        // Invalidate chats list/messages query if notification is a chat notification
+        if (newNotification.type === 'chat') {
+          queryClient.invalidateQueries({ queryKey: ['chats'] });
+        }
       });
       return () => {
         socket.off('notification:new');
@@ -125,7 +142,7 @@ export function NotificationBell() {
     } catch (err) {
       console.warn('Real-time socket notifications could not be initialized:', err);
     }
-  }, [user, queryClient]);
+  }, [user, queryClient, navigate]);
 
   // Click outside listener
   useEffect(() => {
