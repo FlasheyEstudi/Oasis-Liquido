@@ -226,20 +226,24 @@ export async function createSale(
       },
     });
 
-    await createAuditLog({
-      userId: creatorId || patientId,
-      action: 'create',
-      entityType: 'sale',
-      entityId: sale.id,
-      ipAddress,
-      userAgent,
-      details: JSON.stringify({
-        totalAmount,
-        paidAmount: data.payments ? data.payments.reduce((sum, p) => sum + p.amount, 0) : totalAmount,
-        change: changeAmount,
-        payments: data.payments || [{ amount: totalAmount, method: 'cash' }],
-      }),
-    });
+    try {
+      await createAuditLog({
+        userId: creatorId || patientId,
+        action: 'create',
+        entityType: 'sale',
+        entityId: sale.id,
+        ipAddress,
+        userAgent,
+        details: JSON.stringify({
+          totalAmount,
+          paidAmount: data.payments ? data.payments.reduce((sum, p) => sum + p.amount, 0) : totalAmount,
+          change: changeAmount,
+          payments: data.payments || [{ amount: totalAmount, method: 'cash' }],
+        }),
+      }, tx);
+    } catch (auditErr) {
+      console.error('⚠️ Failed to write sale audit log:', auditErr);
+    }
 
     // PUSH NOTIFICATIONS: Notify patient of delivery confirmation
     if (data.is_delivery && patientId) {
