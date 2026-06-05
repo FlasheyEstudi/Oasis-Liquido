@@ -6,57 +6,11 @@ import { cn } from '@/lib/utils';
 import { MapPin, Loader2 } from 'lucide-react';
 import type { MapMarker, MapViewProps } from './map-view';
 
-// Dynamic loader for MapLibre GL JS from CDN to prevent bundle bloating and allow execution in sandbox
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
 const loadMapLibre = (): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    if (typeof window === 'undefined') {
-      reject(new Error('Cannot load MapLibre on server side'));
-      return;
-    }
-    if ((window as any).maplibregl) {
-      resolve((window as any).maplibregl);
-      return;
-    }
-
-    // Load CSS
-    const cssId = 'maplibre-css';
-    if (!document.getElementById(cssId)) {
-      const link = document.createElement('link');
-      link.id = cssId;
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css';
-      document.head.appendChild(link);
-    }
-
-    // Load JS
-    const jsId = 'maplibre-js';
-    if (!document.getElementById(jsId)) {
-      const script = document.createElement('script');
-      script.id = jsId;
-      script.src = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js';
-      script.async = true;
-      script.onload = () => {
-        if ((window as any).maplibregl) {
-          resolve((window as any).maplibregl);
-        } else {
-          reject(new Error('MapLibre GL failed to load into window object'));
-        }
-      };
-      script.onerror = () => reject(new Error('Failed to load MapLibre GL script'));
-      document.body.appendChild(script);
-    } else {
-      const interval = setInterval(() => {
-        if ((window as any).maplibregl) {
-          clearInterval(interval);
-          resolve((window as any).maplibregl);
-        }
-      }, 100);
-      setTimeout(() => {
-        clearInterval(interval);
-        reject(new Error('Timeout loading MapLibre GL'));
-      }, 10000);
-    }
-  });
+  return Promise.resolve(maplibregl);
 };
 
 // Polyline decoder (returns [lng, lat] for MapLibre compatibility)
@@ -222,6 +176,16 @@ function animateMarker(marker: any, fromLngLat: { lng: number; lat: number }, to
   }
   
   requestAnimationFrame(step);
+}
+
+// Safe check for source to avoid "this.style is undefined" MapLibre crash
+function safeGetSource(map: any, id: string) {
+  if (!map || !map.style || !map.isStyleLoaded()) return null;
+  try {
+    return map.getSource(id);
+  } catch (e) {
+    return null;
+  }
 }
 
 // Detailed Nicaragua Features GeoJSON (OSM enrichment)
@@ -615,7 +579,7 @@ export function MapViewInner({
             }
           }
 
-          if (mapInstance.getSource('openmaptiles')) {
+          if (safeGetSource(mapInstance, 'openmaptiles')) {
             mapInstance.addLayer({
               'id': '3d-buildings',
               'source': 'openmaptiles',
@@ -881,9 +845,10 @@ export function MapViewInner({
                 console.log('🔄 [Rerouting] Driver deviated from route. Re-calculating path from current location.');
                 const lastPoint = routeCoordsRef.current[routeCoordsRef.current.length - 1];
                 fetchOSRMRoute([targetLng, targetLat], lastPoint).then((newCoords) => {
-                  if (newCoords && map.getSource('route')) {
+                  const routeSource = safeGetSource(map, 'route');
+                  if (newCoords && routeSource) {
                     routeCoordsRef.current = newCoords;
-                    (map.getSource('route') as any).setData({
+                    (routeSource as any).setData({
                       type: 'Feature',
                       properties: {},
                       geometry: {
@@ -981,8 +946,9 @@ export function MapViewInner({
 
       if (!coords || coords.length < 2) {
         // Clear existing route if any
-        if (map.getSource('route')) {
-          (map.getSource('route') as any).setData({
+        const routeSource = safeGetSource(map, 'route');
+        if (routeSource) {
+          (routeSource as any).setData({
             type: 'Feature',
             properties: {},
             geometry: {
@@ -996,8 +962,9 @@ export function MapViewInner({
       routeCoordsRef.current = coords;
 
       // Safe update or addition of route GeoJSON source and layer
-      if (map.getSource('route')) {
-        (map.getSource('route') as any).setData({
+      const routeSource = safeGetSource(map, 'route');
+      if (routeSource) {
+        (routeSource as any).setData({
           type: 'Feature',
           properties: {},
           geometry: {

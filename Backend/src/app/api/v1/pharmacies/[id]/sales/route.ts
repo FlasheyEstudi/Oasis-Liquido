@@ -31,6 +31,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest, context: any) => 
 
     return successResponse(data, 'Venta creada exitosamente', 201);
   } catch (error: any) {
+    console.error('❌ [Pharmacy Sale API Error]:', error);
     if (error.message?.startsWith('INSUFFICIENT_STOCK')) {
       return errorResponse(ErrorCodes.INSUFFICIENT_STOCK, 'Stock insuficiente', 400);
     }
@@ -40,6 +41,6 @@ export const POST = withAuth(async (req: AuthenticatedRequest, context: any) => 
     if (error.message === 'NOT_FOUND') {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Farmacia no encontrada', 404);
     }
-    return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
+    return errorResponse(ErrorCodes.INTERNAL_ERROR, `Error interno del servidor: ${error.message || error}`, 500);
   }
 }, { roles: ['patient', 'pharmacy_manager', 'pharmacy_admin', 'admin', 'cashier'] });

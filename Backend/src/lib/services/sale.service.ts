@@ -175,16 +175,22 @@ export async function createSale(
             console.error('Error triggering low stock warning:', stockErr);
           }
 
-          // Record movement for Kardex
-          await (tx as any).inventoryMovement.create({
-            data: {
-              inventoryId: inventoryItem.id,
-              userId: creatorId || patientId || 'system',
-              quantityChange: -item.quantity,
-              type: 'sale',
-              reason: `Venta #${sale.id.slice(-6)} (FEFO applied)`,
+          // Record movement for Kardex safely
+          if ('inventoryMovement' in tx) {
+            try {
+              await (tx as any).inventoryMovement.create({
+                data: {
+                  inventoryId: inventoryItem.id,
+                  userId: creatorId || patientId || 'system',
+                  quantityChange: -item.quantity,
+                  type: 'sale',
+                  reason: `Venta #${sale.id.slice(-6)} (FEFO applied)`,
+                }
+              });
+            } catch (kardexErr) {
+              console.error('Failed to create Kardex inventory movement record:', kardexErr);
             }
-          });
+          }
         }
       }
     }
@@ -197,7 +203,7 @@ export async function createSale(
         data: {
           saleId: sale.id,
           pharmacyId,
-          patientId: patientId || '',
+          patientId: patientId || creatorId || '',
           pickupAddress: pharmacy?.address || '',
           pickupLat: pharmacy?.latitude || 0,
           pickupLng: pharmacy?.longitude || 0,
