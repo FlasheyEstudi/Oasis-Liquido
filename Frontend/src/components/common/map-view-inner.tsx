@@ -6,11 +6,14 @@ import { cn } from '@/lib/utils';
 import { MapPin, Loader2 } from 'lucide-react';
 import type { MapMarker, MapViewProps } from './map-view';
 
-import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-const loadMapLibre = (): Promise<any> => {
-  return Promise.resolve(maplibregl);
+const loadMapLibre = async (): Promise<any> => {
+  if (typeof window === 'undefined') {
+    throw new Error('Cannot load MapLibre on server side');
+  }
+  const mod = await import('maplibre-gl');
+  return mod.default || mod;
 };
 
 // Polyline decoder (returns [lng, lat] for MapLibre compatibility)

@@ -28,9 +28,13 @@ export async function createSale(
   ipAddress?: string,
   userAgent?: string
 ) {
+  let totalAmount = 0;
+  let changeAmount = 0;
+  let finalResult: any = null;
+
   return await db.$transaction(async (tx) => {
     // Validate inventory availability and calculate total
-    let totalAmount = 0;
+    totalAmount = 0;
     const saleItemsData: Array<{ medicine_id: string; quantity: number; unit_price: number }> = [];
 
     for (const item of data.items) {
@@ -66,7 +70,7 @@ export async function createSale(
     }
 
     // Validate split payments cover the total and calculate change (vuelto)
-    let changeAmount = 0;
+    changeAmount = 0;
     if (data.payments && data.payments.length > 0) {
       const paidTotal = data.payments.reduce((sum, p) => sum + p.amount, 0);
       if (paidTotal < totalAmount) {
@@ -216,7 +220,7 @@ export async function createSale(
     }
 
     // Return sale with delivery order if applicable
-    const result = await tx.sale.findUnique({
+    finalResult = await tx.sale.findUnique({
       where: { id: sale.id },
       include: {
         saleItems: { include: { medicine: true } },
@@ -226,52 +230,61 @@ export async function createSale(
       },
     });
 
-    try {
-      await createAuditLog({
-        userId: creatorId || patientId,
-        action: 'create',
-        entityType: 'sale',
-        entityId: sale.id,
-        ipAddress,
-        userAgent,
-        details: JSON.stringify({
-          totalAmount,
-          paidAmount: data.payments ? data.payments.reduce((sum, p) => sum + p.amount, 0) : totalAmount,
-          change: changeAmount,
-          payments: data.payments || [{ amount: totalAmount, method: 'cash' }],
-        }),
-      }, tx);
-    } catch (auditErr) {
-      console.error('⚠️ Failed to write sale audit log:', auditErr);
-    }
-
-    // PUSH NOTIFICATIONS: Notify patient of delivery confirmation
-    if (data.is_delivery && patientId) {
-      try {
-        await sendPushNotification(
-          patientId,
-          '🛒 Pedido Confirmado',
-          `Tu pedido por C$${totalAmount.toFixed(2)} ha sido registrado y está siendo preparado.`,
-          { type: 'sale_created', saleId: sale.id }
-        );
-      } catch (error) {
-        console.error('❌ Error sending sale confirmation push notification:', error);
-      }
-    }
-
-    // Trigger local notifications
-    try {
-      const orderNumber = sale.id.slice(-6);
-      if (pharmacyId && !data.clinic_id) {
-        notifyNewOrderReceived(pharmacyId, orderNumber, totalAmount).catch(err => console.error(err));
-      }
-      if (patientId) {
-        notifyDeliveryStatusChanged(patientId, orderNumber, 'pending').catch(err => console.error(err));
-      }
-    } catch (err) {
-      console.error('Failed to dispatch sale/order notifications:', err);
-    }
-
-    return result;
+    return finalResult;
   });
+
+  if (!finalResult) return null;
+
+  const finalPatientId = patientId;
+  const finalCreatorId = creatorId;
+
+  try {
+    await createAuditLog({
+      userId: finalCreatorId || finalPatientId,
+      action: 'create',
+      entityType: 'sale',
+      entityId: finalResult.id,
+      ipAddress,
+      userAgent,
+      details: JSON.stringify({
+        totalAmount,
+        paidAmount: data.payments?.reduce((sum, p) => sum + p.amount, 0) ?? totalAmount,
+        change: changeAmount,
+        payments: data.payments || [{ amount: totalAmount, method: 'cash' }],
+      }),
+    });
+  } catch (auditErr) {
+    console.error('⚠️ Failed to write sale audit log:', auditErr);
+  }
+
+  // PUSH NOTIFICATIONS: Notify patient of delivery confirmation
+  if (data.is_delivery && finalPatientId) {
+    const activePatientId = finalPatientId as string;
+    try {
+      await sendPushNotification(
+        activePatientId,
+        '🛒 Pedido Confirmado',
+        `Tu pedido por C$${totalAmount.toFixed(2)} ha sido registrado y está siendo preparado.`,
+        { type: 'sale_created', saleId: finalResult.id }
+      );
+    } catch (error) {
+      console.error('❌ Error sending sale confirmation push notification:', error);
+    }
+  }
+
+  // Trigger local notifications
+  try {
+    const orderNumber = finalResult.id.slice(-6);
+    if (pharmacyId && !data.clinic_id) {
+      notifyNewOrderReceived(pharmacyId, orderNumber, totalAmount).catch(err => console.error(err));
+    }
+    if (finalPatientId) {
+      const activePatientId = finalPatientId as string;
+      notifyDeliveryStatusChanged(activePatientId, orderNumber, 'pending').catch(err => console.error(err));
+    }
+  } catch (err) {
+    console.error('Failed to dispatch sale/order notifications:', err);
+  }
+
+  return finalResult;
 }
