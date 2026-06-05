@@ -109,7 +109,7 @@ export default function Home() {
   if (currentPage === 'bienvenida') return <OasisLandingPage />;
 
   // Auth pages
-  if (currentPage === 'entrar') return <LoginForm />;
+  if (currentPage === 'entrar' || currentPage === 'login') return <LoginForm />;
   if (currentPage === 'registro') return <RegisterForm />;
   if (currentPage === 'recuperar-cuenta') return <ForgotPasswordForm />;
   if (currentPage === 'cambiar-clave') return <ResetPasswordForm />;

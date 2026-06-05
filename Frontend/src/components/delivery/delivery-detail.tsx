@@ -7,7 +7,11 @@ import {
   useDeliveryRoute,
   useUpdateDeliveryStatus,
   useUpdateDeliveryLocation,
+  useAssignedDeliveries,
+  usePickupDelivery,
+  useDeliverDelivery,
 } from '@/hooks/use-api';
+import { QrScanner } from '@/components/common/qr-scanner';
 import { formatDate, formatCurrency, formatDistance } from '@/utils/helpers';
 import { DELIVERY_STATUS_CONFIG, DEFAULT_LAT, DEFAULT_LNG } from '@/utils/constants';
 import { StatusBadge } from '@/components/common/status-badge';
@@ -32,6 +36,7 @@ import {
   Loader2,
   QrCode,
   Sparkles,
+  Camera,
 } from 'lucide-react';
 
 const STATUS_STEPS = [
@@ -123,13 +128,18 @@ function SwipeButton({
 }
 
 export function DeliveryDetail() {
-  const { selectedItemId, setNotification, navigate, isElderlyMode } = useAuthStore();
+  const { user, selectedItemId, setNotification, navigate, isElderlyMode } = useAuthStore();
+  const driverId = user?.id || '';
 
   const [confirmDeliveryOpen, setConfirmDeliveryOpen] = useState(false);
   const [receiverName, setReceiverName] = useState('');
   const [patientQrCode, setPatientQrCode] = useState('');
   const [verificationError, setVerificationError] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const lastSentTimeRef = useRef<number>(0);
+
+  const { data: assignedDeliveries = [], isLoading: assignedLoading } = useAssignedDeliveries(!!driverId);
 
   const {
     data: order,
@@ -142,9 +152,23 @@ export function DeliveryDetail() {
     data: route,
   } = useDeliveryRoute(selectedItemId || '', !!selectedItemId);
 
+  useEffect(() => {
+    if (!selectedItemId && assignedDeliveries.length > 0) {
+      const activeOrder = assignedDeliveries.find((d: any) => 
+        ['assigned', 'picked_up', 'in_transit'].includes(d.status)
+      ) || assignedDeliveries[0];
+      if (activeOrder) {
+        navigate('delivery-detail', activeOrder.id);
+      }
+    }
+  }, [selectedItemId, assignedDeliveries, navigate]);
+
   const updateDeliveryStatus = useUpdateDeliveryStatus();
   const updateLocation = useUpdateDeliveryLocation();
-  const isUpdating = updateDeliveryStatus.isPending;
+  const pickupDelivery = usePickupDelivery();
+  const deliverDelivery = useDeliverDelivery();
+  const [isScannerActive, setIsScannerActive] = useState(false);
+  const isUpdating = updateDeliveryStatus.isPending || pickupDelivery.isPending || deliverDelivery.isPending;
 
   useEffect(() => {
     if (!order || order.status !== 'in_transit') return;
@@ -153,6 +177,11 @@ export function DeliveryDetail() {
     let fallbackInterval: NodeJS.Timeout | null = null;
 
     const handleCoordsUpdate = (coords: GeolocationCoordinates) => {
+      const now = Date.now();
+      // Throttle: Send GPS coordinates at most once every 8 seconds to prevent hammering the server
+      if (now - lastSentTimeRef.current < 8000) return;
+      lastSentTimeRef.current = now;
+
       updateLocation.mutate({
         orderId: order.id,
         lat: coords.latitude,
@@ -197,25 +226,37 @@ export function DeliveryDetail() {
   const handleStatusUpdate = (newStatus: 'picked_up' | 'in_transit' | 'delivered') => {
     if (!order) return;
 
-    updateDeliveryStatus.mutate(
-      { id: order.id, data: { status: newStatus } },
-      {
+    if (newStatus === 'picked_up') {
+      pickupDelivery.mutate(order.id, {
         onSuccess: () => {
-          const statusLabels: Record<string, string> = {
-            picked_up: 'Pedido recogido',
-            in_transit: 'Ruta iniciada',
-            delivered: 'Pedido entregado',
-          };
-          setNotification({ type: 'success', message: statusLabels[newStatus] || 'Estado actualizado' });
-          if (newStatus === 'delivered') {
-            navigate('driver-home');
-          }
+          setNotification({ type: 'success', message: 'Pedido recogido de la farmacia' });
+          refetchOrder();
         },
         onError: () => {
-          setNotification({ type: 'error', message: 'Error al actualizar estado' });
+          setNotification({ type: 'error', message: 'Error al retirar el pedido' });
         },
-      }
-    );
+      });
+    } else {
+      updateDeliveryStatus.mutate(
+        { id: order.id, data: { status: newStatus } },
+        {
+          onSuccess: () => {
+            const statusLabels: Record<string, string> = {
+              in_transit: 'Ruta iniciada',
+              delivered: 'Pedido entregado',
+            };
+            setNotification({ type: 'success', message: statusLabels[newStatus] || 'Estado actualizado' });
+            refetchOrder();
+            if (newStatus === 'delivered') {
+              navigate('driver-home');
+            }
+          },
+          onError: () => {
+            setNotification({ type: 'error', message: 'Error al actualizar estado' });
+          },
+        }
+      );
+    }
   };
 
   const handleConfirmDelivery = () => {
@@ -240,13 +281,8 @@ export function DeliveryDetail() {
     }
 
     setVerificationError('');
-    updateDeliveryStatus.mutate(
-      { 
-        id: order.id, 
-        data: { 
-          status: 'delivered',
-        } 
-      },
+    deliverDelivery.mutate(
+      order.id,
       {
         onSuccess: () => {
           setNotification({ 
@@ -256,6 +292,7 @@ export function DeliveryDetail() {
           setConfirmDeliveryOpen(false);
           setReceiverName('');
           setPatientQrCode('');
+          refetchOrder();
           navigate('driver-home');
         },
         onError: () => {
@@ -274,18 +311,32 @@ export function DeliveryDetail() {
     );
   }
 
-  if (orderError || !order) {
+  if (!selectedItemId || orderError || !order) {
     return (
-      <div className="space-y-6 max-w-2xl mx-auto px-1 sm:px-0 text-center py-12">
+      <div className="flex flex-col items-center justify-center min-h-[70vh] max-w-md mx-auto px-6 text-center space-y-6 select-none pb-20">
+        <div className="relative">
+          <div className="absolute inset-0 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative size-24 rounded-[2.5rem] bg-slate-500/5 dark:bg-white/[0.03] border border-slate-200/40 dark:border-white/5 flex items-center justify-center text-teal-500 shadow-xl">
+            <Truck className="size-10 animate-bounce" />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Sin Misiones Activas</h2>
+          <p className="text-xs font-bold text-slate-400 dark:text-zinc-550 max-w-[280px] mx-auto leading-relaxed">
+            No tienes ninguna entrega activa o asignada en este momento. Visita el radar para aceptar nuevas órdenes.
+          </p>
+        </div>
+
         <motion.button
-          whileHover={{ x: -4 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => navigate('driver-home')}
-          className="rounded-full px-4 py-2 text-[9px] font-black uppercase tracking-widest bg-white/40 dark:bg-white/5 border border-slate-200/50 text-slate-700 dark:text-zinc-350 flex items-center gap-2 mx-auto"
+          className="w-full max-w-[240px] h-12 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 cursor-pointer mx-auto"
         >
-          <ArrowLeft className="size-4" /> Volver
+          <Sparkles className="size-4" />
+          Ir al Radar de Pedidos
         </motion.button>
-        <p className="text-xs font-bold text-slate-450 mt-4">Error al cargar la bitácora del pedido.</p>
       </div>
     );
   }
@@ -356,126 +407,132 @@ export function DeliveryDetail() {
           {/* Header Info */}
           <div className="flex justify-between items-center">
             <div>
-              <span className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">ORDEN EN SEGUIMIENTO</span>
+              <span className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">
+                {isCollapsed ? "TOCA PARA VER DETALLES" : "ORDEN EN SEGUIMIENTO"}
+              </span>
               <h2 className="text-sm font-black text-slate-905 dark:text-white font-serif mt-0.5">
-                Orden #{order.id?.slice(0, 8) || '...'}
+                Orden #{order.id?.slice(0, 8) || '...'} {isCollapsed && order.patient && `• ${order.patient.name}`}
               </h2>
             </div>
             <StatusBadge status={order.status} type="delivery" />
           </div>
 
-          {/* Status Steps Tracker Dot Timeline */}
-          <div className="flex items-center justify-between px-2 py-2.5 border-y border-dashed border-slate-200 dark:border-white/5">
-            {STATUS_STEPS.map((step, index) => {
-              const isCompleted = index <= currentStepIndex;
-              const isCurrent = index === currentStepIndex;
-              return (
-                <div key={step.key} className="flex flex-col items-center gap-1.5 relative">
-                  <div className={cn(
-                    "size-6.5 rounded-full flex items-center justify-center border transition-all duration-300 text-[9px] font-black",
-                    isCurrent && "bg-teal-500 text-white ring-4 ring-teal-500/25",
-                    isCompleted && !isCurrent && "bg-teal-500/10 border-teal-500/25 text-teal-600 dark:text-teal-400",
-                    !isCompleted && "bg-white dark:bg-zinc-900 border-slate-200 dark:border-white/5 text-slate-400 dark:text-zinc-605"
-                  )}>
-                    {index + 1}
+          {!isCollapsed && (
+            <div className="space-y-6 pt-2">
+              {/* Status Steps Tracker Dot Timeline */}
+              <div className="flex items-center justify-between px-2 py-2.5 border-y border-dashed border-slate-200 dark:border-white/5">
+                {STATUS_STEPS.map((step, index) => {
+                  const isCompleted = index <= currentStepIndex;
+                  const isCurrent = index === currentStepIndex;
+                  return (
+                    <div key={step.key} className="flex flex-col items-center gap-1.5 relative">
+                      <div className={cn(
+                        "size-6.5 rounded-full flex items-center justify-center border transition-all duration-300 text-[9px] font-black",
+                        isCurrent && "bg-teal-500 text-white ring-4 ring-teal-500/25",
+                        isCompleted && !isCurrent && "bg-teal-500/10 border-teal-500/25 text-teal-600 dark:text-teal-400",
+                        !isCompleted && "bg-white dark:bg-zinc-900 border-slate-200 dark:border-white/5 text-slate-400 dark:text-zinc-605"
+                      )}>
+                        {index + 1}
+                      </div>
+                      <span className={cn(
+                        "text-[8px] font-black uppercase tracking-wider scale-90",
+                        isCurrent ? "text-teal-500" : isCompleted ? "text-slate-800 dark:text-zinc-300" : "text-slate-400 dark:text-zinc-655"
+                      )}>
+                        {step.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Route Steps / Addresses */}
+              <div className="space-y-4 pt-1">
+                {/* Pharmacy Origin */}
+                <div className="flex items-start gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+                    <Building2 className="size-4.5" />
                   </div>
-                  <span className={cn(
-                    "text-[8px] font-black uppercase tracking-wider scale-90",
-                    isCurrent ? "text-teal-500" : isCompleted ? "text-slate-800 dark:text-zinc-300" : "text-slate-400 dark:text-zinc-650"
-                  )}>
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Route Steps / Addresses */}
-          <div className="space-y-4 pt-1">
-            {/* Pharmacy Origin */}
-            <div className="flex items-start gap-3">
-              <div className="flex size-9 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
-                <Building2 className="size-4.5" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[7.5px] font-black text-emerald-655 dark:text-emerald-450 uppercase tracking-widest">Punto de Retiro</span>
-                <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.pharmacy?.name || 'Farmacia'}</h4>
-                <p className="text-[10px] text-slate-550 dark:text-zinc-400 mt-0.5 truncate font-medium">{order.pickup_address || 'N/A'}</p>
-              </div>
-            </div>
-
-            {/* Patient Destination */}
-            <div className="flex items-start gap-3">
-              <div className="flex size-9 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
-                <MapPin className="size-4.5" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[7.5px] font-black text-rose-655 dark:text-rose-450 uppercase tracking-widest">Destino de Entrega</span>
-                <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.delivery_address}</h4>
-                {order.patient && (
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-slate-500/5 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 text-[8.5px] font-black text-slate-700 dark:text-zinc-350">{order.patient.name}</span>
-                    {order.patient.phone && <span className="text-[9.5px] font-mono text-slate-450 dark:text-zinc-450">{order.patient.phone}</span>}
+                  <div className="min-w-0">
+                    <span className="text-[7.5px] font-black text-emerald-655 dark:text-emerald-450 uppercase tracking-widest">Punto de Retiro</span>
+                    <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.pharmacy?.name || 'Farmacia'}</h4>
+                    <p className="text-[10px] text-slate-550 dark:text-zinc-400 mt-0.5 truncate font-medium">{order.pickup_address || 'N/A'}</p>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Comments Note */}
-          {order.notes && (
-            <div className="p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-350 leading-relaxed shadow-sm">
-              <span className="font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider block mb-0.5">Comentarios de Recolección:</span>
-              {order.notes}
-            </div>
-          )}
-
-          {/* Cargo manifest */}
-          {order.items && order.items.length > 0 && (
-            <div className="bg-slate-500/[0.02] dark:bg-black/10 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5 space-y-2">
-              <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest block mb-1">Manifiesto de Receta</span>
-              {order.items.map((item) => (
-                <div key={item.id} className="flex justify-between items-center text-xs font-bold">
-                  <span className="text-slate-700 dark:text-zinc-300 truncate max-w-[70%]">{item.medicine?.name || 'Medicamento'} <span className="text-slate-450 dark:text-zinc-500 font-mono text-[10px]">x{item.quantity}</span></span>
-                  <span className="font-mono text-slate-800 dark:text-zinc-200">{formatCurrency(item.quantity * item.unit_price)}</span>
                 </div>
-              ))}
-              <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-white/5 mt-2">
-                <span className="text-[8px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest">Subtotal Cargamento</span>
-                <span className="text-xs font-black text-slate-905 dark:text-white font-mono">{formatCurrency(totalAmount)}</span>
-              </div>
-            </div>
-          )}
 
-          {/* Dynamic Action Trigger Slider */}
-          {order.status !== 'delivered' && order.status !== 'cancelled' && (
-            <div className="pt-2">
-              {order.status === 'assigned' && (
-                <SwipeButton
-                  text={isUpdating ? 'PROCESANDO...' : 'Deslizar para confirmar Retiro'}
-                  onConfirm={() => handleStatusUpdate('picked_up')}
-                  colorClasses="from-teal-500 to-cyan-500"
-                  icon={PackageOpen}
-                  disabled={isUpdating}
-                />
+                {/* Patient Destination */}
+                <div className="flex items-start gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
+                    <MapPin className="size-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[7.5px] font-black text-rose-655 dark:text-rose-450 uppercase tracking-widest">Destino de Entrega</span>
+                    <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.delivery_address}</h4>
+                    {order.patient && (
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-500/5 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 text-[8.5px] font-black text-slate-700 dark:text-zinc-355">{order.patient.name}</span>
+                        {order.patient.phone && <span className="text-[9.5px] font-mono text-slate-455 dark:text-zinc-455">{order.patient.phone}</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Comments Note */}
+              {order.notes && (
+                <div className="p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-350 leading-relaxed shadow-sm">
+                  <span className="font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider block mb-0.5">Comentarios de Recolección:</span>
+                  {order.notes}
+                </div>
               )}
-              {order.status === 'picked_up' && (
-                <SwipeButton
-                  text={isUpdating ? 'PROCESANDO...' : 'Deslizar para iniciar Ruta'}
-                  onConfirm={() => handleStatusUpdate('in_transit')}
-                  colorClasses="from-sky-500 to-blue-600"
-                  icon={Navigation}
-                  disabled={isUpdating}
-                />
+
+              {/* Cargo manifest */}
+              {order.items && order.items.length > 0 && (
+                <div className="bg-slate-500/[0.02] dark:bg-black/10 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5 space-y-2">
+                  <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest block mb-1">Manifiesto de Receta</span>
+                  {order.items.map((item) => (
+                    <div key={item.id} className="flex justify-between items-center text-xs font-bold">
+                      <span className="text-slate-700 dark:text-zinc-300 truncate max-w-[70%]">{item.medicine?.name || 'Medicamento'} <span className="text-slate-455 dark:text-zinc-500 font-mono text-[10px]">x{item.quantity}</span></span>
+                      <span className="font-mono text-slate-800 dark:text-zinc-200">{formatCurrency(item.quantity * item.unit_price)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-white/5 mt-2">
+                    <span className="text-[8px] font-black text-slate-455 dark:text-zinc-550 uppercase tracking-widest">Subtotal Cargamento</span>
+                    <span className="text-xs font-black text-slate-905 dark:text-white font-mono">{formatCurrency(totalAmount)}</span>
+                  </div>
+                </div>
               )}
-              {order.status === 'in_transit' && (
-                <SwipeButton
-                  text="Deslizar para entregar"
-                  onConfirm={() => setConfirmDeliveryOpen(true)}
-                  colorClasses="from-emerald-500 to-teal-600 font-bold animate-[pulse_3s_infinite]"
-                  icon={CheckCircle2}
-                  disabled={isUpdating}
-                />
+
+              {/* Dynamic Action Trigger Slider */}
+              {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                <div className="pt-2">
+                  {order.status === 'assigned' && (
+                    <SwipeButton
+                      text={isUpdating ? 'PROCESANDO...' : 'Deslizar para confirmar Retiro'}
+                      onConfirm={() => handleStatusUpdate('picked_up')}
+                      colorClasses="from-teal-500 to-cyan-500"
+                      icon={PackageOpen}
+                      disabled={isUpdating}
+                    />
+                  )}
+                  {order.status === 'picked_up' && (
+                    <SwipeButton
+                      text={isUpdating ? 'PROCESANDO...' : 'Deslizar para iniciar Ruta'}
+                      onConfirm={() => handleStatusUpdate('in_transit')}
+                      colorClasses="from-sky-500 to-blue-600"
+                      icon={Navigation}
+                      disabled={isUpdating}
+                    />
+                  )}
+                  {order.status === 'in_transit' && (
+                    <SwipeButton
+                      text="Deslizar para entregar"
+                      onConfirm={() => setConfirmDeliveryOpen(true)}
+                      colorClasses="from-emerald-500 to-teal-600 font-bold animate-[pulse_3s_infinite]"
+                      icon={CheckCircle2}
+                      disabled={isUpdating}
+                    />
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -531,16 +588,42 @@ export function DeliveryDetail() {
                     />
                     <Button
                       size="sm"
-                      className="bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-[9px] font-black uppercase tracking-widest rounded-xl px-3 border border-teal-500/10 cursor-pointer"
+                      type="button"
+                      className="bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-[9px] font-black uppercase tracking-widest rounded-xl px-3 border border-teal-500/10 cursor-pointer flex items-center gap-1 shrink-0"
+                      onClick={() => setIsScannerActive(!isScannerActive)}
+                    >
+                      <Camera className="size-3.5" />
+                      {isScannerActive ? 'Cerrar' : 'Cámara'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      type="button"
+                      className="bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-[9px] font-black uppercase tracking-widest rounded-xl px-2.5 border border-teal-500/10 cursor-pointer shrink-0"
                       onClick={() => {
                         setPatientQrCode(`patient-id-${order.patient?.id}`);
                         setReceiverName(order.patient?.name || '');
                         setVerificationError('');
                       }}
                     >
-                      Completar
+                      Auto
                     </Button>
                   </div>
+                  {isScannerActive && (
+                    <div className="mt-3 p-2 border border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50 dark:bg-zinc-950/50">
+                      <QrScanner
+                        isActive={isScannerActive}
+                        onScan={(data) => {
+                          setPatientQrCode(data);
+                          setReceiverName(order.patient?.name || '');
+                          setIsScannerActive(false);
+                          if (typeof window !== 'undefined' && navigator.vibrate) {
+                            navigator.vibrate([100]);
+                          }
+                        }}
+                        onError={(err) => console.error('QR Scanner error:', err)}
+                      />
+                    </div>
+                  )}
                   {verificationError && (
                     <p className="text-[10px] text-red-500 dark:text-red-400 font-bold mt-1">{verificationError}</p>
                   )}
@@ -553,13 +636,14 @@ export function DeliveryDetail() {
                   className="flex-1 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-white cursor-pointer" 
                   onClick={() => {
                     setConfirmDeliveryOpen(false);
+                    setIsScannerActive(false);
                     setVerificationError('');
                   }}
                 >
                   Cancelar
                 </Button>
                 <Button 
-                  className="flex-1 bg-teal-650 hover:bg-teal-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl cursor-pointer"
+                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl cursor-pointer"
                   disabled={!receiverName.trim() || !patientQrCode.trim() || isUpdating}
                   onClick={handleConfirmDelivery}
                 >

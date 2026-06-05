@@ -25,6 +25,11 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Pedido no encontrado', 404);
     }
 
+    // Verify driver authorization (BOLA Mitigation)
+    if (req.user.role === 'delivery_driver' && order.deliveryDriverId !== req.user.userId) {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No autorizado para actualizar la ubicación de este pedido', 403);
+    }
+
     // Optional: Update driver profile current location
     if (req.user.role === 'delivery_driver') {
       await db.deliveryDriverProfile.update({

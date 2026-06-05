@@ -1,17 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Stand-in font configs to prevent fetching external Google Fonts in offline/sandboxed build environments.
+const geistSans = { variable: "var(--font-geist-sans, sans-serif)" };
+const geistMono = { variable: "var(--font-geist-mono, monospace)" };
 
 export const metadata: Metadata = {
   title: "OASIS – Intelligent Pharmacy Management System",
@@ -45,7 +36,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         {children}
-        <Toaster />
       </body>
     </html>
   );

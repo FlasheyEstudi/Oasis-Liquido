@@ -462,7 +462,7 @@ export async function fulfillPrescription(
 
     // Notify patient
     try {
-      const { notifyPrescriptionFulfilled } = require('./event-notifications');
+      const { notifyPrescriptionFulfilled } = await import('./event-notifications');
       notifyPrescriptionFulfilled(updated.patientId, updated.fulfilledPharmacy?.name || 'Farmacia').catch((err: any) => console.error(err));
     } catch (err) {
       console.error('Failed to trigger prescription fulfilled notification:', err);

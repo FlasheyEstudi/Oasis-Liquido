@@ -89,4 +89,21 @@ export async function updateGlobalSetting(key: string, value: string): Promise<a
   const result = await put<any>(`/admin/settings/${key}`, { value });
   return result.data;
 }
+/** Get all pending accreditation documents (admin) */
+export async function getPendingDocuments(): Promise<any> {
+  const result = await get<any>('/documents/admin/pending');
+  return result.data;
+}
+
+/** Verify a specific accreditation document (admin) */
+export async function verifyDocument(
+  type: string,
+  docId: string,
+  data: { status: string; rejectionReason?: string }
+): Promise<any> {
+  const { put } = await import('./client');
+  const result = await put<any>(`/documents/admin/${type}/${docId}/verify`, data);
+  return result.data;
+}
+
 

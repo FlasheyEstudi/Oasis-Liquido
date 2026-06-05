@@ -768,6 +768,137 @@ async function main() {
     }
   });
 
+  // 14. E2E Playwright Test Users & Entities
+  console.log('🧪 Seeding Playwright E2E test data...');
+  
+  const hashE2EPatient = await hash('Paciente123$', 12);
+  const hashE2EDoctor = await hash('Doctor123$', 12);
+  const hashE2EPharmacy = await hash('Farmacia123$', 12);
+
+  // E2E Clinic
+  const clinicE2E = await prisma.clinic.create({
+    data: {
+      name: 'Oasis Central Nicaragua',
+      address: 'De la rotonda El Periodista 100m al norte, Managua',
+      latitude: 12.1221,
+      longitude: -86.2845,
+      phone: '+505 2278-0000',
+      isActive: true,
+    }
+  });
+
+  // E2E Patient
+  const e2ePatient = await prisma.user.create({
+    data: {
+      name: 'Paciente Test',
+      email: 'paciente.test@oasis.com',
+      passwordHash: hashE2EPatient,
+      role: 'patient',
+      phone: '+505 7777-3333',
+      isActive: true,
+      emailVerified: true,
+      patientProfile: {
+        create: {
+          dateOfBirth: '2000-01-01',
+          bloodType: 'O+',
+          allergies: JSON.stringify([]),
+          medicalNotes: 'Perfil para pruebas automatizadas E2E.'
+        }
+      }
+    }
+  });
+
+  // E2E Doctors
+  const e2eDoctor1 = await prisma.user.create({
+    data: {
+      name: 'Dr. Somarriba',
+      email: 'dr.somarriba@oasis.com',
+      passwordHash: hashE2EDoctor,
+      role: 'doctor',
+      phone: '+505 7777-4444',
+      isActive: true,
+      emailVerified: true,
+      doctorProfile: {
+        create: {
+          clinicId: clinicE2E.id,
+          specialty: 'Medicina General',
+          licenseNumber: 'MINSA-SOMARRIBA',
+          signaturePin: '4321'
+        }
+      }
+    }
+  });
+
+  const e2eDoctor2 = await prisma.user.create({
+    data: {
+      name: 'Dra. María Altamirano',
+      email: 'paciente.test.dr@oasis.com', // use unique email, let's keep it clean or make it a doctor
+      passwordHash: hashE2EDoctor,
+      role: 'doctor',
+      phone: '+505 7777-5555',
+      isActive: true,
+      emailVerified: true,
+      doctorProfile: {
+        create: {
+          clinicId: clinicE2E.id,
+          specialty: 'Ginecología',
+          licenseNumber: 'MINSA-ALTAMIRANO',
+          signaturePin: '1234'
+        }
+      }
+    }
+  });
+
+  // Rename Dra. María Altamirano user name to match test select option
+  await prisma.user.update({
+    where: { id: e2eDoctor2.id },
+    data: { name: 'Dra. María Altamirano' }
+  });
+
+  // E2E Pharmacy Cashier / Manager
+  const e2ePharmacyUser = await prisma.user.create({
+    data: {
+      name: 'Farmacia Test',
+      email: 'farmacia.test@oasis.com',
+      passwordHash: hashE2EPharmacy,
+      role: 'pharmacy_manager',
+      phone: '+505 7777-6666',
+      isActive: true,
+      emailVerified: true,
+      pharmacyManagerProfile: {
+        create: {
+          pharmacyId: pharmacy1.id
+        }
+      }
+    }
+  });
+
+  // E2E Prescription (Para el test de farmacia)
+  const ibuprofeno = medicines.find(m => m.name === 'Ibuprofeno 400mg') || medicines[2];
+  
+  await prisma.prescription.create({
+    data: {
+      patientId: e2ePatient.id,
+      doctorId: e2eDoctor1.id,
+      clinicId: clinicE2E.id,
+      status: 'active',
+      verificationCode: 'RX-A3B9CD',
+      qrCode: 'RX-A3B9CD',
+      digitalSignature: crypto.randomBytes(32).toString('hex'),
+      notes: 'Prescripción de prueba E2E.',
+      expirationDate: '2027-01-01',
+      prescriptionLines: {
+        create: {
+          medicineId: ibuprofeno.id,
+          quantity: 2,
+          dosageInstructions: 'Tomar 1 tableta cada 8 horas por 5 días'
+        }
+      }
+    }
+  });
+
+  console.log('✅ Playwright E2E test data seeded successfully!\n');
+
   console.log('\n🏝️  OASIS - Seeding completed successfully!');
   console.log('\n🚀 Cuentas de Acceso Creadas:');
   console.log('--------------------------------------------------');

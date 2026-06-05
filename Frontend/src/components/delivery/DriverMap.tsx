@@ -20,7 +20,6 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
   const [route, setRoute] = useState<any>(null);
   
   const watchIdRef = useRef<number | null>(null);
-  const updateIntervalRef = useRef<any>(null);
 
   // Determine stage and destination
   const stage = order.status === 'assigned' ? 'to_pharmacy' : 'to_patient';
@@ -99,18 +98,6 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
-
-    // 2. Periodic transmit every 5 seconds
-    updateIntervalRef.current = setInterval(async () => {
-      if (currentLocation) {
-        try {
-          await updateLocation(order.id, currentLocation.lat, currentLocation.lng);
-          console.log('📡 [DriverMap] Location packet transmitted:', currentLocation);
-        } catch (err) {
-          console.error('Failed to update live driver location:', err);
-        }
-      }
-    }, 5000);
   };
 
   const stopNavigation = () => {
@@ -121,17 +108,12 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
-    if (updateIntervalRef.current) {
-      clearInterval(updateIntervalRef.current);
-      updateIntervalRef.current = null;
-    }
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
-      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
     };
   }, []);
 

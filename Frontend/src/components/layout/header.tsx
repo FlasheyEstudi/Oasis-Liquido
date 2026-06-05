@@ -3,7 +3,49 @@
 import { useAuthStore } from '@/store/auth-store';
 import { ROLE_LABELS } from '@/utils/constants';
 import { getInitials } from '@/utils/helpers';
-import { getPageTitle } from '@/components/layout/sidebar';
+import type { AppPage } from '@/types';
+
+const PAGE_TITLES: Record<AppPage, string> = {
+  bienvenida: 'Oasis Aura',
+  entrar: 'Iniciar Sesión',
+  registro: 'Registro',
+  'recuperar-cuenta': 'Recuperar Contraseña',
+  'cambiar-clave': 'Restablecer Contraseña',
+  inicio: 'Dashboard',
+  citas: 'Citas',
+  'nueva-cita': 'Nueva Cita',
+  'detalle-cita': 'Detalle de Cita',
+  recetas: 'Recetas',
+  'detalle-receta': 'Detalle de Receta',
+  'mapa-farmacias': 'Farmacias',
+  'detalle-farmacia': 'Detalle de Farmacia',
+  'solicitud-envio': 'Solicitar Entrega',
+  seguimiento: 'Seguimiento de Pedido',
+  consulta: 'Consulta',
+  'gestionar-clinicas': 'Mi Clínica',
+  'gestionar-farmacias': 'Mi Farmacia',
+  'gestionar-usuarios': 'Usuarios',
+  'gestionar-documentos': 'Documentos',
+  'manage-clinics': 'Mi Clínica',
+  'manage-pharmacies': 'Mi Farmacia',
+  'clinic-staff': 'Mi Personal',
+  'clinic-analytics': 'Métricas & KPIs',
+  'pharmacy-staff': 'Mi Personal',
+  'pharmacy-analytics': 'Métricas & KPIs',
+  inventario: 'Inventario',
+  surtimiento: 'Surtir Recetas',
+  'gestion-pedidos': 'Pedidos',
+  'inicio-repartidor': 'Inicio',
+  'driver-dashboard': 'Mi Rendimiento',
+  'detalle-envio': 'Detalle de Entrega',
+  perfil: 'Mi Perfil',
+  auditoria: 'Auditoría',
+  venta: 'Punto de Venta',
+};
+
+function getPageTitle(page: AppPage): string {
+  return PAGE_TITLES[page] ?? page;
+}
 import { useNotifications, useMarkNotificationsAsRead } from '@/hooks/use-api';
 import { cn } from '@/lib/utils';
 import { Bell, Menu, Check, CheckSquare } from 'lucide-react';

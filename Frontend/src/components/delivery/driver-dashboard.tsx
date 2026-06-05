@@ -6,9 +6,10 @@ import {
   useDeliveryOrders, 
   useUpdateDeliveryStatus, 
   useReviews,
+  useDriverEarnings,
   getHookErrorMessage 
 } from '@/hooks/use-api';
-import { timeAgo } from '@/utils/helpers';
+import { timeAgo, formatCurrency } from '@/utils/helpers';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { StatusBadge } from '@/components/common/status-badge';
 import { cn } from '@/lib/utils';
@@ -27,7 +28,10 @@ import {
   Star,
   AlertCircle,
   Radio,
-  Loader2
+  Loader2,
+  DollarSign,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '@/api/client';
@@ -44,12 +48,14 @@ export function DriverDashboard() {
   const { user, setNotification } = useAuthStore();
   const driverId = user?.id;
 
+  const { data: stats, isLoading: statsLoading } = useDriverEarnings(!!driverId);
+
   const {
     data: ordersResult,
-    isLoading,
+    isLoading: ordersLoading,
     error,
     refetch,
-  } = useDeliveryOrders({ status: 'pending', limit: 20 });
+  } = useDeliveryOrders({ status: 'delivered', limit: 20 }, !!driverId);
 
   const {
     data: reviewsResult,
@@ -204,10 +210,14 @@ export function DriverDashboard() {
     }
   };
 
-  if (isLoading) {
+  if (ordersLoading || statsLoading) {
     return (
-      <div className="delivery-container space-y-4 !max-w-2xl">
+      <div className="delivery-container space-y-6 !max-w-2xl mt-4">
         <div className="shimmer h-32 rounded-3xl" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="shimmer h-24 rounded-3xl" />
+          <div className="shimmer h-24 rounded-3xl" />
+        </div>
         <div className="shimmer h-64 rounded-3xl" />
       </div>
     );
@@ -215,7 +225,7 @@ export function DriverDashboard() {
 
   return (
     <motion.div 
-      className="delivery-container flex flex-col gap-4 sm:gap-6 !max-w-2xl"
+      className="delivery-container flex flex-col gap-4 sm:gap-6 !max-w-2xl pb-24"
       variants={stagger}
       initial="initial"
       animate="animate"
@@ -233,7 +243,7 @@ export function DriverDashboard() {
           <div className="flex items-center justify-between mt-4">
             <div>
               <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Hola, {firstName}</h1>
-              <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mt-1">Tu oasis de hoy: <span className="text-teal-600 dark:text-teal-400">{orders.length} entregas</span></p>
+              <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mt-1">Panel de Rendimiento y Estadísticas</p>
             </div>
             <button 
               onMouseDown={handleSosStart}
@@ -250,20 +260,80 @@ export function DriverDashboard() {
         </GlassCard>
       </motion.div>
 
-      {/* Active Deliveries List */}
+      {/* METRICS GRID */}
+      <motion.div variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {/* Earnings today */}
+        <div className="bg-white/80 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden backdrop-blur-xl">
+          <div className="absolute top-0 right-0 p-2 opacity-10">
+            <DollarSign className="size-12 text-teal-500" />
+          </div>
+          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Hoy</span>
+          <div>
+            <h4 className="text-xl font-black text-slate-800 dark:text-white font-mono mt-1">
+              {formatCurrency(stats?.todayEarnings ?? 0)}
+            </h4>
+            <span className="text-[7.5px] font-bold text-teal-600 dark:text-teal-400">Ganancias de hoy</span>
+          </div>
+        </div>
+
+        {/* Earnings weekly */}
+        <div className="bg-white/80 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden backdrop-blur-xl">
+          <div className="absolute top-0 right-0 p-2 opacity-10">
+            <TrendingUp className="size-12 text-teal-500" />
+          </div>
+          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Esta Semana</span>
+          <div>
+            <h4 className="text-xl font-black text-slate-800 dark:text-white font-mono mt-1">
+              {formatCurrency(stats?.weekEarnings ?? 0)}
+            </h4>
+            <span className="text-[7.5px] font-bold text-teal-600 dark:text-teal-400">Semana móvil</span>
+          </div>
+        </div>
+
+        {/* Total Deliveries */}
+        <div className="bg-white/80 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden backdrop-blur-xl">
+          <div className="absolute top-0 right-0 p-2 opacity-10">
+            <Truck className="size-12 text-teal-500" />
+          </div>
+          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Repartos</span>
+          <div>
+            <h4 className="text-xl font-black text-slate-800 dark:text-white font-mono mt-1">
+              {stats?.totalDeliveries ?? 0}
+            </h4>
+            <span className="text-[7.5px] font-bold text-slate-500 dark:text-zinc-400">Entregados total</span>
+          </div>
+        </div>
+
+        {/* Rating */}
+        <div className="bg-white/80 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden backdrop-blur-xl">
+          <div className="absolute top-0 right-0 p-2 opacity-10">
+            <Star className="size-12 text-amber-500 fill-amber-500/10" />
+          </div>
+          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Valoración</span>
+          <div>
+            <h4 className="text-xl font-black text-slate-800 dark:text-white font-mono mt-1 flex items-center gap-1">
+              {stats?.rating ?? 5.0}
+              <Star className="size-4.5 text-amber-400 fill-amber-400" />
+            </h4>
+            <span className="text-[7.5px] font-bold text-slate-500 dark:text-zinc-400">Puntaje promedio</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* HISTORIAL DE REPARTOS */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
-          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Ruta Actual</h3>
-          <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">
-            En Tiempo Real
+          <h3 className="text-sm font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Historial de Repartos</h3>
+          <span className="text-[10px] bg-slate-500/5 dark:bg-black/20 border border-slate-200/40 dark:border-white/5 px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">
+            Últimas Entregas
           </span>
         </div>
 
         {orders.length === 0 ? (
           <GlassCard className="py-20 text-center opacity-60">
             <PackageCheck className="size-12 mx-auto mb-4 text-slate-400 dark:text-zinc-300" />
-            <p className="font-medium text-slate-800 dark:text-white">No hay entregas pendientes</p>
-            <p className="text-xs text-muted-foreground mt-1">¡Buen trabajo! Disfruta tu descanso.</p>
+            <p className="font-medium text-slate-800 dark:text-white">No tienes entregas registradas</p>
+            <p className="text-xs text-muted-foreground mt-1">Las entregas que completes aparecerán aquí.</p>
           </GlassCard>
         ) : (
           <AnimatePresence>
@@ -274,56 +344,39 @@ export function DriverDashboard() {
                 layout
                 className="group"
               >
-                <GlassCard className="px-3 py-4 sm:p-6 hover:border-teal-500/30 transition-all cursor-pointer no-card-mobile">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="size-10 rounded-2xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center text-teal-600">
-                        <MapPin className="size-5" />
+                <GlassCard 
+                  onClick={() => {
+                    useAuthStore.getState().navigate('delivery-detail', order.id);
+                  }}
+                  className="px-3 py-4 sm:p-5 hover:border-teal-500/30 transition-all cursor-pointer no-card-mobile"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-2.5">
+                      <div className="size-9.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <CheckCircle2 className="size-5" />
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-foreground truncate max-w-[180px]">
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 truncate max-w-[220px]">
                           {order.delivery_address}
+                        </h4>
+                        <p className="text-[10px] text-slate-455 dark:text-zinc-500 font-bold mt-0.5">
+                          {order.patient?.name || 'Paciente'} • Orden #{order.id.slice(0, 8)}
                         </p>
-                        <p className="text-[10px] text-muted-foreground font-medium">
-                          {order.patient?.name || 'Cliente Oasis'}
-                        </p>
+                        {order.delivered_at && (
+                          <span className="text-[8.5px] text-slate-400 dark:text-zinc-550 block mt-1 font-mono">
+                            Entregado: {new Date(order.delivered_at).toLocaleDateString()} {new Date(order.delivered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <StatusBadge status={order.status} type="delivery" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div className="p-3 rounded-2xl bg-muted/30 border border-border/50">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase mb-1">
-                        <Clock className="size-3" />
-                        <span>Espera</span>
-                      </div>
-                      <p className="text-sm font-bold">12 min</p>
+                    <div className="text-right">
+                      <span className="text-xs font-black text-slate-905 dark:text-white font-mono block">
+                        +{formatCurrency((order.pharmacy as any)?.deliveryFee || 29.90)}
+                      </span>
+                      <span className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                        Completado
+                      </span>
                     </div>
-                    <div className="p-3 rounded-2xl bg-muted/30 border border-border/50">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase mb-1">
-                        <MapIcon className="size-3" />
-                        <span>Distancia</span>
-                      </div>
-                      <p className="text-sm font-bold">1.4 km</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => window.open(`tel:${order.patient?.phone}`)}
-                      className="flex-1 h-12 rounded-2xl bg-muted/50 flex items-center justify-center text-zinc-600 hover:bg-muted transition-colors"
-                    >
-                      <Phone className="size-5" />
-                    </button>
-                    <button 
-                      onClick={() => handleStatusUpdate(order.id, 'picked_up')}
-                      className="flex-[3] h-12 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 shadow-xl"
-                      disabled={updatingId === order.id}
-                    >
-                      <Navigation className="size-4" />
-                      Iniciar Entrega
-                    </button>
                   </div>
                 </GlassCard>
               </motion.div>

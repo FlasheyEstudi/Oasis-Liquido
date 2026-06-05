@@ -2,36 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
-import { get, put, getErrorMessage } from '@/api/client';
+import { getErrorMessage } from '@/api/client';
+import { usePendingDocuments, useVerifyDocument } from '@/hooks/use-api';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, FileText, Check, X, ExternalLink, Stethoscope, Building2 } from 'lucide-react';
 
 export function PendingDocumentsPanel() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
+  const { data: documentsData, isLoading: loading, refetch: fetchDocuments } = usePendingDocuments();
+  const verifyDocumentMut = useVerifyDocument();
   const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
   const [processingId, setProcessingId] = useState<string | null>(null);
   const { setNotification } = useAuthStore();
-
-  const fetchDocuments = async () => {
-    setLoading(true);
-    try {
-      const res = await get<any>('/documents/admin/pending');
-      if (res.success) {
-        setData(res.data);
-      }
-    } catch (err) {
-      setNotification({ type: 'error', message: 'No se pudieron cargar los documentos pendientes' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
 
   const handleVerifyGroup = async (
     docIds: string[],
@@ -47,11 +30,15 @@ export function PendingDocumentsPanel() {
 
     setProcessingId(groupId);
     try {
-      // Loop through all documents of the group and verify them sequentially
+      // Loop through all documents of the group and verify them sequentially using mutation.mutateAsync
       for (const docId of docIds) {
-        await put(`/documents/admin/${type}/${docId}/verify`, {
-          status,
-          rejectionReason: status === 'rejected' ? reason : undefined
+        await verifyDocumentMut.mutateAsync({
+          type,
+          docId,
+          data: {
+            status,
+            rejectionReason: status === 'rejected' ? reason : undefined
+          }
         });
       }
 
@@ -84,9 +71,9 @@ export function PendingDocumentsPanel() {
     );
   }
 
-  const doctorDocs = data?.doctorDocuments || [];
-  const clinicDocs = data?.clinicDocuments || [];
-  const pharmacyDocs = data?.pharmacyDocuments || [];
+  const doctorDocs = documentsData?.doctorDocuments || [];
+  const clinicDocs = documentsData?.clinicDocuments || [];
+  const pharmacyDocs = documentsData?.pharmacyDocuments || [];
 
   // Group Clinics
   const groupedClinics: Record<string, {

@@ -129,67 +129,115 @@ export function VerificationScreen({ type, id }: { type: 'sale' | 'prescription'
 
       {data.type === 'sale' && (
         <div className="space-y-4 sm:space-y-6">
-          <GlassCard spatial className="p-4 sm:p-6 border-t-4 border-teal-500">
-            <div className="flex justify-between items-start mb-6 sm:mb-8">
-              <div>
-                <h3 className="text-lg sm:text-xl font-semibold leading-snug text-foreground">Resumen de Venta</h3>
-                <p className="text-xs leading-relaxed text-muted font-mono mt-1">ID: #{data.id.toUpperCase()}</p>
-              </div>
-              <Receipt className="size-6 sm:size-8 text-teal-600/50" />
+          <GlassCard spatial className="p-4 sm:p-6 border-t-4 border-teal-500 shadow-2xl relative overflow-hidden">
+            {/* Watermark background icon */}
+            <div className="absolute -right-12 -top-12 size-36 rounded-full bg-teal-500/[0.03] border border-teal-500/10 flex items-center justify-center rotate-12 pointer-events-none select-none">
+              <Receipt className="size-16 text-teal-500/10" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="flex justify-between items-start mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mb-3 border border-emerald-500/25 shadow-sm">
+                  <CheckCircle2 className="size-3" /> Transacción Válida
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Factura Digital de Venta</h3>
+                <p className="text-[10px] text-muted-foreground font-mono mt-1">N° de Factura: #{data.id.toUpperCase()}</p>
+              </div>
+              <div className="size-11 sm:size-12 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-600 border border-teal-500/20 shrink-0">
+                <Receipt className="size-5 sm:size-6" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 bg-zinc-50/50 dark:bg-zinc-900/30 p-4 rounded-3xl border border-zinc-100 dark:border-zinc-800">
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <User className="size-4 sm:size-5 text-teal-600 shrink-0" />
+                <div className="flex items-start gap-2.5">
+                  <div className="size-7 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 shrink-0">
+                    <User className="size-3.5" />
+                  </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Cliente</p>
-                    <p className="text-xs sm:text-sm font-semibold">{data.customerName}</p>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider leading-none">Cliente / Paciente</p>
+                    <p className="text-xs sm:text-sm font-semibold mt-1">{data.customerName}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Building2 className="size-4 sm:size-5 text-teal-600 shrink-0" />
+                <div className="flex items-start gap-2.5">
+                  <div className="size-7 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 shrink-0">
+                    <Building2 className="size-3.5" />
+                  </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Establecimiento</p>
-                    <p className="text-xs sm:text-sm font-semibold">{data.pharmacyName}</p>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider leading-none">Establecimiento Emisor</p>
+                    <p className="text-xs sm:text-sm font-semibold mt-1">{data.pharmacyName}</p>
                   </div>
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="size-4 sm:size-5 text-teal-600 shrink-0" />
+                <div className="flex items-start gap-2.5">
+                  <div className="size-7 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 shrink-0">
+                    <Clock className="size-3.5" />
+                  </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Fecha y Hora</p>
-                    <p className="text-xs sm:text-sm font-semibold">{formatDate(data.date, 'dd/MM/yyyy HH:mm')}</p>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider leading-none">Fecha de Emisión</p>
+                    <p className="text-xs sm:text-sm font-semibold mt-1">{formatDate(data.date, 'dd/MM/yyyy HH:mm')}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <User className="size-4 sm:size-5 text-teal-600 shrink-0" />
+                <div className="flex items-start gap-2.5">
+                  <div className="size-7 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 shrink-0">
+                    <User className="size-3.5" />
+                  </div>
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider">Atendido por</p>
-                    <p className="text-xs sm:text-sm font-semibold">{data.attendant}</p>
+                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-wider leading-none">Despachado por</p>
+                    <p className="text-xs sm:text-sm font-semibold mt-1">{data.attendant}</p>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Delivery Order details if applicable */}
+            {data.deliveryOrder && (
+              <div className="mb-6 p-4 bg-emerald-500/[0.04] border border-emerald-500/20 rounded-2xl">
+                <div className="flex items-start gap-3">
+                  <Car className="size-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[9px] uppercase font-black tracking-widest text-emerald-600 dark:text-emerald-400">Certificado de Entrega Logística</p>
+                    <p className="text-xs font-bold text-foreground mt-1">Entregado a domicilio por {data.deliveryOrder.driverName}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1"><strong>Destino:</strong> {data.deliveryOrder.address}</p>
+                    {data.deliveryOrder.deliveredAt && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5"><strong>Completado el:</strong> {formatDate(data.deliveryOrder.deliveredAt, 'dd/MM/yyyy HH:mm')}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800 py-6">
-              <p className="text-xs font-bold uppercase text-muted-foreground mb-4">Productos</p>
+              <p className="text-xs font-black uppercase text-muted-foreground tracking-widest mb-4">Productos Surtidos</p>
               <div className="space-y-3">
                 {data.items.map((item: any, i: number) => (
-                  <div key={i} className="flex justify-between text-sm">
-                    <span>{item.name} <span className="text-muted-foreground font-normal">x{item.quantity}</span></span>
-                    <span className="font-mono font-bold">{formatCurrency(item.price * item.quantity)}</span>
+                  <div key={i} className="flex justify-between text-sm items-baseline">
+                    <span className="font-semibold text-foreground">{item.name} <span className="text-muted-foreground font-normal text-xs ml-1">x{item.quantity}</span></span>
+                    <span className="font-mono font-bold text-foreground">{formatCurrency(item.price * item.quantity)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="border-t-2 border-zinc-900 dark:border-white pt-6 flex justify-between items-center select-none">
-              <span className="text-sm sm:text-base font-black">TOTAL PAGADO</span>
-              <span className="text-2xl sm:text-3xl font-black text-teal-600">{formatCurrency(data.total)}</span>
+              <span className="text-sm sm:text-base font-black uppercase tracking-widest">Total Pagado</span>
+              <span className="text-2xl sm:text-3xl font-black text-teal-600 dark:text-teal-400">{formatCurrency(data.total)}</span>
             </div>
           </GlassCard>
+
+          <div className="flex justify-center mt-6">
+            <motion.button
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ y: 1, scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 450, damping: 18 }}
+              onClick={() => window.open(`${getApiUrl()}/sales/${data.id}/receipt`, '_blank')}
+              className="clay-btn-primary h-12 px-8 font-extrabold flex items-center justify-center gap-2 select-none shadow-lg cursor-pointer text-xs"
+            >
+              <Receipt className="size-4" />
+              Descargar PDF Original
+            </motion.button>
+          </div>
 
           {data.prescription && (
             <GlassCard className="p-4 sm:p-6 bg-sky-500/5 border-l-4 border-sky-500">

@@ -159,10 +159,155 @@ function isPointOffRoute(lat: number, lng: number, routeCoords: [number, number]
   return minDistance > thresholdMeters;
 }
 
+// Project a point onto a line segment [lng, lat]
+function projectPointOnSegment(p: [number, number], a: [number, number], b: [number, number]): [number, number] {
+  const x = p[0], y = p[1];
+  const x1 = a[0], y1 = a[1];
+  const x2 = b[0], y2 = b[1];
+  
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  
+  if (dx === 0 && dy === 0) return a;
+  
+  let t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy);
+  t = Math.max(0, Math.min(1, t)); // Clamp to segment
+  
+  return [x1 + t * dx, y1 + t * dy];
+}
+
+// Find the closest point on the route for snapping
+function snapToRoute(lat: number, lng: number, routeCoords: [number, number][], maxDistanceMeters = 50): { lat: number; lng: number } {
+  if (!routeCoords || routeCoords.length < 2) return { lat, lng };
+  
+  let closestPoint: [number, number] = [lng, lat];
+  let minDistance = Infinity;
+  
+  for (let i = 0; i < routeCoords.length - 1; i++) {
+    const a = routeCoords[i]; // [lng, lat]
+    const b = routeCoords[i+1];
+    const projected = projectPointOnSegment([lng, lat], a, b);
+    
+    const dist = distanceBetweenPoints(lat, lng, projected[1], projected[0]);
+    if (dist < minDistance) {
+      minDistance = dist;
+      closestPoint = projected;
+    }
+  }
+  
+  if (minDistance <= maxDistanceMeters) {
+    return { lat: closestPoint[1], lng: closestPoint[0] };
+  }
+  
+  return { lat, lng };
+}
+
+// Smooth location interpolation animation
+function animateMarker(marker: any, fromLngLat: { lng: number; lat: number }, toLngLat: { lng: number; lat: number }, durationMs: number = 1400) {
+  const start = performance.now();
+  
+  function step(now: number) {
+    const progress = Math.min(1, (now - start) / durationMs);
+    // Quadratic easing out for ultra-smooth fluid movement
+    const ease = progress * (2 - progress);
+    
+    const lng = fromLngLat.lng + (toLngLat.lng - fromLngLat.lng) * ease;
+    const lat = fromLngLat.lat + (toLngLat.lat - fromLngLat.lat) * ease;
+    
+    marker.setLngLat([lng, lat]);
+    
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+  
+  requestAnimationFrame(step);
+}
+
 // Detailed Nicaragua Features GeoJSON (OSM enrichment)
 const NICARAGUA_DETAIL_GEOJSON = {
   type: 'FeatureCollection',
   features: [
+    // --- CIUDADES PRINCIPALES ---
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Managua' },
+      geometry: { type: 'Point', coordinates: [-86.2514, 12.1364] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'León' },
+      geometry: { type: 'Point', coordinates: [-86.8780, 12.4379] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Masaya' },
+      geometry: { type: 'Point', coordinates: [-86.0960, 11.9740] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Granada' },
+      geometry: { type: 'Point', coordinates: [-85.9560, 11.9300] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Estelí' },
+      geometry: { type: 'Point', coordinates: [-86.3530, 13.0910] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Matagalpa' },
+      geometry: { type: 'Point', coordinates: [-85.9180, 12.9250] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Chinandega' },
+      geometry: { type: 'Point', coordinates: [-87.1290, 12.6290] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'city', name: 'Jinotega' },
+      geometry: { type: 'Point', coordinates: [-86.0020, 13.1010] }
+    },
+
+    // --- PARQUES Y ZONAS VERDES (MANAGUA) ---
+    {
+      type: 'Feature',
+      properties: { type: 'park', name: 'Parque Luis Alfonso Velásquez Flores' },
+      geometry: { type: 'Point', coordinates: [-86.2725, 12.1550] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'park', name: 'Loma de Tiscapa (Reserva Histórica)' },
+      geometry: { type: 'Point', coordinates: [-86.2715, 12.1385] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'park', name: 'Parque de la Paz Managua' },
+      geometry: { type: 'Point', coordinates: [-86.2690, 12.1510] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'park', name: 'Parque Japonés' },
+      geometry: { type: 'Point', coordinates: [-86.2600, 12.1220] }
+    },
+
+    // --- ESTABLECIMIENTOS COMERCIALES Y ENTIDADES ---
+    {
+      type: 'Feature',
+      properties: { type: 'landmark', name: 'Plaza Inter Managua' },
+      geometry: { type: 'Point', coordinates: [-86.2750, 12.1435] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'landmark', name: 'Palacio Nacional de la Cultura' },
+      geometry: { type: 'Point', coordinates: [-86.2710, 12.1565] }
+    },
+    {
+      type: 'Feature',
+      properties: { type: 'landmark', name: 'Puerto Salvador Allende' },
+      geometry: { type: 'Point', coordinates: [-86.2790, 12.1640] }
+    },
     // --- CIUDADES PRINCIPALES ---
     {
       type: 'Feature',
@@ -639,11 +784,25 @@ export function MapViewInner({
 
           if (type === 'driver') {
             el.innerHTML = `
-              <div style="position: relative; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.25); border-radius: 50%; border: 2px solid #f59e0b; box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);">
-                <div id="driver-compass" style="width: 20px; height: 20px; transform: rotate(${bearing}deg); transition: transform 0.25s ease-out; display: flex; align-items: center; justify-content: center;">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="#f59e0b" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 22l10-6 10 6L12 2z"/>
-                  </svg>
+              <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+                <!-- Glowing radar halo representing telemetry pulse -->
+                <div style="position: absolute; width: 34px; height: 34px; border-radius: 50%; background: rgba(20, 184, 166, 0.15); border: 1.5px solid rgba(20, 184, 166, 0.3); animation: dest-pulse 2s infinite;"></div>
+                
+                <div id="driver-compass" style="width: 40px; height: 40px; transform: rotate(${bearing}deg); transition: transform 0.25s ease-out; display: flex; align-items: center; justify-content: center; position: relative;">
+                  <!-- Dynamic Headlight Beam (triangular headlight glow) -->
+                  <div style="position: absolute; bottom: 20px; width: 55px; height: 75px; background: linear-gradient(to top, rgba(20, 184, 166, 0) 10%, rgba(20, 184, 166, 0.4) 100%); clip-path: polygon(50% 100%, 0 0, 100% 0); transform-origin: bottom center; filter: blur(1.5px); pointer-events: none; opacity: 0.85; z-index: 1;"></div>
+                  
+                  <!-- Motorcycle premium circle SVG element -->
+                  <div style="width: 30px; height: 30px; background: #0b0f19; border-radius: 50%; border: 2px solid #14b8a6; box-shadow: 0 4px 10px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 10;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#14b8a6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="5.5" cy="17.5" r="2.5" fill="#14b8a6" fill-opacity="0.25"/>
+                      <circle cx="18.5" cy="17.5" r="2.5" fill="#14b8a6" fill-opacity="0.25"/>
+                      <path d="M5.5 17.5H10l1.5-4.5H16l1.5 4.5h1" />
+                      <path d="M15 8h2.5l1.5 3.5" />
+                      <path d="M10 8h2l1.5 5" />
+                      <circle cx="16" cy="7" r="1" fill="#14b8a6" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             `;
@@ -676,11 +835,20 @@ export function MapViewInner({
           return el;
         };
 
+        // Resolve snap to route for driver marker to align exactly with path
+        let finalLat = marker.lat;
+        let finalLng = marker.lng;
+        if (marker.type === 'driver' && routeCoordsRef.current.length >= 2) {
+          const snapped = snapToRoute(marker.lat, marker.lng, routeCoordsRef.current, 50);
+          finalLat = snapped.lat;
+          finalLng = snapped.lng;
+        }
+
         if (existingMarker) {
           // Smooth location interpolation & dynamic camera tracking
           const startCoords = existingMarker.getLngLat();
-          const targetLng = marker.lng;
-          const targetLat = marker.lat;
+          const targetLng = finalLng;
+          const targetLat = finalLat;
 
           if (startCoords.lng !== targetLng || startCoords.lat !== targetLat) {
             // Update driver bearing dynamically on movement
@@ -726,9 +894,12 @@ export function MapViewInner({
                   }
                 });
               }
-            }
 
-            existingMarker.setLngLat([targetLng, targetLat]);
+              // Smoothly animate the position to prevent jumping
+              animateMarker(existingMarker, { lng: startCoords.lng, lat: startCoords.lat }, { lng: targetLng, lat: targetLat }, 1400);
+            } else {
+              existingMarker.setLngLat([targetLng, targetLat]);
+            }
           }
         } else {
           // Add brand new marker
@@ -736,7 +907,7 @@ export function MapViewInner({
           const el = createDOMElement(type, type === 'driver' ? driverBearing : 0);
           
           const glMarker = new maplibregl.Marker({ element: el })
-            .setLngLat([marker.lng, marker.lat])
+            .setLngLat([finalLng, finalLat])
             .addTo(map);
 
           if (marker.label) {

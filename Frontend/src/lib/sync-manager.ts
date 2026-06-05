@@ -102,11 +102,9 @@ class SyncManager {
       } catch (error: any) {
         console.error(`OASIS: Sync failed for sale ID ${sale.id}:`, error);
 
-        // Check if the error is due to bad request or validation (which would fail on retry)
-        // rather than network disconnect
+        const status = error.status || error.response?.status;
         const isClientOrStockError = 
-          error.status === 400 || 
-          error.response?.status === 400 ||
+          (status >= 400 && status < 500) ||
           error.message?.includes('INSUFFICIENT') ||
           error.response?.data?.error?.code?.includes('STOCK') ||
           error.response?.data?.error?.code?.includes('VALIDATION');

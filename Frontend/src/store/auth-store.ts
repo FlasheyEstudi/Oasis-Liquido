@@ -8,6 +8,38 @@ import type { User, AppPage, UserRole } from '@/types';
 import { setAccessToken, getAccessToken, clearAuthTokens } from '@/api/client';
 import { getMe, refreshToken, logout as apiLogout } from '@/api/auth';
 
+// Safe localStorage wrapper to prevent crashing on quota limits or private browsing mode
+function safeLocalStorageSet(key: string, value: string) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch (e) {
+    console.warn(`LocalStorage write failed for key "${key}":`, e);
+  }
+}
+
+function safeLocalStorageGet(key: string): string | null {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+  } catch (e) {
+    console.warn(`LocalStorage read failed for key "${key}":`, e);
+  }
+  return null;
+}
+
+function safeLocalStorageRemove(key: string) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  } catch (e) {
+    console.warn(`LocalStorage remove failed for key "${key}":`, e);
+  }
+}
+
 interface AuthState {
   // Estado
   user: User | null;
@@ -99,10 +131,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
     
     clearAuthTokens();
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('oasis_selected_item_id');
-      localStorage.removeItem('oasis_prescription_id');
-    }
+    safeLocalStorageRemove('oasis_selected_item_id');
+    safeLocalStorageRemove('oasis_prescription_id');
     set({
       user: null,
       isAuthenticated: false,
@@ -121,35 +151,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setLoading: (isLoading) => set({ isLoading }),
 
   navigate: (currentPage, selectedItemId = null) => {
-    if (typeof window !== 'undefined') {
-      if (selectedItemId) {
-        localStorage.setItem('oasis_selected_item_id', selectedItemId);
-      } else {
-        const isDetailPage = [
-          'prescription-detail', 'detalle-receta',
-          'delivery-request', 'solicitud-envio',
-          'delivery-detail', 'detalle-envio',
-          'appointment-detail', 'detalle-cita',
-          'consultation', 'consulta'
-        ].includes(currentPage);
-        if (!isDetailPage) {
-          localStorage.removeItem('oasis_selected_item_id');
-        }
+    if (selectedItemId) {
+      safeLocalStorageSet('oasis_selected_item_id', selectedItemId);
+    } else {
+      const isDetailPage = [
+        'prescription-detail', 'detalle-receta',
+        'delivery-request', 'solicitud-envio',
+        'delivery-detail', 'detalle-envio',
+        'appointment-detail', 'detalle-cita',
+        'consultation', 'consulta'
+      ].includes(currentPage);
+      if (!isDetailPage) {
+        safeLocalStorageRemove('oasis_selected_item_id');
       }
     }
     set({ 
       currentPage, 
-      selectedItemId: selectedItemId || (typeof window !== 'undefined' ? localStorage.getItem('oasis_selected_item_id') : null) 
+      selectedItemId: selectedItemId || safeLocalStorageGet('oasis_selected_item_id') 
     });
   },
 
   setPrescriptionId: (prescriptionId) => {
-    if (typeof window !== 'undefined') {
-      if (prescriptionId) {
-        localStorage.setItem('oasis_prescription_id', prescriptionId);
-      } else {
-        localStorage.removeItem('oasis_prescription_id');
-      }
+    if (prescriptionId) {
+      safeLocalStorageSet('oasis_prescription_id', prescriptionId);
+    } else {
+      safeLocalStorageRemove('oasis_prescription_id');
     }
     set({ prescriptionId });
   },
@@ -235,8 +261,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const normalized = normalizeUser(user);
       const homePage = getHomeForRole(normalized?.role || user.role);
       
-      const savedItemId = localStorage.getItem('oasis_selected_item_id');
-      const savedPrescriptionId = localStorage.getItem('oasis_prescription_id');
+      const savedItemId = safeLocalStorageGet('oasis_selected_item_id');
+      const savedPrescriptionId = safeLocalStorageGet('oasis_prescription_id');
       
       set({
         user: normalized,

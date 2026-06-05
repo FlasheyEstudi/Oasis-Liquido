@@ -26,6 +26,11 @@ export async function GET(
             include: {
               doctor: true,
             }
+          },
+          deliveryOrder: {
+            include: {
+              deliveryDriver: true
+            }
           }
         },
       });
@@ -50,6 +55,12 @@ export async function GET(
           doctor: sale.prescription.doctor.name,
           clinic: sale.prescription.clinic.name,
           date: sale.prescription.issuedAt
+        } : null,
+        deliveryOrder: sale.deliveryOrder ? {
+          status: sale.deliveryOrder.status,
+          driverName: sale.deliveryOrder.deliveryDriver?.name || 'Asignando repartidor',
+          deliveredAt: sale.deliveryOrder.deliveredAt,
+          address: sale.deliveryOrder.deliveryAddress
         } : null
       };
 

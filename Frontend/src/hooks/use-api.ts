@@ -1181,5 +1181,26 @@ export function useReconciliationHistory(entityId: string, type: 'clinics' | 'ph
   });
 }
 
+/** Hook for listing all pending verification documents (admin) */
+export function usePendingDocuments(enabled = true) {
+  return useQuery({
+    queryKey: ['admin', 'pending-documents'],
+    queryFn: () => adminApi.getPendingDocuments(),
+    enabled,
+  });
+}
+
+/** Hook for verifying verification documents (admin) */
+export function useVerifyDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ type, docId, data }: { type: string; docId: string; data: { status: string; rejectionReason?: string } }) =>
+      adminApi.verifyDocument(type, docId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'pending-documents'] });
+    },
+  });
+}
+
 
 

@@ -1,0 +1,92 @@
+name: Oasis Líquida CI/CD Quality Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quality-gate:
+    name: Lint, Test & Security Scan
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: oasis_test
+          POSTGRES_PASSWORD: oasis_password
+          POSTGRES_DB: oasis_db_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://oasis_test:oasis_password@localhost:5432/oasis_db_test
+      JWT_SECRET: test_jwt_secret_oasis_liquida_2026_super_secure
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd Backend
+          npm ci
+
+      - name: Run Prisma Setup
+        run: |
+          cd Backend
+          npx prisma db push --skip-generate
+          npx prisma generate
+
+      - name: Run Backend Unit & Integration Tests
+        run: |
+          cd Backend
+          npx vitest run
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd Frontend
+          npm ci
+
+      - name: Install Playwright Browsers
+        run: |
+          cd Frontend
+          npx playwright install --with-deps
+
+      - name: Build and Spinup Services
+        run: |
+          cd Backend
+          npm run build
+          npm run start &
+          cd ../Frontend
+          cp .env.local.example .env.local
+          npm run build
+          npm run dev &
+          sleep 10
+
+      - name: Run Playwright E2E & Accessibility Tests
+        run: |
+          cd Frontend
+          npx playwright test
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            Frontend/playwright-report/
+            Backend/coverage/
