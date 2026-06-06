@@ -371,6 +371,7 @@ export interface DeliveryOrder {
   patient?: User;
   driver?: User;
   items?: DeliveryOrderItem[];
+  sale?: any;
 }
 
 export interface DeliveryOrderItem {

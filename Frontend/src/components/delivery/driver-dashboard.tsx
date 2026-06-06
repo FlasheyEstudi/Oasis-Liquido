@@ -31,7 +31,10 @@ import {
   Loader2,
   DollarSign,
   TrendingUp,
-  Award
+  Award,
+  Eye,
+  Download,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '@/api/client';
@@ -210,6 +213,59 @@ export function DriverDashboard() {
     }
   };
 
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownloadInvoice = async (order: any) => {
+    const saleId = order.sale?.id || order.saleId;
+    if (!saleId) {
+      toast.error('No hay venta asociada a esta entrega');
+      return;
+    }
+    setDownloadingId(order.id);
+    try {
+      const response = await apiClient.get(`/sales/${saleId}/receipt`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `factura-${order.id.slice(-6)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Factura descargada correctamente');
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al descargar la factura');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleViewInvoice = async (order: any) => {
+    const saleId = order.sale?.id || order.saleId;
+    if (!saleId) {
+      toast.error('No hay venta asociada a esta entrega');
+      return;
+    }
+    setDownloadingId(order.id);
+    try {
+      const response = await apiClient.get(`/sales/${saleId}/receipt`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al visualizar la factura');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   if (ordersLoading || statsLoading) {
     return (
       <div className="delivery-container space-y-6 !max-w-2xl mt-4">
@@ -377,6 +433,41 @@ export function DriverDashboard() {
                         Completado
                       </span>
                     </div>
+                  </div>
+                  
+                  {/* Action Buttons for Invoice */}
+                  <div className="flex gap-4 mt-4 pt-3 border-t border-dashed border-slate-200/50 dark:border-white/5 flex-wrap sm:flex-nowrap">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewInvoice(order);
+                      }}
+                      disabled={downloadingId === order.id}
+                      className="text-[10px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 flex items-center gap-1.5 cursor-pointer bg-transparent border-none p-0 disabled:opacity-50"
+                    >
+                      {downloadingId === order.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Eye className="size-3.5" />
+                      )}
+                      Ver Factura
+                    </button>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownloadInvoice(order);
+                      }}
+                      disabled={downloadingId === order.id}
+                      className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 flex items-center gap-1.5 cursor-pointer bg-transparent border-none p-0 disabled:opacity-50"
+                    >
+                      {downloadingId === order.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Download className="size-3.5" />
+                      )}
+                      Descargar PDF
+                    </button>
                   </div>
                 </GlassCard>
               </motion.div>

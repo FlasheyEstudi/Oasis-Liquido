@@ -40,7 +40,11 @@ import {
   CheckCircle2,
   HeartPulse,
   Sparkles,
+  Eye,
+  Download,
+  Loader2
 } from 'lucide-react';
+import apiClient from '@/api/client';
 
 const DELIVERY_STEPS: { status: DeliveryStatus; label: string; description: string }[] = [
   { status: 'pending', label: 'Pendiente', description: 'Pedido recibido' },
@@ -389,6 +393,58 @@ export function OrderTracking() {
   const { navigate } = useAuthStore();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [reviewOrder, setReviewOrder] = useState<DeliveryOrder | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownloadInvoice = async (order: any) => {
+    const saleId = order.sale?.id || order.saleId;
+    if (!saleId) {
+      toast.error('No hay venta asociada a esta entrega');
+      return;
+    }
+    setDownloadingId(order.id);
+    try {
+      const response = await apiClient.get(`/sales/${saleId}/receipt`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `factura-${order.id.slice(-6)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Factura descargada correctamente');
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al descargar la factura');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleViewInvoice = async (order: any) => {
+    const saleId = order.sale?.id || order.saleId;
+    if (!saleId) {
+      toast.error('No hay venta asociada a esta entrega');
+      return;
+    }
+    setDownloadingId(order.id);
+    try {
+      const response = await apiClient.get(`/sales/${saleId}/receipt`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al visualizar la factura');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const ordersQuery = useDeliveryOrders({});
   const createReviewMutation = useCreateReview();
@@ -605,13 +661,47 @@ export function OrderTracking() {
                         )}
                         
                         {order.status === 'delivered' && (
-                          <Button
-                            size="sm"
-                            className="w-full rounded-full bg-teal-500/10 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 border border-teal-500/20 font-black h-10 transition-colors uppercase tracking-widest text-[9px]"
-                            onClick={() => setReviewOrder(order)}
-                          >
-                            Calificar Reparto Bioseguro
-                          </Button>
+                          <div className="space-y-2">
+                            <Button
+                              size="sm"
+                              className="w-full rounded-full bg-teal-500/10 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 border border-teal-500/20 font-black h-10 transition-colors uppercase tracking-widest text-[9px]"
+                              onClick={() => setReviewOrder(order)}
+                            >
+                              Calificar Reparto Bioseguro
+                            </Button>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={downloadingId === order.id}
+                                className="rounded-full border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 font-black h-10 transition-colors uppercase tracking-widest text-[9px] flex items-center justify-center gap-1.5"
+                                onClick={() => handleViewInvoice(order)}
+                              >
+                                {downloadingId === order.id ? (
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                ) : (
+                                  <Eye className="size-3.5" />
+                                )}
+                                Ver Factura
+                              </Button>
+
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={downloadingId === order.id}
+                                className="rounded-full border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 font-black h-10 transition-colors uppercase tracking-widest text-[9px] flex items-center justify-center gap-1.5"
+                                onClick={() => handleDownloadInvoice(order)}
+                              >
+                                {downloadingId === order.id ? (
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                ) : (
+                                  <Download className="size-3.5" />
+                                )}
+                                Descargar PDF
+                              </Button>
+                            </div>
+                          </div>
                         )}
                         
                         {order.delivered_at && (
