@@ -5,6 +5,7 @@ import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM } from '@/utils/constants';
 import { cn } from '@/lib/utils';
 import { MapPin, Loader2 } from 'lucide-react';
 import type { MapMarker, MapViewProps } from './map-view';
+import { getMapStyle } from '@/lib/map/tile-providers';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -183,9 +184,19 @@ function animateMarker(marker: any, fromLngLat: { lng: number; lat: number }, to
 
 // Safe check for source to avoid "this.style is undefined" MapLibre crash
 function safeGetSource(map: any, id: string) {
-  if (!map || !map.style || !map.isStyleLoaded()) return null;
+  if (!map || !map.style) return null;
   try {
     return map.getSource(id);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Safe check for layer to avoid crashes
+function safeGetLayer(map: any, id: string) {
+  if (!map || !map.style) return null;
+  try {
+    return map.getLayer(id);
   } catch (e) {
     return null;
   }
@@ -472,6 +483,7 @@ export function MapViewInner({
   isNavigating = false,
   route = null,
   onMarkerClick,
+  onMapLoad,
   className,
   theme = 'light',
 }: MapViewProps) {
@@ -544,13 +556,11 @@ export function MapViewInner({
     let mapInstance: any = null;
 
     loadMapLibre()
-      .then((maplibregl) => {
+      .then(async (maplibregl) => {
         if (!mapContainer.current) return;
 
-        // CARTO Vector Styles with CORS support
-        const styleUrl = document.documentElement.classList.contains('dark')
-          ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-          : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+        const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        const styleUrl = await getMapStyle(currentTheme);
 
         mapInstance = new maplibregl.Map({
           container: mapContainer.current,
@@ -571,6 +581,9 @@ export function MapViewInner({
         mapInstance.on('load', () => {
           setMapLoaded(true);
           mapRef.current = mapInstance;
+          if (onMapLoad) {
+            onMapLoad(mapInstance);
+          }
 
           // 1. Add 3D Extruded Buildings Layer dynamically
           const layers = mapInstance.getStyle().layers;
@@ -607,80 +620,88 @@ export function MapViewInner({
           }
 
           // 2. Add Nicaragua Detailed Pedestrian and POI layers (OSM Enrichment)
-          mapInstance.addSource('nicaragua-detail', {
-            type: 'geojson',
-            data: NICARAGUA_DETAIL_GEOJSON
-          });
+          if (!safeGetSource(mapInstance, 'nicaragua-detail')) {
+            mapInstance.addSource('nicaragua-detail', {
+              type: 'geojson',
+              data: NICARAGUA_DETAIL_GEOJSON
+            });
+          }
 
-          // Pedestrian Paths (Andenes)
-          mapInstance.addLayer({
-            id: 'nicaragua-paths-layer',
-            type: 'line',
-            source: 'nicaragua-detail',
-            filter: ['==', ['get', 'type'], 'path'],
-            paint: {
-              'line-color': '#10b981', // green emerald
-              'line-width': 3,
-              'line-dasharray': [2, 2],
-              'line-opacity': 0.8
-            }
-          });
+          if (!safeGetLayer(mapInstance, 'nicaragua-paths-layer') && safeGetSource(mapInstance, 'nicaragua-detail')) {
+            // Pedestrian Paths (Andenes)
+            mapInstance.addLayer({
+              id: 'nicaragua-paths-layer',
+              type: 'line',
+              source: 'nicaragua-detail',
+              filter: ['==', ['get', 'type'], 'path'],
+              paint: {
+                'line-color': '#10b981', // green emerald
+                'line-width': 3,
+                'line-dasharray': [2, 2],
+                'line-opacity': 0.8
+              }
+            });
+          }
 
-          // Detailed clinics/pharmacies/markets circles
-          mapInstance.addLayer({
-            id: 'nicaragua-pois-layer',
-            type: 'circle',
-            source: 'nicaragua-detail',
-            filter: ['!=', ['get', 'type'], 'path'],
-            paint: {
-              'circle-radius': [
-                'match',
-                ['get', 'type'],
-                'city', 8,
-                'neighborhood', 5,
-                6
-              ],
-              'circle-color': [
-                'match',
-                ['get', 'type'],
-                'clinic', '#10b981',
-                'pharmacy', '#0d9488',
-                'market', '#f59e0b',
-                'city', '#3b82f6',
-                'neighborhood', '#8b5cf6',
-                'landmark', '#ec4899',
-                '#6b7280'
-              ],
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#ffffff'
-            }
-          });
+          if (!safeGetLayer(mapInstance, 'nicaragua-pois-layer') && safeGetSource(mapInstance, 'nicaragua-detail')) {
+            // Detailed clinics/pharmacies/markets circles
+            mapInstance.addLayer({
+              id: 'nicaragua-pois-layer',
+              type: 'circle',
+              source: 'nicaragua-detail',
+              filter: ['!=', ['get', 'type'], 'path'],
+              paint: {
+                'circle-radius': [
+                  'match',
+                  ['get', 'type'],
+                  'city', 8,
+                  'neighborhood', 5,
+                  6
+                ],
+                'circle-color': [
+                  'match',
+                  ['get', 'type'],
+                  'clinic', '#10b981',
+                  'pharmacy', '#0d9488',
+                  'market', '#f59e0b',
+                  'city', '#3b82f6',
+                  'neighborhood', '#8b5cf6',
+                  'landmark', '#ec4899',
+                  '#6b7280'
+                ],
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#ffffff'
+              }
+            });
+          }
 
-          // Text labels for POIs
-          mapInstance.addLayer({
-            id: 'nicaragua-labels-layer',
-            type: 'symbol',
-            source: 'nicaragua-detail',
-            filter: ['!=', ['get', 'type'], 'path'],
-            layout: {
-              'text-field': ['get', 'name'],
-              'text-size': [
-                'match',
-                ['get', 'type'],
-                'city', 12,
-                'neighborhood', 10,
-                9
-              ],
-              'text-offset': [0, 1.3],
-              'text-anchor': 'top',
-              'text-font': ['Noto Sans Regular']
-            },
-            paint: {
-              'text-color': document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#1f2937',
-              'text-halo-color': document.documentElement.classList.contains('dark') ? '#09090b' : '#ffffff',
-              'text-halo-width': 1.5
-            }
-          });
+          if (!safeGetLayer(mapInstance, 'nicaragua-labels-layer') && safeGetSource(mapInstance, 'nicaragua-detail')) {
+            // Text labels for POIs
+            mapInstance.addLayer({
+              id: 'nicaragua-labels-layer',
+              type: 'symbol',
+              source: 'nicaragua-detail',
+              filter: ['!=', ['get', 'type'], 'path'],
+              layout: {
+                'text-field': ['get', 'name'],
+                'text-size': [
+                  'match',
+                  ['get', 'type'],
+                  'city', 12,
+                  'neighborhood', 10,
+                  9
+                ],
+                'text-offset': [0, 1.3],
+                'text-anchor': 'top',
+                'text-font': ['Noto Sans Regular']
+              },
+              paint: {
+                'text-color': document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#1f2937',
+                'text-halo-color': document.documentElement.classList.contains('dark') ? '#09090b' : '#ffffff',
+                'text-halo-width': 1.5
+              }
+            });
+          }
         });
       })
       .catch((err) => {
@@ -710,14 +731,19 @@ export function MapViewInner({
   // Update theme style dynamically
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
-    const styleUrl = isDarkMode
-      ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-      : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
-    try {
-      mapRef.current.setStyle(styleUrl);
-    } catch (e) {
-      console.warn('Failed to switch style dynamically:', e);
-    }
+    
+    const updateStyle = async () => {
+      const styleUrl = await getMapStyle(isDarkMode ? 'dark' : 'light');
+      try {
+        if (mapRef.current) {
+          mapRef.current.setStyle(styleUrl);
+        }
+      } catch (e) {
+        console.warn('Failed to switch style dynamically:', e);
+      }
+    };
+    
+    updateStyle();
   }, [isDarkMode, mapLoaded]);
 
   // Handle Markers addition and smooth interpolation
@@ -987,7 +1013,11 @@ export function MapViewInner({
             }
           }
         });
+      }
 
+      // Safe update or addition of layer
+      const routeLayer = safeGetLayer(map, 'route-layer');
+      if (!routeLayer && safeGetSource(map, 'route')) {
         // Add thick premium blue route line (grosor 5)
         map.addLayer({
           id: 'route-layer',

@@ -1,0 +1,76 @@
+import fetch from 'node-fetch';
+import { RouteResponse, calculateHaversineFallback } from './osrm';
+
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
+export async function selectBestRoute(
+  start: LatLng,
+  end: LatLng,
+  waypoints: LatLng[] = []
+): Promise<RouteResponse> {
+  const localUrl = process.env.OSRM_BASE_URL || 'http://osrm:5000';
+  const fallbackUrlsStr = process.env.OSRM_FALLBACK_URLS || 'https://routing.openstreetmap.de/routed-car,https://router.project-osrm.org';
+  const servers = [
+    localUrl,
+    ...fallbackUrlsStr.split(',').map(s => s.trim()).filter(Boolean)
+  ];
+
+  const coords = [start, ...waypoints, end].map(p => `${p.lng},${p.lat}`).join(';');
+  const path = `/route/v1/driving/${coords}?overview=full&geometries=geojson&alternatives=3&steps=true&annotations=true`;
+
+  let responseData: any = null;
+
+  for (const server of servers) {
+    try {
+      console.log(`📡 [Route Selector] Querying OSRM server: ${server}`);
+      const res = await fetch(`${server}${path}`, { signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const data = await res.json() as any;
+        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+          responseData = data;
+          break;
+        }
+      }
+    } catch (err: any) {
+      console.warn(`⚠️ [Route Selector] Query to ${server} failed:`, err.message || err);
+    }
+  }
+
+  if (!responseData || !responseData.routes || responseData.routes.length === 0) {
+    console.warn('⚠️ [Route Selector] All OSRM routing attempts failed, falling back to Haversine.');
+    return calculateHaversineFallback(start.lat, start.lng, end.lat, end.lng);
+  }
+
+  // Scoring: prioritize faster duration (lower duration seconds)
+  // adding a small penalty for longer distances to select the most efficient route.
+  const scoredRoutes = responseData.routes.map((r: any) => {
+    const score = r.duration + r.distance * 0.005; // 1 second of duration is equivalent to 200m of distance
+    return { route: r, score };
+  });
+
+  // Sort by lowest score
+  scoredRoutes.sort((a: any, b: any) => a.score - b.score);
+  const best = scoredRoutes[0].route;
+
+  // Map GeoJSON coordinates [lng, lat] to { lat, lng } objects
+  const routeCoords = best.geometry.coordinates.map((coord: [number, number]) => ({
+    lat: coord[1],
+    lng: coord[0]
+  }));
+
+  const distanceMeters = best.distance;
+  const durationSeconds = best.duration;
+
+  return {
+    route: routeCoords,
+    distanceKm: distanceMeters / 1000,
+    durationMinutes: Math.round(durationSeconds / 60),
+    durationText: `${Math.round(durationSeconds / 60)} min`,
+    distance_meters: distanceMeters,
+    duration_seconds: durationSeconds,
+    geometry: best.geometry // Store the GeoJSON geometry or raw geometry if needed
+  };
+}

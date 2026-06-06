@@ -1,5 +1,6 @@
 import { Server as SocketServer } from 'socket.io';
 import { Server as HTTPServer } from 'http';
+import { db } from './db';
 
 let io: SocketServer;
 
@@ -28,6 +29,54 @@ export function initSocket(server: HTTPServer) {
     socket.on('join:user', (userId: string) => {
       socket.join(`user:${userId}`);
       console.log(`👤 User joined personal room: ${userId}`);
+    });
+
+    socket.on('driver-location', async (data: { orderId: string; points: { lat: number; lng: number; timestamp: number }[] }) => {
+      try {
+        const { orderId, points } = data;
+        if (!orderId || !points || points.length === 0) return;
+
+        const lastPoint = points[points.length - 1];
+
+        // Broadcast the latest coordinate immediately to the order room (low latency update)
+        io.to(`order:${orderId}`).emit('delivery:locationUpdate', {
+          orderId,
+          lat: lastPoint.lat,
+          lng: lastPoint.lng
+        });
+
+        // Async batch write to database
+        db.deliveryRoute.createMany({
+          data: points.map(pt => ({
+            deliveryOrderId: orderId,
+            driverLat: pt.lat,
+            driverLng: pt.lng,
+            createdAt: new Date(pt.timestamp)
+          }))
+        }).catch(err => {
+          console.error('Error batch saving delivery routes:', err);
+        });
+
+        // Update driver's current position using the deliveryOrder relationship
+        db.deliveryOrder.findUnique({
+          where: { id: orderId },
+          select: { deliveryDriverId: true }
+        }).then(order => {
+          if (order && order.deliveryDriverId) {
+            db.deliveryDriverProfile.update({
+              where: { userId: order.deliveryDriverId },
+              data: { currentLat: lastPoint.lat, currentLng: lastPoint.lng }
+            }).catch(err => {
+              console.error('Error updating driver profile location:', err);
+            });
+          }
+        }).catch(err => {
+          console.error('Error finding order for driver location update:', err);
+        });
+
+      } catch (err: any) {
+        console.warn('⚠️ Error processing driver-location event:', err.message);
+      }
     });
 
     socket.on('disconnect', () => {

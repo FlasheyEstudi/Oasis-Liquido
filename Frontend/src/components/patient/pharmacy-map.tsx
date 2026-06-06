@@ -105,12 +105,6 @@ export function PharmacyMap() {
     }
   }, [userLoc.loading, userLoc.lat, userLoc.lng, hasCenteredOnUser]);
 
-  // Fetch nearby Oasis database places whenever mapCenter, toggles, or selected medicines change
-  const serializedMedicineIds = JSON.stringify(medicineIds);
-  useEffect(() => {
-    fetchNearbyPlaces(mapCenter[0], mapCenter[1]);
-  }, [mapCenter[0], mapCenter[1], showNearbyClinics, serializedMedicineIds]);
-
   const fetchNearbyPlaces = async (lat: number, lng: number) => {
     setIsSearchingNearby(true);
     try {
@@ -125,6 +119,12 @@ export function PharmacyMap() {
       setIsSearchingNearby(false);
     }
   };
+
+  // Fetch nearby Oasis database places whenever mapCenter, toggles, or selected medicines change
+  const serializedMedicineIds = JSON.stringify(medicineIds);
+  useEffect(() => {
+    fetchNearbyPlaces(mapCenter[0], mapCenter[1]);
+  }, [mapCenter[0], mapCenter[1], showNearbyClinics, serializedMedicineIds]);
 
   const handleSearchSelect = (lat: number, lng: number) => {
     setMapCenter([lat, lng]);

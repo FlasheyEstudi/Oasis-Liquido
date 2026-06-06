@@ -1,5 +1,6 @@
 import { list as listPharmacies } from '@/api/pharmacies';
 import { list as listClinics } from '@/api/clinics';
+import { get } from '@/api/client';
 
 export interface OSMSearchResult {
   place_id: any;
@@ -90,36 +91,21 @@ export async function searchNearbyClinics(
 export async function searchPlaceByName(query: string): Promise<OSMSearchResult[]> {
   if (!query || query.trim().length < 3) return [];
 
-  // Limit to Nicaragua bounds or include Nicaragua in search to focus results
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-    query
-  )}&format=json&limit=8&countrycodes=ni&addressdetails=1`;
-
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'OasisNicaragua/1.0 (contact: support@oasisnicaragua.org)',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Nominatim error: ${response.statusText}`);
+    const response = await get<{ results: any[] }>('/geo/search', { q: query });
+    if (!response.success || !response.data?.results) {
+      return [];
     }
 
-    const data = await response.json();
-    return data.map((item: any) => ({
-      place_id: parseInt(item.place_id, 10) || Math.random(),
-      lat: parseFloat(item.lat),
-      lng: parseFloat(item.lon),
+    return response.data.results.map((item: any) => ({
+      place_id: Math.random(),
+      lat: item.lat,
+      lng: item.lng,
       display_name: item.display_name,
-      type: item.type || item.class,
-      importance: item.importance,
+      type: item.type,
       address: {
-        pharmacy: item.address?.pharmacy || item.address?.amenity,
-        road: item.address?.road || item.address?.suburb,
-        city: item.address?.city || item.address?.town || item.address?.village,
-        state: item.address?.state,
-        country: item.address?.country,
+        road: item.display_name.split(',')[0] || '',
+        city: 'Nicaragua',
       },
     }));
   } catch (error) {
@@ -132,21 +118,12 @@ export async function searchPlaceByName(query: string): Promise<OSMSearchResult[
  * Performs reverse geocoding to retrieve a human-readable address for a given lat/lng.
  */
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
-
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'OasisNicaragua/1.0 (contact: support@oasisnicaragua.org)',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Nominatim reverse error: ${response.statusText}`);
+    const response = await get<{ address: string }>('/geo/reverse', { lat, lng });
+    if (!response.success || !response.data?.address) {
+      return 'Ubicación actual';
     }
-
-    const data = await response.json();
-    return data.display_name || 'Ubicación desconocida';
+    return response.data.address;
   } catch (error) {
     console.error('Error reverse geocoding coordinates:', error);
     return 'Ubicación actual';

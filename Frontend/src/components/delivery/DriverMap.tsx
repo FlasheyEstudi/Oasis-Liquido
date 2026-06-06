@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { MapView } from '@/components/common/map-view';
 import type { MapMarker } from '@/components/common/map-view';
-import { updateLocation, getRoute } from '@/api/deliveries';
+import { getRoute } from '@/api/deliveries';
 import { DEFAULT_LAT, DEFAULT_LNG } from '@/utils/constants';
 import { Button } from '@/components/ui/button';
 import { Navigation, Play, Square, MapPin, Compass } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDriverLocationStream } from '@/hooks/useDriverLocationStream';
 
 interface DriverMapProps {
   order: any;
@@ -15,12 +16,10 @@ interface DriverMapProps {
 }
 
 export function DriverMap({ order, height = '320px' }: DriverMapProps) {
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [route, setRoute] = useState<any>(null);
+  const [mapInstance, setMapInstance] = useState<any>(null);
   
-  const watchIdRef = useRef<number | null>(null);
-
   // Determine stage and destination
   const stage = order.status === 'assigned' ? 'to_pharmacy' : 'to_patient';
   
@@ -31,6 +30,9 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
   const destLng = stage === 'to_pharmacy' 
     ? (order.pickup_lng ?? order.pickupLng) 
     : (order.delivery_lng ?? order.deliveryLng);
+
+  // Hook up the live location streaming with snap to road feature
+  const { currentLocation } = useDriverLocationStream(order.id, isNavigating, mapInstance);
 
   // Fetch the street route dynamically when position or destination changes
   useEffect(() => {
@@ -58,7 +60,7 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
     fetchRoute();
   }, [order.id, currentLocation, stage]);
 
-  // Start watching GPS position and transmitting updates to backend every 5 seconds
+  // Start watching GPS position and transmitting updates to backend
   const startNavigation = () => {
     if (!navigator.geolocation) {
       toast.error('Tu navegador no soporta geolocalización');
@@ -82,40 +84,12 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
 
     setIsNavigating(true);
     toast.success('Navegación iniciada. Transmitiendo ubicación...');
-
-    // 1. Live position tracking
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setCurrentLocation({ lat: latitude, lng: longitude });
-      },
-      (err) => {
-        console.warn('Geolocation error:', err);
-        // Simulate coordinates if GPS is unavailable in dev local environment
-        if (!currentLocation) {
-          setCurrentLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
   };
 
   const stopNavigation = () => {
     setIsNavigating(false);
     toast.info('Navegación pausada');
-
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
   };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
-    };
-  }, []);
 
   // Build map markers
   const markers = useMemo(() => {
@@ -182,6 +156,7 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
           isNavigating={isNavigating}
           route={route ? { geometry: route.geometry } : null}
           className="rounded-[2.5rem] md:rounded-[3rem] border-0"
+          onMapLoad={setMapInstance}
         />
       </div>
 
@@ -198,7 +173,7 @@ export function DriverMap({ order, height = '320px' }: DriverMapProps) {
         {/* Route Metadata floating in the top-right overlay */}
         {route && (
           <div className="rounded-2xl bg-white/90 dark:bg-zinc-950/90 border border-slate-200/50 dark:border-white/10 px-3 py-2 shadow-xl backdrop-blur-md flex flex-col gap-0.5 text-right max-w-[160px]">
-            <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest">Distancia / Tiempo</span>
+            <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-555 uppercase tracking-widest">Distancia / Tiempo</span>
             <span className="text-[11px] font-black text-slate-800 dark:text-white">{route.distanceKm?.toFixed(1) || '0.0'} km ({route.durationText || '15 min'})</span>
           </div>
         )}

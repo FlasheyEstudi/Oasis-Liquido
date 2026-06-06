@@ -9,6 +9,7 @@ import {
   Scissors,
   Loader2
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { GlassCard } from '@/components/oasis/glass-card';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/utils/helpers';
@@ -132,10 +133,11 @@ export function ReceiptModal({ isOpen, onClose, sale }: ReceiptModalProps) {
               <div className="mt-8 text-center">
                 <div className="inline-block p-2 bg-white rounded-xl border border-zinc-100 shadow-sm">
                    <div className="size-24 bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://oasis-aura.com/#verify-sale-${sale.id}`)}`} 
-                        alt="QR Code" 
-                        className="size-full object-contain"
+                      <QRCodeSVG 
+                        value={`https://oasis-aura.com/#verify-sale-${sale.id}`} 
+                        size={96}
+                        level="M"
+                        includeMargin={false}
                       />
                    </div>
                 </div>

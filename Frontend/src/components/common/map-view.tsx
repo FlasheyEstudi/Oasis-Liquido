@@ -22,6 +22,7 @@ export interface MapViewProps {
   isNavigating?: boolean;
   route?: { geometry?: string; origin?: string; destination?: string } | null;
   onMarkerClick?: (marker: MapMarker) => void;
+  onMapLoad?: (map: any) => void;
   className?: string;
   theme?: 'light' | 'dark';
 }

@@ -1,6 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
+
+const checkoutItemSchema = z.object({
+  medicine_id: z.string(),
+  quantity: z.number().int().positive(),
+  unit_price: z.number().nonnegative(),
+});
+
+const salePayloadSchema = z.object({
+  items: z.array(checkoutItemSchema).min(1),
+  prescription_id: z.string().optional(),
+  is_delivery: z.boolean(),
+  notes: z.string().optional(),
+  payments: z.array(z.object({
+    method: z.string(),
+    amount: z.number(),
+    transaction_id: z.string().optional(),
+  })).min(1),
+});
 import { 
   Search, 
   ShoppingCart, 
@@ -80,7 +99,6 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
       const handleOnline = () => {
         setIsOnline(true);
         toast.success('📶 Conexión restablecida. Sincronizando ventas...');
-        syncManager.syncPendingSales();
       };
       
       const handleOffline = () => {
@@ -151,31 +169,39 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
     const unitPrice = item.unitPrice || item.price || 0;
     const stock = item.quantity || item.stock || 0;
 
-    const existing = cart.find(i => i.id === medicineId);
-    if (existing) {
-      if (existing.quantity >= stock) {
-        toast.error('Stock máximo alcanzado');
-        return;
+    let stockReached = false;
+
+    setCart(prev => {
+      const existing = prev.find(i => i.id === medicineId);
+      if (existing) {
+        if (existing.quantity >= stock) {
+          stockReached = true;
+          return prev;
+        }
+        return prev.map(i => i.id === medicineId ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      setCart(cart.map(i => i.id === medicineId ? { ...i, quantity: i.quantity + 1 } : i));
-    } else {
-      setCart([...cart, { 
+      return [...prev, { 
         id: medicineId, 
         name: medicineName, 
         price: unitPrice, 
         quantity: 1, 
         stock: stock 
-      }]);
+      }];
+    });
+
+    if (stockReached) {
+      toast.error('Stock máximo alcanzado');
+    } else {
+      toast.success(`${medicineName} añadido`);
     }
-    toast.success(`${medicineName} añadido`);
   };
 
   const removeFromCart = (id: string) => {
-    setCart(cart.filter(i => i.id !== id));
+    setCart(prev => prev.filter(i => i.id !== id));
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setCart(cart.map(item => {
+    setCart(prev => prev.map(item => {
       if (item.id === id) {
         const newQty = Math.max(1, Math.min(item.stock, item.quantity + delta));
         return { ...item, quantity: newQty };
@@ -190,6 +216,18 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
     if (cart.length === 0) return;
     
     setIsProcessing(true);
+
+    // Revalidate stock levels before processing checkout
+    for (const cartItem of cart) {
+      const invItem = activeInventory.find(inv => (inv.medicineId || inv.medicine_id || inv.id) === cartItem.id);
+      const currentStock = invItem ? (invItem.quantity || invItem.stock || 0) : 0;
+      if (cartItem.quantity > currentStock) {
+        toast.error(`Stock insuficiente para ${cartItem.name}. Disponible: ${currentStock}`);
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     const salePayload = {
       items: cart.map((item) => ({ 
         medicine_id: item.id, 
@@ -201,6 +239,14 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
       notes: guestName ? `Cliente: ${guestName}` : undefined,
       payments: finalPayments,
     };
+
+    const validation = salePayloadSchema.safeParse(salePayload);
+    if (!validation.success) {
+      toast.error('Datos del carrito o pagos inválidos');
+      console.error('Validation Error:', validation.error);
+      setIsProcessing(false);
+      return;
+    }
 
     if (!isOnline) {
       try {
@@ -502,6 +548,15 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
               whileTap={{ scale: 0.98 }}
               disabled={cart.length === 0 || isProcessing}
               onClick={() => {
+                // Revalidate stock levels before opening checkout
+                for (const cartItem of cart) {
+                  const invItem = activeInventory.find(inv => (inv.medicineId || inv.medicine_id || inv.id) === cartItem.id);
+                  const currentStock = invItem ? (invItem.quantity || invItem.stock || 0) : 0;
+                  if (cartItem.quantity > currentStock) {
+                    toast.error(`Stock insuficiente para ${cartItem.name}. Disponible: ${currentStock}`);
+                    return;
+                  }
+                }
                 setPaymentsList([{ method: 'cash', amount: total }]);
                 setCheckoutModalOpen(true);
               }}

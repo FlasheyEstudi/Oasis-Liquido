@@ -13,7 +13,7 @@ export interface RouteResponse {
 /**
  * Decodes a Google encoded polyline format string into lat/lng coordinate objects.
  */
-function decodePolyline(encoded: string): { lat: number; lng: number }[] {
+export function decodePolyline(encoded: string): { lat: number; lng: number }[] {
   const points: { lat: number; lng: number }[] = [];
   let index = 0;
   let lat = 0;
@@ -54,7 +54,7 @@ function decodePolyline(encoded: string): { lat: number; lng: number }[] {
 /**
  * High-fidelity straight line fallback when all public OSRM servers are offline.
  */
-function calculateHaversineFallback(
+export function calculateHaversineFallback(
   startLat: number,
   startLng: number,
   endLat: number,
@@ -108,9 +108,11 @@ export async function calculateRealRoute(
 ): Promise<RouteResponse> {
   const path = `/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=polyline&steps=false`;
   
+  const localUrl = process.env.OSRM_BASE_URL || 'http://osrm:5000';
+  const fallbackUrlsStr = process.env.OSRM_FALLBACK_URLS || 'https://routing.openstreetmap.de/routed-car,https://router.project-osrm.org';
   const servers = [
-    `https://routing.openstreetmap.de/routed-car`,
-    `https://router.project-osrm.org`
+    localUrl,
+    ...fallbackUrlsStr.split(',').map(s => s.trim()).filter(Boolean)
   ];
   
   let responseData: any = null;
@@ -119,7 +121,7 @@ export async function calculateRealRoute(
   for (const server of servers) {
     try {
       console.log(`📡 [OSRM] Querying routing server: ${server}`);
-      const res = await fetch(`${server}${path}`, { signal: AbortSignal.timeout(4000) });
+      const res = await fetch(`${server}${path}`, { signal: AbortSignal.timeout(8000) });
       if (res.ok) {
         const data = await res.json() as any;
         if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
@@ -128,7 +130,8 @@ export async function calculateRealRoute(
         }
       }
     } catch (e: any) {
-      console.warn(`⚠️ [OSRM] Server ${server} query failed:`, e.message);
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      console.warn(`⚠️ [OSRM] Server ${server} query failed:`, errorMessage);
     }
   }
 

@@ -22,6 +22,8 @@ class SyncManager {
   private listeners = new Set<SyncListener>();
   private isSyncing = false;
 
+  private intervalId: any = null;
+
   constructor() {
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
@@ -29,11 +31,27 @@ class SyncManager {
         this.syncPendingSales();
       });
 
+      // Avoid duplicate background timers on hot-reload/HMR
+      const globalKey = '__oasis_sync_interval__';
+      if ((window as any)[globalKey]) {
+        clearInterval((window as any)[globalKey]);
+      }
+
       // Periodically check count to update UI state
-      setInterval(async () => {
+      this.intervalId = setInterval(async () => {
         const count = await getPendingSalesCount();
         this.emit({ type: 'status-changed', pendingCount: count });
       }, 5000);
+
+      (window as any)[globalKey] = this.intervalId;
+    }
+  }
+
+  destroy() {
+    if (this.intervalId && typeof window !== 'undefined') {
+      clearInterval(this.intervalId);
+      const globalKey = '__oasis_sync_interval__';
+      delete (window as any)[globalKey];
     }
   }
 

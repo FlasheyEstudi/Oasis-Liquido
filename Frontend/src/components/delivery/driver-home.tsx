@@ -51,13 +51,55 @@ import {
 } from 'lucide-react';
 import type { DeliveryStatus } from '@/types';
 
-// Web Audio API Synthesizer for high-end tactical sound design
-const playRadarSound = (type: 'ping' | 'success' | 'click' | 'sonar') => {
+// LocalStorage helpers to limit size and prevent unbounded growth
+const MAX_SEEN_ASSIGNMENTS = 200;
+
+function getSeenAssignments(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem('oasis_seen_assignments');
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function addSeenAssignment(id: string) {
   if (typeof window === 'undefined') return;
   try {
+    const seenIds = getSeenAssignments();
+    if (!seenIds.includes(id)) {
+      seenIds.push(id);
+      if (seenIds.length > MAX_SEEN_ASSIGNMENTS) {
+        seenIds.shift(); // Remove oldest
+      }
+      localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
+    }
+  } catch (e) {}
+}
+
+let sharedAudioCtx: AudioContext | null = null;
+const getSharedAudioContext = () => {
+  if (typeof window === 'undefined') return null;
+  if (!sharedAudioCtx) {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
+    if (AudioContextClass) {
+      sharedAudioCtx = new AudioContextClass();
+    }
+  }
+  if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+};
+
+// Web Audio API Synthesizer for high-end tactical sound design
+const playRadarSound = (type: 'ping' | 'success' | 'click' | 'sonar') => {
+  try {
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     
     if (type === 'ping') {
       const osc = ctx.createOscillator();
@@ -166,12 +208,8 @@ export function DriverHome() {
       if (order.status !== 'assigned') return false;
 
       // Ensure assignment hasn't already been seen/interacted with in this session
-      if (typeof window !== 'undefined') {
-        try {
-          const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
-          if (seenIds.includes(order.id)) return false;
-        } catch (e) {}
-      }
+      const seenIds = getSeenAssignments();
+      if (seenIds.includes(order.id)) return false;
 
       const wasSeen = prevActiveOrdersRef.current.some((prev: any) => prev.id === order.id);
       return !wasSeen;
@@ -306,15 +344,7 @@ export function DriverHome() {
       const orderToAccept = availableOrders.find((o: any) => o.id === id);
       
       // Ensure the order is added to seenIds immediately to prevent assignment popup race conditions
-      if (typeof window !== 'undefined') {
-        try {
-          const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
-          if (!seenIds.includes(id)) {
-            seenIds.push(id);
-            localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
-          }
-        } catch (e) {}
-      }
+      addSeenAssignment(id);
 
       // 1. Perform the API call to accept the order first to set the deliveryDriverId on the server
       await acceptOrder(id);
@@ -1021,15 +1051,7 @@ export function DriverHome() {
               <button
                 onClick={() => {
                   const orderId = newlyAssignedOrder.id;
-                  if (typeof window !== 'undefined') {
-                    try {
-                      const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
-                      if (!seenIds.includes(orderId)) {
-                        seenIds.push(orderId);
-                        localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
-                      }
-                    } catch (e) {}
-                  }
+                  addSeenAssignment(orderId);
                   setNewlyAssignedOrder(null);
                 }}
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-850 text-slate-400 dark:text-zinc-500 hover:text-slate-650 dark:hover:text-white transition-colors duration-200 cursor-pointer"
@@ -1075,15 +1097,7 @@ export function DriverHome() {
                 <button
                   onClick={async () => {
                     const orderId = newlyAssignedOrder.id;
-                    if (typeof window !== 'undefined') {
-                      try {
-                        const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
-                        if (!seenIds.includes(orderId)) {
-                          seenIds.push(orderId);
-                          localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
-                        }
-                      } catch (e) {}
-                    }
+                    addSeenAssignment(orderId);
                     setNewlyAssignedOrder(null);
                     if (soundEnabled) playRadarSound('success');
                     try {
@@ -1106,15 +1120,7 @@ export function DriverHome() {
                 <button
                   onClick={() => {
                     const orderId = newlyAssignedOrder.id;
-                    if (typeof window !== 'undefined') {
-                      try {
-                        const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
-                        if (!seenIds.includes(orderId)) {
-                          seenIds.push(orderId);
-                          localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
-                        }
-                      } catch (e) {}
-                    }
+                    addSeenAssignment(orderId);
                     setNewlyAssignedOrder(null);
                     if (soundEnabled) playRadarSound('click');
                     navigate('delivery-detail', orderId);
@@ -1128,15 +1134,7 @@ export function DriverHome() {
                 <button
                   onClick={() => {
                     const orderId = newlyAssignedOrder.id;
-                    if (typeof window !== 'undefined') {
-                      try {
-                        const seenIds = JSON.parse(localStorage.getItem('oasis_seen_assignments') || '[]');
-                        if (!seenIds.includes(orderId)) {
-                          seenIds.push(orderId);
-                          localStorage.setItem('oasis_seen_assignments', JSON.stringify(seenIds));
-                        }
-                      } catch (e) {}
-                    }
+                    addSeenAssignment(orderId);
                     setNewlyAssignedOrder(null);
                     if (soundEnabled) playRadarSound('click');
                   }}

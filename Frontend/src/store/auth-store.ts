@@ -80,10 +80,13 @@ function getHomeForRole(role: UserRole): AppPage {
     case 'doctor': return 'inicio';
     case 'receptionist': return 'inicio';
     case 'patient': return 'inicio';
-    case 'pharmacy_manager':
+    case 'pharmacy_manager': return 'inicio';
     case 'cashier': return 'inicio';
     case 'delivery_driver': return 'inicio-repartidor';
-    default: return 'inicio';
+    default: {
+      const _exhaustiveCheck: never = role;
+      return 'inicio';
+    }
   }
 }
 

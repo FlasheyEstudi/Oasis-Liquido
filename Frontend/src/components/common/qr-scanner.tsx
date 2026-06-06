@@ -19,7 +19,7 @@ export function QrScanner({ onScan, onError, isActive }: QrScannerProps) {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const regionIdRef = useRef<string>(`qr-scanner-region-${++scannerIdCounter}`);
+  const [regionId] = useState(() => `qr-scanner-region-${++scannerIdCounter}`);
   const mountedRef = useRef(true);
 
   const stopScanner = useCallback(async () => {
@@ -54,7 +54,6 @@ export function QrScanner({ onScan, onError, isActive }: QrScannerProps) {
     setScanning(true);
 
     try {
-      const regionId = regionIdRef.current;
       const html5QrCode = new Html5Qrcode(regionId);
       scannerRef.current = html5QrCode;
 
@@ -89,7 +88,7 @@ export function QrScanner({ onScan, onError, isActive }: QrScannerProps) {
         onError?.(errorMessage);
       }
     }
-  }, [onScan, onError]);
+  }, [onScan, onError, regionId]);
 
   // Handle isActive changes
   useEffect(() => {
@@ -136,7 +135,7 @@ export function QrScanner({ onScan, onError, isActive }: QrScannerProps) {
         style={{ minHeight: 280 }}
       >
         {/* html5-qrcode renders video here */}
-        <div id={regionIdRef.current} className="w-full" />
+        <div id={regionId} className="w-full" />
 
         {/* Scanning overlay with animated line */}
         {scanning && (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { useDriverLocationStream } from '@/hooks/useDriverLocationStream';
 import {
   useDeliveryOrder,
   useDeliveryRoute,
@@ -137,8 +138,6 @@ export function DeliveryDetail() {
   const [verificationError, setVerificationError] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const lastSentTimeRef = useRef<number>(0);
-
   const { data: assignedDeliveries = [], isLoading: assignedLoading } = useAssignedDeliveries(!!driverId);
 
   const {
@@ -170,58 +169,8 @@ export function DeliveryDetail() {
   const [isScannerActive, setIsScannerActive] = useState(false);
   const isUpdating = updateDeliveryStatus.isPending || pickupDelivery.isPending || deliverDelivery.isPending;
 
-  useEffect(() => {
-    if (!order || order.status !== 'in_transit') return;
-
-    let watchId: number | null = null;
-    let fallbackInterval: NodeJS.Timeout | null = null;
-
-    const handleCoordsUpdate = (coords: GeolocationCoordinates) => {
-      const now = Date.now();
-      // Throttle: Send GPS coordinates at most once every 8 seconds to prevent hammering the server
-      if (now - lastSentTimeRef.current < 8000) return;
-      lastSentTimeRef.current = now;
-
-      updateLocation.mutate({
-        orderId: order.id,
-        lat: coords.latitude,
-        lng: coords.longitude,
-      });
-    };
-
-    if ('geolocation' in navigator) {
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          handleCoordsUpdate(position.coords);
-        },
-        (error) => {
-          console.warn('watchPosition failed:', error.message);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-
-      fallbackInterval = setInterval(() => {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            handleCoordsUpdate(position.coords);
-          },
-          (error) => {
-            console.warn('getCurrentPosition fallback failed:', error.message);
-          },
-          { enableHighAccuracy: true, timeout: 5005 }
-        );
-      }, 10000);
-    }
-
-    return () => {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-      if (fallbackInterval !== null) {
-        clearInterval(fallbackInterval);
-      }
-    };
-  }, [order?.status, order?.id]);
+  // Use the optimized telemetry hook
+  useDriverLocationStream(order?.id || '', order?.status === 'in_transit');
 
   const handleStatusUpdate = (newStatus: 'picked_up' | 'in_transit' | 'delivered') => {
     if (!order) return;
