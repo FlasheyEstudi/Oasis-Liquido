@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import {
   usePrescription,
+  useCreateReminder,
   getHookErrorMessage,
 } from '@/hooks/use-api';
 import { formatDate, getInitials } from '@/utils/helpers';
@@ -42,6 +43,7 @@ const fadeInUp: any = {
 export function PrescriptionDetail() {
   const { selectedItemId, navigate, isElderlyMode } = useAuthStore();
   const prescriptionQuery = usePrescription(selectedItemId ?? '', !!selectedItemId);
+  const createReminderMutation = useCreateReminder();
 
   const [selectedLine, setSelectedLine] = useState<any | null>(null);
   const [customTime, setCustomTime] = useState('08:00');
@@ -56,7 +58,19 @@ export function PrescriptionDetail() {
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
         await Notification.requestPermission();
       }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      let scheduled_time = '08:00';
+      if (selectedSlot === 'morning') scheduled_time = '08:00';
+      else if (selectedSlot === 'lunch') scheduled_time = '12:00';
+      else if (selectedSlot === 'dinner') scheduled_time = '19:00';
+      else if (selectedSlot === 'bedtime') scheduled_time = '22:00';
+      else if (selectedSlot === 'custom') scheduled_time = customTime;
+
+      await createReminderMutation.mutateAsync({
+        prescription_line_id: selectedLine.id,
+        scheduled_time,
+      });
+
       setIsSuccess(true);
     } catch (error) {
       toast.error('Error al programar recordatorio');

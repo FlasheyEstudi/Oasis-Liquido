@@ -307,6 +307,13 @@ export interface PrescriptionLine {
   quantity: number;
   quantity_fulfilled: number;
   dosage_instructions?: string;
+  batches?: Array<{
+    id: string;
+    batchNumber: string;
+    expirationDate: string | null;
+    quantityToDeduct: number;
+    sellingPrice?: number;
+  }>;
 }
 
 export interface CreatePrescriptionRequest {
@@ -326,6 +333,7 @@ export interface CreatePrescriptionLineRequest {
 
 export interface ValidatePrescriptionRequest {
   qr_data: string;
+  pharmacy_id?: string;
 }
 
 export interface FulfillPrescriptionRequest {
@@ -336,6 +344,10 @@ export interface FulfillPrescriptionRequest {
 export interface FulfillItemRequest {
   prescription_line_id: string;
   quantity_fulfilled: number;
+  batches?: Array<{
+    batch_id: string;
+    quantity: number;
+  }>;
 }
 
 // --- Delivery / Sales Types ---

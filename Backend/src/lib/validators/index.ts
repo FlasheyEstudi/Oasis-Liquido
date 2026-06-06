@@ -185,6 +185,7 @@ export const createPrescriptionSchema = z.object({
 
 export const validatePrescriptionSchema = z.object({
   qr_data: z.string().min(1, 'QR data requerido'),
+  pharmacy_id: z.string().optional(),
 });
 
 export const fulfillPrescriptionSchema = z.object({
@@ -192,6 +193,10 @@ export const fulfillPrescriptionSchema = z.object({
   items: z.array(z.object({
     prescription_line_id: z.string().min(1),
     quantity_fulfilled: z.number().int().min(1),
+    batches: z.array(z.object({
+      batch_id: z.string().min(1),
+      quantity: z.number().int().min(1),
+    })).optional(),
   })).min(1, 'Al menos un item requerido'),
 });
 
@@ -229,6 +234,18 @@ export const createSaleSchema = z.object({
 export const updateDeliveryStatusSchema = z.object({
   status: z.enum(['pending', 'assigned', 'picked_up', 'in_transit', 'delivered', 'cancelled']),
   delivery_driver_id: z.string().optional(),
+});
+
+// ============================
+// Medication Reminder Validators
+// ============================
+export const createReminderSchema = z.object({
+  prescription_line_id: z.string().min(1, 'Línea de receta requerida'),
+  scheduled_time: z.string().regex(/^\d{2}:\d{2}$/, 'Formato de hora inválido (HH:MM)'),
+});
+
+export const updateReminderStatusSchema = z.object({
+  status: z.enum(['pending', 'taken', 'skipped']),
 });
 
 // ============================

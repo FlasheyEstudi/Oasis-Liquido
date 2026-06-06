@@ -18,8 +18,12 @@ export async function GET(req: NextRequest) {
     }
 
     await CronService.checkExpirations();
+    const remindersSent = await CronService.checkMedicationReminders();
 
-    return successResponse({ processed: true }, 'Tareas programadas de expiración ejecutadas de forma atómica y exitosa.');
+    return successResponse(
+      { processed: true, reminders_sent: remindersSent },
+      'Tareas programadas de expiración y recordatorios de adherencia ejecutados exitosamente.'
+    );
   } catch (error: any) {
     console.error('Cron job route error:', error);
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno al ejecutar tareas cron', 500);

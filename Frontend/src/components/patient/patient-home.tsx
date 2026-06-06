@@ -7,6 +7,8 @@ import {
   usePrescriptions,
   useDeliveryOrders,
   useFamily,
+  useReminders,
+  useUpdateReminderStatus,
   getHookErrorMessage,
 } from '@/hooks/use-api';
 import { useMutation } from '@tanstack/react-query';
@@ -38,6 +40,9 @@ import {
   Shield,
   Sparkles,
   HeartPulse,
+  Check,
+  X,
+  Bell,
 } from 'lucide-react';
 
 function getGreeting(): { text: string; icon: React.ReactNode; bgClass: string; textColor: string } {
@@ -88,16 +93,22 @@ export function PatientHome() {
   const pendingDeliveries = deliveriesQuery.data?.data ?? [];
   const caregiverFor = familyQuery.data?.caregiverFor ?? [];
 
+  const remindersQuery = useReminders();
+  const updateReminderStatusMutation = useUpdateReminderStatus();
+  const reminders = remindersQuery.data?.data ?? [];
+
   const isLoading =
     appointmentsQuery.isLoading ||
     prescriptionsQuery.isLoading ||
     deliveriesQuery.isLoading ||
-    familyQuery.isLoading;
+    familyQuery.isLoading ||
+    remindersQuery.isLoading;
 
   const hasError =
     appointmentsQuery.isError ||
     prescriptionsQuery.isError ||
-    deliveriesQuery.isError;
+    deliveriesQuery.isError ||
+    remindersQuery.isError;
 
   const firstName = representedUser?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'Paciente';
   const greeting = getGreeting();
@@ -344,92 +355,202 @@ export function PatientHome() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-3">
         
         {/* Main Column: timeline & appointments (7 cols) - borderless mobile-first */}
-        <div className="lg:col-span-7 bg-slate-500/[0.02] dark:bg-zinc-950/[0.15] md:bg-white/10 md:dark:bg-zinc-950/10 border border-slate-200/20 dark:border-white/5 rounded-[2rem] backdrop-blur-md p-5 shadow-sm">
-          <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-slate-200 dark:border-white/5 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="flex size-7.5 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/15">
-                <Calendar className="size-4 text-teal-600 dark:text-teal-450" />
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-slate-500/[0.02] dark:bg-zinc-950/[0.15] md:bg-white/10 md:dark:bg-zinc-950/10 border border-slate-200/20 dark:border-white/5 rounded-[2rem] backdrop-blur-md p-5 shadow-sm">
+            <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-slate-200 dark:border-white/5 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex size-7.5 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/15">
+                  <Calendar className="size-4 text-teal-600 dark:text-teal-450" />
+                </div>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Próxima Consulta</h3>
               </div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Próxima Consulta</h3>
+              {nextAppointment && <span className="size-2 rounded-full bg-teal-500 animate-pulse" />}
             </div>
-            {nextAppointment && <span className="size-2 rounded-full bg-teal-500 animate-pulse" />}
-          </div>
 
-          <div className="py-2">
-            {nextAppointment ? (
-              <div className="relative pl-3.5 py-2.5">
-                {/* Timeline bar */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500 rounded-full" />
-                
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-black text-slate-400 dark:text-zinc-550 uppercase tracking-wider">Especialista</p>
-                    <p className="text-base font-black text-slate-800 dark:text-white mt-0.5 font-serif">
-                      Dr. {nextAppointment.doctor?.name}
-                    </p>
-                    {nextAppointment.doctor?.doctor_profile?.specialty && (
-                      <p className="text-[9px] font-black text-teal-600 dark:text-teal-455 uppercase tracking-widest mt-1">
-                        {nextAppointment.doctor.doctor_profile.specialty}
+            <div className="py-2">
+              {nextAppointment ? (
+                <div className="relative pl-3.5 py-2.5">
+                  {/* Timeline bar */}
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500 rounded-full" />
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs font-black text-slate-400 dark:text-zinc-550 uppercase tracking-wider">Especialista</p>
+                      <p className="text-base font-black text-slate-800 dark:text-white mt-0.5 font-serif">
+                        Dr. {nextAppointment.doctor?.name}
                       </p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 bg-teal-500/[0.03] dark:bg-teal-500/[0.02] p-3.5 rounded-2xl border border-teal-500/10 shadow-sm">
-                    <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-slate-405 dark:text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
-                      <p className="text-[11px] font-extrabold text-slate-800 dark:text-zinc-200 flex items-center gap-1">
-                        <Clock className="size-3 text-teal-500 shrink-0" />
-                        <span>{formatDate(nextAppointment.date_time, "dd MMM • HH:mm")}</span>
-                      </p>
+                      {nextAppointment.doctor?.doctor_profile?.specialty && (
+                        <p className="text-[9px] font-black text-teal-600 dark:text-teal-455 uppercase tracking-widest mt-1">
+                          {nextAppointment.doctor.doctor_profile.specialty}
+                        </p>
+                      )}
                     </div>
-                    {nextAppointment.clinic && (
+
+                    <div className="grid grid-cols-2 gap-4 bg-teal-500/[0.03] dark:bg-teal-500/[0.02] p-3.5 rounded-2xl border border-teal-500/10 shadow-sm">
                       <div className="space-y-0.5">
-                        <p className="text-[8px] font-black text-slate-405 dark:text-zinc-500 uppercase tracking-widest">Sede médica</p>
+                        <p className="text-[8px] font-black text-slate-405 dark:text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
                         <p className="text-[11px] font-extrabold text-slate-800 dark:text-zinc-200 flex items-center gap-1">
-                          <MapPin className="size-3 text-rose-500/70 shrink-0" />
-                          <span className="truncate">{nextAppointment.clinic.name}</span>
+                          <Clock className="size-3 text-teal-500 shrink-0" />
+                          <span>{formatDate(nextAppointment.date_time, "dd MMM • HH:mm")}</span>
                         </p>
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-dashed border-slate-200 dark:border-white/5">
-                    <span className={cn(
-                      'inline-flex items-center rounded-full px-3 py-0.5 text-[8px] font-black uppercase tracking-wider border shadow-sm',
-                      APPOINTMENT_STATUS_CONFIG[nextAppointment.status]?.bgColor,
-                      APPOINTMENT_STATUS_CONFIG[nextAppointment.status]?.color
-                    )}>
-                      {APPOINTMENT_STATUS_CONFIG[nextAppointment.status]?.label || nextAppointment.status}
-                    </span>
+                      {nextAppointment.clinic && (
+                        <div className="space-y-0.5">
+                          <p className="text-[8px] font-black text-slate-405 dark:text-zinc-500 uppercase tracking-widest">Sede médica</p>
+                          <p className="text-[11px] font-extrabold text-slate-800 dark:text-zinc-200 flex items-center gap-1">
+                            <MapPin className="size-3 text-rose-500/70 shrink-0" />
+                            <span className="truncate">{nextAppointment.clinic.name}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-dashed border-slate-200 dark:border-white/5">
+                      <span className={cn(
+                        'inline-flex items-center rounded-full px-3 py-0.5 text-[8px] font-black uppercase tracking-wider border shadow-sm',
+                        APPOINTMENT_STATUS_CONFIG[nextAppointment.status]?.bgColor,
+                        APPOINTMENT_STATUS_CONFIG[nextAppointment.status]?.color
+                      )}>
+                        {APPOINTMENT_STATUS_CONFIG[nextAppointment.status]?.label || nextAppointment.status}
+                      </span>
 
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="px-4.5 py-2 rounded-full bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-655 dark:text-zinc-350 cursor-pointer"
-                      onClick={() => navigate('citas')}
-                    >
-                      Administrar Consulta
-                    </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="px-4.5 py-2 rounded-full bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-655 dark:text-zinc-350 cursor-pointer"
+                        onClick={() => navigate('citas')}
+                      >
+                        Administrar Consulta
+                      </motion.button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center py-10 text-center space-y-4">
-                <Calendar className="size-10 text-slate-350 dark:text-zinc-700 animate-bounce-slow" />
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold">Sin consultas programadas</p>
-                  <p className="text-[10px] text-slate-400 dark:text-zinc-550 leading-relaxed font-semibold max-w-xs mx-auto">Tus próximas consultas con especialistas Oasis aparecerán cronológicamente aquí.</p>
+              ) : (
+                <div className="flex flex-col items-center py-10 text-center space-y-4">
+                  <Calendar className="size-10 text-slate-350 dark:text-zinc-700 animate-bounce-slow" />
+                  <div className="space-y-1">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold">Sin consultas programadas</p>
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-555 leading-relaxed font-semibold max-w-xs mx-auto">Tus próximas consultas con especialistas Oasis aparecerán cronológicamente aquí.</p>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-black text-[9px] px-5 py-2.5 shadow-md shadow-teal-500/10 uppercase tracking-widest cursor-pointer border-none"
+                    onClick={() => navigate('nueva-cita')}
+                  >
+                    Agendar Cita Médica
+                  </motion.button>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-black text-[9px] px-5 py-2.5 shadow-md shadow-teal-500/10 uppercase tracking-widest cursor-pointer border-none"
-                  onClick={() => navigate('nueva-cita')}
-                >
-                  Agendar Cita Médica
-                </motion.button>
+              )}
+            </div>
+          </div>
+
+          {/* Adherence Reminders Section */}
+          <div className="bg-slate-500/[0.02] dark:bg-zinc-950/[0.15] md:bg-white/10 md:dark:bg-zinc-950/10 border border-slate-200/20 dark:border-white/5 rounded-[2rem] backdrop-blur-md p-5 shadow-sm">
+            <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-slate-200 dark:border-white/5 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex size-7.5 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/15">
+                  <Clock className="size-4 text-rose-600 dark:text-rose-400" />
+                </div>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Alarmas y Adherencia</h3>
               </div>
-            )}
+              <div className="flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-405 px-3 py-0.5 rounded-[50px] text-[8px] font-black uppercase tracking-widest shadow-sm">
+                <Bell className="size-3 text-rose-500 animate-bounce-slow" />
+                <span>Recordatorios</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {reminders.length === 0 ? (
+                <div className="flex flex-col items-center py-8 text-center space-y-3">
+                  <div className="p-3 bg-slate-500/5 rounded-full">
+                    <Pill className="size-8 text-slate-350 dark:text-zinc-700" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-slate-550 dark:text-zinc-450 font-black">Sin alarmas programadas</p>
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-550 max-w-xs mx-auto leading-relaxed font-semibold">
+                      Agrega alarmas desde el detalle de tus recetas para no olvidar tus tomas.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                  {reminders.map((reminder) => (
+                    <div 
+                      key={reminder.id}
+                      className={cn(
+                        "p-3.5 rounded-2xl border transition-all duration-300 flex flex-col justify-between space-y-3 shadow-sm",
+                        reminder.status === 'taken' 
+                          ? "bg-emerald-500/[0.03] border-emerald-500/20" 
+                          : reminder.status === 'skipped'
+                            ? "bg-slate-500/[0.03] border-slate-200/50 dark:border-white/5 opacity-70"
+                            : "bg-white/40 dark:bg-white/[0.02] border-slate-250 dark:border-white/5 hover:border-teal-500/30"
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1">
+                            <Clock className="size-3" />
+                            <span>{reminder.scheduledTime}</span>
+                          </p>
+                          <p className="text-xs font-black text-slate-805 dark:text-white mt-1 truncate font-serif">
+                            {reminder.medicineName}
+                          </p>
+                          <p className="text-[9px] font-bold text-slate-450 dark:text-zinc-400 mt-0.5 line-clamp-1">
+                            {reminder.dosageInstructions}
+                          </p>
+                        </div>
+
+                        <span className={cn(
+                          "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 border",
+                          reminder.status === 'taken'
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-450"
+                            : reminder.status === 'skipped'
+                              ? "bg-slate-500/10 border-slate-300/20 text-slate-500 dark:text-zinc-400"
+                              : "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-450"
+                        )}>
+                          {reminder.status === 'taken' ? 'Tomado' : reminder.status === 'skipped' ? 'Saltado' : 'Pendiente'}
+                        </span>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-2 pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
+                        {reminder.status === 'pending' ? (
+                          <>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => updateReminderStatusMutation.mutate({ id: reminder.id, status: 'taken' })}
+                              className="flex-1 py-1.5 rounded-lg bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1 shadow-sm shadow-emerald-500/10 cursor-pointer border-none"
+                            >
+                              <Check className="size-3" />
+                              <span>Tomar</span>
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => updateReminderStatusMutation.mutate({ id: reminder.id, status: 'skipped' })}
+                              className="py-1.5 px-3 rounded-lg bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 cursor-pointer"
+                            >
+                              Saltar
+                            </motion.button>
+                          </>
+                        ) : (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => updateReminderStatusMutation.mutate({ id: reminder.id, status: 'pending' })}
+                            className="w-full py-1.5 rounded-lg bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-450 cursor-pointer"
+                          >
+                            Restablecer
+                          </motion.button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

@@ -179,7 +179,9 @@ export async function sendOasisEmail({
   // --- MODO 2: GMAIL SMTP FALLBACK (Para desarrollo local o si no hay API Key de Resend) ---
   if (!smtpPass) {
     console.warn('⚠️ Ni RESEND_API_KEY ni SMTP_PASS están configurados. Envío de correo omitido.');
-    console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${to} | Recovery Code: ${code}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`🔑 [OASIS PASSWORD RECOVERY] User: ${to} | Recovery Code: ${code}`);
+    }
     return false;
   }
 

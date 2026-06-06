@@ -1,7 +1,17 @@
 import { db } from '../db';
 import { createAuditLog } from './audit.service';
+import { ReminderService } from './reminder.service';
 
 export class CronService {
+  /**
+   * Run hourly check of medication adherence reminders and send push notifications.
+   */
+  static async checkMedicationReminders() {
+    console.log('[CronService] Starting medication reminders check...');
+    const count = await ReminderService.sendRemindersForCurrentHour();
+    console.log(`[CronService] Medication reminders check completed. Sent ${count} notifications.`);
+    return count;
+  }
   /**
    * Run daily check of legal document expirations (MINSA, RUC, municipal license, degree, etc.)
    * and automatically suspend establishment visibility or user verification status.

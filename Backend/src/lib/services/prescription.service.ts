@@ -258,7 +258,7 @@ export async function updatePrescription(
 /**
  * Validate a prescription by QR code
  */
-export async function validatePrescription(qrData: string) {
+export async function validatePrescription(qrData: string, pharmacyId?: string) {
   let searchField: 'qrCode' | 'id' = 'qrCode';
   let searchValue = qrData.trim();
 
@@ -308,7 +308,64 @@ export async function validatePrescription(qrData: string) {
     throw new Error('PRESCRIPTION_FULFILLED');
   }
 
-  return mapPrescription(prescription);
+  const mapped = mapPrescription(prescription);
+  if (!mapped) return null;
+
+  if (pharmacyId && mapped.lines) {
+    for (const line of mapped.lines) {
+      // Find inventory item
+      const inventoryItem = await db.inventory.findFirst({
+        where: {
+          pharmacyId,
+          medicineId: line.medicine_id,
+        },
+      });
+
+      if (!inventoryItem) {
+        line.batches = [];
+        continue;
+      }
+
+      // Find active batches
+      const activeBatches = await db.inventoryBatch.findMany({
+        where: {
+          inventoryId: inventoryItem.id,
+          quantity: { gt: 0 },
+        },
+        orderBy: {
+          expirationDate: 'asc',
+        },
+      });
+
+      let remainingToFulfill = Math.max(0, line.quantity - line.quantity_fulfilled);
+      const allocatedBatches: Array<{
+        id: string;
+        batchNumber: string;
+        expirationDate: string | null;
+        quantityToDeduct: number;
+        sellingPrice: number | null;
+      }> = [];
+
+      for (const batch of activeBatches) {
+        if (remainingToFulfill <= 0) break;
+        const deduct = Math.min(batch.quantity, remainingToFulfill);
+        if (deduct > 0) {
+          allocatedBatches.push({
+            id: batch.id,
+            batchNumber: batch.batchNumber,
+            expirationDate: batch.expirationDate ? batch.expirationDate.toISOString() : null,
+            quantityToDeduct: deduct,
+            sellingPrice: batch.sellingPrice,
+          });
+          remainingToFulfill -= deduct;
+        }
+      }
+
+      line.batches = allocatedBatches;
+    }
+  }
+
+  return mapped;
 }
 
 /**
@@ -323,6 +380,10 @@ export async function fulfillPrescription(
     items: Array<{
       prescription_line_id: string;
       quantity_fulfilled: number;
+      batches?: Array<{
+        batch_id: string;
+        quantity: number;
+      }>;
     }>;
   },
   userId: string,
@@ -383,33 +444,59 @@ export async function fulfillPrescription(
         throw new Error(`INSUFFICIENT_STOCK: ${line.medicineId}`);
       }
 
-      // OAS-005: Decrement inventory batches atomically using FEFO strategy
-      let remainingToFulfill = item.quantity_fulfilled;
-      
-      const activeBatches = await tx.inventoryBatch.findMany({
-        where: {
-          inventoryId: inventoryItem.id,
-          quantity: { gt: 0 },
-        },
-        orderBy: {
-          expirationDate: 'asc', // FEFO: First Expired, First Out
-        },
-      });
+      // OAS-005: Decrement inventory batches atomically using specified selection or FEFO strategy
+      if (item.batches && item.batches.length > 0) {
+        const batchTotal = item.batches.reduce((sum, b) => sum + b.quantity, 0);
+        if (batchTotal !== item.quantity_fulfilled) {
+          throw new Error(`Batch total quantity (${batchTotal}) does not match quantity fulfilled (${item.quantity_fulfilled})`);
+        }
 
-      for (const batch of activeBatches) {
-        if (remainingToFulfill <= 0) break;
-        const deduct = Math.min(batch.quantity, remainingToFulfill);
+        for (const batchSelect of item.batches) {
+          const batch = await tx.inventoryBatch.findUnique({
+            where: { id: batchSelect.batch_id },
+          });
+
+          if (!batch || batch.inventoryId !== inventoryItem.id) {
+            throw new Error(`BATCH_NOT_FOUND: Batch ${batchSelect.batch_id} not found in this pharmacy inventory`);
+          }
+
+          if (batch.quantity < batchSelect.quantity) {
+            throw new Error(`INSUFFICIENT_BATCH_STOCK: Batch ${batch.batchNumber} has only ${batch.quantity} units, requested ${batchSelect.quantity}`);
+          }
+
+          await tx.inventoryBatch.update({
+            where: { id: batch.id },
+            data: { quantity: { decrement: batchSelect.quantity } },
+          });
+        }
+      } else {
+        let remainingToFulfill = item.quantity_fulfilled;
         
-        await tx.inventoryBatch.update({
-          where: { id: batch.id },
-          data: { quantity: { decrement: deduct } },
+        const activeBatches = await tx.inventoryBatch.findMany({
+          where: {
+            inventoryId: inventoryItem.id,
+            quantity: { gt: 0 },
+          },
+          orderBy: {
+            expirationDate: 'asc', // FEFO: First Expired, First Out
+          },
         });
-        
-        remainingToFulfill -= deduct;
-      }
 
-      if (remainingToFulfill > 0) {
-        throw new Error(`INSUFFICIENT_BATCH_STOCK: No hay suficiente stock en los lotes activos para dispensar el medicamento ${line.medicineId}`);
+        for (const batch of activeBatches) {
+          if (remainingToFulfill <= 0) break;
+          const deduct = Math.min(batch.quantity, remainingToFulfill);
+          
+          await tx.inventoryBatch.update({
+            where: { id: batch.id },
+            data: { quantity: { decrement: deduct } },
+          });
+          
+          remainingToFulfill -= deduct;
+        }
+
+        if (remainingToFulfill > 0) {
+          throw new Error(`INSUFFICIENT_BATCH_STOCK: No hay suficiente stock en los lotes activos para dispensar el medicamento ${line.medicineId}`);
+        }
       }
 
       await tx.inventory.update({

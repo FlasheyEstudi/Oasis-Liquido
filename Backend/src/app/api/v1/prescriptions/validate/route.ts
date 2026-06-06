@@ -13,7 +13,10 @@ export const POST = withAuth(
       const validation = validateBody(validatePrescriptionSchema, body);
       if (!validation.success) return validation.error;
 
-      const result = await prescriptionService.validatePrescription(validation.data.qr_data);
+      const result = await prescriptionService.validatePrescription(
+        validation.data.qr_data,
+        validation.data.pharmacy_id
+      );
 
       return successResponse(result, 'Receta validada exitosamente');
     } catch (error: any) {

@@ -58,3 +58,9 @@ server.log
 Backend/pgdata/
 Backend/tmp/
 **/tmp/**
+
+# SQLite database files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal

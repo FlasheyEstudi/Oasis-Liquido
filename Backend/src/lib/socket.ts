@@ -5,9 +5,20 @@ import { db } from './db';
 let io: SocketServer;
 
 export function initSocket(server: HTTPServer) {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) 
+    : ['http://localhost:3000', 'https://oasis-liquido.vercel.app'];
+
   io = new SocketServer(server, {
     cors: {
-      origin: '*', // Allow all client connections (localhost:3000, etc.)
+      origin: (requestOrigin, callback) => {
+        // Allow requests with no origin or in the allowed origins whitelist, and all in non-production
+        if (!requestOrigin || allowedOrigins.includes(requestOrigin) || process.env.NODE_ENV !== 'production') {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       methods: ['GET', 'POST'],
       credentials: true
     },

@@ -29,6 +29,7 @@ import * as invitationsApi from '@/api/invitations';
 import * as reconciliationsApi from '@/api/reconciliations';
 import * as settingsApi from '@/api/settings';
 import * as notificationsApi from '@/api/notifications';
+import * as remindersApi from '@/api/reminders';
 
 // --- Type Imports ---
 import type {
@@ -760,6 +761,46 @@ export function useMarkNotificationsAsRead() {
       notificationsApi.markNotificationsAsRead(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+}
+
+// --- Medication Reminders Hooks ---
+export function useReminders() {
+  return useQuery({
+    queryKey: ['reminders'],
+    queryFn: () => remindersApi.listReminders(),
+  });
+}
+
+export function useCreateReminder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { prescription_line_id: string; scheduled_time: string }) =>
+      remindersApi.createReminder(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+  });
+}
+
+export function useUpdateReminderStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { id: string; status: 'pending' | 'taken' | 'skipped' }) =>
+      remindersApi.updateReminderStatus(data.id, data.status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+  });
+}
+
+export function useDeleteReminder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => remindersApi.deleteReminder(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
     },
   });
 }

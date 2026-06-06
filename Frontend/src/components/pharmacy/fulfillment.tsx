@@ -37,6 +37,13 @@ interface FulfillLine {
   toFulfill: number;
   checked: boolean;
   available: number;
+  batches?: Array<{
+    id: string;
+    batchNumber: string;
+    expirationDate: string | null;
+    quantityToDeduct: number;
+    maxQuantity: number;
+  }>;
 }
 
 type FulfillmentState = 'scanning' | 'validating' | 'showing_prescription' | 'fulfilling' | 'success';
@@ -89,7 +96,7 @@ export function Fulfillment() {
     setValidationError(null);
 
     validatePrescription.mutate(
-      { qr_data: data.trim() },
+      { qr_data: data.trim(), pharmacy_id: pharmacyId },
       {
         onSuccess: (presc) => {
           setPrescription(presc);
@@ -108,6 +115,13 @@ export function Fulfillment() {
             toFulfill: line.quantity - line.quantity_fulfilled,
             checked: true,
             available: invMap[line.medicine_id] ?? 0,
+            batches: line.batches?.map((b: any) => ({
+              id: b.id,
+              batchNumber: b.batchNumber,
+              expirationDate: b.expirationDate,
+              quantityToDeduct: b.quantityToDeduct,
+              maxQuantity: b.quantityToDeduct,
+            })),
           }));
           setFulfillLines(lines);
           setFulfillmentState('showing_prescription');
@@ -123,7 +137,23 @@ export function Fulfillment() {
 
   const handleFulfillLineChange = (index: number, field: 'toFulfill' | 'checked', value: number | boolean) => {
     setFulfillLines((prev) =>
-      prev.map((line, i) => (i === index ? { ...line, [field]: value } : line))
+      prev.map((line, i) => {
+        if (i !== index) return line;
+
+        if (field === 'checked') {
+          return { ...line, checked: value as boolean };
+        }
+
+        const newToFulfill = value as number;
+        let remaining = newToFulfill;
+        const updatedBatches = line.batches?.map((batch) => {
+          const deduct = Math.min(batch.maxQuantity, remaining);
+          remaining -= deduct;
+          return { ...batch, quantityToDeduct: deduct };
+        });
+
+        return { ...line, toFulfill: newToFulfill, batches: updatedBatches };
+      })
     );
   };
 
@@ -146,6 +176,10 @@ export function Fulfillment() {
           items: checkedLines.map((l) => ({
             prescription_line_id: l.lineId,
             quantity_fulfilled: l.toFulfill,
+            batches: l.batches?.map((b) => ({
+              batch_id: b.id,
+              quantity: b.quantityToDeduct,
+            })),
           })),
         },
       },
@@ -381,6 +415,30 @@ export function Fulfillment() {
                               className="glass-input rounded-xl w-24 px-3 py-1.5 text-sm text-center disabled:opacity-50"
                             />
                           </div>
+
+                          {/* Batch details displaying FEFO allocations */}
+                          {line.checked && line.batches && line.batches.length > 0 && (
+                            <div className="mt-3.5 pt-3.5 border-t border-dashed border-slate-200/50 dark:border-white/5 space-y-1.5">
+                              <p className="text-[10px] font-black text-teal-650 dark:text-teal-400 uppercase tracking-widest">
+                                Lotes Dispensados (Estrategia FEFO)
+                              </p>
+                              <div className="space-y-1">
+                                {line.batches.map((batch) => (
+                                  <div key={batch.id} className="flex justify-between items-center text-xs text-muted-foreground bg-slate-500/5 px-2.5 py-1.5 rounded-xl">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-mono font-bold text-foreground">Lote: {batch.batchNumber}</span>
+                                      {batch.expirationDate && (
+                                        <span className="text-[9px] text-rose-500 dark:text-rose-455 bg-rose-500/10 px-1.5 py-0.5 rounded font-black">
+                                          Exp: {formatDate(batch.expirationDate, 'dd/MM/yy')}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="font-extrabold text-foreground">Cant: {batch.quantityToDeduct}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

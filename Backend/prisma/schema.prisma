@@ -53,6 +53,7 @@ model User {
   pharmacyDocumentsVerified PharmacyDocument[]    @relation("PharmacyDocumentVerifier")
   notifications             Notification[]        @relation("UserNotifications")
   settings                  UserSettings?
+  medicationReminders       MedicationReminder[]  @relation("UserMedicationReminders")
 
   @@index([email])
   @@index([role])
@@ -311,6 +312,7 @@ model PrescriptionLine {
   updatedAt          DateTime     @updatedAt
   medicine           Medicine     @relation(fields: [medicineId], references: [id])
   prescription       Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  medicationReminders MedicationReminder[] @relation("LineMedicationReminders")
 
   @@index([prescriptionId])
   @@index([medicineId])
@@ -783,6 +785,26 @@ model PasswordResetToken {
   @@index([email])
   @@index([tokenHash])
   @@map("password_reset_tokens")
+}
+
+model MedicationReminder {
+  id                 String   @id @default(cuid())
+  userId             String   @map("user_id")
+  prescriptionLineId String   @map("prescription_line_id")
+  medicineName       String   @map("medicine_name")
+  dosageInstructions String   @map("dosage_instructions")
+  scheduledTime      String   // e.g. "08:00", "12:00", "19:00", "22:00"
+  status             String   @default("pending") // "pending", "taken", "skipped"
+  lastNotified       DateTime? @map("last_notified")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user               User             @relation("UserMedicationReminders", fields: [userId], references: [id], onDelete: Cascade)
+  prescriptionLine   PrescriptionLine @relation("LineMedicationReminders", fields: [prescriptionLineId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([prescriptionLineId])
+  @@map("medication_reminders")
 }
 
 
