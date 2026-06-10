@@ -50,11 +50,11 @@ export function NotificationBanner() {
         <div className="relative overflow-hidden rounded-[2rem] border border-white/20 dark:border-zinc-800/60 shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-white/70 dark:bg-zinc-950/80 backdrop-blur-2xl p-5 md:p-6 transition-all duration-300">
           
           {/* Holographic background light leak */}
-          <div className="absolute -left-12 -top-12 size-36 bg-gradient-to-tr from-emerald-500/20 to-teal-500/0 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -right-16 -bottom-16 size-44 bg-gradient-to-tr from-sky-500/20 to-teal-500/0 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-12 -top-12 size-36 bg-gradient-to-tr from-emerald-500/20 to-primary/0 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -right-16 -bottom-16 size-44 bg-gradient-to-tr from-sky-500/20 to-primary/0 rounded-full blur-3xl pointer-events-none" />
           
           {/* Top highlight bar */}
-          <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 via-teal-500 to-sky-400 opacity-90" />
+          <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 via-primary to-sky-400 opacity-90" />
           
           {/* Close button with premium hover effect */}
           <button

@@ -11,7 +11,7 @@ import {
 } from '@/hooks/use-api';
 import type { Pharmacy } from '@/types';
 import { GlassCard } from '@/components/oasis/glass-card';
-import { PharmacyStaffManagement } from '../staff-management';
+import { PharmacyStaffManagement } from '../common/staff-management';
 import { MinsaComplianceReport } from '../common/minsa-compliance-report';
 import { CashReconciliation } from '../common/cash-reconciliation';
 import {

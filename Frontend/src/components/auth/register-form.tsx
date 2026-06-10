@@ -45,11 +45,11 @@ function PasswordRequirements({ password }: { password: string }) {
       {checks.map((check) => (
         <div key={check.label} className="flex items-center gap-1.5 text-xs">
           {check.met ? (
-            <Check className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+            <Check className="h-3.5 w-3.5 text-primary dark:text-primary" />
           ) : (
             <X className="h-3.5 w-3.5 text-muted-foreground" />
           )}
-          <span className={check.met ? 'text-teal-600 dark:text-teal-400' : 'text-muted-foreground'}>
+          <span className={check.met ? 'text-primary dark:text-primary' : 'text-muted-foreground'}>
             {check.label}
           </span>
         </div>
@@ -60,9 +60,9 @@ function PasswordRequirements({ password }: { password: string }) {
 
 const roleAdvantages: Record<string, Array<{ title: string; desc: string; icon: any }>> = {
   patient: [
-    { title: 'Teleconsulta Inmediata', desc: 'Conéctate con médicos colegiados autorizados al instante.', icon: <Award className="size-4 text-teal-600 dark:text-teal-400" /> },
+    { title: 'Teleconsulta Inmediata', desc: 'Conéctate con médicos colegiados autorizados al instante.', icon: <Award className="size-4 text-primary dark:text-primary" /> },
     { title: 'Entrega en Minutos', desc: 'Repartidores geolocalizados llevan tus medicinas seguras.', icon: <Truck className="size-4 text-emerald-600 dark:text-emerald-400" /> },
-    { title: 'Gestión Familiar', desc: 'Asocia dependientes fácilmente con tu código privado.', icon: <Compass className="size-4 text-cyan-600 dark:text-cyan-400" /> },
+    { title: 'Gestión Familiar', desc: 'Asocia dependientes fácilmente con tu código privado.', icon: <Compass className="size-4 text-secondary dark:text-secondary" /> },
     { title: 'Seguridad Militar', desc: 'Tus datos clínicos encriptados de extremo a extremo.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
   ],
   pharmacy_admin: [
@@ -78,13 +78,13 @@ const roleAdvantages: Record<string, Array<{ title: string; desc: string; icon: 
     { title: 'Firma HMAC Segura', desc: 'Validación instantánea de autenticidad en cada transacción.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
   ],
   clinic_admin: [
-    { title: 'Gestión de Médicos', desc: 'Administra turnos, horarios y especialidades médicas con facilidad.', icon: <Building className="size-4 text-teal-600 dark:text-teal-400" /> },
+    { title: 'Gestión de Médicos', desc: 'Administra turnos, horarios y especialidades médicas con facilidad.', icon: <Building className="size-4 text-primary dark:text-primary" /> },
     { title: 'Firma Digital Colegiada', desc: 'Recetas seguras firmadas por médicos con clave PIN de seguridad.', icon: <Award className="size-4 text-emerald-600 dark:text-emerald-400" /> },
     { title: 'Historiales Clínicos Unidos', desc: 'Acceso inmediato a la historia clínica compartida del paciente.', icon: <Compass className="size-4 text-cyan-600 dark:text-cyan-400" /> },
     { title: 'Menos Carga Administrativa', desc: 'Reportes e integraciones automáticas listas para el MINSA.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
   ],
   delivery_driver: [
-    { title: 'Entregas Inteligentes', desc: 'Ruta óptima por geolocalización satelital por GPS en vivo.', icon: <Truck className="size-4 text-teal-600 dark:text-teal-400" /> },
+    { title: 'Entregas Inteligentes', desc: 'Ruta óptima por geolocalización satelital por GPS en vivo.', icon: <Truck className="size-4 text-primary dark:text-primary" /> },
     { title: 'Ingresos por Comisión', desc: 'Gana más dinero completando entregas de forma eficiente.', icon: <Award className="size-4 text-emerald-600 dark:text-emerald-400" /> },
     { title: 'Horarios a tu Medida', desc: 'Trabaja con flexibilidad total y gestiona tus propios viajes.', icon: <Compass className="size-4 text-cyan-600 dark:text-cyan-400" /> },
     { title: 'Soporte Directo', desc: 'Asistencia y comunicación directa con la farmacia y paciente.', icon: <Shield className="size-4 text-indigo-600 dark:text-indigo-400" /> },
@@ -523,7 +523,7 @@ export function RegisterForm() {
                   Oasis v0.2-RC1
                 </span>
               </div>
-              <h2 className="text-2xl font-black tracking-tight leading-tight mb-4 bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-700 dark:from-teal-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-black tracking-tight leading-tight mb-4 bg-gradient-to-r from-primary via-secondary to-primary dark:from-primary dark:via-secondary dark:to-primary bg-clip-text text-transparent">
                 Eleva tu Salud Digital
               </h2>
               <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed font-light mb-8">
@@ -624,7 +624,7 @@ export function RegisterForm() {
                       className="space-y-3.5"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-teal-600 dark:text-teal-400">Paso 1: Información Personal</span>
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-primary dark:text-primary">Paso 1: Información Personal</span>
                         <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500">{role === 'patient' ? '1 / 2' : '1 / 3'}</span>
                       </div>
 
@@ -634,7 +634,7 @@ export function RegisterForm() {
                           Nombre completo
                         </label>
                         <div className="relative group/input">
-                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors pointer-events-none" />
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                           <input
                             id="register-name"
                             type="text"
@@ -662,7 +662,7 @@ export function RegisterForm() {
                           Correo electrónico
                         </label>
                         <div className="relative group/input">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-teal-500 transition-colors pointer-events-none" />
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                           <input
                             id="register-email"
                             type="email"
@@ -752,7 +752,7 @@ export function RegisterForm() {
                             className="w-full h-11 rounded-xl text-xs font-bold flex items-center justify-center gap-2.5 bg-white/5 dark:bg-white/5 border border-slate-200 dark:border-zinc-800/80 hover:bg-slate-50 dark:hover:bg-zinc-900/60 text-slate-800 dark:text-zinc-200 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-sm relative overflow-hidden"
                           >
                             {isGoogleSubmitting ? (
-                              <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
                             ) : (
                               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -778,7 +778,7 @@ export function RegisterForm() {
                       className="space-y-3.5"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-teal-600 dark:text-teal-400">Paso 2: Detalles de Entidad</span>
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-primary dark:text-primary">Paso 2: Detalles de Entidad</span>
                         <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500">2 / 3</span>
                       </div>
 
@@ -838,8 +838,8 @@ export function RegisterForm() {
                             </div>
 
                             {isLocating ? (
-                              <div className="flex items-center gap-2 text-xs text-teal-600 dark:text-teal-400 bg-white/5 rounded-xl p-3 border border-white/5">
-                                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                              <div className="flex items-center gap-2 text-xs text-primary dark:text-primary bg-white/5 rounded-xl p-3 border border-white/5">
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                 <span>Determinando coordenadas exactas de tu dispositivo...</span>
                               </div>
                             ) : entityLat && entityLng ? (
@@ -854,7 +854,7 @@ export function RegisterForm() {
                                 <button
                                   type="button"
                                   onClick={requestLocation}
-                                  className="text-[10px] font-bold text-teal-600 dark:text-teal-400 hover:underline shrink-0"
+                                  className="text-[10px] font-bold text-primary dark:text-primary hover:underline shrink-0"
                                 >
                                   Recapturar
                                 </button>
@@ -889,7 +889,7 @@ export function RegisterForm() {
                             <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
                             {isLoadingLists ? (
                               <div className="w-full h-11 pl-11 pr-4 rounded-xl text-sm bg-white/40 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                 <span>Cargando farmacias...</span>
                               </div>
                             ) : (
@@ -976,8 +976,8 @@ export function RegisterForm() {
                             </div>
 
                             {isLocating ? (
-                              <div className="flex items-center gap-2 text-xs text-teal-600 dark:text-teal-400 bg-white/5 rounded-xl p-3 border border-white/5">
-                                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                              <div className="flex items-center gap-2 text-xs text-primary dark:text-primary bg-white/5 rounded-xl p-3 border border-white/5">
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                 <span>Determinando coordenadas exactas de tu dispositivo...</span>
                               </div>
                             ) : entityLat && entityLng ? (
@@ -992,7 +992,7 @@ export function RegisterForm() {
                                 <button
                                   type="button"
                                   onClick={requestLocation}
-                                  className="text-[10px] font-bold text-teal-600 dark:text-teal-400 hover:underline shrink-0"
+                                  className="text-[10px] font-bold text-primary dark:text-primary hover:underline shrink-0"
                                 >
                                   Recapturar
                                 </button>
@@ -1082,7 +1082,7 @@ export function RegisterForm() {
                       className="space-y-3.5"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-teal-600 dark:text-teal-400">Paso {role === 'patient' ? '2: Credenciales' : '3: Credenciales'}</span>
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-primary dark:text-primary">Paso {role === 'patient' ? '2: Credenciales' : '3: Credenciales'}</span>
                         <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500">{role === 'patient' ? '2 / 2' : '3 / 3'}</span>
                       </div>
 
@@ -1206,7 +1206,7 @@ export function RegisterForm() {
                     type="button"
                     onClick={() => navigate('entrar')}
                     disabled={isSubmitting}
-                    className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-bold transition-colors disabled:opacity-50"
+                    className="text-primary dark:text-primary hover:text-primary-700 dark:hover:text-primary-300 font-bold transition-colors disabled:opacity-50"
                   >
                     Iniciar sesión
                   </button>
