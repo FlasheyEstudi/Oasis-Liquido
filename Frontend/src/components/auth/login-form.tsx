@@ -11,6 +11,7 @@ import { APP_NAME } from '@/utils/constants';
 import { post, getErrorMessage } from '@/api/client';
 import { OrganicBlobs } from '@/components/oasis/organic-blobs';
 import { AnimatedLogo } from '@/components/ui/animated-logo';
+import { MascotaIcon } from '@/components/ui/mascota-icon';
 import { cn } from '@/lib/utils';
 import type { AuthResponse } from '@/types';
 
@@ -206,6 +207,7 @@ export function LoginForm() {
               {/* Logo */}
               <motion.div custom={0} variants={fadeInUp} className="flex flex-col items-center mb-4">
                 <div className="relative group flex flex-col items-center">
+                  <MascotaIcon size="lg" className="mx-auto mb-6 animate-bounce" />
                   <AnimatedLogo className="scale-[1.15] mb-2" showLabel={false} />
                 </div>
                 <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mt-1">Bienvenido de vuelta</h1>

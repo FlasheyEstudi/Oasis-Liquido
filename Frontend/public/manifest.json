@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/oasis-icon.png",
+      "src": "/images/nuevo logo y mascota/mascota.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/oasis-logo.png",
+      "src": "/images/nuevo logo y mascota/mascota.png",
       "sizes": "512x512",
       "type": "image/png"
     }

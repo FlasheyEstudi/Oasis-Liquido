@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AnimatedLogo } from '@/components/ui/animated-logo';
+import { MascotaIcon } from '@/components/ui/mascota-icon';
 import { LoadingScreen } from '@/components/oasis/loading-screen';
 import { CounterAnimation } from '@/components/landing/counter-animation';
 import { cn } from '@/lib/utils';
@@ -149,6 +150,7 @@ function OasisLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' | 'xl' }) {
     <div className={`relative group ${sizes[size]} transition-all duration-500 flex items-center justify-center`}>
       {/* Floating neon aura behind the logo */}
       <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-tr from-teal-500/30 via-cyan-500/30 to-sky-500/30 opacity-0 blur-2xl group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+      <MascotaIcon size="lg" className="mx-auto mb-6 animate-bounce" />
       <AnimatedLogo priority={size === 'xl'} showLabel={false} />
     </div>
   );
