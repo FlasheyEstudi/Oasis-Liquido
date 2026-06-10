@@ -12,6 +12,14 @@ import {
   notifyReceptionistsOfCheckIn
 } from './event-notifications';
 
+function formatDateTimeNI(date: Date): string {
+  try {
+    return date.toLocaleString('es-NI', { dateStyle: 'long', timeStyle: 'short' });
+  } catch (e) {
+    return date.toLocaleString('es-NI') || date.toString();
+  }
+}
+
 /**
  * Get appointments with filters
  * Role-based filtering: patients see own, doctors see own, admin sees all
@@ -191,9 +199,9 @@ export async function createAppointment(data: {
 
   // Trigger Notifications
   try {
-    const dateStr = appointment.dateTime.toLocaleString('es-NI', { dateStyle: 'long', timeStyle: 'short' });
-    notifyAppointmentBookedForDoctor(appointment.doctorId, appointment.patient.name || 'Paciente', dateStr).catch(err => console.error(err));
-    notifyAppointmentCreatedForClinic(appointment.clinicId, appointment.patient.name || 'Paciente', appointment.doctor.name || 'Médico', dateStr).catch(err => console.error(err));
+    const dateStr = formatDateTimeNI(appointment.dateTime);
+    notifyAppointmentBookedForDoctor(appointment.doctorId, appointment.patient?.name || 'Paciente', dateStr).catch(err => console.error(err));
+    notifyAppointmentCreatedForClinic(appointment.clinicId, appointment.patient?.name || 'Paciente', appointment.doctor?.name || 'Médico', dateStr).catch(err => console.error(err));
   } catch (err) {
     console.error('Failed to dispatch appointment creation notifications:', err);
   }
@@ -216,6 +224,53 @@ export async function updateAppointmentStatus(
   const appointment = await db.appointment.findUnique({ where: { id } });
   if (!appointment) {
     throw new Error('NOT_FOUND');
+  }
+
+  // Tenant / ownership validation
+  let isAuthorized = false;
+  if (userRole === 'admin') {
+    isAuthorized = true;
+  } else if (userRole === 'patient') {
+    if (appointment.patientId === userId) {
+      isAuthorized = true;
+    } else {
+      const caregiverRelation = await db.familyRelationship.findFirst({
+        where: {
+          caregiverId: userId,
+          patientId: appointment.patientId,
+          isActive: true,
+          status: 'active',
+        }
+      });
+      if (caregiverRelation) {
+        isAuthorized = true;
+      }
+    }
+  } else if (userRole === 'doctor') {
+    if (appointment.doctorId === userId) {
+      isAuthorized = true;
+    } else {
+      const profile = await db.doctorProfile.findUnique({ where: { userId } });
+      if (profile && profile.clinicId === appointment.clinicId) {
+        isAuthorized = true;
+      }
+    }
+  } else if (userRole === 'receptionist' || userRole === 'clinic_admin') {
+    if (userRole === 'receptionist') {
+      const profile = await db.receptionistProfile.findUnique({ where: { userId } });
+      if (profile && profile.clinicId === appointment.clinicId) {
+        isAuthorized = true;
+      }
+    } else {
+      const clinic = await db.clinic.findFirst({ where: { id: appointment.clinicId, ownerId: userId } });
+      if (clinic) {
+        isAuthorized = true;
+      }
+    }
+  }
+
+  if (!isAuthorized) {
+    throw new Error('UNAUTHORIZED');
   }
 
   const currentStatus = appointment.status;
@@ -259,15 +314,15 @@ export async function updateAppointmentStatus(
   // Trigger Notifications on cancellation
   if (newStatus === 'cancelled') {
     try {
-      const dateStr = updated.dateTime.toLocaleString('es-NI', { dateStyle: 'long', timeStyle: 'short' });
-      notifyAppointmentCanceledForDoctor(updated.doctorId, updated.patient.name || 'Paciente', dateStr).catch(err => console.error(err));
-      notifyAppointmentCanceledForClinic(updated.clinicId, updated.patient.name || 'Paciente', updated.doctor.name || 'Médico', dateStr).catch(err => console.error(err));
+      const dateStr = formatDateTimeNI(updated.dateTime);
+      notifyAppointmentCanceledForDoctor(updated.doctorId, updated.patient?.name || 'Paciente', dateStr).catch(err => console.error(err));
+      notifyAppointmentCanceledForClinic(updated.clinicId, updated.patient?.name || 'Paciente', updated.doctor?.name || 'Médico', dateStr).catch(err => console.error(err));
     } catch (err) {
       console.error('Failed to dispatch appointment cancellation notifications:', err);
     }
   } else if (newStatus === 'confirmed') {
     try {
-      notifyReceptionistsOfCheckIn(updated.clinicId, updated.patient.name || 'Paciente', updated.doctor.name || 'Médico').catch(err => console.error(err));
+      notifyReceptionistsOfCheckIn(updated.clinicId, updated.patient?.name || 'Paciente', updated.doctor?.name || 'Médico').catch(err => console.error(err));
     } catch (err) {
       console.error('Failed to dispatch receptionist check-in notification:', err);
     }
@@ -339,8 +394,8 @@ export async function updateAppointment(
   // Trigger notifications on reschedule
   if (data.date_time) {
     try {
-      const dateStr = updated.dateTime.toLocaleString('es-NI', { dateStyle: 'long', timeStyle: 'short' });
-      notifyAppointmentRescheduled(updated.patientId, updated.doctor.name || 'Médico', dateStr).catch(err => console.error(err));
+      const dateStr = formatDateTimeNI(updated.dateTime);
+      notifyAppointmentRescheduled(updated.patientId, updated.doctor?.name || 'Médico', dateStr).catch(err => console.error(err));
     } catch (err) {
       console.error('Failed to dispatch reschedule notification:', err);
     }

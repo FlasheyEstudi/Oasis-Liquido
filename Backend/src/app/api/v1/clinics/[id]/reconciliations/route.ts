@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
 import * as cashReconciliationService from '@/lib/services/cash-reconciliation.service';
+import { verifyFacilityAccess } from '@/lib/auth/access';
 
 /**
  * GET /api/v1/clinics/[id]/reconciliations
@@ -16,6 +17,11 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
     const { id: clinicId } = await params;
     if (!clinicId) {
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de clínica requerido', 400);
+    }
+
+    const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, clinicId, 'clinic');
+    if (!hasAccess) {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta clínica', 403);
     }
 
     const history = await cashReconciliationService.getReconciliationHistory(clinicId, 'clinic');
@@ -34,6 +40,11 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
     const { id: clinicId } = await params;
     if (!clinicId) {
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de clínica requerido', 400);
+    }
+
+    const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, clinicId, 'clinic');
+    if (!hasAccess) {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta clínica', 403);
     }
 
     const body = await req.json();

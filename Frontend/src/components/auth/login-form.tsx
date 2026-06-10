@@ -126,8 +126,8 @@ export function LoginForm() {
       <OrganicBlobs />
 
       {/* Futuristic Floating Aura Lights */}
-      <div className="absolute top-10 left-10 w-[450px] h-[450px] bg-teal-500/5 rounded-full blur-[110px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-cyan-500/5 rounded-full blur-[110px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-10 left-10 w-[450px] h-[450px] bg-primary/5 rounded-full blur-[110px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-secondary/5 rounded-full blur-[110px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
 
       <motion.div
         initial="hidden"
@@ -143,13 +143,13 @@ export function LoginForm() {
       >
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
           {/* Left Panel: App Advantages - Displayed on medium screens and up */}
-          <div className="hidden md:flex md:col-span-5 flex-col justify-between p-8 rounded-[2.5rem] backdrop-blur-3xl bg-teal-950/10 dark:bg-zinc-950/60 border border-white/20 dark:border-zinc-800/30 text-slate-900 dark:text-white shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="hidden md:flex md:col-span-5 flex-col justify-between p-8 rounded-[2.5rem] backdrop-blur-3xl bg-primary/10 dark:bg-primary/20 border border-white/20 dark:border-zinc-800/30 text-slate-900 dark:text-white shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full blur-2xl pointer-events-none" />
             
             <div style={{ transform: 'translateZ(30px)' }}>
               <div className="flex items-center gap-2 mb-6">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/20 uppercase">
+                <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border border-teal-500/20 uppercase">
                   Oasis v0.2-RC1
                 </span>
               </div>

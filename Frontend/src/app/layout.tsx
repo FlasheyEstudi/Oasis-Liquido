@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { PWAInitializer } from "@/components/pwa-initializer";
+import Head from "next/head";
 
 // Stand-in font configs to prevent fetching external Google Fonts in offline/sandboxed build environments.
 const inter = { variable: "var(--font-inter, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)" };
@@ -40,9 +41,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}
-      >
+      <Head>
+        <title>Oasis Líquida – Salud Premium</title>
+        <link rel="icon" href="/images/nuevo logo y mascota/logo.png" />
+        <meta name="description" content="Plataforma de salud digital premium con diseño futurista, cumplimiento MINSA y experiencias inmersivas." />
+      </Head>
+      <body className={`${inter.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -5,6 +5,7 @@ import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-resp
 import { validateBody, createSaleSchema } from '@/lib/validators';
 import * as saleService from '@/lib/services/sale.service';
 import { db } from '@/lib/db';
+import { verifyFacilityAccess } from '@/lib/auth/access';
 
 /**
  * POST /api/v1/clinics/:id/sales
@@ -16,14 +17,9 @@ export const POST = withAuth(async (req: AuthenticatedRequest, context: { params
     const body = await req.json();
 
     // Verify access
-    if (req.user.role === 'receptionist' || req.user.role === 'clinic_admin') {
-      const profile = await db.receptionistProfile.findUnique({
-        where: { userId: req.user.userId },
-      });
-      // Simple verification for demo, ideally check clinic_admin too
-      if (profile && profile.clinicId !== clinicId) {
-        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta clínica', 403);
-      }
+    const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, clinicId, 'clinic');
+    if (!hasAccess) {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta clínica', 403);
     }
 
     const creatorId = req.user.userId;

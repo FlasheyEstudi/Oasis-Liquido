@@ -37,6 +37,9 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
     if (error.message === 'NOT_FOUND') {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Cita no encontrada', 404);
     }
+    if (error.message === 'UNAUTHORIZED') {
+      return errorResponse(ErrorCodes.UNAUTHORIZED, 'No tienes permiso para actualizar esta cita', 403);
+    }
     if (error.message === 'INVALID_STATUS_TRANSITION') {
       return errorResponse(ErrorCodes.INVALID_STATUS_TRANSITION, 'Transición de estado no válida', 400);
     }

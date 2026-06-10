@@ -4,6 +4,7 @@
 
 import { NextRequest } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ import { parsePagination } from '@/lib/utils/pagination';
  * List all users with optional filters (admin only)
  * Query: ?role=patient&search=carlos&page=1&limit=20
  */
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: AuthenticatedRequest) => {
   try {
     const { searchParams } = new URL(req.url);
     const { page, limit, skip } = parsePagination(searchParams);
@@ -25,9 +26,36 @@ export const GET = withAuth(async (req: NextRequest) => {
     const role = searchParams.get('role') || undefined;
     const search = searchParams.get('search') || undefined;
 
+    const callerId = req.user.userId;
+    const callerRole = req.user.role;
+    let clinicId: string | undefined = undefined;
+    let pharmacyId: string | undefined = undefined;
+
+    if (callerRole === 'clinic_admin') {
+      const clinic = await db.clinic.findFirst({ where: { ownerId: callerId } });
+      clinicId = clinic?.id;
+    } else if (callerRole === 'doctor') {
+      const profile = await db.doctorProfile.findUnique({ where: { userId: callerId } });
+      clinicId = profile?.clinicId;
+    } else if (callerRole === 'receptionist') {
+      const profile = await db.receptionistProfile.findUnique({ where: { userId: callerId } });
+      clinicId = profile?.clinicId || undefined;
+    } else if (callerRole === 'pharmacy_admin') {
+      const pharmacy = await db.pharmacy.findFirst({ where: { ownerId: callerId } });
+      pharmacyId = pharmacy?.id;
+    } else if (callerRole === 'pharmacy_manager' || callerRole === 'cashier') {
+      const profile = await db.pharmacyManagerProfile.findUnique({ where: { userId: callerId } });
+      pharmacyId = profile?.pharmacyId || undefined;
+    } else if (callerRole === 'delivery_driver') {
+      const profile = await db.deliveryDriverProfile.findUnique({ where: { userId: callerId } });
+      pharmacyId = profile?.pharmacyId;
+    }
+
     const { data, total } = await userService.getUsers({
       role,
       search,
+      clinicId,
+      pharmacyId,
       page,
       limit,
       skip,

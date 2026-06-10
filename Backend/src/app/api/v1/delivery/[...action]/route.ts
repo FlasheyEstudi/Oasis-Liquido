@@ -223,6 +223,12 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
             }).catch(e => console.error('Failed to update sale status in delivery catch-all:', e));
           }
 
+          // Deactivate chat session
+          await db.chatSession.updateMany({
+            where: { targetId: orderId },
+            data: { isActive: false }
+          }).catch(e => console.error('Failed to deactivate chat session on deliver action:', e));
+
           return successResponse(updated);
         } catch (dbError) {
           console.warn('Database offline, delivering in memory:', dbError);
@@ -246,6 +252,12 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
               notes: `Fallo de entrega: ${reason}`,
             },
           });
+          // Deactivate chat session
+          await db.chatSession.updateMany({
+            where: { targetId: orderId },
+            data: { isActive: false }
+          }).catch(e => console.error('Failed to deactivate chat session on fail action:', e));
+
           return successResponse(updated);
         } catch (dbError) {
           console.warn('Database offline, failing in memory:', dbError);

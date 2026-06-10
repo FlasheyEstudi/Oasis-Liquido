@@ -19,7 +19,7 @@ export const GET = withAuth(
         if (!profile || profile.pharmacyId !== id) {
           return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
         }
-      } else if (req.user.role === 'pharmacy_admin' || req.user.role === 'pharmacy_owner') {
+      } else if (req.user.role === 'pharmacy_admin') {
         const pharmacy = await db.pharmacy.findUnique({
           where: { id },
         });

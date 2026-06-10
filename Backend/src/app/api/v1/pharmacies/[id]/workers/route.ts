@@ -19,4 +19,4 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error interno del servidor', 500);
   }
-}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'admin'] });
+}, { roles: ['pharmacy_admin', 'admin'] });

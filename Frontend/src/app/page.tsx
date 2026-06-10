@@ -184,12 +184,14 @@ export default function Home() {
       case 'clinic-staff':
       case 'clinic-finances':
       case 'clinic-analytics':
+      case 'clinic-minsa':
         return <ManageClinics />;
       case 'manage-pharmacies':
       case 'gestionar-farmacias':
       case 'pharmacy-staff':
       case 'pharmacy-finances':
       case 'pharmacy-analytics':
+      case 'pharmacy-minsa':
         return <ManagePharmacies />;
       case 'manage-users':
       case 'gestionar-usuarios':

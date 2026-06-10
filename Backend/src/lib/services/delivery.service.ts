@@ -161,6 +161,14 @@ export async function updateDeliveryStatus(
     });
   }
 
+  // Deactivate chat session if delivery is completed or failed
+  if (['delivered', 'failed'].includes(newStatus)) {
+    await db.chatSession.updateMany({
+      where: { targetId: id },
+      data: { isActive: false }
+    }).catch(e => console.error('Failed to deactivate chat session in updateDeliveryStatus:', e));
+  }
+
   await createAuditLog({
     userId,
     action: 'update',

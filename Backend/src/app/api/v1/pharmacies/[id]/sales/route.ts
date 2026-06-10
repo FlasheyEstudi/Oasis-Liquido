@@ -6,10 +6,18 @@ import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
 import { validateBody, createSaleSchema } from '@/lib/validators';
 import * as saleService from '@/lib/services/sale.service';
+import { verifyFacilityAccess } from '@/lib/auth/access';
 
 export const POST = withAuth(async (req: AuthenticatedRequest, context: any) => {
   try {
     const { id: pharmacyId } = await context.params;
+
+    if (req.user.role !== 'patient') {
+      const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, pharmacyId, 'pharmacy');
+      if (!hasAccess) {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
+      }
+    }
 
     const body = await req.json();
     const validation = validateBody(createSaleSchema, body);

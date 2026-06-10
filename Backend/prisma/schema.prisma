@@ -192,6 +192,7 @@ model Medicine {
   dosageForm           String?
   concentration        String?
   requiresPrescription Boolean            @default(true)
+  controlType          String             @default("NORMAL") // "NORMAL", "CONTROLLED_PSYCHOTROPIC", "CONTROLLED_NARCOTIC"
   isActive             Boolean            @default(true)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt

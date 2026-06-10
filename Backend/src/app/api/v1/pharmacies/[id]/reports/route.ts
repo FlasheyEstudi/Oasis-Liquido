@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
 import { db } from '@/lib/db';
+import { verifyFacilityAccess } from '@/lib/auth/access';
 
 /**
  * GET /api/v1/pharmacies/:id/reports
@@ -12,14 +13,9 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
   try {
     const { id: pharmacyId } = await context.params;
 
-    // Verify access
-    if (req.user.role === 'pharmacy_manager' || req.user.role === 'pharmacy_admin') {
-      const profile = await db.pharmacyManagerProfile.findUnique({
-        where: { userId: req.user.userId },
-      });
-      if (!profile || profile.pharmacyId !== pharmacyId) {
-        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
-      }
+    const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, pharmacyId, 'pharmacy');
+    if (!hasAccess) {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
     }
 
     const { searchParams } = new URL(req.url);
@@ -137,6 +133,110 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
       }));
 
       return successResponse(itemsWithMedicine);
+    }
+
+    if (type === 'minsa_compliance') {
+      // Fetch controlled substance sales for this pharmacy
+      const controlledSales = await db.sale.findMany({
+        where: {
+          pharmacyId,
+          saleItems: {
+            some: {
+              medicine: {
+                controlType: {
+                  in: ['CONTROLLED_PSYCHOTROPIC', 'CONTROLLED_NARCOTIC']
+                }
+              }
+            }
+          }
+        },
+        include: {
+          patient: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true
+            }
+          },
+          prescription: {
+            include: {
+              doctor: {
+                select: {
+                  name: true,
+                  doctorProfile: {
+                    select: {
+                      licenseNumber: true
+                    }
+                  }
+                }
+              },
+              clinic: {
+                select: {
+                  name: true
+                }
+              }
+            }
+          },
+          saleItems: {
+            where: {
+              medicine: {
+                controlType: {
+                  in: ['CONTROLLED_PSYCHOTROPIC', 'CONTROLLED_NARCOTIC']
+                }
+              }
+            },
+            include: {
+              medicine: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+
+      // Map to MINSA format
+      const records = controlledSales.map(sale => {
+        const hasPrescription = !!sale.prescription;
+        
+        return {
+          id: sale.id,
+          date: sale.createdAt.toISOString(),
+          patientName: sale.patient?.name || 'Venta Ambulatoria',
+          patientPhone: sale.patient?.phone || 'N/A',
+          hasPrescription,
+          prescriptionId: sale.prescriptionId || null,
+          doctorName: sale.prescription?.doctor?.name || 'N/A',
+          doctorLicense: sale.prescription?.doctor?.doctorProfile?.licenseNumber || 'N/A',
+          clinicName: sale.prescription?.clinic?.name || 'N/A',
+          digitalSignature: sale.prescription?.digitalSignature ? 'Firmada Digitalmente' : 'Firma Pendiente/Física',
+          qrVerified: !!sale.prescription?.qrCode,
+          items: sale.saleItems.map(item => ({
+            medicineId: item.medicineId,
+            name: item.medicine.name,
+            genericName: item.medicine.genericName,
+            controlType: item.medicine.controlType,
+            concentration: item.medicine.concentration || 'N/A',
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.quantity * item.unitPrice
+          }))
+        };
+      });
+
+      // Calculate totals for MINSA book summary
+      const totals = {
+        totalDispensations: records.length,
+        psychotropicsCount: records.reduce((acc, r) => acc + r.items.filter(i => i.controlType === 'CONTROLLED_PSYCHOTROPIC').reduce((sum, item) => sum + item.quantity, 0), 0),
+        narcoticsCount: records.reduce((acc, r) => acc + r.items.filter(i => i.controlType === 'CONTROLLED_NARCOTIC').reduce((sum, item) => sum + item.quantity, 0), 0),
+        withoutPrescriptionViolations: records.filter(r => !r.hasPrescription).length
+      };
+
+      return successResponse({
+        totals,
+        records
+      });
     }
 
     return errorResponse(ErrorCodes.BAD_REQUEST, 'Tipo de reporte no válido', 400);

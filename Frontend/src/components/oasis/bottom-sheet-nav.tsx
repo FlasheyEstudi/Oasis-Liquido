@@ -43,6 +43,7 @@ function getAllNavItems(role: UserRole): { page: AppPage; label: string; icon: R
         { page: 'clinic-staff', label: 'Mi Personal', icon: <Users className="size-5" /> },
         { page: 'clinic-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-5" /> },
         { page: 'clinic-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-5" /> },
+        { page: 'clinic-minsa', label: 'Reportes MINSA', icon: <Shield className="size-5" /> },
       ];
     case 'pharmacy_admin':
       return [
@@ -54,6 +55,7 @@ function getAllNavItems(role: UserRole): { page: AppPage; label: string; icon: R
         { page: 'pharmacy-staff', label: 'Mi Personal', icon: <Users className="size-5" /> },
         { page: 'pharmacy-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-5" /> },
         { page: 'pharmacy-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-5" /> },
+        { page: 'pharmacy-minsa', label: 'Reportes MINSA', icon: <Shield className="size-5" /> },
       ];
     case 'patient':
       return [
@@ -76,6 +78,7 @@ function getAllNavItems(role: UserRole): { page: AppPage; label: string; icon: R
         { page: 'fulfillment', label: 'Surtir Receta', icon: <Pill className="size-5" /> },
         { page: 'inventory', label: 'Inventario', icon: <Package className="size-5" /> },
         { page: 'order-management', label: 'Pedidos', icon: <FileText className="size-5" /> },
+        { page: 'pharmacy-minsa', label: 'Reportes MINSA', icon: <Shield className="size-5" /> },
       ];
     case 'delivery_driver':
       return [

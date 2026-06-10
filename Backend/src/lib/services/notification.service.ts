@@ -1,5 +1,6 @@
 import { messaging } from '@/lib/firebase/admin';
 import { db } from '@/lib/db';
+import { emitNotification } from '@/lib/socket';
 
 export interface NotificationPayload {
   title: string;
@@ -68,10 +69,10 @@ export class NotificationService {
     let tokens: { token: string }[] = [];
     try {
       // Buscar todos los tokens del usuario
-      tokens = await db.pushToken.findMany({
+      tokens = (await db.pushToken.findMany({
         where: { userId },
         select: { token: true },
-      });
+      })) || [];
     } catch (dbError) {
       console.warn('Database offline, checking fallback in-memory or skipping notifications:', dbError);
     }
@@ -160,7 +161,6 @@ export class NotificationService {
       });
 
       // 2. Emitir en tiempo real por Socket.io
-      const { emitNotification } = require('../socket');
       emitNotification(data.userId, notification);
 
       // 3. Enviar vía FCM Push Notification
@@ -169,7 +169,7 @@ export class NotificationService {
         title: data.title,
         body: data.body,
         data: {
-          id: notification.id,
+          id: notification?.id || '',
           type: data.type,
           link: data.link || '',
         },

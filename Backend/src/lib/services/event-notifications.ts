@@ -1,5 +1,5 @@
 import { NotificationService } from './notification.service';
-import { db } from '../db';
+import { db } from '@/lib/db';
 
 // Helpers to get all staff for multi-tenant notifications
 async function getPharmacyStaff(pharmacyId: string): Promise<string[]> {
@@ -9,12 +9,12 @@ async function getPharmacyStaff(pharmacyId: string): Promise<string[]> {
       select: { ownerId: true }
     });
     
-    const workers = await db.user.findMany({
+    const workers = (await db.user.findMany({
       where: {
         pharmacyManagerProfile: { pharmacyId }
       },
       select: { id: true }
-    });
+    })) || [];
 
     const ids = new Set<string>();
     if (pharmacy?.ownerId) ids.add(pharmacy.ownerId);
@@ -33,7 +33,7 @@ async function getClinicStaff(clinicId: string): Promise<string[]> {
       select: { ownerId: true }
     });
     
-    const workers = await db.user.findMany({
+    const workers = (await db.user.findMany({
       where: {
         OR: [
           { receptionistProfile: { clinicId } },
@@ -41,7 +41,7 @@ async function getClinicStaff(clinicId: string): Promise<string[]> {
         ]
       },
       select: { id: true }
-    });
+    })) || [];
 
     const ids = new Set<string>();
     if (clinic?.ownerId) ids.add(clinic.ownerId);

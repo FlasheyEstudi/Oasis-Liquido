@@ -20,7 +20,7 @@ export const POST = withAuth(
         if (!profile || profile.pharmacyId !== id) {
           return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
         }
-      } else if (req.user.role === 'pharmacy_admin' || req.user.role === 'pharmacy_owner') {
+      } else if (req.user.role === 'pharmacy_admin') {
         const pharmacy = await db.pharmacy.findUnique({
           where: { id },
         });
@@ -52,5 +52,5 @@ export const POST = withAuth(
       return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
     }
   },
-  { roles: ['pharmacy_manager', 'pharmacy_admin', 'pharmacy_owner', 'admin'] }
+  { roles: ['pharmacy_manager', 'pharmacy_admin', 'admin'] }
 );

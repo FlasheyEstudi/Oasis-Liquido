@@ -1128,6 +1128,7 @@ export function useAcceptDelivery() {
     mutationFn: (id: string) => deliveriesApi.acceptDelivery(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['delivery-orders'] });
     },
   });
 }
@@ -1139,6 +1140,7 @@ export function useRejectDelivery() {
     mutationFn: (id: string) => deliveriesApi.rejectDelivery(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['delivery-orders'] });
     },
   });
 }
@@ -1150,6 +1152,7 @@ export function usePickupDelivery() {
     mutationFn: (id: string) => deliveriesApi.pickupDelivery(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['delivery-orders'] });
     },
   });
 }
@@ -1161,6 +1164,7 @@ export function useDeliverDelivery() {
     mutationFn: (id: string) => deliveriesApi.deliverDelivery(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['delivery-orders'] });
     },
   });
 }
@@ -1172,6 +1176,7 @@ export function useFailDelivery() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) => deliveriesApi.failDelivery(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['delivery-orders'] });
     },
   });
 }

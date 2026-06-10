@@ -36,7 +36,18 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
       // Admin can see any order
     } else if (userRole === 'patient') {
       if (order.patientId !== userId) {
-        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permisos para ver esta orden', 403);
+        // Check family caregiver delegation
+        const caregiverRelation = await db.familyRelationship.findFirst({
+          where: {
+            caregiverId: userId,
+            patientId: order.patientId,
+            isActive: true,
+            status: 'active',
+          }
+        });
+        if (!caregiverRelation) {
+          return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permisos para ver esta orden', 403);
+        }
       }
     } else if (userRole === 'delivery_driver') {
       if (order.deliveryDriverId !== userId) {

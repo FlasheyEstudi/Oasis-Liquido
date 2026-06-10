@@ -43,6 +43,7 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'clinic-staff', label: 'Mi Personal', icon: <Users className="size-[18px]" /> },
         { page: 'clinic-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-[18px]" /> },
         { page: 'clinic-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-[18px]" /> },
+        { page: 'clinic-minsa', label: 'Reportes MINSA', icon: <Shield className="size-[18px]" /> },
         { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'pharmacy_admin':
@@ -55,6 +56,7 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'pharmacy-staff', label: 'Mi Personal', icon: <Users className="size-[18px]" /> },
         { page: 'pharmacy-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-[18px]" /> },
         { page: 'pharmacy-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-[18px]" /> },
+        { page: 'pharmacy-minsa', label: 'Reportes MINSA', icon: <Shield className="size-[18px]" /> },
         { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'patient':
@@ -80,6 +82,7 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'fulfillment', label: 'Surtir Receta', icon: <Pill className="size-[18px]" /> },
         { page: 'inventory', label: 'Inventario', icon: <Package className="size-[18px]" /> },
         { page: 'order-management', label: 'Pedidos', icon: <FileText className="size-[18px]" /> },
+        { page: 'pharmacy-minsa', label: 'Reportes MINSA', icon: <Shield className="size-[18px]" /> },
         { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'delivery_driver':

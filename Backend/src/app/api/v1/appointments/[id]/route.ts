@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
 import * as appointmentService from '@/lib/services/appointment.service';
+import { verifyFacilityAccess } from '@/lib/auth/access';
+import { db } from '@/lib/db';
 
 /**
  * GET /api/appointments/:id
@@ -17,6 +19,40 @@ export const GET = withAuth(async (req: AuthenticatedRequest, context: { params:
     const appointment = await appointmentService.getAppointment(id);
     if (!appointment) {
       return errorResponse(ErrorCodes.NOT_FOUND, 'Cita no encontrada', 404);
+    }
+
+    // Authorization checks
+    const { userId, role: userRole } = req.user;
+    let isAuthorized = false;
+
+    if (userRole === 'admin') {
+      isAuthorized = true;
+    } else if (appointment.patientId === userId) {
+      isAuthorized = true;
+    } else if (appointment.doctorId === userId) {
+      isAuthorized = true;
+    } else if (userRole === 'patient') {
+      // Caregiver access check
+      const caregiverRelation = await db.familyRelationship.findFirst({
+        where: {
+          caregiverId: userId,
+          patientId: appointment.patientId,
+          isActive: true,
+          status: 'active',
+        }
+      });
+      if (caregiverRelation) {
+        isAuthorized = true;
+      }
+    } else if (userRole === 'clinic_admin' || userRole === 'receptionist' || userRole === 'doctor') {
+      const isClinicStaff = await verifyFacilityAccess(userId, userRole, appointment.clinicId, 'clinic');
+      if (isClinicStaff) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta cita', 403);
     }
 
     return successResponse(appointment);

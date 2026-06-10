@@ -11,7 +11,8 @@ import {
 } from '@/hooks/use-api';
 import type { Pharmacy } from '@/types';
 import { GlassCard } from '@/components/oasis/glass-card';
-import { PharmacyStaffManagement } from '../common/staff-management';
+import { PharmacyStaffManagement } from '../staff-management';
+import { MinsaComplianceReport } from '../common/minsa-compliance-report';
 import { CashReconciliation } from '../common/cash-reconciliation';
 import {
   InventoryVelocityChart,
@@ -238,6 +239,24 @@ export function ManagePharmacies() {
               Actualmente no tienes ninguna farmacia asociada a tu cuenta. Contacta con el equipo de soporte de OASIS para vincular tu farmacia.
             </p>
           </GlassCard>
+        </div>
+      );
+    }
+
+    if (currentPage === 'pharmacy-minsa') {
+      return (
+        <div className="space-y-6 p-4 md:p-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-2 print:hidden"
+          >
+            <h1 className="text-2xl font-bold text-foreground">Reportes de Cumplimiento MINSA</h1>
+            <p className="text-sm text-muted-foreground">Libro Oficial de Control de Psicotrópicos y Estupefacientes en tiempo real</p>
+          </motion.div>
+          <div>
+            <MinsaComplianceReport facilityId={ownedPharmacy.id} type="pharmacy" />
+          </div>
         </div>
       );
     }

@@ -496,8 +496,8 @@ export function RegisterForm() {
       <OrganicBlobs />
 
       {/* Futuristic Floating Lights */}
-      <div className="absolute top-10 right-10 w-96 h-96 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-10 left-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-10 right-10 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-10 left-10 w-96 h-96 bg-secondary/10 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
 
       <motion.div
         initial="hidden"
@@ -513,13 +513,13 @@ export function RegisterForm() {
       >
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
           {/* Left Panel: App Advantages - Displayed on medium screens and up */}
-          <div className="hidden md:flex md:col-span-5 flex-col justify-between p-8 rounded-[2.5rem] backdrop-blur-3xl bg-teal-950/10 dark:bg-zinc-950/60 border border-white/20 dark:border-zinc-800/30 text-slate-900 dark:text-white shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="hidden md:flex md:col-span-5 flex-col justify-between p-8 rounded-[2.5rem] backdrop-blur-3xl bg-primary/10 dark:bg-primary/20 border border-white/20 dark:border-zinc-800/30 text-slate-900 dark:text-white shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full blur-2xl pointer-events-none" />
             
             <div>
               <div className="flex items-center gap-2 mb-6">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/20 uppercase">
+                <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border border-primary/20 uppercase">
                   Oasis v0.2-RC1
                 </span>
               </div>
@@ -709,17 +709,17 @@ export function RegisterForm() {
                                 className={cn(
                                   "flex flex-col items-start text-left p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden group hover:scale-[1.01] active:scale-[0.99]",
                                   isSelected
-                                    ? "bg-teal-500/10 border-teal-500/50 shadow-[0_4px_20px_rgba(20,184,166,0.15)] text-teal-700 dark:text-teal-400"
+                                    ? "bg-primary/10 border-primary/20 shadow-primary text-primary dark:text-primary"
                                     : "bg-white/40 dark:bg-zinc-900/30 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700"
                                 )}
                               >
                                 {isSelected && (
-                                  <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                                  <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                                 )}
                                 <div className={cn(
                                   "p-1 rounded-xl border mb-2 shrink-0 transition-colors duration-300",
                                   isSelected
-                                    ? "bg-teal-500/20 border-teal-500/30 text-teal-600 dark:text-teal-400"
+                                    ? "bg-primary/20 border-primary/30 text-primary dark:text-primary"
                                     : "bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500"
                                 )}>
                                   {item.icon}
@@ -869,7 +869,7 @@ export function RegisterForm() {
                                 <button
                                   type="button"
                                   onClick={requestLocation}
-                                  className="w-full h-10 rounded-xl text-xs font-bold bg-teal-600/10 border border-teal-500/20 hover:bg-teal-600/20 text-teal-600 dark:text-teal-400 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                                  className="w-full h-10 rounded-xl text-xs font-bold bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary dark:text-primary flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
                                 >
                                   📍 Obtener Ubicación GPS del Dispositivo
                                 </button>
@@ -1007,7 +1007,7 @@ export function RegisterForm() {
                                 <button
                                   type="button"
                                   onClick={requestLocation}
-                                  className="w-full h-10 rounded-xl text-xs font-bold bg-teal-600/10 border border-teal-500/20 hover:bg-teal-600/20 text-teal-600 dark:text-teal-400 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                                  className="w-full h-10 rounded-xl text-xs font-bold bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary dark:text-primary flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
                                 >
                                   📍 Obtener Ubicación GPS del Dispositivo
                                 </button>
@@ -1040,7 +1040,7 @@ export function RegisterForm() {
                                     className={cn(
                                       "flex items-center justify-center py-2.5 px-3 rounded-xl border text-xs font-bold transition-all duration-300",
                                       isSelected
-                                        ? "bg-teal-500/10 border-teal-500/50 text-teal-600 dark:text-teal-400 shadow-md shadow-teal-500/5"
+                                        ? "bg-primary/10 border-primary/20 text-primary dark:text-primary shadow-md shadow-primary/5"
                                         : "bg-white/40 dark:bg-zinc-900/30 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-900/50"
                                     )}
                                   >

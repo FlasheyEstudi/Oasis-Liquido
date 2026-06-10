@@ -35,7 +35,19 @@ export async function createEmployeeDirectly(
 
   const { name, email, phone, password, role, clinicId, pharmacyId, specialty, licenseNumber, vehicleType, licensePlate } = data;
 
-  if (sender.role === 'clinic_admin') {
+  if (sender.role === 'admin') {
+    if (role === 'doctor' || role === 'receptionist') {
+      if (!clinicId) throw new Error('CLINIC_ID_REQUIRED');
+      const clinic = await db.clinic.findUnique({ where: { id: clinicId } });
+      if (!clinic) throw new Error('FORBIDDEN_CLINIC');
+    } else if (role === 'cashier' || role === 'delivery_driver') {
+      if (!pharmacyId) throw new Error('PHARMACY_ID_REQUIRED');
+      const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
+      if (!pharmacy) throw new Error('FORBIDDEN_PHARMACY');
+    } else {
+      throw new Error('INVALID_ROLE_FOR_EMPLOYEE');
+    }
+  } else if (sender.role === 'clinic_admin') {
     if (role !== 'doctor' && role !== 'receptionist') {
       throw new Error('INVALID_ROLE_FOR_CLINIC');
     }
@@ -161,7 +173,19 @@ export async function inviteWorker(
     throw new Error('SENDER_NOT_FOUND');
   }
 
-  if (sender.role === 'clinic_admin') {
+  if (sender.role === 'admin') {
+    if (role === 'doctor' || role === 'receptionist') {
+      if (!clinicId) throw new Error('CLINIC_ID_REQUIRED');
+      const clinic = await db.clinic.findUnique({ where: { id: clinicId } });
+      if (!clinic) throw new Error('FORBIDDEN_CLINIC');
+    } else if (role === 'cashier' || role === 'delivery_driver') {
+      if (!pharmacyId) throw new Error('PHARMACY_ID_REQUIRED');
+      const pharmacy = await db.pharmacy.findUnique({ where: { id: pharmacyId } });
+      if (!pharmacy) throw new Error('FORBIDDEN_PHARMACY');
+    } else {
+      throw new Error('INVALID_ROLE_FOR_EMPLOYEE');
+    }
+  } else if (sender.role === 'clinic_admin') {
     if (role !== 'doctor' && role !== 'receptionist') {
       throw new Error('INVALID_ROLE_FOR_CLINIC');
     }
@@ -520,7 +544,7 @@ export async function changeWorkerStatus(
         throw new Error('FORBIDDEN');
       }
     } else if (worker.role === 'delivery_driver') {
-      if (caller.role !== 'pharmacy_admin' && caller.role !== 'pharmacy_owner') {
+      if (caller.role !== 'pharmacy_admin') {
         throw new Error('FORBIDDEN');
       }
       const pharmacyId = worker.deliveryDriverProfile?.pharmacyId;
@@ -616,7 +640,7 @@ export async function updateWorkerDetails(
         throw new Error('FORBIDDEN');
       }
     } else if (worker.role === 'delivery_driver') {
-      if (caller.role !== 'pharmacy_admin' && caller.role !== 'pharmacy_owner') {
+      if (caller.role !== 'pharmacy_admin') {
         throw new Error('FORBIDDEN');
       }
       const pharmacyId = worker.deliveryDriverProfile?.pharmacyId;

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { successResponse, errorResponse, ErrorCodes } from '@/lib/utils/api-response';
 import * as cashReconciliationService from '@/lib/services/cash-reconciliation.service';
+import { verifyFacilityAccess } from '@/lib/auth/access';
 
 /**
  * GET /api/v1/pharmacies/[id]/reconciliations
@@ -18,12 +19,17 @@ export const GET = withAuth(async (req: AuthenticatedRequest, { params }: { para
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de farmacia requerido', 400);
     }
 
+    const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, pharmacyId, 'pharmacy');
+    if (!hasAccess) {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
+    }
+
     const history = await cashReconciliationService.getReconciliationHistory(pharmacyId, 'pharmacy');
     return successResponse(history);
   } catch (error: any) {
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error al obtener historial de arqueos', 500);
   }
-}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'pharmacy_manager', 'admin', 'cashier'] });
+}, { roles: ['pharmacy_admin', 'pharmacy_manager', 'admin', 'cashier'] });
 
 /**
  * POST /api/v1/pharmacies/[id]/reconciliations
@@ -34,6 +40,11 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
     const { id: pharmacyId } = await params;
     if (!pharmacyId) {
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de farmacia requerido', 400);
+    }
+
+    const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, pharmacyId, 'pharmacy');
+    if (!hasAccess) {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
     }
 
     const body = await req.json();
@@ -65,4 +76,4 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
   } catch (error: any) {
     return errorResponse(ErrorCodes.INTERNAL_ERROR, error.message || 'Error al guardar el arqueo de caja', 500);
   }
-}, { roles: ['pharmacy_owner', 'pharmacy_admin', 'pharmacy_manager', 'admin', 'cashier'] });
+}, { roles: ['pharmacy_admin', 'pharmacy_manager', 'admin', 'cashier'] });

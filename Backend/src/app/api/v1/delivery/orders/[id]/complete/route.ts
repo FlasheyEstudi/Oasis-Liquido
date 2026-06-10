@@ -54,6 +54,12 @@ export const POST = withAuth(async (req: AuthenticatedRequest, context: { params
       });
     }
 
+    // 3.5 Deactivate chat session for this delivery order
+    await db.chatSession.updateMany({
+      where: { targetId: orderId },
+      data: { isActive: false }
+    }).catch(err => console.error('Failed to deactivate chat session on complete:', err));
+
     // 4. Notify patient of delivery completion via Push notification
     if (updatedOrder.patientId) {
       sendPushNotification(

@@ -11,18 +11,47 @@ import { createAuditLog } from './audit.service';
 export async function getUsers(filters: {
   role?: string;
   search?: string;
+  clinicId?: string;
+  pharmacyId?: string;
   page: number;
   limit: number;
   skip: number;
 }) {
-  const where: Record<string, unknown> = {};
+  const where: Record<string, any> = {};
 
   if (filters.role) where.role = filters.role;
+
+  const conditions: any[] = [];
+
   if (filters.search) {
-    where.OR = [
-      { name: { contains: filters.search } },
-      { email: { contains: filters.search } },
-    ];
+    conditions.push({
+      OR: [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { email: { contains: filters.search, mode: 'insensitive' } },
+      ],
+    });
+  }
+
+  if (filters.clinicId) {
+    conditions.push({
+      OR: [
+        { doctorProfile: { clinicId: filters.clinicId } },
+        { receptionistProfile: { clinicId: filters.clinicId } },
+      ],
+    });
+  }
+
+  if (filters.pharmacyId) {
+    conditions.push({
+      OR: [
+        { pharmacyManagerProfile: { pharmacyId: filters.pharmacyId } },
+        { deliveryDriverProfile: { pharmacyId: filters.pharmacyId } },
+      ],
+    });
+  }
+
+  if (conditions.length > 0) {
+    where.AND = conditions;
   }
 
   const [data, total] = await Promise.all([

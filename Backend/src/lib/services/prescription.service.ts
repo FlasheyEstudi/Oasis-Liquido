@@ -50,10 +50,51 @@ export async function getPrescriptions(filters: {
     where.patientId = filters.userId;
   } else if (filters.userRole === 'doctor' && filters.userId) {
     where.doctorId = filters.userId;
-  } else {
-    // pharmacy_manager, admin can see based on filters
+  } else if (filters.userRole === 'clinic_admin' && filters.userId) {
+    const clinics = await db.clinic.findMany({
+      where: { ownerId: filters.userId },
+      select: { id: true },
+    });
+    where.clinicId = { in: clinics.map(c => c.id) };
     if (filters.patientId) where.patientId = filters.patientId;
     if (filters.doctorId) where.doctorId = filters.doctorId;
+  } else if (filters.userRole === 'receptionist' && filters.userId) {
+    const profile = await db.receptionistProfile.findUnique({
+      where: { userId: filters.userId },
+      select: { clinicId: true },
+    });
+    if (profile?.clinicId) {
+      where.clinicId = profile.clinicId;
+    } else {
+      where.id = 'none';
+    }
+    if (filters.patientId) where.patientId = filters.patientId;
+    if (filters.doctorId) where.doctorId = filters.doctorId;
+  } else if ((filters.userRole === 'pharmacy_manager' || filters.userRole === 'cashier') && filters.userId) {
+    const profile = await db.pharmacyManagerProfile.findUnique({
+      where: { userId: filters.userId },
+      select: { pharmacyId: true },
+    });
+    if (profile?.pharmacyId) {
+      where.fulfilledPharmacyId = profile.pharmacyId;
+    } else {
+      where.id = 'none';
+    }
+    if (filters.patientId) where.patientId = filters.patientId;
+    if (filters.doctorId) where.doctorId = filters.doctorId;
+  } else if (filters.userRole === 'pharmacy_admin' && filters.userId) {
+    const pharmacies = await db.pharmacy.findMany({
+      where: { ownerId: filters.userId },
+      select: { id: true },
+    });
+    where.fulfilledPharmacyId = { in: pharmacies.map(p => p.id) };
+    if (filters.patientId) where.patientId = filters.patientId;
+    if (filters.doctorId) where.doctorId = filters.doctorId;
+  } else if (filters.userRole === 'admin') {
+    if (filters.patientId) where.patientId = filters.patientId;
+    if (filters.doctorId) where.doctorId = filters.doctorId;
+  } else {
+    where.id = 'none';
   }
 
   if (filters.status) where.status = filters.status;
