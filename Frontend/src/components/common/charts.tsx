@@ -386,11 +386,11 @@ export function SankeyFlowDiagram() {
 
           <defs>
             <linearGradient id="streamTeal" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#14b8a6" />
-              <stop offset="100%" stopColor="#10b981" />
+              <stop offset="0%" stopColor="#00C2A0" />
+              <stop offset="100%" stopColor="#10B981" />
             </linearGradient>
             <linearGradient id="streamEmerald" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="0%" stopColor="#10B981" />
               <stop offset="100%" stopColor="#0ea5e9" />
             </linearGradient>
             <linearGradient id="streamSky" x1="0" y1="0" x2="1" y2="0">
@@ -521,8 +521,8 @@ export function CircularPerformanceRadar() {
               const y = 50 - r * Math.cos(rad);
               return `${x},${y}`;
             }).join(' ')}
-            fill="rgba(20, 184, 166, 0.25)"
-            stroke="#14b8a6"
+            fill="rgba(0, 194, 160, 0.25)"
+            stroke="#00C2A0"
             strokeWidth="1.5"
           />
 
@@ -539,7 +539,7 @@ export function CircularPerformanceRadar() {
                 cx={x}
                 cy={y}
                 r="3"
-                fill="#34d399"
+                fill="#10B981"
                 className="cursor-pointer hover:r-4 transition-all"
                 onClick={() => setActiveDimension(d.label === activeDimension ? null : `${d.label}: ${d.val}%`)}
               />
@@ -588,13 +588,13 @@ export function AppointmentWaveform() {
           />
           <path
             d="M0 30 Q30 5, 60 40 T120 20 T180 45 T200 30"
-            stroke="#14b8a6"
+            stroke="#00C2A0"
             strokeWidth="2.5"
             fill="none"
           />
           <defs>
             <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#14b8a6" />
+              <stop offset="0%" stopColor="#00C2A0" />
               <stop offset="100%" stopColor="transparent" />
             </linearGradient>
           </defs>
@@ -796,7 +796,7 @@ export function DemandForecastSparklines() {
             <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">+18.4%</span>
           </div>
           <svg className="w-full h-8" viewBox="0 0 100 20" preserveAspectRatio="none">
-            <path d="M0 15 L20 10 L40 18 L60 8 L80 12 L100 2" stroke="#10b981" strokeWidth="2" fill="none" />
+            <path d="M0 15 L20 10 L40 18 L60 8 L80 12 L100 2" stroke="#10B981" strokeWidth="2" fill="none" />
           </svg>
         </div>
 
@@ -806,7 +806,7 @@ export function DemandForecastSparklines() {
             <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">+12.1%</span>
           </div>
           <svg className="w-full h-8" viewBox="0 0 100 20" preserveAspectRatio="none">
-            <path d="M0 12 L20 16 L40 8 L60 14 L80 6 L100 3" stroke="#38bdf8" strokeWidth="2" fill="none" />
+            <path d="M0 12 L20 16 L40 8 L60 14 L80 6 L100 3" stroke="#0ea5e9" strokeWidth="2" fill="none" />
           </svg>
         </div>
       </div>

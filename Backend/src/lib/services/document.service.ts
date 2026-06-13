@@ -384,16 +384,20 @@ export class DocumentService {
 
     // Notify clinic owner
     if (doc.clinic.ownerId) {
-      const { NotificationService } = require('./notification.service');
-      NotificationService.createNotification({
-        userId: doc.clinic.ownerId,
-        title: status === 'approved' ? '✅ Documento de Clínica Aprobado' : '❌ Documento de Clínica Rechazado',
-        body: status === 'approved'
-          ? `El documento de tu clínica "${doc.type}" ha sido verificado y aprobado.`
-          : `El documento de tu clínica "${doc.type}" ha sido rechazado. Motivo: ${rejectionReason || 'No especificado'}.`,
-        type: 'document_verification',
-        link: 'manage-clinics',
-      }).catch((err: any) => console.error(err));
+      try {
+        const { NotificationService } = require('./notification.service');
+        NotificationService.createNotification({
+          userId: doc.clinic.ownerId,
+          title: status === 'approved' ? '✅ Documento de Clínica Aprobado' : '❌ Documento de Clínica Rechazado',
+          body: status === 'approved'
+            ? `El documento de tu clínica "${doc.type}" ha sido verificado y aprobado.`
+            : `El documento de tu clínica "${doc.type}" ha sido rechazado. Motivo: ${rejectionReason || 'No especificado'}.`,
+          type: 'document_verification',
+          link: 'manage-clinics',
+        }).catch((err: any) => console.error(err));
+      } catch (err) {
+        console.error('Error triggering clinic document notification:', err);
+      }
     }
 
     return updatedDoc;
@@ -463,16 +467,20 @@ export class DocumentService {
 
     // Notify pharmacy owner
     if (doc.pharmacy.ownerId) {
-      const { NotificationService } = require('./notification.service');
-      NotificationService.createNotification({
-        userId: doc.pharmacy.ownerId,
-        title: status === 'approved' ? '✅ Documento de Farmacia Aprobado' : '❌ Documento de Farmacia Rechazado',
-        body: status === 'approved'
-          ? `El documento de tu farmacia "${doc.type}" ha sido verificado y aprobado.`
-          : `El documento de tu farmacia "${doc.type}" ha sido rechazado. Motivo: ${rejectionReason || 'No especificado'}.`,
-        type: 'document_verification',
-        link: 'manage-pharmacies',
-      }).catch((err: any) => console.error(err));
+      try {
+        const { NotificationService } = require('./notification.service');
+        NotificationService.createNotification({
+          userId: doc.pharmacy.ownerId,
+          title: status === 'approved' ? '✅ Documento de Farmacia Aprobado' : '❌ Documento de Farmacia Rechazado',
+          body: status === 'approved'
+            ? `El documento de tu farmacia "${doc.type}" ha sido verificado y aprobado.`
+            : `El documento de tu farmacia "${doc.type}" ha sido rechazado. Motivo: ${rejectionReason || 'No especificado'}.`,
+          type: 'document_verification',
+          link: 'manage-pharmacies',
+        }).catch((err: any) => console.error(err));
+      } catch (err) {
+        console.error('Error triggering pharmacy document notification:', err);
+      }
     }
 
     return updatedDoc;

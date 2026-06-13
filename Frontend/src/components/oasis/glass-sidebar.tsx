@@ -109,6 +109,14 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'appointments', label: 'Citas', icon: <Calendar className="size-[18px]" /> },
         { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
+    case 'cashier':
+      return [
+        { page: 'home', label: 'Inicio', icon: <Home className="size-[18px]" /> },
+        { page: 'pos', label: 'Punto de Venta (POS)', icon: <DollarSign className="size-[18px]" /> },
+        { page: 'fulfillment', label: 'Surtir Receta', icon: <Pill className="size-[18px]" /> },
+        { page: 'order-management', label: 'Pedidos', icon: <FileText className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
+      ];
     default:
       return [];
   }

@@ -36,6 +36,18 @@ export function useDriverLocationStream(orderId: string, enabled: boolean, mapIn
   const lastPositionRef = useRef<GeoPoint | null>(null);
   const [currentLocation, setCurrentLocation] = useState<GeoPoint | null>(null);
 
+  const mapInstanceRef = useRef(mapInstance);
+  const updateLocationRef = useRef(updateLocation);
+
+  // Sync refs to avoid breaking the watchPosition loop on component re-renders
+  useEffect(() => {
+    mapInstanceRef.current = mapInstance;
+  }, [mapInstance]);
+
+  useEffect(() => {
+    updateLocationRef.current = updateLocation;
+  }, [updateLocation]);
+
   useEffect(() => {
     if (!enabled || !orderId) {
       setCurrentLocation(null);
@@ -50,10 +62,11 @@ export function useDriverLocationStream(orderId: string, enabled: boolean, mapIn
       let lat = coords.latitude;
       let lng = coords.longitude;
 
-      // Snap the raw coordinates to the road network if map is loaded
-      if (mapInstance) {
+      // Snap the raw coordinates to the road network if map is loaded using the stable ref
+      const currentMap = mapInstanceRef.current;
+      if (currentMap) {
         try {
-          const snapped = await snapToRoad(mapInstance, { lat, lng });
+          const snapped = await snapToRoad(currentMap, { lat, lng });
           lat = snapped.lat;
           lng = snapped.lng;
         } catch (err) {
@@ -113,9 +126,9 @@ export function useDriverLocationStream(orderId: string, enabled: boolean, mapIn
         socket.emit('driver-location', payload);
       }
 
-      // Fallback/Persist via HTTP mutation for persistence
+      // Fallback/Persist via HTTP mutation for persistence using stable ref
       const lastPoint = pointsToFlush[pointsToFlush.length - 1];
-      updateLocation.mutate({
+      updateLocationRef.current.mutate({
         orderId,
         lat: lastPoint.lat,
         lng: lastPoint.lng
@@ -126,7 +139,7 @@ export function useDriverLocationStream(orderId: string, enabled: boolean, mapIn
       if (watchId !== null) navigator.geolocation.clearWatch(watchId);
       if (timerId !== null) clearInterval(timerId);
     };
-  }, [enabled, orderId, mapInstance, updateLocation]);
+  }, [enabled, orderId]);
 
   return { currentLocation };
 }

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npx jiti src/server.ts 2>&1 | tee dev.log",
-    "build": "npx prisma generate && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "build": "npx prisma generate && next build && node scripts/copy-assets.js",
     "start": "NODE_ENV=production PORT=8000 npx jiti src/server.ts 2>&1 | tee server.log",
     "lint": "eslint .",
     "db:push": "prisma db push",

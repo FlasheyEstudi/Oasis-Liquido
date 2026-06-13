@@ -36,7 +36,7 @@ export function AnalyticsCard({
   dataKey, 
   xAxisKey, 
   type = 'area', 
-  color = '#10b981', 
+  color = '#10B981', 
   valuePrefix = '',
   currentValue,
   percentageChange = 0

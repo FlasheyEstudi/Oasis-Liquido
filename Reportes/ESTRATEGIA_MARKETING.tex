@@ -1,0 +1,108 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{amsmath}
+
+% Definición de colores de Oasis Nicaragua
+\definecolor{oasisteal}{HTML}{00C2A0}
+\definecolor{oasismint}{HTML}{5FF3B8}
+\definecolor{oasisemerald}{HTML}{10B981}
+\definecolor{oasissky}{HTML}{0EA5E9}
+\definecolor{oasisdark}{HTML}{09090B}
+\definecolor{slategray}{HTML}{475569}
+
+\titleformat{\section}
+  {\color{oasisteal}\normalfont\Large\bfseries}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\color{oasisemerald}\normalfont\large\bfseries}
+  {\thesubsection}{1em}{}
+
+\title{\color{oasisteal}\bfseries ESTRATEGIA DE MARKETING Y POSICIONAMIENTO \\ \Large OASIS NICARAGUA \\ \large\normalfont De la Arquitectura de Software a la Conversión de Mercado}
+\author{\textbf{Oasis Strategic Operations Group}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Análisis Psicológico y Dolor de Mercado en Nicaragua}
+El ecosistema de \textbf{Oasis Nicaragua} aborda múltiples ineficiencias del sector salud nacional estructurando soluciones sobre pilares clave extraídos de la lógica de negocio del código:
+
+\subsection{El Dolor del Paciente (B2C)}
+\begin{itemize}
+    \item \textbf{El caos del transporte y el tiempo de espera:} El tráfico de Managua y la dificultad de transporte en los departamentos encarecen el acceso a medicamentos. La respuesta técnica de Oasis es la integración del motor de geolocalización satelital y el cálculo automático de rutas mediante OSRM/MapLibre.
+    \item \textbf{Cuidado familiar a distancia:} Gran parte de la población nicaragüense depende de familiares en el extranjero o en otras ciudades para comprar medicamentos. La funcionalidad \textit{Liquid Family} y las relaciones de cuidador (\texttt{FamilyRelationship}) con pins de enlace facilitan el control médico de dependientes.
+\end{itemize}
+
+\subsection{El Dolor del Sector Médico y Farmacéutico (B2B)}
+\begin{itemize}
+    \item \textbf{Fuga de pacientes y recetas falsas:} Los médicos carecen de herramientas centralizadas para fidelizar y certificar recetas. La solución técnica es la firma digital con código PIN criptográfico HMAC y código QR único de verificación.
+    \item \textbf{Pérdida de inventario por vencimiento (FEFO):** Las farmacias locales pierden hasta un 15\% de su stock anual por mala rotación. El módulo de inventario de Oasis (\texttt{InventoryBatch}) implementa obligatoriamente el flujo FEFO (\textit{First Expired, First Out}) basado en la fecha de vencimiento (\texttt{expiration\_date}) a nivel de base de datos.
+\end{itemize}
+
+\section{Guía de Arte y Plantillas (Templates) para Redes Sociales}
+Para el pre-lanzamiento, se utilizarán exclusivamente formatos estáticos y carruseles educativos con estética \textit{Glassmorphic} y \textit{Claymorphic} limpia.
+
+\subsection{Paleta de Colores Corporativa}
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Color} & \textbf{Código Hex} & \textbf{Aplicación de Marca} \\
+\midrule
+\color{oasisteal}\blacksquare~Oasis Teal & \texttt{\#00C2A0} & Color primario, logotipos, botones táctiles principales. \\
+\color{oasismint}\blacksquare~Oasis Mint & \texttt{\#5FF3B8} & Acentos de destaque, badges de éxito, luces de fondo. \\
+\color{oasisemerald}\blacksquare~Oasis Emerald & \texttt{\#10B981} & Estados positivos, áreas de salud y seguridad. \\
+\color{oasissky}\blacksquare~Oasis Sky & \texttt{\#0EA5E9} & Rutas de delivery, mapas interactivos e información técnica. \\
+\color{oasisdark}\blacksquare~Oasis Dark & \texttt{\#09090B} & Fondos para modo oscuro, textos contrastados. \\
+\bottomrule
+\end{tabular}
+\caption{Paleta cromática oficial de Oasis Nicaragua.}
+\end{table}
+
+\subsection{Estructura Visual de Plantillas Estáticas}
+\begin{itemize}
+    \item \textbf{Fondos:} Gradientes sutiles con desenfoque de burbujas líquidas orgánicas (\texttt{liquid-blob}) sobre fondo blanco o gris ultra-claro (\texttt{\#F8FAFC}).
+    \text{\textbf{Tipografía:}} Serif clásico para titulares grandes y sans-serif geométrico (\textit{Outfit} o \textit{Inter}) para subtítulos y descripciones cortas.
+    \item \textbf{Logotipo:} Colocado de manera consistente en la esquina superior izquierda. Un indicador de estado simulado en color Oasis Mint (\texttt{\#5FF3B8}) en la esquina superior derecha para transmitir seguridad médica activa.
+\end{itemize}
+
+\section{Estrategia de Copys y Mensajes por Rol}
+
+\subsection{Pacientes (B2C) - Campaña de Expectativa y Alivio}
+\textbf{Post 1: La Solución al Cuidado Familiar}\\
+\textit{"¿Vives lejos de tus padres pero quieres cuidar su salud? Con la función \textbf{Liquid Family} de Oasis, puedes programar sus citas médicas y pedir su tratamiento farmacéutico a domicilio directamente desde tu celular. Protege a quienes más amas con un par de toques. Próximamente."}
+
+\subsection{Médicos y Clínicas (B2B) - Modernización Profesional}
+\textbf{Post 1: Recetas Digitales HMAC}\\
+\textit{"Protege tu práctica y la salud de tus pacientes. Con Oasis, emite recetas digitales con código QR único y firma digital autenticada con tu código PIN personal. Moderniza tu consultorio y olvídate del papel. Regístrate en nuestra lista de espera."}
+
+\subsection{Farmacias (B2B) - Control de Inventarios y POS}
+\textbf{Post 1: Cero Pérdidas con FEFO}\\
+\textit{"¿Medicamentos vencidos en estantería? Con el Kardex inteligente de Oasis, tu inventario rota automáticamente bajo el estándar FEFO (lo primero que vence es lo primero que se vende). Maximiza tu margen de ganancia hoy. Únete a la red Oasis."}
+
+\subsection{Delivery (Freelance) - Reclutamiento de Conductores}
+\textbf{Post 1: Conduce y Gana con Libertad}\\
+\textit{"¿Tienes moto y quieres generar ingresos extras en Managua? Con la aplicación Oasis Driver, visualizas pedidos en tiempo real, calculas rutas óptimas por GPS y cobras de manera inmediata. Tu horario, tu moto, tus metas. Únete a la flota."}
+
+\section{Cronograma de Expectativa Pre-Lanzamiento (4 Semanas)}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{Semana} & \textbf{Tema Central} & \textbf{Público Objetivo} \\
+\midrule
+Semana 1 & Revelación de la marca Oasis y los 5 roles integrados. & Todo público / B2C \& B2B \\
+Semana 2 & El fin del papel: Expectativa sobre la receta digital QR y la firma médica. & Pacientes y Doctores \\
+Semana 3 & Logística inteligente: Demostración de rutas OSRM para delivery y FEFO para farmacias. & Farmacias y Motorizados \\
+Semana 4 & Apertura del registro oficial y descarga de la aplicación PWA. & Todo público \\
+\bottomrule
+\end{tabularx}
+
+\end{document}

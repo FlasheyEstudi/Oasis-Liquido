@@ -830,14 +830,14 @@ export function OasisLandingPage() {
                         <path
                           d="M 40,80 Q 140,20 220,90 T 360,30"
                           fill="none"
-                          stroke="rgba(20,184,166,0.2)"
+                          stroke="rgba(0,194,160,0.2)"
                           strokeWidth="4"
                           strokeLinecap="round"
                         />
                         <path
                           d="M 40,80 Q 140,20 220,90 T 360,30"
                           fill="none"
-                          stroke="#14b8a6"
+                          stroke="#00C2A0"
                           strokeWidth="3"
                           strokeDasharray="8 6"
                           strokeLinecap="round"

@@ -15,6 +15,26 @@ export interface CashSummary {
 }
 
 /**
+ * Resolves the global USD Exchange Rate (NIO per USD) from configurations
+ */
+export async function getUsdExchangeRate(): Promise<number> {
+  try {
+    const rateSetting = await db.globalSetting.findUnique({
+      where: { key: 'USD_EXCHANGE_RATE' },
+    });
+    if (rateSetting && rateSetting.value) {
+      const rate = parseFloat(rateSetting.value);
+      if (!isNaN(rate) && rate > 0) {
+        return rate;
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching USD_EXCHANGE_RATE setting:', err);
+  }
+  return 36.6; // Nicaragua default exchange rate baseline
+}
+
+/**
  * Calculates the expected cash and card sales totals for today (or a specific date)
  */
 export async function getCashSummary(
@@ -44,6 +64,7 @@ export async function getCashSummary(
     },
   });
 
+  const exchangeRate = await getUsdExchangeRate();
   let expectedCash = 0;
   let expectedCard = 0;
 
@@ -51,15 +72,17 @@ export async function getCashSummary(
     if (sale.payments && sale.payments.length > 0) {
       for (const pay of sale.payments) {
         if (pay.status === 'completed') {
+          // Convert USD to NIO base currency
+          const amountInNio = pay.currency === 'USD' ? pay.amount * exchangeRate : pay.amount;
           if (pay.method === 'cash') {
-            expectedCash += pay.amount;
+            expectedCash += amountInNio;
           } else {
-            expectedCard += pay.amount;
+            expectedCard += amountInNio;
           }
         }
       }
     } else {
-      // Fallback: If no explicit payment records, count as cash
+      // Fallback: If no explicit payment records, count as cash (NIO base)
       expectedCash += sale.totalAmount;
     }
   }
@@ -92,6 +115,14 @@ export async function createCashReconciliation(
   userAgent?: string
 ) {
   const { entityId, entityType, openingBalance, actualCash, actualCard, notes } = data;
+
+  // Validate that all declared financial values are valid non-negative numbers
+  if (
+    isNaN(openingBalance) || isNaN(actualCash) || isNaN(actualCard) ||
+    openingBalance < 0 || actualCash < 0 || actualCard < 0
+  ) {
+    throw new Error('INVALID_AMOUNTS: Balances and declared amounts must be non-negative numbers');
+  }
 
   // 1. Get current expected numbers
   const summary = await getCashSummary(entityId, entityType);

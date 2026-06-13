@@ -262,6 +262,16 @@ export async function createBatch(data: {
   expirationDate?: Date;
   supplier?: string;
 }) {
+  if (data.quantity < 0) {
+    throw new Error('INVALID_QUANTITY: Batch quantity must be non-negative');
+  }
+  if (data.costPrice !== undefined && data.costPrice < 0) {
+    throw new Error('INVALID_PRICE: Cost price must be non-negative');
+  }
+  if (data.sellingPrice !== undefined && data.sellingPrice < 0) {
+    throw new Error('INVALID_PRICE: Selling price must be non-negative');
+  }
+
   return await db.$transaction(async (tx) => {
     const batch = await tx.inventoryBatch.create({
       data: {
@@ -299,23 +309,40 @@ export async function updateBatch(id: string, data: {
   sellingPrice?: number;
   expirationDate?: Date;
 }) {
+  if (data.quantity !== undefined && data.quantity < 0) {
+    throw new Error('INVALID_QUANTITY: Batch quantity must be non-negative');
+  }
+  if (data.costPrice !== undefined && data.costPrice < 0) {
+    throw new Error('INVALID_PRICE: Cost price must be non-negative');
+  }
+  if (data.sellingPrice !== undefined && data.sellingPrice < 0) {
+    throw new Error('INVALID_PRICE: Selling price must be non-negative');
+  }
+
   return await db.$transaction(async (tx) => {
     const oldBatch = await tx.inventoryBatch.findUnique({ where: { id } });
     if (!oldBatch) throw new Error('NOT_FOUND');
 
-    const updated = await tx.inventoryBatch.update({
-      where: { id },
-      data,
-    });
-
-    // If quantity changed, sync total inventory
+    // If quantity changed, check that overall inventory doesn't become negative
     if (data.quantity !== undefined) {
       const diff = data.quantity - oldBatch.quantity;
+      const inventory = await tx.inventory.findUnique({
+        where: { id: oldBatch.inventoryId },
+      });
+      if (inventory && (inventory.quantity + diff) < 0) {
+        throw new Error('INSUFFICIENT_STOCK: Consolidated inventory quantity cannot be negative');
+      }
+
       await tx.inventory.update({
         where: { id: oldBatch.inventoryId },
         data: { quantity: { increment: diff } },
       });
     }
+
+    const updated = await tx.inventoryBatch.update({
+      where: { id },
+      data,
+    });
 
     return updated;
   });

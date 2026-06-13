@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { getSocket, joinOrderRoom } from '@/lib/socket';
 import { useDeliveryOrderTracking, useDeliveryRoute } from '@/hooks/use-api';
 import type { DeliveryOrder, DeliveryRoute } from '@/types';
@@ -29,6 +29,8 @@ export function useRealTimeTracking(orderId: string) {
   const routeQuery = useDeliveryRoute(orderId, !!orderId);
   const route = routeQuery.data;
 
+  const lastUpdateRef = useRef<number>(0);
+
   // 4. WebSocket integration
   useEffect(() => {
     if (!orderId) return;
@@ -43,12 +45,16 @@ export function useRealTimeTracking(orderId: string) {
       const lng = data.lng ?? data.longitude;
       
       if (lat && lng) {
-        console.log('📡 [useRealTimeTracking] Socket location update received:', lat, lng);
-        setDriverLocation({
-          lat,
-          lng,
-          timestamp: new Date()
-        });
+        const now = Date.now();
+        if (now - lastUpdateRef.current >= 3000) {
+          console.log('📡 [useRealTimeTracking] Socket location update received (throttled):', lat, lng);
+          setDriverLocation({
+            lat,
+            lng,
+            timestamp: new Date()
+          });
+          lastUpdateRef.current = now;
+        }
       }
     };
 

@@ -174,7 +174,7 @@ export function ReceptionistDashboard() {
           dataKey="count"
           xAxisKey="date"
           type="bar"
-          color="#3b82f6"
+          color="#0ea5e9"
           currentValue={report.totalAppointments}
           percentageChange={5}
         />

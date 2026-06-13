@@ -166,7 +166,7 @@ export function PharmacyDashboard() {
           data={report.chartData}
           dataKey="amount"
           xAxisKey="date"
-          color="#10b981"
+          color="#10B981"
           percentageChange={12}
         />
       </motion.div>

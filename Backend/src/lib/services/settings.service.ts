@@ -35,6 +35,15 @@ export async function updateGlobalSetting(
     throw new Error('NOT_FOUND');
   }
 
+  // Validation for critical financial keys to prevent NaN or negative settings
+  const numericKeys = ['USD_EXCHANGE_RATE', 'default_vat_rate', 'delivery_fee_per_km', 'base_consultation_fee'];
+  if (numericKeys.includes(key)) {
+    const valNum = parseFloat(value);
+    if (isNaN(valNum) || valNum < 0) {
+      throw new Error('INVALID_VALUE: Value must be a non-negative number');
+    }
+  }
+
   // 2. Perform DB update
   const updated = await db.globalSetting.update({
     where: { key },

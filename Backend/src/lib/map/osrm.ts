@@ -10,6 +10,14 @@ export interface RouteResponse {
   duration_seconds?: number;// Duration in seconds
 }
 
+// Memory cache for computed OSRM coordinates/routes to reduce external API overhead
+export const routeCache = new Map<string, RouteResponse>();
+
+export function getCacheKey(startLat: number, startLng: number, endLat: number, endLng: number): string {
+  const round = (num: number) => num.toFixed(4); // ~11m precision
+  return `${round(startLat)},${round(startLng)}->${round(endLat)},${round(endLng)}`;
+}
+
 /**
  * Decodes a Google encoded polyline format string into lat/lng coordinate objects.
  */
@@ -106,6 +114,12 @@ export async function calculateRealRoute(
   endLat: number,
   endLng: number
 ): Promise<RouteResponse> {
+  const cacheKey = getCacheKey(startLat, startLng, endLat, endLng);
+  if (routeCache.has(cacheKey)) {
+    console.log(`💾 [OSRM Cache] Cache hit for route: ${cacheKey}`);
+    return routeCache.get(cacheKey)!;
+  }
+
   const path = `/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=polyline&steps=false`;
   
   const localUrl = process.env.OSRM_BASE_URL || 'http://osrm:5000';
@@ -135,28 +149,33 @@ export async function calculateRealRoute(
     }
   }
 
+  let result: RouteResponse;
+
   // Fallback if all external APIs are unreachable or rate-limited
   if (!responseData) {
-    return calculateHaversineFallback(startLat, startLng, endLat, endLng);
+    result = calculateHaversineFallback(startLat, startLng, endLat, endLng);
+  } else {
+    try {
+      const polylineGeometry = responseData.geometry;
+      const coordinates = decodePolyline(polylineGeometry);
+      const distanceMeters = responseData.distance;
+      const durationSeconds = responseData.duration;
+
+      result = {
+        route: coordinates,
+        distanceKm: distanceMeters / 1000,
+        durationMinutes: Math.round(durationSeconds / 60),
+        durationText: `${Math.round(durationSeconds / 60)} min`,
+        geometry: polylineGeometry,
+        distance_meters: distanceMeters,
+        duration_seconds: durationSeconds
+      };
+    } catch (err: any) {
+      console.error("⚠️ [OSRM] Parse error, falling back to Haversine:", err.message);
+      result = calculateHaversineFallback(startLat, startLng, endLat, endLng);
+    }
   }
 
-  try {
-    const polylineGeometry = responseData.geometry;
-    const coordinates = decodePolyline(polylineGeometry);
-    const distanceMeters = responseData.distance;
-    const durationSeconds = responseData.duration;
-
-    return {
-      route: coordinates,
-      distanceKm: distanceMeters / 1000,
-      durationMinutes: Math.round(durationSeconds / 60),
-      durationText: `${Math.round(durationSeconds / 60)} min`,
-      geometry: polylineGeometry,
-      distance_meters: distanceMeters,
-      duration_seconds: durationSeconds
-    };
-  } catch (err: any) {
-    console.error("⚠️ [OSRM] Parse error, falling back to Haversine:", err.message);
-    return calculateHaversineFallback(startLat, startLng, endLat, endLng);
-  }
+  routeCache.set(cacheKey, result);
+  return result;
 }

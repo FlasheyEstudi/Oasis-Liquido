@@ -173,7 +173,7 @@ export function PharmacyMap() {
         lng: place.lng,
         type: isSelected ? 'destination' : (place.type === 'pharmacy' ? 'pharmacy' : 'clinic'),
         label: place.display_name,
-        color: isSelected ? undefined : (place.type === 'pharmacy' ? '#0d9488' : '#2563eb'), // Teal for pharmacy, Blue for clinic
+        color: isSelected ? undefined : (place.type === 'pharmacy' ? '#00C2A0' : '#0ea5e9'), // Oasis Teal, Oasis Sky
       };
     });
 

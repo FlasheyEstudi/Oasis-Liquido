@@ -58,14 +58,26 @@ export const POST = withAuth(async (req: AuthenticatedRequest, { params }: { par
       );
     }
 
+    const parsedOpening = parseFloat(openingBalance);
+    const parsedCash = parseFloat(actualCash);
+    const parsedCard = parseFloat(actualCard);
+
+    if (isNaN(parsedOpening) || isNaN(parsedCash) || isNaN(parsedCard)) {
+      return errorResponse(
+        ErrorCodes.VALIDATION_ERROR,
+        'Balances de apertura, efectivo real y tarjeta real deben ser números válidos',
+        400
+      );
+    }
+
     const settle = await cashReconciliationService.createCashReconciliation(
       req.user.userId,
       {
         entityId: clinicId,
         entityType: 'clinic',
-        openingBalance: parseFloat(openingBalance),
-        actualCash: parseFloat(actualCash),
-        actualCard: parseFloat(actualCard),
+        openingBalance: parsedOpening,
+        actualCash: parsedCash,
+        actualCard: parsedCard,
         notes: notes || '',
       },
       req.headers.get('x-forwarded-for') || undefined,

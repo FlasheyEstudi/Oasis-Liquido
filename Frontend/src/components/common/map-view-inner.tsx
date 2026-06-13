@@ -635,7 +635,7 @@ export function MapViewInner({
               source: 'nicaragua-detail',
               filter: ['==', ['get', 'type'], 'path'],
               paint: {
-                'line-color': '#10b981', // green emerald
+                'line-color': '#10B981', // Oasis Emerald
                 'line-width': 3,
                 'line-dasharray': [2, 2],
                 'line-opacity': 0.8
@@ -661,10 +661,10 @@ export function MapViewInner({
                 'circle-color': [
                   'match',
                   ['get', 'type'],
-                  'clinic', '#10b981',
-                  'pharmacy', '#0d9488',
+                  'clinic', '#10B981',     // Oasis Emerald
+                  'pharmacy', '#00C2A0',   // Oasis Teal
                   'market', '#f59e0b',
-                  'city', '#3b82f6',
+                  'city', '#0ea5e9',       // Oasis Sky
                   'neighborhood', '#8b5cf6',
                   'landmark', '#ec4899',
                   '#6b7280'
@@ -1028,7 +1028,7 @@ export function MapViewInner({
             'line-cap': 'round'
           },
           paint: {
-            'line-color': '#2563eb', // Indigo Blue
+            'line-color': '#0ea5e9', // Oasis Sky
             'line-width': 5,
             'line-opacity': 0.85
           }

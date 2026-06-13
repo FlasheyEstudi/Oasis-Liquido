@@ -45,9 +45,20 @@ export function initSocket(server: HTTPServer) {
     socket.on('driver-location', async (data: { orderId: string; points: { lat: number; lng: number; timestamp: number }[] }) => {
       try {
         const { orderId, points } = data;
-        if (!orderId || !points || points.length === 0) return;
+        if (!orderId || !points || !Array.isArray(points) || points.length === 0) return;
 
-        const lastPoint = points[points.length - 1];
+        // Strict validation of coordinates and timestamp to prevent NaN, undefined, or malformed data
+        const validPoints = points.filter(pt => 
+          pt &&
+          typeof pt.lat === 'number' && !isNaN(pt.lat) &&
+          typeof pt.lng === 'number' && !isNaN(pt.lng) &&
+          typeof pt.timestamp === 'number' && !isNaN(pt.timestamp) &&
+          pt.timestamp > 0
+        );
+
+        if (validPoints.length === 0) return;
+
+        const lastPoint = validPoints[validPoints.length - 1];
 
         // Broadcast the latest coordinate immediately to the order room (low latency update)
         io.to(`order:${orderId}`).emit('delivery:locationUpdate', {
@@ -58,11 +69,11 @@ export function initSocket(server: HTTPServer) {
 
         // Async batch write to database
         db.deliveryRoute.createMany({
-          data: points.map(pt => ({
+          data: validPoints.map(pt => ({
             deliveryOrderId: orderId,
             driverLat: pt.lat,
             driverLng: pt.lng,
-            createdAt: new Date(pt.timestamp)
+            recordedAt: new Date(pt.timestamp)
           }))
         }).catch(err => {
           console.error('Error batch saving delivery routes:', err);

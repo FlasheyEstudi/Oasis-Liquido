@@ -156,6 +156,27 @@ export async function createPrescription(
   ipAddress?: string,
   userAgent?: string
 ) {
+  // Validate expiration date formatting and ensure it is not in the past
+  const expDate = new Date(data.expiration_date);
+  if (isNaN(expDate.getTime())) {
+    throw new Error('INVALID_EXPIRATION_DATE');
+  }
+  const now = new Date();
+  now.setHours(0, 0, 0, 0); // Allow same-day prescriptions
+  if (expDate < now) {
+    throw new Error('PRESCRIPTION_EXPIRED_DATE_IN_PAST');
+  }
+
+  // Validate prescription lines
+  if (!data.lines || data.lines.length === 0) {
+    throw new Error('PRESCRIPTION_LINES_REQUIRED');
+  }
+  for (const line of data.lines) {
+    if (line.quantity <= 0 || isNaN(line.quantity)) {
+      throw new Error('INVALID_LINE_QUANTITY: Medicine quantities must be greater than 0');
+    }
+  }
+
   // 1. Fetch Doctor Profile and User Verification Status
   const doctor = await db.user.findUnique({
     where: { id: doctorId },
@@ -335,7 +356,7 @@ export async function validatePrescription(qrData: string, pharmacyId?: string) 
   // Check if prescription is expired
   const now = new Date();
   const expDate = new Date(prescription.expirationDate);
-  if (expDate < now || prescription.status === 'expired') {
+  if (isNaN(expDate.getTime()) || expDate < now || prescription.status === 'expired') {
     throw new Error('PRESCRIPTION_EXPIRED');
   }
 
@@ -347,6 +368,25 @@ export async function validatePrescription(qrData: string, pharmacyId?: string) 
   // Check if already fully fulfilled
   if (prescription.status === 'fulfilled') {
     throw new Error('PRESCRIPTION_FULFILLED');
+  }
+
+  // Verify cryptographic signature integrity to prevent tampering
+  const doctorProfile = prescription.doctor?.doctorProfile;
+  if (prescription.digitalSignature && doctorProfile && doctorProfile.signaturePin) {
+    const serializedLines = prescription.prescriptionLines
+      .map((line) => `${line.medicineId}:${line.quantity}`)
+      .sort()
+      .join('|');
+    const linesHash = crypto.createHash('sha256').update(serializedLines).digest('hex');
+    const messageToSign = `${prescription.doctorId}|${prescription.patientId}|${prescription.expirationDate}|${linesHash}`;
+    const calculatedSignature = crypto
+      .createHmac('sha256', doctorProfile.signaturePin)
+      .update(messageToSign)
+      .digest('hex');
+
+    if (calculatedSignature !== prescription.digitalSignature) {
+      throw new Error('PRESCRIPTION_SIGNATURE_TAMPERED');
+    }
   }
 
   const mapped = mapPrescription(prescription);

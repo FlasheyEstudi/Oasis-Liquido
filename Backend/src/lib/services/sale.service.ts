@@ -46,7 +46,10 @@ export async function createSale(
           where: { pharmacyId, medicineId: item.medicine_id },
         });
 
-        if (!inventoryItem || inventoryItem.quantity < item.quantity) {
+        if (!inventoryItem) {
+          throw new Error(`INSUFFICIENT_STOCK: Medicine ${item.medicine_id} insufficient stock`);
+        }
+        if (!data.prescription_id && inventoryItem.quantity < item.quantity) {
           throw new Error(`INSUFFICIENT_STOCK: Medicine ${item.medicine_id} insufficient stock`);
         }
         unitPrice = inventoryItem.unitPrice;
@@ -69,14 +72,41 @@ export async function createSale(
       }
     }
 
+    // Resolve USD Exchange Rate (NIO per USD) using tx client
+    let exchangeRate = 36.6;
+    try {
+      const rateSetting = await tx.globalSetting.findUnique({
+        where: { key: 'USD_EXCHANGE_RATE' },
+      });
+      if (rateSetting && rateSetting.value) {
+        const rate = parseFloat(rateSetting.value);
+        if (!isNaN(rate) && rate > 0) {
+          exchangeRate = rate;
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching USD_EXCHANGE_RATE during sale creation:', err);
+    }
+
     // Validate split payments cover the total and calculate change (vuelto)
     changeAmount = 0;
     if (data.payments && data.payments.length > 0) {
-      const paidTotal = data.payments.reduce((sum, p) => sum + p.amount, 0);
-      if (paidTotal < totalAmount) {
+      let paidTotalInNio = 0;
+      for (const p of data.payments) {
+        const amt = p.amount;
+        if (amt < 0) {
+          throw new Error('INVALID_PAYMENT_AMOUNT');
+        }
+        if (p.currency === 'USD') {
+          paidTotalInNio += amt * exchangeRate;
+        } else {
+          paidTotalInNio += amt;
+        }
+      }
+      if (paidTotalInNio < totalAmount) {
         throw new Error('INSUFFICIENT_PAYMENT');
       }
-      changeAmount = paidTotal - totalAmount;
+      changeAmount = paidTotalInNio - totalAmount;
     }
 
     // Create sale in transaction
@@ -127,8 +157,8 @@ export async function createSale(
       },
     });
 
-    // Decrement inventory only for pharmacy sales using FEFO
-    if (pharmacyId && !data.clinic_id) {
+    // Decrement inventory only for pharmacy sales using FEFO, unless it's a prescription sale
+    if (pharmacyId && !data.clinic_id && !data.prescription_id) {
       for (const item of data.items) {
         const inventoryItem = await tx.inventory.findFirst({
           where: { pharmacyId, medicineId: item.medicine_id },

@@ -6,11 +6,26 @@ export interface LatLng {
   lng: number;
 }
 
+// Memory cache for computed waypoint routes to reduce OSRM queries
+export const multiRouteCache = new Map<string, RouteResponse>();
+
+export function getMultiCacheKey(start: LatLng, end: LatLng, waypoints: LatLng[]): string {
+  const round = (num: number) => num.toFixed(4);
+  const ptStr = (p: LatLng) => `${round(p.lat)},${round(p.lng)}`;
+  return [start, ...waypoints, end].map(ptStr).join('->');
+}
+
 export async function selectBestRoute(
   start: LatLng,
   end: LatLng,
   waypoints: LatLng[] = []
 ): Promise<RouteResponse> {
+  const cacheKey = getMultiCacheKey(start, end, waypoints);
+  if (multiRouteCache.has(cacheKey)) {
+    console.log(`💾 [Route Selector Cache] Cache hit for multi-route: ${cacheKey}`);
+    return multiRouteCache.get(cacheKey)!;
+  }
+
   const localUrl = process.env.OSRM_BASE_URL || 'http://osrm:5000';
   const fallbackUrlsStr = process.env.OSRM_FALLBACK_URLS || 'https://routing.openstreetmap.de/routed-car,https://router.project-osrm.org';
   const servers = [
@@ -39,38 +54,43 @@ export async function selectBestRoute(
     }
   }
 
+  let result: RouteResponse;
+
   if (!responseData || !responseData.routes || responseData.routes.length === 0) {
     console.warn('⚠️ [Route Selector] All OSRM routing attempts failed, falling back to Haversine.');
-    return calculateHaversineFallback(start.lat, start.lng, end.lat, end.lng);
+    result = calculateHaversineFallback(start.lat, start.lng, end.lat, end.lng);
+  } else {
+    // Scoring: prioritize faster duration (lower duration seconds)
+    // adding a small penalty for longer distances to select the most efficient route.
+    const scoredRoutes = responseData.routes.map((r: any) => {
+      const score = r.duration + r.distance * 0.005; // 1 second of duration is equivalent to 200m of distance
+      return { route: r, score };
+    });
+
+    // Sort by lowest score
+    scoredRoutes.sort((a: any, b: any) => a.score - b.score);
+    const best = scoredRoutes[0].route;
+
+    // Map GeoJSON coordinates [lng, lat] to { lat, lng } objects
+    const routeCoords = best.geometry.coordinates.map((coord: [number, number]) => ({
+      lat: coord[1],
+      lng: coord[0]
+    }));
+
+    const distanceMeters = best.distance;
+    const durationSeconds = best.duration;
+
+    result = {
+      route: routeCoords,
+      distanceKm: distanceMeters / 1000,
+      durationMinutes: Math.round(durationSeconds / 60),
+      durationText: `${Math.round(durationSeconds / 60)} min`,
+      distance_meters: distanceMeters,
+      duration_seconds: durationSeconds,
+      geometry: best.geometry // Store the GeoJSON geometry or raw geometry if needed
+    };
   }
 
-  // Scoring: prioritize faster duration (lower duration seconds)
-  // adding a small penalty for longer distances to select the most efficient route.
-  const scoredRoutes = responseData.routes.map((r: any) => {
-    const score = r.duration + r.distance * 0.005; // 1 second of duration is equivalent to 200m of distance
-    return { route: r, score };
-  });
-
-  // Sort by lowest score
-  scoredRoutes.sort((a: any, b: any) => a.score - b.score);
-  const best = scoredRoutes[0].route;
-
-  // Map GeoJSON coordinates [lng, lat] to { lat, lng } objects
-  const routeCoords = best.geometry.coordinates.map((coord: [number, number]) => ({
-    lat: coord[1],
-    lng: coord[0]
-  }));
-
-  const distanceMeters = best.distance;
-  const durationSeconds = best.duration;
-
-  return {
-    route: routeCoords,
-    distanceKm: distanceMeters / 1000,
-    durationMinutes: Math.round(durationSeconds / 60),
-    durationText: `${Math.round(durationSeconds / 60)} min`,
-    distance_meters: distanceMeters,
-    duration_seconds: durationSeconds,
-    geometry: best.geometry // Store the GeoJSON geometry or raw geometry if needed
-  };
+  multiRouteCache.set(cacheKey, result);
+  return result;
 }
