@@ -45,7 +45,14 @@ export async function verifyFacilityAccess(
       const pharmacy = await db.pharmacy.findUnique({
         where: { id: facilityId },
       });
-      return pharmacy?.ownerId === userId;
+      const profile = await db.pharmacyManagerProfile.findUnique({
+        where: { userId },
+      });
+      return (
+        pharmacy?.ownerId === userId || 
+        (pharmacy as any)?.owner_id === userId ||
+        profile?.pharmacyId === facilityId
+      );
     }
 
     if (role === 'pharmacy_manager' || role === 'cashier') {

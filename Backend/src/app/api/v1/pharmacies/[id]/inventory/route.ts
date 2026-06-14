@@ -6,34 +6,17 @@ import { successResponse, errorResponse, paginatedResponse, ErrorCodes } from '@
 import * as inventoryService from '@/lib/services/inventory.service';
 import { parsePagination } from '@/lib/utils/pagination';
 import { db } from '@/lib/db';
+import { verifyFacilityAccess } from '@/lib/auth/access';
 
 export const GET = withAuth(
   async (req: AuthenticatedRequest, context: { params: Promise<any> }) => {
     try {
       const { id } = await context.params;
 
-      // Verify access to this pharmacy based on employee role profile
-      if (req.user.role === 'pharmacy_manager' || req.user.role === 'cashier') {
-        const profile = await db.pharmacyManagerProfile.findUnique({
-          where: { userId: req.user.userId },
-        });
-        if (!profile || profile.pharmacyId !== id) {
-          return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
-        }
-      } else if (req.user.role === 'delivery_driver') {
-        const profile = await db.deliveryDriverProfile.findUnique({
-          where: { userId: req.user.userId },
-        });
-        if (!profile || profile.pharmacyId !== id) {
-          return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
-        }
-      } else if (req.user.role === 'pharmacy_admin') {
-        const pharmacy = await db.pharmacy.findUnique({
-          where: { id },
-        });
-        if (!pharmacy || (pharmacy.ownerId !== req.user.userId && (pharmacy as any).owner_id !== req.user.userId)) {
-          return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
-        }
+      // Verify access to this pharmacy using centralized access control helper
+      const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, id, 'pharmacy');
+      if (!hasAccess) {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
       }
 
       const { searchParams } = new URL(req.url);

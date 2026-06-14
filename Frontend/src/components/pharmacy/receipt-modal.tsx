@@ -134,7 +134,7 @@ export function ReceiptModal({ isOpen, onClose, sale }: ReceiptModalProps) {
                 <div className="inline-block p-2 bg-white rounded-xl border border-zinc-100 shadow-sm">
                    <div className="size-24 bg-white rounded-lg flex items-center justify-center overflow-hidden">
                       <QRCodeSVG 
-                        value={`https://oasis-aura.com/#verify-sale-${sale.id}`} 
+                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verificar-venta-${sale.id}`} 
                         size={96}
                         level="M"
                         includeMargin={false}

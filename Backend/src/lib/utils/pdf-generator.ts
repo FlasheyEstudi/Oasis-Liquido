@@ -74,7 +74,8 @@ export async function generateReceiptPDF(data: PDFReceiptData): Promise<Buffer> 
   // QR Code Generation (Using API to avoid heavy local dependencies)
   try {
     // Point to the verification page
-    const verifyUrl = `https://oasis-aura.com/%23verify-sale-${data.id}`;
+    const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://oasis-liquido.vercel.app';
+    const verifyUrl = `${frontendUrl}/verificar-venta-${data.id}`;
     
     // Use local qrcode library instead of external API
     const qrBase64 = await QRCode.toDataURL(verifyUrl, {
