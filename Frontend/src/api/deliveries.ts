@@ -117,7 +117,7 @@ export async function pickupDelivery(id: string): Promise<any> {
 
 /** DELIVER an order */
 export async function deliverDelivery(id: string): Promise<any> {
-  const result = await post<any>(`/delivery/orders/${id}/deliver`, {});
+  const result = await post<any>(`/delivery/orders/${id}/complete`, {});
   return result.data;
 }
 

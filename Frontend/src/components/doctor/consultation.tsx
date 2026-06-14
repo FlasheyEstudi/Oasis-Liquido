@@ -213,7 +213,7 @@ export function Consultation() {
     setIsSettingPinLoading(true);
     setPinError('');
     try {
-      await apiClient.post('/v1/doctor/profile/pin', {
+      await apiClient.post('/doctor/profile/pin', {
         pin: signaturePin,
         password: accountPassword,
       });

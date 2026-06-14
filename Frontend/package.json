@@ -6,7 +6,7 @@
     "dev": "next dev --webpack -H 0.0.0.0 -p 3000 2>&1 | tee dev.log",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",

@@ -5,7 +5,7 @@
 // NO mock fallbacks — all calls go to the real backend
 // ============================================
 
-import { get, patch } from './client';
+import { get, patch, post } from './client';
 import type {
   InventoryItem,
   AdjustInventoryRequest,
@@ -27,7 +27,7 @@ export async function getByPharmacy(pharmacyId: string, params?: InventoryListPa
 
 /** Adjust inventory stock for a pharmacy */
 export async function adjust(pharmacyId: string, data: AdjustInventoryRequest): Promise<InventoryItem> {
-  const result = await patch<InventoryItem>(`/pharmacies/${pharmacyId}/inventory`, data);
+  const result = await post<InventoryItem>(`/pharmacies/${pharmacyId}/inventory/adjust`, data);
   return result.data;
 }
 

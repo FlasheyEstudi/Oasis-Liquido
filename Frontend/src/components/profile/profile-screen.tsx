@@ -171,7 +171,7 @@ export function ProfileScreen() {
     setPinSaveLoading(true);
     try {
       const apiClient = (await import('@/api/client')).default;
-      await apiClient.post('/v1/doctor/profile/pin', { pin: newPin, password: pinPassword });
+      await apiClient.post('/doctor/profile/pin', { pin: newPin, password: pinPassword });
       setPinSaveSuccess(true);
       setNewPin('');
       setConfirmPin('');
