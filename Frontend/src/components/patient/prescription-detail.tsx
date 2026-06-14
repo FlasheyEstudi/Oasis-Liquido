@@ -71,6 +71,9 @@ export function PrescriptionDetail() {
         scheduled_time,
       });
 
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([40, 25, 40]);
+      }
       setIsSuccess(true);
     } catch (error) {
       toast.error('Error al programar recordatorio');
@@ -253,16 +256,29 @@ export function PrescriptionDetail() {
 
           {/* Holographic Verification QR Seal (Right) - Unboxed floating capsule */}
           <div className="md:col-span-6 flex flex-col items-center p-3">
-            <div className="flex justify-center bg-slate-50 dark:bg-white rounded-[2rem] p-3.5 border border-slate-200/60 shadow-inner w-fit">
-              <QrCode 
-                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#prescription-${prescription.id}`} 
-                size={120} 
-                label="Receta"
-                className="scale-95"
-                showValue={false}
+            <div className="relative bg-white p-4 rounded-3xl shadow-xl overflow-hidden shrink-0 border border-slate-200/60">
+              {/* Scanner glow animation */}
+              <motion.div 
+                animate={{ top: ['-100%', '200%'] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                className="absolute left-0 right-0 h-8 bg-gradient-to-b from-transparent via-teal-500/25 to-transparent z-10 pointer-events-none"
               />
+              <div className="relative flex items-center justify-center overflow-hidden p-1 bg-white">
+                <QrCode 
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#prescription-${prescription.id}`} 
+                  size={120} 
+                  className="!p-0"
+                  showValue={false}
+                />
+              </div>
+              
+              {/* Corners */}
+              <div className="absolute top-2 left-2 size-3.5 border-t-2 border-l-2 border-teal-500/60 rounded-tl" />
+              <div className="absolute top-2 right-2 size-3.5 border-t-2 border-r-2 border-teal-500/60 rounded-tr" />
+              <div className="absolute bottom-2 left-2 size-3.5 border-b-2 border-l-2 border-teal-500/60 rounded-bl" />
+              <div className="absolute bottom-2 right-2 size-3.5 border-b-2 border-r-2 border-teal-500/60 rounded-br" />
             </div>
-            <p className="text-[9px] font-black text-slate-400 dark:text-zinc-555 uppercase tracking-widest mt-3 text-center">Firma Biométrica Encriptada HMAC</p>
+            <p className="text-[9px] font-black text-slate-450 dark:text-zinc-555 uppercase tracking-widest mt-3 text-center">Firma Biométrica Encriptada HMAC</p>
           </div>
 
         </div>

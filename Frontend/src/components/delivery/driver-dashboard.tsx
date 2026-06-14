@@ -34,7 +34,8 @@ import {
   Award,
   Eye,
   Download,
-  FileText
+  FileText,
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '@/api/client';
@@ -288,91 +289,91 @@ export function DriverDashboard() {
     >
       {/* Driver Status Card */}
       <motion.div variants={fadeUp}>
-        <GlassCard className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 shadow-2xl relative overflow-hidden transition-colors duration-300 px-3 py-4 sm:p-6 no-card-mobile">
-          <div className="absolute top-0 right-0 p-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/30">
-              <div className="size-1.5 rounded-full bg-emerald-600 dark:bg-emerald-500 animate-pulse" />
-              En Línea
-            </div>
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-teal-500/10 via-white/[0.01] to-emerald-500/[0.02] dark:from-teal-500/10 dark:via-zinc-950/15 dark:to-emerald-500/[0.02] p-6 sm:p-8 border border-slate-200/20 dark:border-white/5 shadow-lg backdrop-blur-xl">
+          <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 shadow-sm">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            <span>En Línea</span>
           </div>
           
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-2">
             <div>
-              <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Hola, {firstName}</h1>
-              <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mt-1">Panel de Rendimiento y Estadísticas</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-705/80 dark:text-teal-300">Panel Operativo</span>
+                <Sparkles className="size-4 text-emerald-500 animate-pulse" />
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-serif font-black text-slate-900 dark:text-white tracking-tight leading-none mt-1">
+                Hola, {firstName}
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-2 font-bold">Resumen de rendimientos y misiones completadas</p>
             </div>
+            
             <button 
               onMouseDown={handleSosStart}
               onMouseUp={handleSosEnd}
               onMouseLeave={handleSosEnd}
               onTouchStart={handleSosStart}
               onTouchEnd={handleSosEnd}
-              className="size-14 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-500 border border-red-500/30 active:scale-95 transition-transform cursor-pointer shadow-lg shadow-red-500/10 animate-pulse select-none touch-none"
+              className="size-14 rounded-2xl bg-red-500/10 hover:bg-red-500/15 flex items-center justify-center text-red-500 border border-red-500/20 active:scale-95 transition-all cursor-pointer shadow-lg shadow-red-500/5 animate-pulse select-none touch-none shrink-0"
               title="Presión simple para marcar 128 | Mantener presionado para alerta satelital SOS"
             >
               <Phone className="size-7" />
             </button>
           </div>
-        </GlassCard>
+        </div>
       </motion.div>
 
       {/* METRICS GRID */}
-      <motion.div variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <motion.div variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Earnings today */}
-        <div className="bg-white/80 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden backdrop-blur-xl">
-          <div className="absolute top-0 right-0 p-2 opacity-10">
-            <DollarSign className="size-12 text-teal-500" />
+        <div className="rounded-2xl bg-teal-500/5 border border-teal-500/10 p-3.5 text-center shadow-inner relative overflow-hidden flex flex-col justify-between min-h-[105px]">
+          <div className="absolute top-1 right-1 opacity-5">
+            <DollarSign className="size-8 text-teal-500" />
           </div>
-          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Hoy</span>
-          <div>
-            <h4 className="text-xl font-black text-slate-800 dark:text-white font-mono mt-1">
-              {formatCurrency(stats?.todayEarnings ?? 0)}
-            </h4>
-            <span className="text-[7.5px] font-bold text-teal-600 dark:text-teal-400">Ganancias de hoy</span>
-          </div>
+          <span className="text-[8px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">Hoy</span>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1 font-mono tracking-tight">
+            {formatCurrency(stats?.todayEarnings ?? 0)}
+          </h4>
+          <span className="text-[7.5px] text-slate-450 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Ganancias</span>
         </div>
 
         {/* Earnings weekly */}
-        <div className="bg-white/80 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden backdrop-blur-xl">
-          <div className="absolute top-0 right-0 p-2 opacity-10">
-            <TrendingUp className="size-12 text-teal-500" />
+        <div className="rounded-2xl bg-sky-500/5 border border-sky-500/10 p-3.5 text-center shadow-inner relative overflow-hidden flex flex-col justify-between min-h-[105px]">
+          <div className="absolute top-1 right-1 opacity-5">
+            <TrendingUp className="size-8 text-sky-500" />
           </div>
-          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Esta Semana</span>
-          <div>
-            <h4 className="text-xl font-black text-slate-800 dark:text-white font-mono mt-1">
-              {formatCurrency(stats?.weekEarnings ?? 0)}
-            </h4>
-            <span className="text-[7.5px] font-bold text-teal-600 dark:text-teal-400">Semana móvil</span>
-          </div>
+          <span className="text-[8px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">Semana</span>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1 font-mono tracking-tight">
+            {formatCurrency(stats?.weekEarnings ?? 0)}
+          </h4>
+          <span className="text-[7.5px] text-slate-450 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Semana móvil</span>
         </div>
 
         {/* Total Deliveries */}
-        <div className="bg-white/80 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden backdrop-blur-xl">
-          <div className="absolute top-0 right-0 p-2 opacity-10">
-            <Truck className="size-12 text-teal-500" />
+        <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-3.5 text-center shadow-inner relative overflow-hidden flex flex-col justify-between min-h-[105px]">
+          <div className="absolute top-1 right-1 opacity-5">
+            <Truck className="size-8 text-emerald-500" />
           </div>
-          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Repartos</span>
-          <div>
-            <h4 className="text-xl font-black text-slate-800 dark:text-white font-mono mt-1">
-              {stats?.totalDeliveries ?? 0}
-            </h4>
-            <span className="text-[7.5px] font-bold text-slate-500 dark:text-zinc-400">Entregados total</span>
-          </div>
+          <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-450 uppercase tracking-widest">Repartos</span>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1 font-mono tracking-tight">
+            {stats?.totalDeliveries ?? 0}
+          </h4>
+          <span className="text-[7.5px] text-slate-450 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Entregados</span>
         </div>
 
         {/* Rating */}
-        <div className="bg-white/80 dark:bg-zinc-900/80 border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[110px] relative overflow-hidden backdrop-blur-xl">
-          <div className="absolute top-0 right-0 p-2 opacity-10">
-            <Star className="size-12 text-amber-500 fill-amber-500/10" />
+        <div className="rounded-2xl bg-amber-500/5 border border-amber-500/10 p-3.5 text-center shadow-inner relative overflow-hidden flex flex-col justify-between min-h-[105px]">
+          <div className="absolute top-1 right-1 opacity-5">
+            <Star className="size-8 text-amber-500" />
           </div>
-          <span className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Valoración</span>
-          <div>
-            <h4 className="text-xl font-black text-slate-800 dark:text-white font-mono mt-1 flex items-center gap-1">
-              {stats?.rating ?? 5.0}
-              <Star className="size-4.5 text-amber-400 fill-amber-400" />
-            </h4>
-            <span className="text-[7.5px] font-bold text-slate-500 dark:text-zinc-400">Puntaje promedio</span>
-          </div>
+          <span className="text-[8px] font-black text-amber-600 dark:text-amber-450 uppercase tracking-widest">Valoración</span>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1 font-mono flex items-center justify-center gap-0.5 tracking-tight">
+            {stats?.rating ?? 5.0}
+            <Star className="size-3 text-amber-500 fill-amber-500" />
+          </h4>
+          <span className="text-[7.5px] text-slate-450 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Puntaje</span>
         </div>
       </motion.div>
 
@@ -476,24 +477,24 @@ export function DriverDashboard() {
         )}
       </div>
 
-      {/* Recent Reviews */}
-      <GlassCard className="mt-4 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 transition-colors duration-300 px-3 py-4 sm:p-6 no-card-mobile">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-100 flex items-center gap-2 uppercase tracking-widest">
-            <Star className="size-4 text-amber-500" />
+       {/* Recent Reviews */}
+      <div className="mt-4 bg-white/10 dark:bg-zinc-950/15 border border-slate-200/50 dark:border-white/5 rounded-[2.5rem] p-5 shadow-xl backdrop-blur-md">
+        <div className="flex items-center justify-between mb-4 border-b border-slate-200/40 dark:border-white/5 pb-2.5">
+          <h3 className="text-sm font-black text-slate-800 dark:text-zinc-100 flex items-center gap-2 uppercase tracking-widest">
+            <Star className="size-4 text-amber-500 fill-amber-500/10" />
             Calificaciones del Cliente
           </h3>
-          <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-bold">Últimas 5</span>
+          <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold">Últimas 5</span>
         </div>
 
         <div className="space-y-3">
           {reviewsLoading ? (
-            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-500">Cargando reseñas...</div>
+            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-550">Cargando reseñas...</div>
           ) : reviews.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-500 italic">No hay calificaciones aún</div>
+            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-550 italic">No hay calificaciones aún</div>
           ) : (
             reviews.map((review: any) => (
-              <div key={review.id} className="p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-white/5 space-y-2 transition-colors">
+              <div key={review.id} className="p-4 rounded-2xl border border-slate-200/60 dark:border-zinc-800 bg-slate-500/[0.02] dark:bg-white/5 space-y-2 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map(s => (
@@ -502,12 +503,12 @@ export function DriverDashboard() {
                   </div>
                   <span className="text-[10px] text-slate-500 dark:text-zinc-500">{timeAgo(review.createdAt)}</span>
                 </div>
-                <p className="text-xs font-bold text-slate-800 dark:text-zinc-100 italic">"{review.comment}"</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-zinc-105 italic">"{review.comment}"</p>
               </div>
             ))
           )}
         </div>
-      </GlassCard>
+      </div>
 
       {/* SOS satellite emergency dispatch modal overlay */}
       <AnimatePresence>

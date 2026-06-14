@@ -503,14 +503,14 @@ export function PharmacyMap() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSelectedNearbyPlace(null)}
-                        className="rounded-full px-3 py-1.5 font-bold border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 bg-white/5 text-[10px] uppercase hover:bg-white/10 transition-colors"
+                        className="rounded-full px-3 py-1.5 font-black border border-slate-250 dark:border-white/10 text-slate-705 dark:text-zinc-300 bg-white/5 text-[9px] uppercase hover:bg-white/10 transition-colors cursor-pointer"
                       >
                         Cerrar
                       </button>
                       {selectedNearbyPlace.type === 'pharmacy' ? (
                         <button
                           onClick={() => navigate('delivery-request', selectedNearbyPlace.place_id)}
-                          className="rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-500/10 transition-all duration-300"
+                          className="rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md shadow-emerald-500/10 transition-all duration-300 cursor-pointer border-none"
                         >
                           <Truck className="size-3.5" />
                           Pedir Domicilio
@@ -518,7 +518,7 @@ export function PharmacyMap() {
                       ) : (
                         <button
                           onClick={() => navigate('appointment-list')}
-                          className="rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-500/10 transition-all duration-300"
+                          className="rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 bg-gradient-to-r from-teal-500 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white shadow-md shadow-teal-500/10 transition-all duration-300 cursor-pointer border-none"
                         >
                           <Clock className="size-3.5" />
                           Agendar Cita
@@ -579,8 +579,8 @@ export function PharmacyMap() {
                           const isFullMatch = matchedCount === totalNeeded && totalNeeded > 0;
                           return (
                             <div className={cn(
-                              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider shadow-inner",
-                              isFullMatch ? "bg-teal-500/10 text-teal-500 border border-teal-500/20" : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider shadow-inner",
+                                isFullMatch ? "bg-teal-500/10 text-teal-500 border border-teal-500/20" : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
                             )}>
                               {isFullMatch ? <CheckCircle2 className="size-3 text-teal-500 animate-bounce" /> : <AlertCircle className="size-3 text-amber-500 animate-pulse" />}
                               <span>{isFullMatch ? "Disponibilidad de Stock Completo" : `Stock Parcial: ${matchedCount}/${totalNeeded}`}</span>
@@ -593,13 +593,13 @@ export function PharmacyMap() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSelectedPharmacy(null)}
-                        className="rounded-full px-3 py-1.5 font-bold border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 bg-white/5 text-[10px] uppercase hover:bg-white/10 transition-colors"
+                        className="rounded-full px-3 py-1.5 font-black border border-slate-250 dark:border-white/10 text-slate-755 dark:text-zinc-300 bg-white/5 text-[9px] uppercase hover:bg-white/10 transition-colors cursor-pointer"
                       >
                         Cerrar
                       </button>
                       <button
                         onClick={() => navigate('delivery-request', selectedPharmacy.id)}
-                        className="rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-500/10 transition-all duration-300"
+                        className="rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md shadow-emerald-500/10 transition-all duration-300 cursor-pointer border-none"
                       >
                         <Truck className="size-3.5" />
                         Pedir Domicilio
@@ -737,7 +737,7 @@ export function PharmacyMap() {
 
                             {/* Delivery button */}
                             <button
-                              className="mt-3.5 rounded-full h-9 text-[10px] font-black uppercase tracking-wider gap-1.5 px-4 flex items-center justify-center bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:scale-[1.02] transition-all duration-300"
+                              className="mt-3.5 rounded-full h-9 text-[9px] font-black uppercase tracking-wider gap-1.5 px-4 flex items-center justify-center bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:scale-[1.02] transition-all duration-300 cursor-pointer border-none"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate('delivery-request', pharmacy.id);

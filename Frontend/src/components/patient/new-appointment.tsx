@@ -33,6 +33,9 @@ import {
   Sparkles,
   ShieldCheck,
   ArrowRight,
+  Star,
+  Phone,
+  Mail
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
@@ -50,9 +53,9 @@ const TIME_SLOTS = [
 ];
 
 const fadeInUp = {
-  initial: { opacity: 0, scale: 0.95, y: 30 },
-  animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 20 } },
-  exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.2 } },
+  initial: { opacity: 0, scale: 0.98, y: 15 },
+  animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 22 } },
+  exit: { opacity: 0, scale: 0.98, y: -15, transition: { duration: 0.15 } },
 } as const;
 
 export function NewAppointment() {
@@ -159,16 +162,16 @@ export function NewAppointment() {
 
   return (
     <div className={cn(
-      "space-y-8 max-w-4xl mx-auto pb-24 relative overflow-visible",
-      isElderlyMode && "text-base font-medium [&_h3]:text-xl [&_p]:text-sm [&_button]:text-sm [&_button]:h-12"
+      "space-y-8 max-w-4xl mx-auto pb-24 relative overflow-visible px-2 sm:px-0",
+      isElderlyMode && "text-base font-medium [&_h3]:text-2xl [&_p]:text-base [&_button]:text-base [&_button]:h-14"
     )}>
       
-      {/* Dynamic Background Organic Blobs */}
-      <div className="absolute top-[20%] left-[-15%] size-80 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-15%] size-80 rounded-full bg-gradient-to-br from-sky-500/5 to-transparent blur-3xl pointer-events-none" />
+      {/* Background Glows */}
+      <div className="absolute top-[10%] left-[-10%] size-96 rounded-full bg-teal-500/[0.03] blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[-10%] size-96 rounded-full bg-sky-500/[0.03] blur-3xl pointer-events-none" />
 
-      {/* Stepper Bar - Premium Floating Capsule */}
-      <div className="bg-white/60 dark:bg-zinc-950/40 border border-slate-250/60 dark:border-white/10 rounded-full pt-4 pb-7 px-8 shadow-xl backdrop-blur-xl max-w-xl mx-auto">
+      {/* Stepper Capsule */}
+      <div className="bg-zinc-900/60 dark:bg-zinc-950/40 border border-zinc-800 rounded-full py-4 px-6 sm:px-8 shadow-xl backdrop-blur-xl max-w-xl mx-auto">
         <div className="flex items-center justify-between gap-1">
           {STEPS.map((s, idx) => {
             const isCompleted = step > s.number;
@@ -178,30 +181,30 @@ export function NewAppointment() {
                 <div className="flex flex-col items-center gap-1.5 relative">
                   <motion.button
                     type="button"
-                    whileHover={{ scale: 1.08 }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     disabled={step < s.number && !canProceed()}
                     onClick={() => step >= s.number && setStep(s.number)}
                     className={cn(
-                      'flex size-10 items-center justify-center rounded-full text-xs font-black transition-all duration-300 relative z-10 border shadow-md',
+                      'flex size-10 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 relative z-10 border shadow-md',
                       isCompleted 
                         ? 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/10'
                         : isActive
-                          ? 'bg-gradient-to-br from-teal-500 to-cyan-500 border-teal-500 text-white scale-110 shadow-teal-500/20'
-                          : 'bg-white/40 dark:bg-white/5 border-slate-250 dark:border-white/5 text-slate-400 dark:text-zinc-550'
+                          ? 'bg-gradient-to-br from-teal-500 to-sky-500 border-teal-500 text-white scale-105 shadow-teal-500/25'
+                          : 'bg-zinc-900/40 dark:bg-zinc-900/20 border-zinc-800 text-zinc-500'
                     )}
                   >
                     {isCompleted ? <CheckCircle2 className="size-5" /> : s.number}
                   </motion.button>
                   <span className={cn(
-                    'hidden sm:block text-[9px] font-black uppercase tracking-wider absolute -bottom-5 w-20 text-center truncate transition-colors duration-300',
-                    isActive ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-zinc-550'
+                    'hidden sm:block text-[10px] font-black uppercase tracking-wider absolute -bottom-5 w-20 text-center truncate transition-colors duration-300',
+                    isActive ? 'text-teal-400' : 'text-zinc-500'
                   )}>
                     {s.label}
                   </span>
                 </div>
                 {idx < STEPS.length - 1 && (
-                  <div className="flex-1 mx-2 h-0.5 relative rounded-full overflow-hidden bg-slate-200 dark:bg-zinc-800">
+                  <div className="flex-1 mx-2 h-0.5 relative rounded-full overflow-hidden bg-zinc-800">
                     <motion.div 
                       className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500"
                       initial={{ width: '0%' }}
@@ -216,73 +219,74 @@ export function NewAppointment() {
         </div>
         
         {/* Mobile current label */}
-        <div className="block sm:hidden text-center text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-[0.2em] mt-3 animate-pulse">
+        <div className="block sm:hidden text-center text-[10px] font-black text-teal-400 uppercase tracking-[0.2em] mt-3 animate-pulse">
           Paso {step} de 4: {STEPS[step - 1].label}
         </div>
       </div>
 
-      {/* Dynamic Step Viewport */}
+      {/* Step Container */}
       <div className="min-h-[440px] relative">
         <AnimatePresence mode="wait">
           
-          {/* STEP 1: Clinic Selection (Asymmetric Grid) */}
+          {/* STEP 1: Clinic Selection */}
           {step === 1 && (
             <motion.div key="step1" {...fadeInUp} className="grid grid-cols-1 md:grid-cols-12 gap-6">
               
-              {/* Clinic Selection List */}
+              {/* Clinic List */}
               <div className="col-span-12 md:col-span-7">
-                <div className="border border-slate-200/65 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[40px_20px_32px_120px] p-6 backdrop-blur-xl h-full flex flex-col justify-between">
+                <GlassCard className="p-6 h-full flex flex-col justify-between border-zinc-800 bg-zinc-900/20">
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-dashed border-slate-250 dark:border-white/10 mb-5">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400 pb-3 border-b border-dashed border-zinc-800 mb-5">
                       Selecciona una Clínica
                     </h3>
                     
                     {clinicsQuery.isLoading ? (
-                      <div className="space-y-3">
-                        {[1, 2].map((i) => (
-                          <div key={i} className="shimmer rounded-3xl h-20 opacity-70" />
+                      <div className="space-y-4">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="shimmer rounded-2xl h-24 opacity-60" />
                         ))}
                       </div>
                     ) : (
-                      <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
-                        {clinics.map((clinic, idx) => {
+                      <div className="space-y-4 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar">
+                        {clinics.map((clinic) => {
                           const isSelected = selectedClinicId === clinic.id;
                           return (
                             <motion.div
                               key={clinic.id}
                               whileHover={{ scale: 1.01, x: 2 }}
                               whileTap={{ scale: 0.99 }}
-                              style={{
-                                borderRadius: idx % 2 === 0 
-                                  ? '24px 12px 20px 12px' 
-                                  : '12px 24px 12px 20px'
-                              }}
                               className={cn(
-                                'flex items-center gap-3.5 p-4 cursor-pointer border transition-all duration-300 relative overflow-hidden group shadow-sm',
+                                'flex items-center gap-4 p-5 cursor-pointer border rounded-2xl transition-all duration-300 relative overflow-hidden group shadow-md',
                                 isSelected 
-                                  ? 'bg-teal-500/10 border-teal-500/35 ring-4 ring-teal-500/5' 
-                                  : 'bg-white/40 dark:bg-zinc-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white/80 dark:hover:bg-zinc-900/70'
+                                  ? 'bg-teal-500/10 border-teal-500/40 ring-2 ring-teal-500/10' 
+                                  : 'bg-zinc-900/40 border-zinc-850 hover:bg-zinc-800/40'
                               )}
                               onClick={() => handleClinicSelect(clinic.id)}
                             >
-                              {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-500 to-cyan-500" />}
+                              {isSelected && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-400 to-teal-600" />
+                              )}
                               <div className={cn(
-                                'flex size-12 items-center justify-center rounded-2xl shrink-0 transition-colors',
-                                isSelected ? 'bg-teal-500/15 text-teal-600 dark:text-teal-400' : 'bg-slate-100 dark:bg-black/10 text-slate-400 dark:text-zinc-550'
+                                'flex size-12 items-center justify-center rounded-xl shrink-0 transition-colors',
+                                isSelected ? 'bg-teal-500/20 text-teal-450' : 'bg-zinc-800 text-zinc-500'
                               )}>
-                                <Building2 className="size-5.5" />
+                                <Building2 className="size-6" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <p className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-bold text-white truncate">
                                     {clinic.name}
                                   </p>
-                                  {isSelected && <ShieldCheck className="size-4 text-teal-500 shrink-0" />}
+                                  {isSelected && <ShieldCheck className="size-4 text-teal-400 shrink-0" />}
                                 </div>
-                                <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-450 mt-1 flex items-center gap-1">
-                                  <MapPin className="size-3 text-red-500/70 shrink-0" />
+                                <p className="text-xs font-medium text-zinc-400 mt-1 flex items-center gap-1.5">
+                                  <MapPin className="size-3.5 text-rose-500/80 shrink-0" />
                                   <span className="truncate">{clinic.address}</span>
                                 </p>
+                                <div className="mt-2.5 flex items-center gap-4 text-[10px] font-bold text-zinc-500">
+                                  <span className="flex items-center gap-1"><Phone className="size-3" /> {clinic.phone || 'N/A'}</span>
+                                  <span className="flex items-center gap-1"><Mail className="size-3" /> {clinic.email || 'Contacto en sede'}</span>
+                                </div>
                               </div>
                             </motion.div>
                           );
@@ -290,13 +294,13 @@ export function NewAppointment() {
                       </div>
                     )}
                   </div>
-                </div>
+                </GlassCard>
               </div>
 
-              {/* Holographic Clinic Map Scope */}
+              {/* Map Panel */}
               <div className="col-span-12 md:col-span-5 h-72 md:h-auto">
-                <div className="border border-slate-250 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[80px_40px_32px_120px] p-3 backdrop-blur-xl h-full relative overflow-hidden">
-                  <div className="rounded-[76px_36px_28px_116px] overflow-hidden h-full">
+                <GlassCard className="p-2 h-full overflow-hidden border-zinc-800 bg-zinc-900/20">
+                  <div className="rounded-2xl overflow-hidden h-full">
                     <MapView
                       markers={selectedClinic 
                         ? [{ id: selectedClinic.id, lat: selectedClinic.latitude, lng: selectedClinic.longitude, type: 'clinic', label: selectedClinic.name }] 
@@ -306,81 +310,87 @@ export function NewAppointment() {
                       zoom={selectedClinic ? 15 : 12}
                     />
                   </div>
-                </div>
+                </GlassCard>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 2: Doctor Selection (Bento Leaf Curved list) */}
+          {/* STEP 2: Doctor Selection */}
           {step === 2 && (
             <motion.div key="step2" {...fadeInUp}>
-              <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[32px_120px_20px_40px] p-6 backdrop-blur-xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-dashed border-slate-250 dark:border-white/10 mb-5">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">
+              <GlassCard className="p-6 border-zinc-800 bg-zinc-900/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-dashed border-zinc-800 mb-6">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">
                     Selecciona un Especialista
                   </h3>
                   
                   <div className="relative w-full sm:max-w-xs shrink-0">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 dark:text-zinc-550" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
                     <Input
                       placeholder="Buscar por nombre o especialidad..."
                       value={doctorSearch}
                       onChange={(e) => setDoctorSearch(e.target.value)}
-                      className="glass-input rounded-full pl-9 h-10 text-xs font-bold"
+                      className="bg-zinc-950/80 border-zinc-800 text-white rounded-full pl-9 h-10 text-xs font-bold"
                     />
                   </div>
                 </div>
 
                 {doctorsQuery.isLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[1, 2].map((i) => (
-                      <div key={i} className="shimmer rounded-3xl h-24 opacity-70" />
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="shimmer rounded-2xl h-24 opacity-60" />
                     ))}
                   </div>
                 ) : doctors.length === 0 ? (
-                  <div className="flex flex-col items-center py-16 text-center max-w-xs mx-auto space-y-3.5">
-                    <Stethoscope className="size-10 text-slate-350 dark:text-zinc-800 animate-pulse" />
-                    <p className="text-xs text-slate-450 dark:text-zinc-500 font-bold leading-relaxed">
+                  <div className="flex flex-col items-center py-16 text-center max-w-xs mx-auto space-y-4">
+                    <Stethoscope className="size-12 text-zinc-700 animate-pulse" />
+                    <p className="text-xs text-zinc-400 font-bold leading-relaxed">
                       No se encontraron especialistas en esta clínica que coincidan con la búsqueda.
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
-                    {doctors.map((doc, idx) => {
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar">
+                    {doctors.map((doc) => {
                       const isSelected = selectedDoctorId === doc.id;
                       return (
                         <motion.div
                           key={doc.id}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          style={{
-                            borderRadius: idx % 2 === 0 
-                              ? '32px 12px 24px 12px' 
-                              : '12px 32px 12px 24px'
-                          }}
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
                           className={cn(
-                            'flex items-center gap-3.5 p-4 cursor-pointer border transition-all duration-300 relative overflow-hidden shadow-sm group',
+                            'flex items-center gap-4 p-5 cursor-pointer border rounded-2xl transition-all duration-300 relative overflow-hidden shadow-sm group',
                             isSelected 
-                              ? 'bg-teal-500/10 border-teal-500/35 ring-4 ring-teal-500/5' 
-                              : 'bg-white/40 dark:bg-zinc-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white/80 dark:hover:bg-zinc-900/70'
+                              ? 'bg-teal-500/10 border-teal-500/40 ring-2 ring-teal-500/10' 
+                              : 'bg-zinc-900/40 border-zinc-850 hover:bg-zinc-800/45'
                           )}
                           onClick={() => setSelectedDoctorId(doc.id)}
                         >
-                          {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-500 to-cyan-500" />}
-                          <Avatar className="size-12 border border-teal-500/15 shrink-0 shadow-sm">
-                            <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-450 text-xs font-black font-serif">
+                          {isSelected && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-400 to-teal-600" />
+                          )}
+                          <Avatar className="size-14 border border-zinc-800 group-hover:border-teal-500/25 shrink-0 shadow-sm transition-colors duration-300">
+                            <AvatarFallback className="bg-teal-500/5 text-teal-400 text-sm font-black font-serif">
                               {getInitials(doc.name)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <p className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-bold text-white truncate">
                                 Dr. {doc.name}
                               </p>
-                              {isSelected && <CheckCircle2 className="size-4 text-teal-500 shrink-0" />}
+                              {isSelected ? (
+                                <CheckCircle2 className="size-4.5 text-teal-400 shrink-0" />
+                              ) : (
+                                <span className="flex items-center text-[10px] font-black text-amber-500 bg-amber-500/5 border border-amber-500/10 px-2 py-0.5 rounded-full shrink-0">
+                                  <Star className="size-3 mr-0.5 fill-amber-500 shrink-0" /> 4.9
+                                </span>
+                              )}
                             </div>
-                            <p className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-1">
+                            <p className="text-xs font-black text-teal-450 uppercase tracking-widest mt-1">
                               {doc.doctor_profile?.specialty || 'Médico General'}
+                            </p>
+                            <p className="text-[10px] text-zinc-500 font-semibold mt-1">
+                              Consulta Presencial & Teleconsulta
                             </p>
                           </div>
                         </motion.div>
@@ -388,21 +398,21 @@ export function NewAppointment() {
                     })}
                   </div>
                 )}
-              </div>
+              </GlassCard>
             </motion.div>
           )}
 
-          {/* STEP 3: Date and Time Schedule (Bubble slots) */}
+          {/* STEP 3: Date and Time Schedule */}
           {step === 3 && (
             <motion.div key="step3" {...fadeInUp} className="grid grid-cols-1 md:grid-cols-12 gap-6">
               
-              {/* Date Calendar - Soft Shield curves */}
+              {/* Calendar Box */}
               <div className="col-span-12 md:col-span-6">
-                <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[80px_40px_32px_120px] p-5 h-full backdrop-blur-xl">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-dashed border-slate-250 dark:border-white/10 mb-4">
+                <GlassCard className="p-6 h-full border-zinc-800 bg-zinc-900/20">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400 pb-3 border-b border-dashed border-zinc-800 mb-4">
                     Selecciona una Fecha
                   </h3>
-                  <div className="flex justify-center bg-white/40 dark:bg-black/10 rounded-[60px_20px_28px_100px] p-3 border border-slate-200/50 dark:border-white/5 shadow-inner">
+                  <div className="flex justify-center bg-zinc-950/40 rounded-2xl p-4 border border-zinc-850 shadow-inner">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
@@ -411,54 +421,49 @@ export function NewAppointment() {
                         setSelectedTime(null); 
                       }}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      className="rounded-3xl border-none p-1 mx-auto"
+                      className="rounded-xl border-none p-1 mx-auto"
                     />
                   </div>
-                </div>
+                </GlassCard>
               </div>
 
-              {/* Time Slots (Irregular grid buttons) */}
+              {/* Time Slots */}
               <div className="col-span-12 md:col-span-6">
-                <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[40px_120px_20px_80px] p-5 h-full flex flex-col justify-between min-h-[380px] backdrop-blur-xl">
+                <GlassCard className="p-6 h-full flex flex-col justify-between min-h-[380px] border-zinc-800 bg-zinc-900/20">
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 pb-3 border-b border-dashed border-slate-250 dark:border-white/10 mb-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400 pb-3 border-b border-dashed border-zinc-800 mb-4">
                       Horarios Disponibles
                     </h3>
                     
                     {!selectedDate ? (
-                      <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-550 py-16 text-center space-y-3">
-                        <CalendarIcon className="size-12 text-slate-350 dark:text-zinc-800 animate-bounce-slow" />
-                        <p className="text-xs font-black uppercase tracking-[0.2em] text-teal-600">Paso previo</p>
-                        <p className="text-[11px] text-slate-500 font-semibold max-w-[200px]">Elige una fecha del calendario.</p>
+                      <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 py-16 text-center space-y-4">
+                        <CalendarIcon className="size-14 text-zinc-800 animate-pulse" />
+                        <p className="text-xs font-black uppercase tracking-[0.2em] text-teal-400">Paso previo</p>
+                        <p className="text-[11px] text-zinc-450 font-semibold max-w-[200px]">Por favor selecciona un día en el calendario.</p>
                       </div>
                     ) : isLoadingOccupied ? (
                       <div className="flex-1 flex flex-col items-center justify-center py-20">
                         <Loader2 className="size-8 text-teal-500 animate-spin" />
-                        <p className="text-[10px] font-black text-slate-500 dark:text-zinc-500 mt-2.5 uppercase tracking-widest">Sincronizando consultorios...</p>
+                        <p className="text-[10px] font-black text-zinc-500 mt-2.5 uppercase tracking-widest">Sincronizando consultorios...</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-2.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
-                        {availableSlots.map(({ time, isOccupied }, idx) => {
+                      <div className="grid grid-cols-3 gap-2.5 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                        {availableSlots.map(({ time, isOccupied }) => {
                           const isSelected = selectedTime === time;
                           return (
                             <motion.button
                               key={time}
-                              whileHover={!isOccupied ? { scale: 1.05 } : {}}
-                              whileTap={!isOccupied ? { scale: 0.95 } : {}}
+                              whileHover={!isOccupied ? { scale: 1.02 } : {}}
+                              whileTap={!isOccupied ? { scale: 0.98 } : {}}
                               disabled={isOccupied}
                               onClick={() => setSelectedTime(time)}
-                              style={{
-                                borderRadius: idx % 2 === 0
-                                  ? '16px 8px 12px 8px'
-                                  : '8px 16px 8px 12px'
-                              }}
                               className={cn(
-                                'flex items-center justify-center gap-1.5 py-3 text-xs font-black tracking-wider transition-all duration-300 border shadow-sm select-none',
+                                'flex items-center justify-center gap-1.5 py-3 text-xs font-bold rounded-xl transition-all duration-300 border shadow-sm select-none',
                                 isSelected
-                                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 border-teal-500 text-white shadow-md'
+                                  ? 'bg-teal-500 border-teal-500 text-white shadow-lg shadow-teal-500/10'
                                   : isOccupied 
-                                    ? 'bg-red-500/5 border-red-500/10 text-red-550/40 cursor-not-allowed opacity-40'
-                                    : 'bg-white/40 dark:bg-zinc-900/40 border-slate-200/50 dark:border-white/5 text-slate-655 dark:text-zinc-350 hover:bg-white/80 dark:hover:bg-zinc-900/70'
+                                    ? 'bg-zinc-950/20 border-zinc-900/40 text-zinc-700 cursor-not-allowed opacity-30'
+                                    : 'bg-zinc-900/60 border-zinc-850 text-zinc-300 hover:bg-zinc-800/40'
                               )}
                             >
                               <Clock className="size-3.5 shrink-0" />
@@ -471,63 +476,66 @@ export function NewAppointment() {
                   </div>
 
                   {selectedDate && !isLoadingOccupied && (
-                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 flex items-center gap-4 text-[9px] uppercase font-black text-slate-400 dark:text-zinc-500 tracking-widest pl-1">
-                      <div className="flex items-center gap-1.5"><div className="size-2 rounded-full bg-teal-500 shadow-sm" /> Disponible</div>
-                      <div className="flex items-center gap-1.5"><div className="size-2 rounded-full bg-red-500/30" /> Ocupado</div>
+                    <div className="mt-4 pt-3 border-t border-zinc-800 flex items-center gap-4 text-[10px] uppercase font-black text-zinc-500 tracking-widest pl-1">
+                      <div className="flex items-center gap-1.5"><div className="size-2.5 rounded-full bg-teal-500 shadow-sm" /> Disponible</div>
+                      <div className="flex items-center gap-1.5"><div className="size-2.5 rounded-full bg-zinc-900" /> Ocupado</div>
                     </div>
                   )}
-                </div>
+                </GlassCard>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 4: Confirm Appointment Details (Holographic Clinic Ticket) */}
+          {/* STEP 4: Confirm Details */}
           {step === 4 && (
             <motion.div key="step4" {...fadeInUp}>
-              <div className="border border-slate-200/60 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 shadow-2xl rounded-[80px_40px_32px_120px] p-6 max-w-md mx-auto backdrop-blur-xl relative overflow-hidden">
+              <GlassCard className="p-6 max-w-md mx-auto border-zinc-800 bg-zinc-900/20 relative overflow-hidden">
                 <div className="absolute top-0 right-0 size-24 bg-teal-500/5 rounded-full blur-xl pointer-events-none" />
-                <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-zinc-400 pb-3 border-b border-dashed border-slate-200 dark:border-white/10 mb-6 text-center">
+                
+                <h3 className="text-sm font-black uppercase tracking-[0.25em] text-zinc-400 pb-3 border-b border-dashed border-zinc-800 mb-6 text-center">
                   Resumen de Reserva Médica
                 </h3>
                 
                 <div className="space-y-6">
-                  {/* Doctor Info Card */}
-                  <div className="flex flex-col items-center text-center p-5 rounded-[40px_16px_28px_16px] bg-teal-500/5 border border-teal-500/15 shadow-sm">
+                  {/* Doctor Card */}
+                  <div className="flex flex-col items-center text-center p-5 rounded-2xl bg-teal-500/5 border border-teal-500/20 shadow-sm">
                     <Avatar className="size-16 mb-3 border border-teal-500/20 ring-4 ring-teal-500/5 shadow-md">
-                      <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-base font-black font-serif">
+                      <AvatarFallback className="bg-teal-500/10 text-teal-400 text-base font-black font-serif">
                         {getInitials(selectedDoctor?.name || '')}
                       </AvatarFallback>
                     </Avatar>
-                    <h4 className="text-sm font-black text-slate-800 dark:text-white leading-none font-serif">Dr. {selectedDoctor?.name}</h4>
-                    <p className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-1.5">{selectedDoctor?.doctor_profile?.specialty || 'Medicina General'}</p>
+                    <h4 className="text-sm font-black text-white leading-none">Dr. {selectedDoctor?.name}</h4>
+                    <p className="text-[10px] font-black text-teal-400 uppercase tracking-widest mt-1.5">
+                      {selectedDoctor?.doctor_profile?.specialty || 'Médico General'}
+                    </p>
                   </div>
 
-                  {/* Receipt Grid */}
+                  {/* Receipt Details Grid */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-[24px_12px_16px_12px] bg-white/40 dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5 shadow-sm">
-                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Ubicación</p>
-                      <p className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">{selectedClinic?.name}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate leading-relaxed font-semibold">{selectedClinic?.address}</p>
+                    <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-850 space-y-1.5 shadow-sm">
+                      <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Ubicación</p>
+                      <p className="text-xs font-bold text-white truncate">{selectedClinic?.name}</p>
+                      <p className="text-[10px] text-zinc-400 truncate leading-relaxed font-semibold">{selectedClinic?.address}</p>
                     </div>
 
-                    <div className="p-4 rounded-[12px_24px_12px_16px] bg-white/40 dark:bg-zinc-950/40 border border-slate-200/50 dark:border-white/5 space-y-1.5 shadow-sm">
-                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
-                      <p className="text-xs font-black text-slate-800 dark:text-white font-serif">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-relaxed font-semibold">{selectedTime} hrs • 30 mins</p>
+                    <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-850 space-y-1.5 shadow-sm">
+                      <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
+                      <p className="text-xs font-bold text-white">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
+                      <p className="text-[10px] text-zinc-400 leading-relaxed font-semibold">{selectedTime} hrs • 30 mins</p>
                     </div>
                   </div>
 
-                  {/* Warning banner */}
-                  <div className="flex items-center gap-2.5 p-3.5 bg-sky-500/5 rounded-2xl border border-sky-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-300 shadow-sm leading-relaxed">
-                    <Sparkles className="size-4.5 text-sky-500 shrink-0 animate-pulse" />
+                  {/* Notification warning banner */}
+                  <div className="flex items-center gap-3 p-4 bg-sky-500/5 rounded-2xl border border-sky-500/15 text-[11px] font-medium text-zinc-350 shadow-sm leading-relaxed">
+                    <Sparkles className="size-5 text-sky-450 shrink-0 animate-pulse" />
                     <span>Recibirás un recordatorio seguro por notificación PWA antes del horario pactado.</span>
                   </div>
 
-                  {/* Confirm Trigger - Capsule button */}
+                  {/* Confirm Button */}
                   <Button 
                     onClick={handleSubmit} 
                     disabled={createMutation.isPending} 
-                    className="w-full h-13 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-550 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest shadow-[inset_0_4px_6px_rgba(255,255,255,0.35),inset_0_-2px_4px_rgba(0,0,0,0.2),0_12px_30px_rgba(20,184,166,0.25)] flex items-center justify-center gap-2 border-none transition-all duration-300"
+                    className="w-full h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/15 flex items-center justify-center gap-2 border-none transition-all duration-300"
                   >
                     {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : (
                       <>
@@ -537,7 +545,7 @@ export function NewAppointment() {
                     )}
                   </Button>
                 </div>
-              </div>
+              </GlassCard>
             </motion.div>
           )}
 
@@ -545,10 +553,10 @@ export function NewAppointment() {
       </div>
 
       {/* Control Navigation Footer */}
-      <div className="flex items-center justify-between pt-5 border-t border-slate-200 dark:border-white/5 transition-colors duration-300">
+      <div className="flex items-center justify-between pt-5 border-t border-zinc-800 transition-colors duration-300">
         <Button 
           variant="ghost" 
-          className="rounded-full gap-1.5 px-6 text-xs font-black uppercase tracking-widest text-slate-450 hover:bg-white/5" 
+          className="rounded-full gap-1.5 px-6 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:bg-zinc-900/60" 
           onClick={handleBack}
         >
           <ChevronLeft className="size-4 shrink-0" /> 
@@ -559,7 +567,7 @@ export function NewAppointment() {
           <Button 
             onClick={() => setStep(step + 1)} 
             disabled={!canProceed()} 
-            className="rounded-full bg-teal-500 hover:bg-teal-600 text-white font-black text-xs uppercase tracking-widest gap-1.5 px-7 shadow-md shadow-teal-500/10"
+            className="rounded-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs uppercase tracking-widest gap-1.5 px-7 shadow-md shadow-teal-500/10 h-11"
           >
             <span>Siguiente</span> 
             <ChevronRight className="size-4 shrink-0" />

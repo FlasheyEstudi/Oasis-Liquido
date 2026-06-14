@@ -481,10 +481,10 @@ export function PatientHome() {
                       className={cn(
                         "p-3.5 rounded-2xl border transition-all duration-300 flex flex-col justify-between space-y-3 shadow-sm",
                         reminder.status === 'taken' 
-                          ? "bg-emerald-500/[0.03] border-emerald-500/20" 
+                          ? "bg-emerald-500/[0.04] border-emerald-500/35 text-emerald-800 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.05)]" 
                           : reminder.status === 'skipped'
-                            ? "bg-slate-500/[0.03] border-slate-200/50 dark:border-white/5 opacity-70"
-                            : "bg-white/40 dark:bg-white/[0.02] border-slate-250 dark:border-white/5 hover:border-teal-500/30"
+                            ? "bg-slate-500/[0.02] border-slate-200/50 dark:border-white/5 opacity-70"
+                            : "bg-white/45 dark:bg-zinc-950/20 border-slate-200/60 dark:border-white/5 hover:border-teal-500/30 hover:shadow-md"
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -520,7 +520,12 @@ export function PatientHome() {
                             <motion.button
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => updateReminderStatusMutation.mutate({ id: reminder.id, status: 'taken' })}
+                              onClick={() => {
+                                updateReminderStatusMutation.mutate({ id: reminder.id, status: 'taken' });
+                                if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                                  navigator.vibrate(30);
+                                }
+                              }}
                               className="flex-1 py-1.5 rounded-lg bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1 shadow-sm shadow-emerald-500/10 cursor-pointer border-none"
                             >
                               <Check className="size-3" />
@@ -529,7 +534,12 @@ export function PatientHome() {
                             <motion.button
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => updateReminderStatusMutation.mutate({ id: reminder.id, status: 'skipped' })}
+                              onClick={() => {
+                                updateReminderStatusMutation.mutate({ id: reminder.id, status: 'skipped' });
+                                if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                                  navigator.vibrate(15);
+                                }
+                              }}
                               className="py-1.5 px-3 rounded-lg bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 cursor-pointer"
                             >
                               Saltar
@@ -539,7 +549,12 @@ export function PatientHome() {
                           <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            onClick={() => updateReminderStatusMutation.mutate({ id: reminder.id, status: 'pending' })}
+                            onClick={() => {
+                              updateReminderStatusMutation.mutate({ id: reminder.id, status: 'pending' });
+                              if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                                navigator.vibrate(20);
+                              }
+                            }}
                             className="w-full py-1.5 rounded-lg bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-450 cursor-pointer"
                           >
                             Restablecer

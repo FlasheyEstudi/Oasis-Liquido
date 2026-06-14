@@ -314,6 +314,9 @@ export function DriverHome() {
 
   const handleStatusUpdate = (orderId: string, newStatus: 'picked_up' | 'in_transit' | 'delivered') => {
     if (soundEnabled) playRadarSound('sonar');
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate([80, 40, 80]);
+    }
     setUpdatingId(orderId);
     updateDeliveryStatus.mutate(
       { id: orderId, data: { status: newStatus } },
@@ -340,6 +343,9 @@ export function DriverHome() {
   const handleAccept = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (soundEnabled) playRadarSound('success');
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate([100, 30, 100]);
+    }
     try {
       const orderToAccept = availableOrders.find((o: any) => o.id === id);
       
@@ -370,6 +376,9 @@ export function DriverHome() {
   const handleReject = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (soundEnabled) playRadarSound('click');
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(15);
+    }
     try {
       await rejectOrder(id);
       setNotification({ type: 'info', message: 'Pedido declinado en tu radar' });
@@ -417,7 +426,7 @@ export function DriverHome() {
   if (isLoading) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto px-1 sm:px-0">
-        <div className="shimmer rounded-[40px_16px_40px_16px] h-28 w-full opacity-70" />
+        <div className="shimmer rounded-[2.5rem] h-28 w-full opacity-70" />
         <div className="grid grid-cols-3 gap-4">
           <div className="shimmer rounded-2xl h-24 opacity-70" />
           <div className="shimmer rounded-2xl h-24 opacity-70" />
@@ -500,6 +509,9 @@ export function DriverHome() {
             onClick={() => {
               setLocalAvailable(!localAvailable);
               if (soundEnabled) playRadarSound('success');
+              if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                navigator.vibrate(30);
+              }
             }}
             className={cn(
               'h-11 px-4 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 cursor-pointer border flex items-center gap-2 shadow-md',
@@ -544,7 +556,7 @@ export function DriverHome() {
       </div>
 
       {/* 3. The Radar Preview Panel — Floating HUD scoped Map */}
-      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-4 sm:p-5 shadow-xl space-y-4">
+      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[2.5rem] backdrop-blur-md p-4 sm:p-5 shadow-xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-dashed border-slate-200 dark:border-white/5">
           <div className="flex items-center gap-2">
             <div className="flex size-7.5 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/15">
@@ -600,7 +612,7 @@ export function DriverHome() {
       </div>
 
       {/* 4. Tabbed Misiones Feed — Cardless tab lists divided by clinic dashed separators */}
-      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-4 sm:p-5 shadow-xl space-y-4">
+      <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[2.5rem] backdrop-blur-md p-4 sm:p-5 shadow-xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-dashed border-slate-200 dark:border-white/5">
           <div className="flex items-center gap-2">
             <div className="flex size-7.5 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/15">

@@ -225,6 +225,9 @@ export function DeliveryRequest() {
       });
       setNotification({ type: 'success', message: 'Pedido realizado con éxito' });
       useAuthStore.getState().setPrescriptionId(null);
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([100, 30, 100]);
+      }
       setOrderConfirmed(true);
     } catch {
       setNotification({ type: 'error', message: 'No se pudo realizar el pedido. Intenta de nuevo.' });
@@ -358,7 +361,7 @@ export function DeliveryRequest() {
 
       {/* 2. Seamless Address & Map configuration — Cardless Glass Panel */}
       <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-5 shadow-xl space-y-4">
-        <p className="text-[8.5px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:divide-white/5">DIRECCIÓN Y COBERTURA</p>
+        <p className="text-[8.5px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:border-white/5">DIRECCIÓN Y COBERTURA</p>
         
         <div className="space-y-3">
           <div className="space-y-1">
@@ -399,7 +402,7 @@ export function DeliveryRequest() {
         <div className="flex items-center justify-between pb-2 border-b border-dashed border-slate-200 dark:border-white/5">
           <p className="text-[8.5px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em]">FÁRMACOS Y PRODUCTOS</p>
           <button
-            className="bg-teal-500/10 text-teal-600 border border-teal-500/20 rounded-full h-8 text-[9px] font-black uppercase tracking-widest px-4 flex items-center gap-1 cursor-pointer"
+            className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 dark:border-teal-500/10 hover:bg-teal-500/20 rounded-full h-8 text-[9px] font-black uppercase tracking-widest px-4 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm"
             onClick={() => setShowMedicineSearch(!showMedicineSearch)}
           >
             <Plus className="size-3 stroke-[3]" />

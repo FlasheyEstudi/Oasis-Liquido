@@ -322,78 +322,115 @@ export function AppointmentList() {
 
       {/* Modern High-Fidelity Appointment Detail Modal */}
       <Dialog open={!!selectedApt} onOpenChange={(open) => !open && setSelectedApt(null)}>
-        <DialogContent className="sm:rounded-[40px_16px_40px_16px] rounded-3xl glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center shadow-2xl">
-          <DialogHeader className="items-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <ShieldCheck className="size-5 text-teal-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-zinc-455">Verificación de Reserva</span>
-            </div>
-            <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-800 dark:text-white font-serif">Ticket Clínico Digital</DialogTitle>
+        <DialogContent className="sm:rounded-[2.5rem] rounded-3xl bg-zinc-950/90 border-zinc-800 max-w-md mx-auto p-6 shadow-2xl backdrop-blur-xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Ticket Clínico Digital</DialogTitle>
           </DialogHeader>
 
           {selectedApt && (
-            <div className="flex flex-col items-center py-2 space-y-4">
-              {/* Security QR Seal */}
-              <div className="flex justify-center bg-slate-100 dark:bg-white rounded-[2rem] p-4 border border-slate-200 shadow-inner w-fit mx-auto animate-shimmer-fast">
-                <QrCode 
-                  // OAS-008: Map the QR code value uniquely to the appointment ID instead of the doctor's ID, to allow receptionists to verify the correct clinical ticket
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify#appointment-${selectedApt.id}`} 
-                  size={150} 
-                  label="TICKET"
-                  className="scale-95"
-                  showValue={false}
-                />
-              </div>
-
-              {/* Patient and Doctor receipt */}
-              <div className="w-full space-y-3.5 bg-slate-500/[0.02] dark:bg-zinc-950/40 p-4 rounded-2xl border border-slate-200/50 dark:border-white/5 text-left shadow-inner">
-                <div>
-                  <p className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Profesional Asignado</p>
-                  <p className="text-xs font-black text-slate-800 dark:text-white mt-1 font-serif">Dr. {selectedApt.doctor?.name}</p>
-                  {selectedApt.doctor?.doctor_profile?.specialty && (
-                    <p className="text-[9px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-1">{selectedApt.doctor.doctor_profile.specialty}</p>
-                  )}
-                </div>
-
-                <div className="border-t border-dashed border-slate-200 dark:border-white/10 pt-2.5 grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Horario</p>
-                    <p className="text-[10px] font-black text-slate-800 dark:text-white mt-1">{formatDate(selectedApt.date_time, "dd MMM • HH:mm")}</p>
-                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{formatDuration(selectedApt.duration_minutes)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Estado</p>
-                    <div className="mt-1">
-                      <span className={cn(
-                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider border',
-                        APPOINTMENT_STATUS_CONFIG[selectedApt.status]?.bgColor,
-                        APPOINTMENT_STATUS_CONFIG[selectedApt.status]?.color
-                      )}>
-                        {APPOINTMENT_STATUS_CONFIG[selectedApt.status]?.label || selectedApt.status}
+            <div className="flex flex-col items-center py-2 space-y-6">
+              {/* Boarding Pass Ticket */}
+              <div className="w-full flex flex-col items-stretch space-y-0 text-left bg-zinc-900 border border-zinc-800 rounded-[2rem] overflow-hidden shadow-2xl relative">
+                
+                {/* Top Section */}
+                <div className="p-6 space-y-5">
+                  {/* Header */}
+                  <div className="flex justify-between items-center pb-3 border-b border-zinc-800/60">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-400 border border-teal-500/25">
+                        <ShieldCheck className="size-3" /> Verificado
                       </span>
+                    </div>
+                    <span className={cn(
+                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider border',
+                      APPOINTMENT_STATUS_CONFIG[selectedApt.status]?.bgColor,
+                      APPOINTMENT_STATUS_CONFIG[selectedApt.status]?.color
+                    )}>
+                      {APPOINTMENT_STATUS_CONFIG[selectedApt.status]?.label || selectedApt.status}
+                    </span>
+                  </div>
+
+                  {/* Doctor Info */}
+                  <div className="flex items-center gap-4">
+                    <Avatar className="size-14 border border-zinc-850 shrink-0 shadow-sm">
+                      <AvatarFallback className="bg-teal-500/5 text-teal-400 text-xs font-black font-serif">
+                        {getInitials(selectedApt.doctor?.name || '')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-black text-zinc-550 uppercase tracking-widest leading-none">Médico Tratante</p>
+                      <p className="text-sm font-black text-white mt-1.5 truncate font-serif">Dr. {selectedApt.doctor?.name}</p>
+                      {selectedApt.doctor?.doctor_profile?.specialty && (
+                        <p className="text-[9px] font-black text-teal-450 uppercase tracking-widest mt-0.5">{selectedApt.doctor.doctor_profile.specialty}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Schedule & Clinic Details Grid */}
+                  <div className="grid grid-cols-2 gap-4 pt-1.5 border-t border-zinc-850/60">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-zinc-550 uppercase tracking-widest leading-none">Fecha y hora</p>
+                      <p className="text-xs font-bold text-zinc-200 mt-1">{formatDate(selectedApt.date_time, "dd 'de' MMMM")}</p>
+                      <p className="text-[10px] text-zinc-400 font-semibold">{formatDate(selectedApt.date_time, "HH:mm")} hrs • {formatDuration(selectedApt.duration_minutes)}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-zinc-550 uppercase tracking-widest leading-none">Consultorio</p>
+                      <p className="text-xs font-bold text-zinc-200 mt-1 truncate">{selectedApt.clinic?.name}</p>
+                      <p className="text-[10px] text-zinc-400 font-semibold truncate leading-none mt-1">{selectedApt.clinic?.address}</p>
                     </div>
                   </div>
                 </div>
 
-                {selectedApt.clinic && (
-                  <div className="border-t border-slate-200 dark:border-white/5 pt-2.5">
-                    <p className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Sede Médica</p>
-                    <p className="text-xs font-extrabold text-slate-850 dark:text-white mt-1 font-serif">{selectedApt.clinic.name}</p>
-                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-normal truncate font-semibold mt-0.5">{selectedApt.clinic.address}</p>
+                {/* Perforated separator (punch holes) */}
+                <div className="relative h-4 w-full flex items-center justify-center pointer-events-none select-none my-0.5">
+                  <div className="w-full border-t-2 border-dashed border-zinc-800" />
+                  <div className="absolute left-0 -translate-x-1/2 size-6 rounded-full bg-zinc-950 border border-zinc-800" />
+                  <div className="absolute right-0 translate-x-1/2 size-6 rounded-full bg-zinc-950 border border-zinc-800" />
+                </div>
+
+                {/* Bottom Section - QR pass focused */}
+                <div className="p-6 flex flex-col items-center text-center space-y-4 bg-zinc-950/20">
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.25em]">Pase de Entrada QR</p>
+                  
+                  {/* QR container */}
+                  <div className="relative bg-white p-4 rounded-2xl shadow-xl overflow-hidden shrink-0">
+                    {/* Scanner glow animation */}
+                    <motion.div 
+                      animate={{ top: ['-100%', '200%'] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                      className="absolute left-0 right-0 h-8 bg-gradient-to-b from-transparent via-teal-500/25 to-transparent z-10 pointer-events-none"
+                    />
+                    <div className="relative flex items-center justify-center overflow-hidden p-1 bg-white">
+                      <QrCode 
+                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify#appointment-${selectedApt.id}`} 
+                        size={130} 
+                        className="!p-0"
+                        showValue={false}
+                      />
+                    </div>
+                    
+                    {/* Corners */}
+                    <div className="absolute top-2 left-2 size-3.5 border-t-2 border-l-2 border-teal-500/60 rounded-tl" />
+                    <div className="absolute top-2 right-2 size-3.5 border-t-2 border-r-2 border-teal-500/60 rounded-tr" />
+                    <div className="absolute bottom-2 left-2 size-3.5 border-b-2 border-l-2 border-teal-500/60 rounded-bl" />
+                    <div className="absolute bottom-2 right-2 size-3.5 border-b-2 border-r-2 border-teal-500/60 rounded-br" />
                   </div>
-                )}
+
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-teal-400 tracking-[0.2em]">Escánear en Recepción</p>
+                    <p className="text-[9px] text-zinc-450 max-w-[250px] font-semibold leading-normal">
+                      Muestra este pase al llegar a la clínica para confirmar tu asistencia al instante.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* Action Banner */}
-              <div className="flex items-center gap-2 p-3 bg-teal-500/5 rounded-2xl border border-teal-500/10 text-[10px] font-bold text-slate-650 dark:text-zinc-355 text-left w-full">
-                <CheckCircle className="size-4 text-teal-500 shrink-0" />
-                <span>Presenta este ticket digital desde tu teléfono en recepción al llegar a la clínica.</span>
-               {/* Actions */}
+              {/* Action buttons */}
               <div className="w-full flex gap-3 pt-1">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 rounded-[16px_50px_16px_50px] bg-slate-100 hover:bg-slate-250 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-355 font-black text-[10px] uppercase tracking-widest h-11 border border-slate-200 dark:border-white/5 cursor-pointer"
+                  className="flex-1 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-bold text-xs h-11 border border-zinc-800 cursor-pointer transition-colors"
                   onClick={() => setSelectedApt(null)}
                 >
                   Cerrar
@@ -402,7 +439,7 @@ export function AppointmentList() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 rounded-[50px_16px_50px_16px] bg-teal-500 hover:bg-teal-650 text-white font-black text-[10px] uppercase tracking-widest h-11 border-none shadow-md cursor-pointer"
+                    className="flex-1 rounded-full bg-teal-650 hover:bg-teal-700 text-white font-bold text-xs h-11 border-none shadow-md cursor-pointer transition-colors"
                     onClick={() => {
                       setReviewApt(selectedApt);
                       setSelectedApt(null);
@@ -415,7 +452,7 @@ export function AppointmentList() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-655 text-white font-black text-[10px] uppercase tracking-widest h-11 border-none shadow-md cursor-pointer"
+                    className="flex-1 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs h-11 border-none shadow-md cursor-pointer transition-colors"
                     onClick={() => {
                       setCancelDialog(selectedApt);
                     }}
@@ -423,7 +460,6 @@ export function AppointmentList() {
                     Cancelar Cita
                   </motion.button>
                 )}
-              </div>
               </div>
             </div>
           )}

@@ -60,7 +60,6 @@ function getStepIndex(status: DeliveryStatus): number {
   const idx = STEP_ORDER.indexOf(status);
   return idx >= 0 ? idx : 0;
 }
-
 function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
   const currentIndex = getStepIndex(currentStatus);
 
@@ -82,10 +81,10 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
   };
 
   return (
-    <div className="py-4 bg-white/5 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-3xl p-5 shadow-inner">
-      <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-2.5">
+    <div className="py-4 bg-white/10 dark:bg-zinc-950/15 border border-slate-200/50 dark:border-white/5 rounded-[2rem] p-5 shadow-inner backdrop-blur-md">
+      <div className="flex items-center gap-2 mb-4 border-b border-slate-200/50 dark:border-white/5 pb-2.5">
         <Sparkles className="size-4 text-emerald-500 animate-pulse" />
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400">Estado del Envío Bioseguro</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-550 dark:text-zinc-400">Estado del Envío Bioseguro</span>
       </div>
 
       <div className="relative pl-1">
@@ -99,9 +98,9 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
               {index < DELIVERY_STEPS.length - 1 && (
                 <div
                   className={cn(
-                    'absolute left-5 top-10 w-0.5 h-10 -ml-[1px] transition-all duration-500',
+                    'absolute left-5 top-10 w-[3px] h-10 -ml-[1.5px] transition-all duration-500 rounded-full',
                     isCompleted
-                      ? 'bg-gradient-to-b from-emerald-500 to-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                      ? 'bg-gradient-to-b from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
                       : isCancelled
                       ? 'bg-red-500/25'
                       : 'bg-slate-200 dark:bg-zinc-800'
@@ -113,12 +112,12 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
                 className={cn(
                   'flex size-10 items-center justify-center rounded-2xl border transition-all duration-500 z-10 shadow-md',
                   isCompleted
-                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-500 shadow-emerald-500/5 scale-100'
+                    ? 'bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border-emerald-500/40 text-emerald-500 shadow-emerald-500/5 scale-100'
                     : isCurrent && !isCancelled
-                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-500 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.25)] scale-110'
+                    ? 'bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border-amber-500/50 text-amber-500 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.35)] scale-110'
                     : isCancelled
                     ? 'bg-red-500/15 border-red-500/30 text-red-400'
-                    : 'bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-650'
+                    : 'bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-600'
                 )}
               >
                 {getStepIcon(step.status, 'size-4.5 shrink-0')}
@@ -131,10 +130,10 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
                     isCompleted
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : isCurrent && !isCancelled
-                      ? 'text-amber-500 animate-pulse font-extrabold'
+                      ? 'text-amber-500 font-extrabold'
                       : isCancelled
                       ? 'text-red-400/60 line-through'
-                      : 'text-slate-450 dark:text-zinc-500'
+                      : 'text-slate-450 dark:text-zinc-400'
                   )}
                 >
                   {step.label}
@@ -143,10 +142,10 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
                   className={cn(
                     'text-[11px] font-semibold mt-0.5 transition-colors leading-relaxed',
                     isCompleted
-                      ? 'text-slate-500 dark:text-zinc-400'
+                      ? 'text-slate-500 dark:text-zinc-350'
                       : isCurrent && !isCancelled
-                      ? 'text-slate-700 dark:text-zinc-200 font-bold'
-                      : 'text-slate-450 dark:text-zinc-555'
+                      ? 'text-slate-800 dark:text-zinc-100 font-bold'
+                      : 'text-slate-450 dark:text-zinc-500'
                   )}
                 >
                   {isCancelled && isCurrent ? 'Pedido cancelado' : step.description}
@@ -289,21 +288,23 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
       <StatusTimeline currentStatus={currentOrder.status} />
 
       {(currentOrder.status === 'in_transit' || currentOrder.status === 'picked_up') && (
-        <div className="rounded-2xl bg-amber-500/[0.05] border border-amber-500/15 p-4 space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Clock className="size-4 text-amber-600 dark:text-amber-500 animate-pulse" />
-            <p className="text-xs font-black text-amber-600 dark:text-amber-500">
-              Arribo Estimado: {dynamicEta}
+        <div className="rounded-[2rem] bg-amber-500/[0.04] border border-amber-500/25 p-4 relative overflow-hidden flex items-start gap-3.5 shadow-sm">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/[0.02] rounded-bl-full pointer-events-none" />
+          <div className="size-8.5 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0 mt-0.5">
+            <Clock className="size-4 text-amber-600 dark:text-amber-400 animate-pulse" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-amber-650 dark:text-amber-400 uppercase tracking-widest leading-none">Arribo Estimado</p>
+            <p className="text-sm font-extrabold text-slate-805 dark:text-amber-300 mt-1">{dynamicEta}</p>
+            <p className="text-[10px] text-slate-450 dark:text-zinc-400 font-bold mt-1.5 leading-relaxed italic">
+              ⚠️ Tu medicina es transportada en compartimientos térmicos certificados para mantener la eficacia biológica de la fórmula.
             </p>
           </div>
-          <p className="text-[9.5px] text-amber-650/80 leading-relaxed font-semibold italic">
-            ⚠️ Tu medicina es transportada en compartimientos térmicos certificados para mantener la eficacia biológica de la fórmula.
-          </p>
         </div>
       )}
 
       {currentOrder.driver && (
-        <div className="bg-slate-500/[0.02] border border-slate-200/50 dark:border-white/5 p-4 rounded-[2rem] shadow-sm relative overflow-hidden">
+        <div className="relative overflow-hidden rounded-[2rem] bg-white/10 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 p-4 sm:p-5 shadow-inner backdrop-blur-md">
           <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/[0.02] rounded-bl-full pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
@@ -319,7 +320,7 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
                 <p className="text-xs font-black text-slate-800 dark:text-white leading-tight">
                   {currentOrder.driver.name}
                 </p>
-                <div className="flex items-center gap-1 bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider w-fit mx-auto sm:mx-0">
+                <div className="flex items-center gap-1 bg-amber-500/10 text-amber-550 dark:text-amber-450 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider w-fit mx-auto sm:mx-0">
                   <Star className="size-2.5 fill-amber-500" />
                   <span>4.9 Certificado</span>
                 </div>
@@ -333,7 +334,7 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
             {currentOrder.driver.phone && (
               <Button
                 size="sm"
-                className="h-9 px-4 rounded-full bg-teal-500 hover:bg-teal-600 dark:bg-teal-500/10 dark:text-teal-400 dark:hover:bg-teal-500/20 border border-teal-500/20 font-black text-[10px] flex items-center gap-1 w-full sm:w-auto shadow-sm"
+                className="h-9 px-4 rounded-full bg-teal-500 hover:bg-teal-600 dark:bg-teal-500/10 dark:text-teal-400 dark:hover:bg-teal-500/20 border border-teal-500/20 font-black text-[10px] flex items-center gap-1 w-full sm:w-auto shadow-sm cursor-pointer"
                 asChild
               >
                 <a href={`tel:${currentOrder.driver.phone}`}>

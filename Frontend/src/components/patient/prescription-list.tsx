@@ -286,48 +286,120 @@ export function PrescriptionList() {
 
       {/* Secure QR Dialog */}
       <Dialog open={!!qrDialog} onOpenChange={(open) => !open && setQrDialog(null)}>
-        <DialogContent className="sm:rounded-[40px_16px_40px_16px] rounded-3xl glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center shadow-2xl">
-          <DialogHeader className="items-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Shield className="size-5 text-sky-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-400">Verificación de Receta</span>
-            </div>
-            <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-800 dark:text-white font-serif">Código QR Seguro</DialogTitle>
+        <DialogContent className="sm:rounded-[2.5rem] rounded-3xl bg-zinc-950/90 border-zinc-800 max-w-md mx-auto p-6 shadow-2xl backdrop-blur-xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Código QR Seguro de Receta</DialogTitle>
           </DialogHeader>
 
           {qrDialog && (
-            <div className="flex flex-col items-center py-2 space-y-4">
-              <div className="flex justify-center bg-slate-100 dark:bg-white rounded-[2rem] p-4 border border-slate-200/50 shadow-inner w-fit mx-auto">
-                <QrCode 
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#prescription-${qrDialog.id}`} 
-                  size={160} 
-                  label="Receta Médica"
-                  className="scale-95"
-                  showValue={false}
-                />
-              </div>
+            <div className="flex flex-col items-center py-2 space-y-6">
+              {/* Boarding Pass Ticket */}
+              <div className="w-full flex flex-col items-stretch space-y-0 text-left bg-zinc-900 border border-zinc-800 rounded-[2rem] overflow-hidden shadow-2xl relative">
+                
+                {/* Top Section */}
+                <div className="p-6 space-y-5">
+                  {/* Header */}
+                  <div className="flex justify-between items-center pb-3 border-b border-zinc-800/60">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-455 border border-sky-500/25">
+                        <Shield className="size-3" /> MINSA Valido
+                      </span>
+                    </div>
+                    <span className={cn(
+                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider border shadow-sm',
+                      PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.bgColor,
+                      PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.color
+                    )}>
+                      {PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.label || qrDialog.status}
+                    </span>
+                  </div>
 
-              <div className="w-full space-y-1 bg-slate-500/[0.02] dark:bg-zinc-950/40 p-3.5 rounded-2xl border border-slate-200/50 dark:border-white/5 text-center shadow-inner">
-                <p className="text-xs font-black text-slate-800 dark:text-white font-serif">
-                  Dr. {qrDialog.doctor?.name || 'Especialista Oasis'}
-                </p>
-                <p className="text-[9px] font-bold text-slate-500 dark:text-zinc-455">
-                  Emitida el {formatDate(qrDialog.issue_date, 'dd/MM/yyyy')}
-                </p>
-                <div className="pt-2">
-                  <span className={cn(
-                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-black tracking-wider uppercase border shadow-sm',
-                    PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.bgColor,
-                    PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.color
-                  )}>
-                    {PRESCRIPTION_STATUS_CONFIG[qrDialog.status]?.label || qrDialog.status}
-                  </span>
+                  {/* Doctor Info */}
+                  <div className="flex items-center gap-4">
+                    <Avatar className="size-14 border border-zinc-850 shrink-0 shadow-sm">
+                      <AvatarFallback className="bg-sky-500/5 text-sky-450 text-xs font-black font-serif">
+                        {getInitials(qrDialog.doctor?.name || '')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-black text-zinc-555 uppercase tracking-widest leading-none">Médico Emisor</p>
+                      <p className="text-sm font-black text-white mt-1.5 truncate font-serif">Dr. {qrDialog.doctor?.name}</p>
+                      {qrDialog.doctor?.doctor_profile?.specialty && (
+                        <p className="text-[9px] font-black text-teal-450 uppercase tracking-widest mt-0.5">{qrDialog.doctor.doctor_profile.specialty}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Schedule & Clinic Details Grid */}
+                  <div className="grid grid-cols-2 gap-4 pt-1.5 border-t border-zinc-850/60">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-zinc-555 uppercase tracking-widest leading-none">Fecha de Emisión</p>
+                      <p className="text-xs font-bold text-zinc-200 mt-1">{formatDate(qrDialog.issue_date, "dd 'de' MMMM")}</p>
+                      {qrDialog.expiration_date && (
+                        <p className="text-[9px] text-amber-500 font-black uppercase tracking-wider mt-0.5">Vence: {formatDate(qrDialog.expiration_date, 'dd/MM/yyyy')}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-zinc-555 uppercase tracking-widest leading-none">Medicamentos</p>
+                      <p className="text-xs font-bold text-zinc-200 mt-1">{qrDialog.lines?.length || 0} Formulados</p>
+                      <p className="text-[10px] text-zinc-400 font-semibold truncate mt-0.5">Autorizado para Surtido</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Perforated separator (punch holes) */}
+                <div className="relative h-4 w-full flex items-center justify-center pointer-events-none select-none my-0.5">
+                  <div className="w-full border-t-2 border-dashed border-zinc-800" />
+                  <div className="absolute left-0 -translate-x-1/2 size-6 rounded-full bg-zinc-950 border border-zinc-800" />
+                  <div className="absolute right-0 translate-x-1/2 size-6 rounded-full bg-zinc-950 border border-zinc-800" />
+                </div>
+
+                {/* Bottom Section - QR pass focused */}
+                <div className="p-6 flex flex-col items-center text-center space-y-4 bg-zinc-950/20">
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.25em]">Pase Digital de Receta</p>
+                  
+                  {/* QR container */}
+                  <div className="relative bg-white p-4 rounded-2xl shadow-xl overflow-hidden shrink-0">
+                    {/* Scanner glow animation */}
+                    <motion.div 
+                      animate={{ top: ['-100%', '200%'] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                      className="absolute left-0 right-0 h-8 bg-gradient-to-b from-transparent via-sky-500/25 to-transparent z-10 pointer-events-none"
+                    />
+                    <div className="relative flex items-center justify-center overflow-hidden p-1 bg-white">
+                      <QrCode 
+                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/family/verify#prescription-${qrDialog.id}`} 
+                        size={130} 
+                        className="!p-0"
+                        showValue={false}
+                      />
+                    </div>
+                    
+                    {/* Corners */}
+                    <div className="absolute top-2 left-2 size-3.5 border-t-2 border-l-2 border-sky-500/60 rounded-tl" />
+                    <div className="absolute top-2 right-2 size-3.5 border-t-2 border-r-2 border-sky-500/60 rounded-tr" />
+                    <div className="absolute bottom-2 left-2 size-3.5 border-b-2 border-l-2 border-sky-500/60 rounded-bl" />
+                    <div className="absolute bottom-2 right-2 size-3.5 border-b-2 border-r-2 border-sky-500/60 rounded-br" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-sky-400 tracking-[0.2em]">Escánear en Farmacia</p>
+                    <p className="text-[9px] text-zinc-450 max-w-[250px] font-semibold leading-normal">
+                      Presenta este código al farmacéutico para despachar y registrar tus medicamentos autorizados.
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <p className="text-[9px] text-slate-400 dark:text-zinc-555 leading-relaxed font-semibold">
-                Certificación y firmas biométricas resguardadas bajo cifrado HMAC. Acreditado por farmacéuticas autorizadas por el MINSA.
-              </p>
+              {/* Close Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-bold text-xs h-11 border border-zinc-800 cursor-pointer transition-colors"
+                onClick={() => setQrDialog(null)}
+              >
+                Cerrar Recibo
+              </motion.button>
             </div>
           )}
         </DialogContent>

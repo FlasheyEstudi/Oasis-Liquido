@@ -79,6 +79,9 @@ function SwipeButton({
 
   const handleDragEnd = () => {
     if (x.get() >= dragRange * 0.85) {
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([80, 30, 80]);
+      }
       onConfirm();
     }
     animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
@@ -226,6 +229,9 @@ export function DeliveryDetail() {
 
     if (scannedPatientId !== expectedId) {
       setVerificationError('Código QR incorrecto. No coincide con el ID digital de este paciente.');
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
       return;
     }
 
@@ -238,6 +244,9 @@ export function DeliveryDetail() {
             type: 'success', 
             message: `Pedido entregado exitosamente a: ${receiverName || order.patient?.name}` 
           });
+          if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+            navigator.vibrate([150, 40, 150]);
+          }
           setConfirmDeliveryOpen(false);
           setReceiverName('');
           setPatientQrCode('');
@@ -498,7 +507,7 @@ export function DeliveryDetail() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.94, opacity: 0, y: 30 }}
               transition={{ type: 'spring', damping: 25 }}
-              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-850 dark:text-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden"
+              className="bg-white/95 dark:bg-zinc-950/95 border border-teal-500/20 text-slate-850 dark:text-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden backdrop-blur-2xl"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
               
@@ -514,7 +523,7 @@ export function DeliveryDetail() {
 
               <div className="space-y-4 mb-6">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">¿Quién recibe?</label>
+                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-555 uppercase tracking-widest">¿Quién recibe?</label>
                   <input
                     placeholder="Ej. Paciente, Madre, Tutor"
                     value={receiverName}
@@ -524,7 +533,7 @@ export function DeliveryDetail() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">Código QR o ID Digital</label>
+                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-555 uppercase tracking-widest">Código QR o ID Digital</label>
                   <div className="flex gap-2">
                     <input
                       placeholder="patient-id-xxxx"
@@ -591,14 +600,14 @@ export function DeliveryDetail() {
                 >
                   Cancelar
                 </Button>
-                <Button 
-                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl cursor-pointer"
+                <button 
+                  className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-[9px] uppercase tracking-widest rounded-xl cursor-pointer border-none shadow-sm flex items-center justify-center gap-1"
                   disabled={!receiverName.trim() || !patientQrCode.trim() || isUpdating}
                   onClick={handleConfirmDelivery}
                 >
-                  {isUpdating ? <Loader2 className="size-4 animate-spin mr-1" /> : null}
+                  {isUpdating ? <Loader2 className="size-3.5 animate-spin mr-1" /> : null}
                   Confirmar
-                </Button>
+                </button>
               </div>
             </motion.div>
           </div>
