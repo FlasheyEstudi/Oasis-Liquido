@@ -259,7 +259,7 @@ export function NewAppointment() {
                                 'flex items-center gap-4 p-5 cursor-pointer border rounded-2xl transition-all duration-300 relative overflow-hidden group shadow-md',
                                 isSelected 
                                   ? 'bg-teal-500/10 border-teal-500/40 ring-2 ring-teal-500/10' 
-                                  : 'bg-zinc-900/40 border-zinc-850 hover:bg-zinc-800/40'
+                                  : 'bg-zinc-900/40 border-zinc-800 hover:bg-zinc-800/40'
                               )}
                               onClick={() => handleClinicSelect(clinic.id)}
                             >
@@ -268,7 +268,7 @@ export function NewAppointment() {
                               )}
                               <div className={cn(
                                 'flex size-12 items-center justify-center rounded-xl shrink-0 transition-colors',
-                                isSelected ? 'bg-teal-500/20 text-teal-450' : 'bg-zinc-800 text-zinc-500'
+                                isSelected ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400' : 'bg-zinc-800 text-zinc-500'
                               )}>
                                 <Building2 className="size-6" />
                               </div>
@@ -361,7 +361,7 @@ export function NewAppointment() {
                             'flex items-center gap-4 p-5 cursor-pointer border rounded-2xl transition-all duration-300 relative overflow-hidden shadow-sm group',
                             isSelected 
                               ? 'bg-teal-500/10 border-teal-500/40 ring-2 ring-teal-500/10' 
-                              : 'bg-zinc-900/40 border-zinc-850 hover:bg-zinc-800/45'
+                              : 'bg-zinc-900/40 border-zinc-800 hover:bg-zinc-800/40'
                           )}
                           onClick={() => setSelectedDoctorId(doc.id)}
                         >
@@ -386,7 +386,7 @@ export function NewAppointment() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs font-black text-teal-450 uppercase tracking-widest mt-1">
+                            <p className="text-xs font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-1">
                               {doc.doctor_profile?.specialty || 'Médico General'}
                             </p>
                             <p className="text-[10px] text-zinc-500 font-semibold mt-1">
@@ -412,7 +412,7 @@ export function NewAppointment() {
                   <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400 pb-3 border-b border-dashed border-zinc-800 mb-4">
                     Selecciona una Fecha
                   </h3>
-                  <div className="flex justify-center bg-zinc-950/40 rounded-2xl p-4 border border-zinc-850 shadow-inner">
+                  <div className="flex justify-center bg-zinc-950/40 rounded-2xl p-4 border border-zinc-800 shadow-inner">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
@@ -439,7 +439,7 @@ export function NewAppointment() {
                       <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 py-16 text-center space-y-4">
                         <CalendarIcon className="size-14 text-zinc-800 animate-pulse" />
                         <p className="text-xs font-black uppercase tracking-[0.2em] text-teal-400">Paso previo</p>
-                        <p className="text-[11px] text-zinc-450 font-semibold max-w-[200px]">Por favor selecciona un día en el calendario.</p>
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-semibold max-w-[200px]">Por favor selecciona un día en el calendario.</p>
                       </div>
                     ) : isLoadingOccupied ? (
                       <div className="flex-1 flex flex-col items-center justify-center py-20">
@@ -463,7 +463,7 @@ export function NewAppointment() {
                                   ? 'bg-teal-500 border-teal-500 text-white shadow-lg shadow-teal-500/10'
                                   : isOccupied 
                                     ? 'bg-zinc-950/20 border-zinc-900/40 text-zinc-700 cursor-not-allowed opacity-30'
-                                    : 'bg-zinc-900/60 border-zinc-850 text-zinc-300 hover:bg-zinc-800/40'
+                                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:bg-zinc-800/40'
                               )}
                             >
                               <Clock className="size-3.5 shrink-0" />
@@ -512,13 +512,13 @@ export function NewAppointment() {
 
                   {/* Receipt Details Grid */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-850 space-y-1.5 shadow-sm">
+                    <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-800 space-y-1.5 shadow-sm">
                       <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Ubicación</p>
                       <p className="text-xs font-bold text-white truncate">{selectedClinic?.name}</p>
                       <p className="text-[10px] text-zinc-400 truncate leading-relaxed font-semibold">{selectedClinic?.address}</p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-850 space-y-1.5 shadow-sm">
+                    <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-800 space-y-1.5 shadow-sm">
                       <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
                       <p className="text-xs font-bold text-white">{selectedDate ? formatDate(selectedDate.toISOString(), "dd 'de' MMMM") : ''}</p>
                       <p className="text-[10px] text-zinc-400 leading-relaxed font-semibold">{selectedTime} hrs • 30 mins</p>
@@ -526,8 +526,8 @@ export function NewAppointment() {
                   </div>
 
                   {/* Notification warning banner */}
-                  <div className="flex items-center gap-3 p-4 bg-sky-500/5 rounded-2xl border border-sky-500/15 text-[11px] font-medium text-zinc-350 shadow-sm leading-relaxed">
-                    <Sparkles className="size-5 text-sky-450 shrink-0 animate-pulse" />
+                  <div className="flex items-center gap-3 p-4 bg-sky-500/5 rounded-2xl border border-sky-500/15 text-[11px] font-medium text-zinc-400 shadow-sm leading-relaxed">
+                    <Sparkles className="size-5 text-sky-500 dark:text-sky-400 shrink-0 animate-pulse" />
                     <span>Recibirás un recordatorio seguro por notificación PWA antes del horario pactado.</span>
                   </div>
 

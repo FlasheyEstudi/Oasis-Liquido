@@ -281,7 +281,7 @@ export function DeliveryDetail() {
 
         <div className="space-y-2">
           <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Sin Misiones Activas</h2>
-          <p className="text-xs font-bold text-slate-400 dark:text-zinc-550 max-w-[280px] mx-auto leading-relaxed">
+          <p className="text-xs font-bold text-slate-400 dark:text-zinc-400 max-w-[280px] mx-auto leading-relaxed">
             No tienes ninguna entrega activa o asignada en este momento. Visita el radar para aceptar nuevas órdenes.
           </p>
         </div>
@@ -356,7 +356,7 @@ export function DeliveryDetail() {
             }}
             className="w-full flex flex-col items-center justify-center -mt-2 mb-4 cursor-pointer py-1 select-none"
           >
-            <div className="w-12 h-1 bg-slate-350 dark:bg-zinc-800 rounded-full" />
+            <div className="w-12 h-1 bg-slate-300 dark:bg-zinc-800 rounded-full" />
             <span className="text-[7.5px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 mt-1">
               {isCollapsed ? "Ver Detalles (Expandir)" : "Ocultar Detalles (Colapsar)"}
             </span>
@@ -365,10 +365,10 @@ export function DeliveryDetail() {
           {/* Header Info */}
           <div className="flex justify-between items-center">
             <div>
-              <span className="text-[8px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest">
+              <span className="text-[8px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest">
                 {isCollapsed ? "TOCA PARA VER DETALLES" : "ORDEN EN SEGUIMIENTO"}
               </span>
-              <h2 className="text-sm font-black text-slate-905 dark:text-white font-serif mt-0.5">
+              <h2 className="text-sm font-black text-slate-900 dark:text-white font-serif mt-0.5">
                 Orden #{order.id?.slice(0, 8) || '...'} {isCollapsed && order.patient && `• ${order.patient.name}`}
               </h2>
             </div>
@@ -388,13 +388,13 @@ export function DeliveryDetail() {
                         "size-6.5 rounded-full flex items-center justify-center border transition-all duration-300 text-[9px] font-black",
                         isCurrent && "bg-teal-500 text-white ring-4 ring-teal-500/25",
                         isCompleted && !isCurrent && "bg-teal-500/10 border-teal-500/25 text-teal-600 dark:text-teal-400",
-                        !isCompleted && "bg-white dark:bg-zinc-900 border-slate-200 dark:border-white/5 text-slate-400 dark:text-zinc-605"
+                        !isCompleted && "bg-white dark:bg-zinc-900 border-slate-200 dark:border-white/5 text-slate-400 dark:text-zinc-600"
                       )}>
                         {index + 1}
                       </div>
                       <span className={cn(
                         "text-[8px] font-black uppercase tracking-wider scale-90",
-                        isCurrent ? "text-teal-500" : isCompleted ? "text-slate-800 dark:text-zinc-300" : "text-slate-400 dark:text-zinc-655"
+                        isCurrent ? "text-teal-500" : isCompleted ? "text-slate-800 dark:text-zinc-300" : "text-slate-400 dark:text-zinc-500"
                       )}>
                         {step.label}
                       </span>
@@ -411,9 +411,9 @@ export function DeliveryDetail() {
                     <Building2 className="size-4.5" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[7.5px] font-black text-emerald-655 dark:text-emerald-450 uppercase tracking-widest">Punto de Retiro</span>
-                    <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.pharmacy?.name || 'Farmacia'}</h4>
-                    <p className="text-[10px] text-slate-550 dark:text-zinc-400 mt-0.5 truncate font-medium">{order.pickup_address || 'N/A'}</p>
+                    <span className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Punto de Retiro</span>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.pharmacy?.name || 'Farmacia'}</h4>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5 truncate font-medium">{order.pickup_address || 'N/A'}</p>
                   </div>
                 </div>
 
@@ -423,12 +423,12 @@ export function DeliveryDetail() {
                     <MapPin className="size-4.5" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[7.5px] font-black text-rose-655 dark:text-rose-450 uppercase tracking-widest">Destino de Entrega</span>
-                    <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.delivery_address}</h4>
+                    <span className="text-[7.5px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Destino de Entrega</span>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 mt-0.5 truncate font-serif">{order.delivery_address}</h4>
                     {order.patient && (
                       <div className="mt-1.5 flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-full bg-slate-500/5 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 text-[8.5px] font-black text-slate-700 dark:text-zinc-355">{order.patient.name}</span>
-                        {order.patient.phone && <span className="text-[9.5px] font-mono text-slate-455 dark:text-zinc-455">{order.patient.phone}</span>}
+                        <span className="px-2 py-0.5 rounded-full bg-slate-500/5 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 text-[8.5px] font-black text-slate-700 dark:text-zinc-400">{order.patient.name}</span>
+                        {order.patient.phone && <span className="text-[9.5px] font-mono text-slate-400 dark:text-zinc-400">{order.patient.phone}</span>}
                       </div>
                     )}
                   </div>
@@ -446,16 +446,16 @@ export function DeliveryDetail() {
               {/* Cargo manifest */}
               {order.items && order.items.length > 0 && (
                 <div className="bg-slate-500/[0.02] dark:bg-black/10 rounded-2xl p-4 border border-slate-200/50 dark:border-white/5 space-y-2">
-                  <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest block mb-1">Manifiesto de Receta</span>
+                  <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest block mb-1">Manifiesto de Receta</span>
                   {order.items.map((item) => (
                     <div key={item.id} className="flex justify-between items-center text-xs font-bold">
-                      <span className="text-slate-700 dark:text-zinc-300 truncate max-w-[70%]">{item.medicine?.name || 'Medicamento'} <span className="text-slate-455 dark:text-zinc-500 font-mono text-[10px]">x{item.quantity}</span></span>
+                      <span className="text-slate-700 dark:text-zinc-300 truncate max-w-[70%]">{item.medicine?.name || 'Medicamento'} <span className="text-slate-400 dark:text-zinc-500 font-mono text-[10px]">x{item.quantity}</span></span>
                       <span className="font-mono text-slate-800 dark:text-zinc-200">{formatCurrency(item.quantity * item.unit_price)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-white/5 mt-2">
-                    <span className="text-[8px] font-black text-slate-455 dark:text-zinc-550 uppercase tracking-widest">Subtotal Cargamento</span>
-                    <span className="text-xs font-black text-slate-905 dark:text-white font-mono">{formatCurrency(totalAmount)}</span>
+                    <span className="text-[8px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest">Subtotal Cargamento</span>
+                    <span className="text-xs font-black text-slate-900 dark:text-white font-mono">{formatCurrency(totalAmount)}</span>
                   </div>
                 </div>
               )}
@@ -507,7 +507,7 @@ export function DeliveryDetail() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.94, opacity: 0, y: 30 }}
               transition={{ type: 'spring', damping: 25 }}
-              className="bg-white/95 dark:bg-zinc-950/95 border border-teal-500/20 text-slate-850 dark:text-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden backdrop-blur-2xl"
+              className="bg-white/95 dark:bg-zinc-950/95 border border-teal-500/20 text-slate-800 dark:text-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden backdrop-blur-2xl"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
               
@@ -523,17 +523,17 @@ export function DeliveryDetail() {
 
               <div className="space-y-4 mb-6">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-555 uppercase tracking-widest">¿Quién recibe?</label>
+                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest">¿Quién recibe?</label>
                   <input
                     placeholder="Ej. Paciente, Madre, Tutor"
                     value={receiverName}
                     onChange={(e) => setReceiverName(e.target.value)}
-                    className="w-full h-11 px-4 bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 text-slate-800 dark:text-white rounded-xl text-xs focus:outline-none focus:border-teal-500 font-bold placeholder:text-slate-400"
+                    className="w-full h-11 px-4 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-white rounded-xl text-xs focus:outline-none focus:border-teal-500 font-bold placeholder:text-slate-400"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-555 uppercase tracking-widest">Código QR o ID Digital</label>
+                  <label className="text-[9px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest">Código QR o ID Digital</label>
                   <div className="flex gap-2">
                     <input
                       placeholder="patient-id-xxxx"
@@ -542,7 +542,7 @@ export function DeliveryDetail() {
                         setPatientQrCode(e.target.value);
                         if (verificationError) setVerificationError('');
                       }}
-                      className="flex-1 h-11 px-4 bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 text-slate-805 dark:text-white rounded-xl text-xs font-mono focus:outline-none focus:border-teal-500 placeholder:text-slate-400"
+                      className="flex-1 h-11 px-4 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-white rounded-xl text-xs font-mono focus:outline-none focus:border-teal-500 placeholder:text-slate-400"
                     />
                     <Button
                       size="sm"
@@ -601,7 +601,7 @@ export function DeliveryDetail() {
                   Cancelar
                 </Button>
                 <button 
-                  className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-[9px] uppercase tracking-widest rounded-xl cursor-pointer border-none shadow-sm flex items-center justify-center gap-1"
+                  className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-[9px] uppercase tracking-widest rounded-xl cursor-pointer border-none shadow-sm flex items-center justify-center gap-1"
                   disabled={!receiverName.trim() || !patientQrCode.trim() || isUpdating}
                   onClick={handleConfirmDelivery}
                 >

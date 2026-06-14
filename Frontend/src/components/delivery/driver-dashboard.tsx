@@ -336,7 +336,7 @@ export function DriverDashboard() {
           <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1 font-mono tracking-tight">
             {formatCurrency(stats?.todayEarnings ?? 0)}
           </h4>
-          <span className="text-[7.5px] text-slate-450 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Ganancias</span>
+          <span className="text-[7.5px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Ganancias</span>
         </div>
 
         {/* Earnings weekly */}
@@ -348,7 +348,7 @@ export function DriverDashboard() {
           <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1 font-mono tracking-tight">
             {formatCurrency(stats?.weekEarnings ?? 0)}
           </h4>
-          <span className="text-[7.5px] text-slate-450 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Semana móvil</span>
+          <span className="text-[7.5px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Semana móvil</span>
         </div>
 
         {/* Total Deliveries */}
@@ -356,11 +356,11 @@ export function DriverDashboard() {
           <div className="absolute top-1 right-1 opacity-5">
             <Truck className="size-8 text-emerald-500" />
           </div>
-          <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-450 uppercase tracking-widest">Repartos</span>
+          <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Repartos</span>
           <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1 font-mono tracking-tight">
             {stats?.totalDeliveries ?? 0}
           </h4>
-          <span className="text-[7.5px] text-slate-450 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Entregados</span>
+          <span className="text-[7.5px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Entregados</span>
         </div>
 
         {/* Rating */}
@@ -368,12 +368,12 @@ export function DriverDashboard() {
           <div className="absolute top-1 right-1 opacity-5">
             <Star className="size-8 text-amber-500" />
           </div>
-          <span className="text-[8px] font-black text-amber-600 dark:text-amber-450 uppercase tracking-widest">Valoración</span>
+          <span className="text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">Valoración</span>
           <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1 font-mono flex items-center justify-center gap-0.5 tracking-tight">
             {stats?.rating ?? 5.0}
             <Star className="size-3 text-amber-500 fill-amber-500" />
           </h4>
-          <span className="text-[7.5px] text-slate-450 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Puntaje</span>
+          <span className="text-[7.5px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Puntaje</span>
         </div>
       </motion.div>
 
@@ -413,21 +413,21 @@ export function DriverDashboard() {
                         <CheckCircle2 className="size-5" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-slate-805 dark:text-zinc-200 truncate max-w-[220px]">
+                        <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 truncate max-w-[220px]">
                           {order.delivery_address}
                         </h4>
-                        <p className="text-[10px] text-slate-455 dark:text-zinc-500 font-bold mt-0.5">
+                        <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold mt-0.5">
                           {order.patient?.name || 'Paciente'} • Orden #{order.id.slice(0, 8)}
                         </p>
                         {order.delivered_at && (
-                          <span className="text-[8.5px] text-slate-400 dark:text-zinc-550 block mt-1 font-mono">
+                          <span className="text-[8.5px] text-slate-400 dark:text-zinc-400 block mt-1 font-mono">
                             Entregado: {new Date(order.delivered_at).toLocaleDateString()} {new Date(order.delivered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         )}
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs font-black text-slate-905 dark:text-white font-mono block">
+                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono block">
                         +{formatCurrency((order.pharmacy as any)?.deliveryFee || 29.90)}
                       </span>
                       <span className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
@@ -489,9 +489,9 @@ export function DriverDashboard() {
 
         <div className="space-y-3">
           {reviewsLoading ? (
-            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-550">Cargando reseñas...</div>
+            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-400">Cargando reseñas...</div>
           ) : reviews.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-550 italic">No hay calificaciones aún</div>
+            <div className="py-8 text-center text-xs text-slate-500 dark:text-zinc-400 italic">No hay calificaciones aún</div>
           ) : (
             reviews.map((review: any) => (
               <div key={review.id} className="p-4 rounded-2xl border border-slate-200/60 dark:border-zinc-800 bg-slate-500/[0.02] dark:bg-white/5 space-y-2 transition-colors">
@@ -503,7 +503,7 @@ export function DriverDashboard() {
                   </div>
                   <span className="text-[10px] text-slate-500 dark:text-zinc-500">{timeAgo(review.createdAt)}</span>
                 </div>
-                <p className="text-xs font-bold text-slate-800 dark:text-zinc-105 italic">"{review.comment}"</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-zinc-100 italic">"{review.comment}"</p>
               </div>
             ))
           )}
@@ -513,12 +513,12 @@ export function DriverDashboard() {
       {/* SOS satellite emergency dispatch modal overlay */}
       <AnimatePresence>
         {showSosModal && (
-          <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 30 }}
-              className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-[2.5rem] p-6 shadow-2xl overflow-hidden select-none"
+              className="relative w-full max-w-sm bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[2.5rem] p-6 shadow-2xl overflow-hidden select-none"
             >
               {/* Organic glowing indicator */}
               <div className="absolute -top-12 -left-12 size-36 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -527,13 +527,13 @@ export function DriverDashboard() {
                 <div className="mx-auto size-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-3 animate-pulse">
                   <AlertCircle className="size-6" />
                 </div>
-                <h3 className="text-lg font-bold text-white uppercase tracking-wider">Línea de Auxilio SOS</h3>
-                <p className="text-xs text-slate-400 mt-1">Repartidor en Ruta Activa de Medicamentos</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-wider">Línea de Auxilio SOS</h3>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Repartidor en Ruta Activa de Medicamentos</p>
               </div>
 
               <div className="space-y-4">
                 {isAuraTriggering ? (
-                  <div className="flex flex-col items-center justify-center p-6 rounded-3xl bg-teal-500/10 border border-teal-500/30 text-center space-y-4">
+                  <div className="flex flex-col items-center justify-center p-6 rounded-3xl bg-teal-500/5 dark:bg-teal-500/10 border border-teal-500/20 dark:border-teal-500/30 text-center space-y-4">
                     <div className="relative size-20 flex items-center justify-center">
                       <motion.div
                         animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
@@ -545,30 +545,30 @@ export function DriverDashboard() {
                         transition={{ repeat: Infinity, duration: 1.5, delay: 0.4, ease: "easeOut" }}
                         className="absolute inset-0 rounded-full bg-teal-500/20"
                       />
-                      <div className="size-16 rounded-full bg-gradient-to-tr from-teal-600 to-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-[0_0_20px_rgba(20,184,166,0.4)]">
+                      <div className="size-16 rounded-full bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-[0_0_20px_rgba(20,184,166,0.3)]">
                         {auraCountdown > 0 ? auraCountdown : <Loader2 className="size-8 animate-spin" />}
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-widest text-teal-400">Despachando Auxilio Satelital...</h4>
-                      <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">Compartiendo geolocalización GPS activa y detalles de envío de medicamentos con soporte central.</p>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-teal-600 dark:text-teal-400">Despachando Auxilio Satelital...</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1 max-w-[200px]">Compartiendo geolocalización GPS activa y detalles de envío de medicamentos con soporte central.</p>
                     </div>
                     <button
                       type="button"
                       onClick={cancelAuraTrigger}
-                      className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-widest text-zinc-300 transition-colors"
+                      className="px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-300 transition-colors border-none cursor-pointer"
                     >
                       Cancelar Alerta
                     </button>
                   </div>
                 ) : auraTriggered ? (
-                  <div className="flex flex-col items-center justify-center p-6 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
-                    <div className="size-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <div className="flex flex-col items-center justify-center p-6 rounded-3xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 dark:border-emerald-500/30 text-center space-y-3">
+                    <div className="size-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="size-6" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400">¡Auxilio Despachado!</h4>
-                      <p className="text-[10px] text-slate-400 mt-1">Tu ubicación y telemetría de vehículo fueron notificadas vía WhatsApp. El centro de soporte Oasis está en camino.</p>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">¡Auxilio Despachado!</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1">Tu ubicación y telemetría de vehículo fueron notificadas vía WhatsApp. El centro de soporte Oasis está en camino.</p>
                     </div>
                     <button
                       type="button"
@@ -576,7 +576,7 @@ export function DriverDashboard() {
                         setAuraTriggered(false);
                         setShowSosModal(false);
                       }}
-                      className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-widest text-zinc-300 transition-colors"
+                      className="px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-300 transition-colors border-none cursor-pointer"
                     >
                       Entendido
                     </button>
@@ -585,17 +585,17 @@ export function DriverDashboard() {
                   <button
                     type="button"
                     onClick={startAuraTrigger}
-                    className="flex items-center gap-4 w-full p-4 rounded-3xl bg-gradient-to-r from-teal-500/20 via-cyan-500/10 to-transparent border border-teal-500/30 hover:border-teal-500 hover:bg-teal-500/20 text-white transition duration-300 cursor-pointer relative overflow-hidden group shadow-lg shadow-teal-500/5"
+                    className="flex items-center gap-4 w-full p-4 rounded-3xl bg-gradient-to-r from-teal-500/10 via-cyan-500/5 to-transparent border border-teal-500/20 dark:border-teal-500/30 hover:border-teal-500 dark:hover:border-teal-500/50 hover:bg-teal-500/10 text-slate-800 dark:text-white transition duration-300 cursor-pointer relative overflow-hidden group shadow-md"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="size-10 rounded-2xl bg-teal-500/20 flex items-center justify-center text-teal-400 relative z-10 shrink-0 shadow-inner">
+                    <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="size-10 rounded-2xl bg-teal-500/15 dark:bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 relative z-10 shrink-0 shadow-inner">
                       <Radio className="size-5 animate-pulse" />
                     </div>
                     <div className="text-left flex-1 relative z-10">
-                      <div className="text-xs font-black text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-                        Oasis Aura <span className="text-[7px] bg-teal-400 text-black font-extrabold px-1 rounded">SATELITAL</span>
+                      <div className="text-xs font-black text-teal-600 dark:text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                        Oasis Aura <span className="text-[7px] bg-teal-500/20 dark:bg-teal-400 text-teal-700 dark:text-black font-extrabold px-1 rounded">SATELITAL</span>
                       </div>
-                      <div className="text-[10px] text-slate-300 font-medium mt-0.5 leading-tight">Alerta digital vía WhatsApp + Geolocalización Activa</div>
+                      <div className="text-[10px] text-slate-600 dark:text-slate-350 font-medium mt-0.5 leading-tight">Alerta digital vía WhatsApp + Geolocalización Activa</div>
                     </div>
                   </button>
                 )}
@@ -603,14 +603,14 @@ export function DriverDashboard() {
                 <div className="flex gap-2">
                   <a
                     href="tel:128"
-                    className="flex-1 flex items-center gap-2 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-red-500/30 hover:bg-red-500/10 text-white transition duration-200 justify-center text-center"
+                    className="flex-1 flex items-center gap-2 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 hover:border-red-500/30 hover:bg-red-500/10 text-slate-800 dark:text-white transition duration-200 justify-center text-center cursor-pointer"
                   >
-                    <div className="text-sm font-black text-white">Cruz Roja (128)</div>
+                    <div className="text-xs font-black text-slate-800 dark:text-white">Cruz Roja (128)</div>
                   </a>
                   <button
                     type="button"
                     onClick={() => setShowSosModal(false)}
-                    className="flex-1 p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-300 text-xs font-bold transition-colors"
+                    className="flex-1 p-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-zinc-350 text-xs font-black transition-colors border-none cursor-pointer"
                   >
                     Cerrar
                   </button>

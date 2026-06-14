@@ -53,7 +53,7 @@ export async function getCashSummary(
     where: {
       clinicId: entityType === 'clinic' ? entityId : undefined,
       pharmacyId: entityType === 'pharmacy' ? entityId : undefined,
-      status: 'completed',
+      status: { in: ['completed', 'delivered'] },
       createdAt: {
         gte: startOfDay,
         lte: endOfDay,

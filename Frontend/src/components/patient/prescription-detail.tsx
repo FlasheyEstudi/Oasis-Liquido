@@ -125,7 +125,7 @@ export function PrescriptionDetail() {
         </Button>
         <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 rounded-[40px_16px_32px_16px] p-6 backdrop-blur-xl text-center">
           <AlertCircle className="size-10 text-red-500 mb-3 mx-auto" />
-          <p className="text-sm font-bold text-slate-655 dark:text-zinc-350 mb-4">
+          <p className="text-sm font-bold text-slate-600 dark:text-zinc-400 mb-4">
             {prescriptionQuery.isError ? getHookErrorMessage(prescriptionQuery.error) : 'Receta no encontrada'}
           </p>
           <Button
@@ -239,18 +239,18 @@ export function PrescriptionDetail() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-xl font-black text-slate-800 dark:text-white leading-none font-serif">{progressPercent}%</span>
-                <span className="text-[8px] font-black text-slate-400 dark:text-zinc-555 uppercase tracking-wide mt-1">surtido</span>
+                <span className="text-[8px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-wide mt-1">surtido</span>
               </div>
             </div>
             <div className="text-center sm:text-left space-y-1.5">
               <div className="flex items-center justify-center sm:justify-start gap-1.5">
                 <Pill className="size-3.5 text-teal-500 shrink-0" />
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Progreso de Entrega</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Progreso de Entrega</h3>
               </div>
               <p className="text-sm font-extrabold text-slate-800 dark:text-zinc-200">
                 {fulfilledQuantity} de {totalQuantity} unidades
               </p>
-              <p className="text-[10px] text-slate-400 dark:text-zinc-555 font-bold leading-normal">Unidades certificadas surtidas en farmacias MINSA.</p>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-400 font-bold leading-normal">Unidades certificadas surtidas en farmacias MINSA.</p>
             </div>
           </div>
 
@@ -278,7 +278,7 @@ export function PrescriptionDetail() {
               <div className="absolute bottom-2 left-2 size-3.5 border-b-2 border-l-2 border-teal-500/60 rounded-bl" />
               <div className="absolute bottom-2 right-2 size-3.5 border-b-2 border-r-2 border-teal-500/60 rounded-br" />
             </div>
-            <p className="text-[9px] font-black text-slate-450 dark:text-zinc-555 uppercase tracking-widest mt-3 text-center">Firma Biométrica Encriptada HMAC</p>
+            <p className="text-[9px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest mt-3 text-center">Firma Biométrica Encriptada HMAC</p>
           </div>
 
         </div>
@@ -296,7 +296,7 @@ export function PrescriptionDetail() {
             <div className="flex size-7 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/15">
               <FileText className="size-3.5 text-sky-500" />
             </div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Medicamentos Formulados</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Medicamentos Formulados</h3>
           </div>
 
           <div className="divide-y divide-dashed divide-slate-200/50 dark:divide-white/5">
@@ -372,7 +372,7 @@ export function PrescriptionDetail() {
               );
             })}
             {(!prescription.lines || prescription.lines.length === 0) && (
-              <p className="py-6 text-xs text-slate-400 dark:text-zinc-550 text-center font-bold">
+              <p className="py-6 text-xs text-slate-400 dark:text-zinc-400 text-center font-bold">
                 No hay medicamentos formulados en esta receta médica.
               </p>
             )}
@@ -386,9 +386,9 @@ export function PrescriptionDetail() {
               <div className="flex size-7 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/15">
                 <StickyNote className="size-3.5 text-amber-600 dark:text-amber-400" />
               </div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Indicaciones Médicas</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Indicaciones Médicas</h3>
             </div>
-            <p className="text-xs text-slate-655 dark:text-zinc-350 leading-relaxed font-bold bg-amber-500/5 p-3 rounded-2xl border border-amber-500/10">
+            <p className="text-xs text-slate-600 dark:text-zinc-350 leading-relaxed font-bold bg-amber-500/5 p-3 rounded-2xl border border-amber-500/10">
               {prescription.notes}
             </p>
           </div>
@@ -400,7 +400,7 @@ export function PrescriptionDetail() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full h-12 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] border-none cursor-pointer transition-all duration-300"
+          className="w-full h-12 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-400 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] border-none cursor-pointer transition-all duration-300"
           onClick={() => {
             useAuthStore.getState().setPrescriptionId(prescription.id);
             navigate('pharmacy-map', prescription.id);
@@ -437,7 +437,7 @@ export function PrescriptionDetail() {
               
               <button
                 onClick={() => setSelectedLine(null)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 transition-colors p-1.5 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 cursor-pointer"
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1.5 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 cursor-pointer"
               >
                 <X className="size-4" />
               </button>
@@ -458,7 +458,7 @@ export function PrescriptionDetail() {
                     </div>
                   </div>
 
-                  <p className="text-[11px] text-slate-400 dark:text-slate-550 leading-relaxed mb-4 font-semibold">
+                  <p className="text-[11px] text-slate-400 dark:text-slate-400 leading-relaxed mb-4 font-semibold">
                     Selecciona a qué hora deseas recibir la notificación push diaria en tu dispositivo para recordar tomar tu dosis.
                   </p>
 
@@ -562,13 +562,13 @@ export function PrescriptionDetail() {
                   <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
                     ¡Alarma Programada!
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-455 mt-2 max-w-[240px] leading-relaxed font-bold">
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-2 max-w-[240px] leading-relaxed font-bold">
                     Hemos registrado tu recordatorio exitosamente. Recibirás una notificación push directa en este dispositivo para tu dosis de <b>{selectedLine.medicine?.name}</b>.
                   </p>
 
                   <button
                     onClick={() => setSelectedLine(null)}
-                    className="w-full mt-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-305 font-black text-xs active:scale-95 transition-all cursor-pointer border-none"
+                    className="w-full mt-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 font-black text-xs active:scale-95 transition-all cursor-pointer border-none"
                   >
                     Entendido
                   </button>

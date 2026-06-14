@@ -84,7 +84,7 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
     <div className="py-4 bg-white/10 dark:bg-zinc-950/15 border border-slate-200/50 dark:border-white/5 rounded-[2rem] p-5 shadow-inner backdrop-blur-md">
       <div className="flex items-center gap-2 mb-4 border-b border-slate-200/50 dark:border-white/5 pb-2.5">
         <Sparkles className="size-4 text-emerald-500 animate-pulse" />
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-550 dark:text-zinc-400">Estado del Envío Bioseguro</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400">Estado del Envío Bioseguro</span>
       </div>
 
       <div className="relative pl-1">
@@ -133,7 +133,7 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
                       ? 'text-amber-500 font-extrabold'
                       : isCancelled
                       ? 'text-red-400/60 line-through'
-                      : 'text-slate-450 dark:text-zinc-400'
+                      : 'text-slate-400 dark:text-zinc-400'
                   )}
                 >
                   {step.label}
@@ -145,7 +145,7 @@ function StatusTimeline({ currentStatus }: { currentStatus: DeliveryStatus }) {
                       ? 'text-slate-500 dark:text-zinc-350'
                       : isCurrent && !isCancelled
                       ? 'text-slate-800 dark:text-zinc-100 font-bold'
-                      : 'text-slate-450 dark:text-zinc-500'
+                      : 'text-slate-400 dark:text-zinc-500'
                   )}
                 >
                   {isCancelled && isCurrent ? 'Pedido cancelado' : step.description}
@@ -296,7 +296,7 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
           <div>
             <p className="text-[10px] font-black text-amber-650 dark:text-amber-400 uppercase tracking-widest leading-none">Arribo Estimado</p>
             <p className="text-sm font-extrabold text-slate-805 dark:text-amber-300 mt-1">{dynamicEta}</p>
-            <p className="text-[10px] text-slate-450 dark:text-zinc-400 font-bold mt-1.5 leading-relaxed italic">
+            <p className="text-[10px] text-slate-400 dark:text-zinc-400 font-bold mt-1.5 leading-relaxed italic">
               ⚠️ Tu medicina es transportada en compartimientos térmicos certificados para mantener la eficacia biológica de la fórmula.
             </p>
           </div>
@@ -320,7 +320,7 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
                 <p className="text-xs font-black text-slate-800 dark:text-white leading-tight">
                   {currentOrder.driver.name}
                 </p>
-                <div className="flex items-center gap-1 bg-amber-500/10 text-amber-550 dark:text-amber-450 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider w-fit mx-auto sm:mx-0">
+                <div className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider w-fit mx-auto sm:mx-0">
                   <Star className="size-2.5 fill-amber-500" />
                   <span>4.9 Certificado</span>
                 </div>
@@ -382,8 +382,8 @@ function OrderDetail({ order: rawOrder }: { order: DeliveryOrder }) {
       )}
 
       {currentOrder.pharmacy && (
-        <div className="text-[9px] text-slate-450 dark:text-zinc-550 font-black uppercase tracking-wider text-center">
-          Despachado en: <span className="text-slate-600 dark:text-zinc-450">{currentOrder.pharmacy.name}</span>
+        <div className="text-[9px] text-slate-400 dark:text-zinc-400 font-black uppercase tracking-wider text-center">
+          Despachado en: <span className="text-slate-600 dark:text-zinc-400">{currentOrder.pharmacy.name}</span>
         </div>
       )}
     </div>
@@ -491,7 +491,7 @@ export function OrderTracking() {
             <Sparkles className="size-5 text-teal-500 dark:text-teal-400 animate-pulse" />
             <span>Mis Pedidos Domicilio</span>
           </h2>
-          <p className="text-[10px] text-slate-500 dark:text-zinc-450 font-bold mt-0.5">
+          <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold mt-0.5">
             Sigue en tiempo real tus tratamientos médicos despachados
           </p>
         </div>
@@ -531,12 +531,12 @@ export function OrderTracking() {
                           <StatusBadge status={order.status} type="delivery" />
                         </div>
                         
-                        <p className="mt-0.5 text-[10px] text-slate-500 dark:text-zinc-450 truncate flex items-center gap-1 font-bold">
+                        <p className="mt-0.5 text-[10px] text-slate-500 dark:text-zinc-400 truncate flex items-center gap-1 font-bold">
                           <MapPin className="size-3.5 shrink-0 text-red-500" />
                           {order.delivery_address}
                         </p>
                         
-                        <div className="mt-2.5 flex items-center gap-2 text-[9px] text-slate-400 dark:text-zinc-550 font-black uppercase tracking-wider">
+                        <div className="mt-2.5 flex items-center gap-2 text-[9px] text-slate-400 dark:text-zinc-400 font-black uppercase tracking-wider">
                           <Clock className="size-3.5 animate-pulse" />
                           <span>{formatDate(order.order_date, 'dd/MM/yyyy HH:mm')} hrs</span>
                           <span>·</span>
@@ -548,9 +548,9 @@ export function OrderTracking() {
                       
                       <div className="shrink-0 mt-1">
                         {isExpanded ? (
-                          <ChevronUp className="size-4 text-slate-450" />
+                          <ChevronUp className="size-4 text-slate-400" />
                         ) : (
-                          <ChevronDown className="size-4 text-slate-450" />
+                          <ChevronDown className="size-4 text-slate-400" />
                         )}
                       </div>
                     </div>
@@ -595,21 +595,21 @@ export function OrderTracking() {
                     onClick={() => toggleExpand(order.id)}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-500/5 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 text-slate-550">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-500/5 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 text-slate-500">
                         <Package className="size-4 shrink-0" />
                       </div>
                       
                       <div className="min-w-0">
-                        <h4 className="text-xs font-black text-slate-705 dark:text-zinc-300 font-serif truncate">
+                        <h4 className="text-xs font-black text-slate-700 dark:text-zinc-300 font-serif truncate">
                           {order.pharmacy?.name || 'Farmacia'}
                         </h4>
-                        <p className="text-[10px] text-slate-500 dark:text-zinc-450 truncate mt-0.5">{order.delivery_address}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate mt-0.5">{order.delivery_address}</p>
                         
                         <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mt-1.5 flex items-center gap-1.5">
                           <Clock className="size-3" />
                           <span>{formatDate(order.order_date, 'dd/MM/yyyy HH:mm')} hrs</span>
                           <span>·</span>
-                          <span className="font-mono text-slate-650 dark:text-zinc-400">{formatCurrency(orderTotal)}</span>
+                          <span className="font-mono text-slate-600 dark:text-zinc-400">{formatCurrency(orderTotal)}</span>
                         </p>
                       </div>
                     </div>
@@ -617,9 +617,9 @@ export function OrderTracking() {
                     <div className="flex items-center gap-2.5 shrink-0 pt-1">
                       <StatusBadge status={order.status} type="delivery" />
                       {isExpanded ? (
-                        <ChevronUp className="size-4 text-slate-450" />
+                        <ChevronUp className="size-4 text-slate-400" />
                       ) : (
-                        <ChevronDown className="size-4 text-slate-450" />
+                        <ChevronDown className="size-4 text-slate-400" />
                       )}
                     </div>
                   </button>
@@ -634,7 +634,7 @@ export function OrderTracking() {
                       >
                         {order.items && order.items.length > 0 && (
                           <div className="space-y-3 bg-slate-500/[0.01] dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 transition-colors">
-                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-550">Productos Despachados</p>
+                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400">Productos Despachados</p>
                             
                             <div className="space-y-2">
                               {order.items.map((item: any) => (
@@ -642,10 +642,10 @@ export function OrderTracking() {
                                   key={item.id}
                                   className="flex items-center justify-between text-xs font-bold"
                                 >
-                                  <p className="text-slate-700 dark:text-zinc-350 truncate">
+                                  <p className="text-slate-700 dark:text-zinc-300 truncate">
                                     {item.medicine?.name || 'Medicamento'} × {item.quantity}
                                   </p>
-                                  <p className="font-mono text-slate-850 dark:text-white shrink-0 ml-2">
+                                  <p className="font-mono text-slate-800 dark:text-white shrink-0 ml-2">
                                     {formatCurrency(item.quantity * item.unit_price)}
                                   </p>
                                 </div>

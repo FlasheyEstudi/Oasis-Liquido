@@ -123,6 +123,7 @@ export async function createSale(
         deliveryLng: data.delivery_lng,
         deliveryNotes: data.notes,
         totalAmount,
+        status: data.is_delivery ? 'pending' : 'completed',
         saleItems: {
           create: saleItemsData.map((item) => ({
             medicineId: item.medicine_id,

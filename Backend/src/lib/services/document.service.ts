@@ -385,7 +385,7 @@ export class DocumentService {
     // Notify clinic owner
     if (doc.clinic.ownerId) {
       try {
-        const { NotificationService } = require('./notification.service');
+        const { NotificationService } = await import('./notification.service');
         NotificationService.createNotification({
           userId: doc.clinic.ownerId,
           title: status === 'approved' ? '✅ Documento de Clínica Aprobado' : '❌ Documento de Clínica Rechazado',
@@ -468,7 +468,7 @@ export class DocumentService {
     // Notify pharmacy owner
     if (doc.pharmacy.ownerId) {
       try {
-        const { NotificationService } = require('./notification.service');
+        const { NotificationService } = await import('./notification.service');
         NotificationService.createNotification({
           userId: doc.pharmacy.ownerId,
           title: status === 'approved' ? '✅ Documento de Farmacia Aprobado' : '❌ Documento de Farmacia Rechazado',

@@ -201,7 +201,7 @@ export async function updateDeliveryStatus(
     );
 
     try {
-      const { notifyDeliveryStatusChanged } = require('./event-notifications');
+      const { notifyDeliveryStatusChanged } = await import('./event-notifications');
       notifyDeliveryStatusChanged(updated.patientId, updated.saleId ? updated.saleId.slice(-6) : id.slice(-6), newStatus).catch((err: any) => console.error(err));
     } catch (err) {
       console.error('Error triggering local delivery status notification:', err);
@@ -211,7 +211,7 @@ export async function updateDeliveryStatus(
   // Notify pharmacy staff of the status update in their bells
   if (updated.pharmacyId) {
     try {
-      const { notifyPharmacyDeliveryStatus } = require('./event-notifications');
+      const { notifyPharmacyDeliveryStatus } = await import('./event-notifications');
       notifyPharmacyDeliveryStatus(
         updated.pharmacyId,
         updated.saleId ? updated.saleId.slice(-6) : id.slice(-6),
@@ -233,7 +233,7 @@ export async function updateDeliveryStatus(
 
     // In-app notification in driver's bell
     try {
-      const { NotificationService } = require('./notification.service');
+      const { NotificationService } = await import('./notification.service');
       NotificationService.createNotification({
         userId: deliveryDriverId,
         title: '🛒 Nuevo reparto asignado',

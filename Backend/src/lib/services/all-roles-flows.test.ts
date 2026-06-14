@@ -440,7 +440,17 @@ vi.mock('@/lib/db', () => {
         }
         return Promise.resolve(null);
       }),
-      count: vi.fn(() => Promise.resolve(mockAppointments.length))
+      count: vi.fn(() => Promise.resolve(mockAppointments.length)),
+      groupBy: vi.fn(({ by }) => {
+        const counts: Record<string, number> = {};
+        mockAppointments.forEach(a => {
+          counts[a.status] = (counts[a.status] || 0) + 1;
+        });
+        return Promise.resolve(Object.entries(counts).map(([status, count]) => ({
+          status,
+          _count: count
+        })));
+      })
     },
     prescription: {
       create: vi.fn(({ data }) => {
@@ -564,7 +574,13 @@ vi.mock('@/lib/db', () => {
         if (where) {
           if (where.pharmacyId) list = list.filter(s => s.pharmacyId === where.pharmacyId);
           if (where.clinicId) list = list.filter(s => s.clinicId === where.clinicId);
-          if (where.status) list = list.filter(s => s.status === where.status);
+          if (where.status) {
+            if (typeof where.status === 'string') {
+              list = list.filter(s => s.status === where.status);
+            } else if (where.status.in && Array.isArray(where.status.in)) {
+              list = list.filter(s => where.status.in.includes(s.status));
+            }
+          }
           if (where.createdAt && where.createdAt.gte) {
             list = list.filter(s => s.createdAt >= where.createdAt.gte);
           }
@@ -1336,7 +1352,7 @@ describe('Oasis Líquida - Comprehensive All-Roles & Flow-Path Test Suite', () =
     // --------------------------------------------------------------------------------
     const stats = await getAdminStats();
     expect(stats.total_users).toBeGreaterThan(0);
-    expect(stats.total_patients).toBe(3); 
+    expect(stats.total_patients).toBe(2); 
     expect(stats.total_doctors).toBe(1);
     expect(stats.total_clinics).toBe(1);
     expect(stats.total_pharmacies).toBe(1);

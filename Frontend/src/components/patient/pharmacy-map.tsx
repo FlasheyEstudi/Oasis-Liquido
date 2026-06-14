@@ -503,7 +503,7 @@ export function PharmacyMap() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSelectedNearbyPlace(null)}
-                        className="rounded-full px-3 py-1.5 font-black border border-slate-250 dark:border-white/10 text-slate-705 dark:text-zinc-300 bg-white/5 text-[9px] uppercase hover:bg-white/10 transition-colors cursor-pointer"
+                        className="rounded-full px-3 py-1.5 font-black border border-slate-200 dark:border-white/10 text-slate-700 dark:text-zinc-300 bg-white/5 text-[9px] uppercase hover:bg-white/10 transition-colors cursor-pointer"
                       >
                         Cerrar
                       </button>
@@ -518,7 +518,7 @@ export function PharmacyMap() {
                       ) : (
                         <button
                           onClick={() => navigate('appointment-list')}
-                          className="rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 bg-gradient-to-r from-teal-500 to-cyan-555 hover:from-teal-600 hover:to-cyan-650 text-white shadow-md shadow-teal-500/10 transition-all duration-300 cursor-pointer border-none"
+                          className="rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-md shadow-teal-500/10 transition-all duration-300 cursor-pointer border-none"
                         >
                           <Clock className="size-3.5" />
                           Agendar Cita
@@ -593,7 +593,7 @@ export function PharmacyMap() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSelectedPharmacy(null)}
-                        className="rounded-full px-3 py-1.5 font-black border border-slate-250 dark:border-white/10 text-slate-755 dark:text-zinc-300 bg-white/5 text-[9px] uppercase hover:bg-white/10 transition-colors cursor-pointer"
+                        className="rounded-full px-3 py-1.5 font-black border border-slate-200 dark:border-white/10 text-slate-700 dark:text-zinc-300 bg-white/5 text-[9px] uppercase hover:bg-white/10 transition-colors cursor-pointer"
                       >
                         Cerrar
                       </button>
@@ -756,7 +756,7 @@ export function PharmacyMap() {
             </div>
 
             {/* Smart Tips panel */}
-            <div className="mt-4 pt-3.5 border-t border-white/5 text-[10px] font-semibold text-slate-400 dark:text-zinc-550 space-y-1">
+            <div className="mt-4 pt-3.5 border-t border-white/5 text-[10px] font-semibold text-slate-400 dark:text-zinc-400 space-y-1">
               <p>💡 Marcadores verdes: Farmacias acreditadas con telemetría de stock.</p>
               <p>📍 Marcadores azules: Clínicas afiliadas para consultas médicas.</p>
             </div>

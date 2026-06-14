@@ -563,7 +563,7 @@ export function DriverHome() {
               <Radio className="size-4 text-teal-500 animate-pulse animate-bounce-slow" />
             </div>
             <div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Radar Satelital</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Radar Satelital</h3>
             </div>
           </div>
 
@@ -574,7 +574,7 @@ export function DriverHome() {
               if (soundEnabled) playRadarSound('success');
               setIsFullscreenRadar(true);
             }}
-            className="flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-850 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 px-4 py-2 rounded-full text-[8.5px] font-black uppercase tracking-widest cursor-pointer border-none shadow-sm"
+            className="flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 px-4 py-2 rounded-full text-[8.5px] font-black uppercase tracking-widest cursor-pointer border-none shadow-sm"
           >
             <Maximize2 className="size-3.5 shrink-0" /> Pantalla Completa
           </motion.button>
@@ -591,9 +591,9 @@ export function DriverHome() {
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100/50 dark:bg-zinc-950/70 backdrop-blur-sm z-[500] text-center p-6">
-              <Bike className="size-12 text-slate-400 dark:text-zinc-650 mb-2 animate-bounce-slow" />
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-550 dark:text-zinc-450">Radar Inactivo</h4>
-              <p className="text-[10px] text-slate-450 dark:text-zinc-500 font-bold max-w-xs mt-1 leading-relaxed">Conéctate para recibir coordenadas satelitales en vivo.</p>
+              <Bike className="size-12 text-slate-400 dark:text-zinc-600 mb-2 animate-bounce-slow" />
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Radar Inactivo</h4>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold max-w-xs mt-1 leading-relaxed">Conéctate para recibir coordenadas satelitales en vivo.</p>
             </div>
           )}
 
@@ -618,7 +618,7 @@ export function DriverHome() {
             <div className="flex size-7.5 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/15">
               <Truck className="size-4 text-indigo-500" />
             </div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Canal de Misiones</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Canal de Misiones</h3>
           </div>
 
           {/* Inline filters — Highly ergonomic and glow-styled */}
@@ -632,7 +632,7 @@ export function DriverHome() {
                 'px-4 py-2.5 h-11 rounded-xl text-[9.5px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none flex items-center justify-center gap-1.5 shadow-sm',
                 activeTab === 'all'
                   ? 'bg-white dark:bg-zinc-800 text-teal-500 shadow-sm border border-teal-500/10'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent shadow-none'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white bg-transparent shadow-none'
               )}
             >
               Disponibles ({availableOrders.length})
@@ -646,7 +646,7 @@ export function DriverHome() {
                 'px-4 py-2.5 h-11 rounded-xl text-[9.5px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 border-none flex items-center justify-center gap-1.5 shadow-sm',
                 activeTab === 'high_fee'
                   ? 'bg-white dark:bg-zinc-800 text-emerald-500 shadow-sm border border-emerald-500/10'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white bg-transparent shadow-none'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white bg-transparent shadow-none'
               )}
             >
               Premium Pago
@@ -660,7 +660,7 @@ export function DriverHome() {
           {/* Active Missions (Fixed header priority) */}
           {activeOrders.length > 0 && (
             <div className="pb-3.5 space-y-3">
-              <p className="text-[8.5px] font-black text-sky-655 dark:text-sky-400 uppercase tracking-[0.2em] mb-2 pl-2">Misiones en Curso</p>
+              <p className="text-[8.5px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-[0.2em] mb-2 pl-2">Misiones en Curso</p>
               {activeOrders.map((order, idx) => {
                 const action = getActionForOrder(order.status);
                 const totalAmount = order.items
@@ -698,7 +698,7 @@ export function DriverHome() {
                     <div className="flex items-center gap-4 pl-12 md:pl-0 shrink-0 justify-between md:justify-end w-full md:w-auto" onClick={(e) => e.stopPropagation()}>
                       <div className="text-left md:text-right font-mono font-bold text-xs space-y-0.5 text-slate-800 dark:text-zinc-200">
                         <p className="text-emerald-500">+{formatCurrency(order.deliveryFee || 60)} fee</p>
-                        <p className="text-[9px] text-slate-400 dark:text-zinc-550 font-black">VAL: {formatCurrency(totalAmount)}</p>
+                        <p className="text-[9px] text-slate-400 dark:text-zinc-400 font-black">VAL: {formatCurrency(totalAmount)}</p>
                       </div>
 
                       {action && (
@@ -726,17 +726,17 @@ export function DriverHome() {
 
           {/* Available Jobs list */}
           <div className="pt-3.5 space-y-3">
-            <p className="text-[8.5px] font-black text-emerald-655 dark:text-emerald-450 uppercase tracking-[0.2em] mb-2 pl-2">Órdenes Disponibles en Radar</p>
+            <p className="text-[8.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] mb-2 pl-2">Órdenes Disponibles en Radar</p>
             
             {!localAvailable ? (
               <div className="flex flex-col items-center py-10 text-center">
-                <Bike className="size-10 text-slate-350 dark:text-zinc-700 mb-2" />
-                <p className="text-xs text-slate-450 dark:text-zinc-500 font-bold">Conéctate para activar el radar satelital.</p>
+                <Bike className="size-10 text-slate-300 dark:text-zinc-700 mb-2" />
+                <p className="text-xs text-slate-400 dark:text-zinc-500 font-bold">Conéctate para activar el radar satelital.</p>
               </div>
             ) : filteredAvailableOrders.length === 0 ? (
               <div className="flex flex-col items-center py-10 text-center">
                 <Activity className="size-8 text-teal-500/20 animate-pulse mb-2" />
-                <p className="text-xs text-slate-450 dark:text-zinc-500 font-bold">No hay pedidos adicionales en esta zona.</p>
+                <p className="text-xs text-slate-400 dark:text-zinc-500 font-bold">No hay pedidos adicionales en esta zona.</p>
               </div>
             ) : (
               filteredAvailableOrders.map((order, idx) => (
@@ -772,7 +772,7 @@ export function DriverHome() {
                   <div className="flex items-center gap-4 pl-12 md:pl-0 shrink-0 justify-between md:justify-end w-full md:w-auto" onClick={(e) => e.stopPropagation()}>
                     <div className="text-left md:text-right font-mono font-bold text-xs space-y-0.5 text-slate-800 dark:text-white">
                       <p className="text-emerald-500">+{formatCurrency(order.deliveryFee || 60)} fee</p>
-                      <p className="text-[8px] text-slate-400 dark:text-zinc-555 font-black uppercase tracking-wide">Recibe crédito</p>
+                      <p className="text-[8px] text-slate-400 dark:text-zinc-400 font-black uppercase tracking-wide">Recibe crédito</p>
                     </div>
 
                     <div className="flex gap-2">
@@ -842,20 +842,20 @@ export function DriverHome() {
 
               {/* Real-time telemetry counters */}
               <div className="flex flex-wrap items-center gap-4 sm:gap-6 font-mono text-[9px] sm:text-[10px] text-slate-600 dark:text-cyan-400/80">
-                <div className="text-left">
-                  <span className="block text-slate-400 dark:text-zinc-555 text-[7px] sm:text-[8px] uppercase font-sans">Coordenadas GPS</span>
-                  <span className="font-bold tracking-widest text-slate-800 dark:text-white">
-                    {driverCoords ? `[${driverCoords.lat.toFixed(4)}, ${driverCoords.lng.toFixed(4)}]` : 'BUSCANDO SATÉLITE...'}
+                <div>
+                  <span className="block text-slate-400 dark:text-zinc-400 text-[7px] sm:text-[8px] uppercase font-sans">Coordenadas GPS</span>
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white font-mono mt-1 tracking-tight">
+                    {radarCoordinates ? `${radarCoordinates.lat.toFixed(4)} N, ${radarCoordinates.lng.toFixed(4)} W` : 'Buscando satélites...'}
                   </span>
                 </div>
-                <div className="text-left">
-                  <span className="block text-slate-400 dark:text-zinc-555 text-[7px] sm:text-[8px] uppercase font-sans">Blancos Detectados</span>
-                  <span className="font-bold tracking-widest text-emerald-600 dark:text-emerald-400">
-                    {availableOrders.length} PEDIDOS
+                <div className="bg-slate-500/[0.03] dark:bg-white/5 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5 text-center min-w-[100px]">
+                  <span className="block text-slate-400 dark:text-zinc-400 text-[7px] sm:text-[8px] uppercase font-sans">Blancos Detectados</span>
+                  <span className="text-xs font-black text-teal-600 dark:text-teal-400 font-mono mt-1 block">
+                    {availableOrders.length} objetivos
                   </span>
                 </div>
-                <div className="text-right hidden md:block">
-                  <span className="block text-slate-400 dark:text-zinc-555 text-[8px] uppercase font-sans">Escala Visor</span>
+                <div className="bg-slate-500/[0.03] dark:bg-white/5 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5 text-center min-w-[100px]">
+                  <span className="block text-slate-400 dark:text-zinc-400 text-[8px] uppercase font-sans">Escala Visor</span>
                   <span className="font-bold tracking-widest text-slate-800 dark:text-white">RADIUS: 5.0 KM</span>
                 </div>
               </div>
@@ -894,7 +894,7 @@ export function DriverHome() {
                   <span className="size-2 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-ping" />
                   <span>MODO DE ESCANEO DE CANALES SATELITALES ACTIVO</span>
                 </div>
-                <span className="text-[8px] text-slate-400 dark:text-zinc-555">POLLING DEL SERVER CADA 15 SEG PARA NUEVAS RECETAS</span>
+                <span className="text-[8px] text-slate-400 dark:text-zinc-400">POLLING DEL SERVER CADA 15 SEG PARA NUEVAS RECETAS</span>
               </div>
 
               {/* Floating holographic card details */}
@@ -917,7 +917,7 @@ export function DriverHome() {
                         </h4>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-555 block">RECOMPENSA CRÉDITO</span>
+                        <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-400 block">RECOMPENSA CRÉDITO</span>
                         <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
                           {formatCurrency(selectedRadarOrder.deliveryFee || 60)}
                         </span>
@@ -927,18 +927,18 @@ export function DriverHome() {
                     <hr className="border-slate-200 dark:border-white/10" />
 
                     {/* Mission route specs */}
-                    <div className="space-y-3 font-mono text-xs">
-                      <div className="flex items-start gap-2.5 text-slate-650 dark:text-zinc-400">
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-2.5 text-slate-600 dark:text-zinc-400">
                         <MapPin className="size-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5" />
                         <div>
-                          <strong className="text-[8px] text-slate-450 dark:text-zinc-555 uppercase block font-sans">ORIGEN RECOLECCIÓN</strong>
+                          <strong className="text-[8px] text-slate-400 dark:text-zinc-400 uppercase block font-sans">ORIGEN RECOLECCIÓN</strong>
                           <span className="text-[11px] leading-relaxed text-slate-800 dark:text-zinc-300 font-bold">{selectedRadarOrder.pharmacy?.address || 'Managua, Nicaragua'}</span>
                         </div>
                       </div>
-                      <div className="flex items-start gap-2.5 text-slate-655 dark:text-zinc-400">
+                      <div className="flex items-start gap-2.5 text-slate-600 dark:text-zinc-400">
                         <Target className="size-4 text-rose-500 shrink-0 mt-0.5" />
                         <div>
-                          <strong className="text-[8px] text-slate-455 dark:text-zinc-555 uppercase block font-sans">DESTINO DE ENTREGA</strong>
+                          <strong className="text-[8px] text-slate-400 dark:text-zinc-400 uppercase block font-sans">DESTINO DE ENTREGA</strong>
                           <span className="text-[11px] leading-relaxed text-slate-800 dark:text-zinc-300 font-bold">{selectedRadarOrder.deliveryAddress || 'Domicilio paciente'}</span>
                         </div>
                       </div>
@@ -1055,7 +1055,7 @@ export function DriverHome() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.94, opacity: 0, y: 30 }}
               transition={{ type: 'spring', damping: 25 }}
-              className="bg-white dark:bg-zinc-905 border border-slate-200 dark:border-zinc-800 text-slate-850 dark:text-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden"
+              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-white rounded-[2.5rem] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
               
@@ -1066,7 +1066,7 @@ export function DriverHome() {
                   addSeenAssignment(orderId);
                   setNewlyAssignedOrder(null);
                 }}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-850 text-slate-400 dark:text-zinc-500 hover:text-slate-650 dark:hover:text-white transition-colors duration-200 cursor-pointer"
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-white transition-colors duration-200 cursor-pointer"
                 title="Mantener en espera"
               >
                 <X className="size-5" />
@@ -1077,28 +1077,27 @@ export function DriverHome() {
                   <Truck className="size-8" />
                 </div>
                 <h3 className="text-base font-black uppercase tracking-wider font-serif">¡Misión Asignada!</h3>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-450 mt-2 font-semibold leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-2 font-semibold leading-relaxed">
                   Se te ha asignado un nuevo pedido de entrega. ¿Qué deseas hacer?
                 </p>
               </div>
 
-              {/* Order quick highlights */}
               <div className="bg-slate-50 dark:bg-zinc-950 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 space-y-3.5 mb-6 text-left">
                 <div>
-                  <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest block">ID de la Orden</span>
+                  <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest block">ID de la Orden</span>
                   <span className="text-xs font-black text-slate-800 dark:text-white font-mono">#{newlyAssignedOrder.id.slice(-8)}</span>
                 </div>
                 <div>
-                  <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest block">Farmacia de Origen</span>
+                  <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest block">Farmacia de Origen</span>
                   <span className="text-xs font-bold text-slate-800 dark:text-zinc-200">{newlyAssignedOrder.pharmacy?.name || 'Farmacia Oasis'}</span>
                 </div>
                 <div>
-                  <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest block">Destino de Entrega</span>
-                  <p className="text-xs font-medium text-slate-700 dark:text-zinc-350 truncate">{newlyAssignedOrder.delivery_address || newlyAssignedOrder.deliveryAddress}</p>
+                  <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest block">Destino de Entrega</span>
+                  <p className="text-xs font-medium text-slate-700 dark:text-zinc-400 truncate">{newlyAssignedOrder.delivery_address || newlyAssignedOrder.deliveryAddress}</p>
                 </div>
                 {newlyAssignedOrder.deliveryFee && (
                   <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
-                    <span className="text-[7.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-widest">Ganancia</span>
+                    <span className="text-[7.5px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest">Ganancia</span>
                     <span className="text-xs font-black text-teal-600 dark:text-teal-400 font-mono">{formatCurrency(newlyAssignedOrder.deliveryFee)}</span>
                   </div>
                 )}

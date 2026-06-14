@@ -205,7 +205,7 @@ export function PatientHome() {
               "flex items-center gap-2 px-4 py-2.5 rounded-[50px] border text-[10px] font-black uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer",
               isElderlyMode
                 ? "bg-amber-500/10 border-amber-500/35 text-amber-700 dark:text-amber-400 ring-2 ring-amber-500/15"
-                : "bg-white/40 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-slate-550 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/10"
+                : "bg-white/40 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-slate-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/10"
             )}
           >
             <Activity className="size-3.5 text-amber-500 animate-pulse shrink-0" />
@@ -300,7 +300,7 @@ export function PatientHome() {
             </div>
             <Avatar className="size-14 border-2 border-white/60 dark:border-white/10 shadow-lg ring-4 ring-teal-500/10">
               <AvatarImage src={user?.avatar_url} alt={user?.name} />
-              <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-455 text-base font-black font-serif">
+              <AvatarFallback className="bg-teal-500/10 text-teal-600 dark:text-teal-400 text-base font-black font-serif">
                 {getInitials(representedUser?.name || user?.name || 'Paciente')}
               </AvatarFallback>
             </Avatar>
@@ -309,7 +309,7 @@ export function PatientHome() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowQrModal(true)}
-              className="group relative flex items-center justify-center size-11 rounded-[16px_8px_14px_8px] bg-white/50 dark:bg-white/5 hover:bg-teal-500/10 border border-slate-250 dark:border-white/10 shadow-sm transition-all duration-300 cursor-pointer"
+              className="group relative flex items-center justify-center size-11 rounded-[16px_8px_14px_8px] bg-white/50 dark:bg-white/5 hover:bg-teal-500/10 border border-slate-200 dark:border-white/10 shadow-sm transition-all duration-300 cursor-pointer"
             >
               <QrCodeIcon className="size-5 text-slate-700 dark:text-teal-400 group-hover:scale-105 shrink-0" />
               <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-teal-500 border border-white dark:border-zinc-950 shadow-md">
@@ -360,9 +360,9 @@ export function PatientHome() {
             <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-slate-200 dark:border-white/5 mb-4">
               <div className="flex items-center gap-2">
                 <div className="flex size-7.5 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/15">
-                  <Calendar className="size-4 text-teal-600 dark:text-teal-450" />
+                  <Calendar className="size-4 text-teal-600 dark:text-teal-400" />
                 </div>
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Próxima Consulta</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Próxima Consulta</h3>
               </div>
               {nextAppointment && <span className="size-2 rounded-full bg-teal-500 animate-pulse" />}
             </div>
@@ -375,12 +375,12 @@ export function PatientHome() {
                   
                   <div className="space-y-4">
                     <div>
-                      <p className="text-xs font-black text-slate-400 dark:text-zinc-550 uppercase tracking-wider">Especialista</p>
+                      <p className="text-xs font-black text-slate-400 dark:text-zinc-400 uppercase tracking-wider">Especialista</p>
                       <p className="text-base font-black text-slate-800 dark:text-white mt-0.5 font-serif">
                         Dr. {nextAppointment.doctor?.name}
                       </p>
                       {nextAppointment.doctor?.doctor_profile?.specialty && (
-                        <p className="text-[9px] font-black text-teal-600 dark:text-teal-455 uppercase tracking-widest mt-1">
+                        <p className="text-[9px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-1">
                           {nextAppointment.doctor.doctor_profile.specialty}
                         </p>
                       )}
@@ -388,7 +388,7 @@ export function PatientHome() {
 
                     <div className="grid grid-cols-2 gap-4 bg-teal-500/[0.03] dark:bg-teal-500/[0.02] p-3.5 rounded-2xl border border-teal-500/10 shadow-sm">
                       <div className="space-y-0.5">
-                        <p className="text-[8px] font-black text-slate-405 dark:text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
+                        <p className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Fecha y hora</p>
                         <p className="text-[11px] font-extrabold text-slate-800 dark:text-zinc-200 flex items-center gap-1">
                           <Clock className="size-3 text-teal-500 shrink-0" />
                           <span>{formatDate(nextAppointment.date_time, "dd MMM • HH:mm")}</span>
@@ -396,7 +396,7 @@ export function PatientHome() {
                       </div>
                       {nextAppointment.clinic && (
                         <div className="space-y-0.5">
-                          <p className="text-[8px] font-black text-slate-405 dark:text-zinc-500 uppercase tracking-widest">Sede médica</p>
+                          <p className="text-[8px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Sede médica</p>
                           <p className="text-[11px] font-extrabold text-slate-800 dark:text-zinc-200 flex items-center gap-1">
                             <MapPin className="size-3 text-rose-500/70 shrink-0" />
                             <span className="truncate">{nextAppointment.clinic.name}</span>
@@ -417,7 +417,7 @@ export function PatientHome() {
                       <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="px-4.5 py-2 rounded-full bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-655 dark:text-zinc-350 cursor-pointer"
+                        className="px-4.5 py-2 rounded-full bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-300 cursor-pointer"
                         onClick={() => navigate('citas')}
                       >
                         Administrar Consulta
@@ -427,10 +427,10 @@ export function PatientHome() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center py-10 text-center space-y-4">
-                  <Calendar className="size-10 text-slate-350 dark:text-zinc-700 animate-bounce-slow" />
+                  <Calendar className="size-10 text-slate-300 dark:text-zinc-700 animate-bounce-slow" />
                   <div className="space-y-1">
                     <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold">Sin consultas programadas</p>
-                    <p className="text-[10px] text-slate-400 dark:text-zinc-555 leading-relaxed font-semibold max-w-xs mx-auto">Tus próximas consultas con especialistas Oasis aparecerán cronológicamente aquí.</p>
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-400 leading-relaxed font-semibold max-w-xs mx-auto">Tus próximas consultas con especialistas Oasis aparecerán cronológicamente aquí.</p>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.03 }}
@@ -452,9 +452,9 @@ export function PatientHome() {
                 <div className="flex size-7.5 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/15">
                   <Clock className="size-4 text-rose-600 dark:text-rose-400" />
                 </div>
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Alarmas y Adherencia</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Alarmas y Adherencia</h3>
               </div>
-              <div className="flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-405 px-3 py-0.5 rounded-[50px] text-[8px] font-black uppercase tracking-widest shadow-sm">
+              <div className="flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 px-3 py-0.5 rounded-[50px] text-[8px] font-black uppercase tracking-widest shadow-sm">
                 <Bell className="size-3 text-rose-500 animate-bounce-slow" />
                 <span>Recordatorios</span>
               </div>
@@ -464,11 +464,11 @@ export function PatientHome() {
               {reminders.length === 0 ? (
                 <div className="flex flex-col items-center py-8 text-center space-y-3">
                   <div className="p-3 bg-slate-500/5 rounded-full">
-                    <Pill className="size-8 text-slate-350 dark:text-zinc-700" />
+                    <Pill className="size-8 text-slate-300 dark:text-zinc-700" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-slate-550 dark:text-zinc-450 font-black">Sin alarmas programadas</p>
-                    <p className="text-[10px] text-slate-400 dark:text-zinc-550 max-w-xs mx-auto leading-relaxed font-semibold">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 font-black">Sin alarmas programadas</p>
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-400 max-w-xs mx-auto leading-relaxed font-semibold">
                       Agrega alarmas desde el detalle de tus recetas para no olvidar tus tomas.
                     </p>
                   </div>
@@ -493,10 +493,10 @@ export function PatientHome() {
                             <Clock className="size-3" />
                             <span>{reminder.scheduledTime}</span>
                           </p>
-                          <p className="text-xs font-black text-slate-805 dark:text-white mt-1 truncate font-serif">
+                          <p className="text-xs font-black text-slate-800 dark:text-white mt-1 truncate font-serif">
                             {reminder.medicineName}
                           </p>
-                          <p className="text-[9px] font-bold text-slate-450 dark:text-zinc-400 mt-0.5 line-clamp-1">
+                          <p className="text-[9px] font-bold text-slate-500 dark:text-zinc-400 mt-0.5 line-clamp-1">
                             {reminder.dosageInstructions}
                           </p>
                         </div>
@@ -504,10 +504,10 @@ export function PatientHome() {
                         <span className={cn(
                           "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 border",
                           reminder.status === 'taken'
-                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-450"
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
                             : reminder.status === 'skipped'
                               ? "bg-slate-500/10 border-slate-300/20 text-slate-500 dark:text-zinc-400"
-                              : "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-450"
+                              : "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400"
                         )}>
                           {reminder.status === 'taken' ? 'Tomado' : reminder.status === 'skipped' ? 'Saltado' : 'Pendiente'}
                         </span>
@@ -555,7 +555,7 @@ export function PatientHome() {
                                 navigator.vibrate(20);
                               }
                             }}
-                            className="w-full py-1.5 rounded-lg bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-450 cursor-pointer"
+                            className="w-full py-1.5 rounded-lg bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 cursor-pointer"
                           >
                             Restablecer
                           </motion.button>
@@ -579,7 +579,7 @@ export function PatientHome() {
                 <div className="flex size-7.5 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/15">
                   <Pill className="size-4 text-sky-500" />
                 </div>
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Recetas Recientes</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Recetas Recientes</h3>
               </div>
               <motion.button
                 whileHover={{ x: 2 }}
@@ -612,7 +612,7 @@ export function PatientHome() {
                         <p className="text-xs font-black text-slate-800 dark:text-white truncate font-serif">
                           Dr. {presc.doctor?.name || 'Médico'}
                         </p>
-                        <p className="text-[9px] text-slate-450 dark:text-zinc-500 font-extrabold mt-0.5 uppercase tracking-wide">
+                        <p className="text-[9px] text-slate-500 dark:text-zinc-400 font-extrabold mt-0.5 uppercase tracking-wide">
                           {formatDate(presc.issue_date, 'dd MMM yyyy')} • {presc.lines?.length || 0} meds
                         </p>
                       </div>
@@ -636,7 +636,7 @@ export function PatientHome() {
               <div className="flex size-7.5 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/15">
                 <HeartPulse className="size-4 text-emerald-500" />
               </div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Resumen Clínico</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400">Resumen Clínico</h3>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
@@ -644,21 +644,21 @@ export function PatientHome() {
               <div className="rounded-xl bg-teal-500/5 border border-teal-500/10 p-2.5 text-center shadow-inner">
                 <p className="text-[8px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">Consultas</p>
                 <p className="text-base font-black text-slate-800 dark:text-white mt-1 font-serif">{totalAppointments}</p>
-                <p className="text-[7.5px] text-slate-450 dark:text-zinc-550 font-extrabold uppercase mt-0.5">{upcomingCount} activa{(upcomingCount) !== 1 ? 's' : ''}</p>
+                <p className="text-[7.5px] text-slate-500 dark:text-zinc-500 font-extrabold uppercase mt-0.5">{upcomingCount} activa{(upcomingCount) !== 1 ? 's' : ''}</p>
               </div>
 
               {/* Active Prescriptions */}
               <div className="rounded-xl bg-sky-500/5 border border-sky-500/10 p-2.5 text-center shadow-inner">
                 <p className="text-[8px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">Recetas</p>
                 <p className="text-base font-black text-slate-800 dark:text-white mt-1 font-serif">{activePrescriptions}</p>
-                <p className="text-[7.5px] text-slate-450 dark:text-zinc-550 font-extrabold uppercase mt-0.5">{prescriptions.length} emitidas</p>
+                <p className="text-[7.5px] text-slate-500 dark:text-zinc-500 font-extrabold uppercase mt-0.5">{prescriptions.length} emitidas</p>
               </div>
 
               {/* Pending Deliveries */}
               <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-2.5 text-center shadow-inner">
                 <p className="text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">Envíos</p>
                 <p className="text-base font-black text-slate-800 dark:text-white mt-1 font-serif">{pendingDeliveries.length}</p>
-                <p className="text-[7.5px] text-slate-450 dark:text-zinc-550 font-extrabold uppercase mt-0.5">Por recibir</p>
+                <p className="text-[7.5px] text-slate-500 dark:text-zinc-500 font-extrabold uppercase mt-0.5">Por recibir</p>
               </div>
             </div>
           </div>
@@ -697,7 +697,7 @@ export function PatientHome() {
               <h3 className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight mb-1 font-serif">
                 {representedUser?.name || user?.name}
               </h3>
-              <p className="text-[10px] font-bold text-slate-450 dark:text-zinc-555 mb-6 uppercase tracking-wider">Escanea este código en Farmacias Autorizadas</p>
+              <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 mb-6 uppercase tracking-wider">Escanea este código en Farmacias Autorizadas</p>
 
               <div className="flex justify-center bg-slate-50 dark:bg-white rounded-[32px] p-5 border border-slate-200/50 shadow-inner w-fit mx-auto animate-shimmer-fast">
                 <QrCode 
@@ -716,7 +716,7 @@ export function PatientHome() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="mt-6 w-full rounded-[16px_50px_16px_50px] bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-350 font-black text-[10px] h-11 border border-slate-250 dark:border-white/5 uppercase tracking-widest cursor-pointer"
+                className="mt-6 w-full rounded-[16px_50px_16px_50px] bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-350 font-black text-[10px] h-11 border border-slate-200 dark:border-white/5 uppercase tracking-widest cursor-pointer"
                 onClick={() => setShowQrModal(false)}
               >
                 Cerrar Pasaporte

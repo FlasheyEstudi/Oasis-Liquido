@@ -75,7 +75,7 @@ export function PrescriptionList() {
             <Sparkles className="size-5.5 text-sky-500 shrink-0" />
             <span>Mis Recetas Digitales</span>
           </h2>
-          <p className="text-[11px] text-slate-500 dark:text-zinc-455 font-bold mt-1 tracking-wide">
+          <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1 tracking-wide">
             Validadas por el MINSA y listas para surtido en farmacias autorizadas
           </p>
         </div>
@@ -84,7 +84,7 @@ export function PrescriptionList() {
           whileHover={{ scale: 1.03, y: -1 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('pharmacy-map')}
-          className="w-full sm:w-auto h-11 px-6 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-550 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] transition-all duration-300 border-none"
+          className="w-full sm:w-auto h-11 px-6 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-400 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] transition-all duration-300 border-none"
         >
           <Search className="size-4 shrink-0" />
           Buscar farmacias con stock
@@ -104,7 +104,7 @@ export function PrescriptionList() {
                   'rounded-xl px-3.5 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all duration-300 select-none flex-1 text-center min-w-[85px] sm:min-w-0 border',
                   isTabActive
                     ? 'bg-sky-600 border-sky-600 text-white shadow-md'
-                    : 'text-slate-550 dark:text-zinc-400 border-transparent hover:bg-white/5 hover:text-slate-800 dark:hover:text-white'
+                    : 'text-slate-500 dark:text-zinc-400 border-transparent hover:bg-white/5 hover:text-slate-800 dark:hover:text-white'
                 )}
               >
                 {tab.label}
@@ -129,7 +129,7 @@ export function PrescriptionList() {
                 <div className="flex size-14 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20 shadow-md">
                   <AlertCircle className="size-6 text-red-500 animate-bounce" />
                 </div>
-                <p className="text-xs font-bold text-slate-500 dark:text-zinc-455 leading-relaxed">
+                <p className="text-xs font-bold text-slate-500 dark:text-zinc-400 leading-relaxed">
                   {getHookErrorMessage(prescriptionsQuery.error)}
                 </p>
                 <Button
@@ -146,11 +146,11 @@ export function PrescriptionList() {
             <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 sm:rounded-[80px_40px_32px_120px] rounded-3xl p-6 backdrop-blur-xl">
               <div className="flex flex-col items-center py-14 text-center max-w-sm mx-auto space-y-4.5">
                 <div className="size-16 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
-                  <FileText className="size-7 text-slate-400 dark:text-zinc-550" />
+                  <FileText className="size-7 text-slate-400 dark:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5">
                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 dark:text-white font-serif">Sin Recetas</h3>
-                  <p className="text-xs text-slate-550 dark:text-zinc-450 font-bold leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold leading-relaxed">
                     No tienes recetas médicas emitidas registradas en esta sección en este momento.
                   </p>
                 </div>
@@ -229,7 +229,7 @@ export function PrescriptionList() {
 
                     {/* Right side telemetry info */}
                     <div className="flex items-center justify-between md:justify-end gap-5 pl-3 md:pl-0 border-t md:border-t-0 border-dashed border-slate-200 dark:border-white/5 pt-3.5 md:pt-0">
-                      <div className="text-left md:text-right font-bold text-[11px] text-slate-655 dark:text-zinc-355 space-y-0.5">
+                      <div className="text-left md:text-right font-bold text-[11px] text-slate-600 dark:text-zinc-400 space-y-0.5">
                         <div className="flex items-center md:justify-end gap-1.5">
                           <Calendar className="size-3.5 text-sky-500 shrink-0" />
                           <span>Emitida: {formatDate(presc.issue_date, 'dd MMM yyyy')}</span>
@@ -257,7 +257,7 @@ export function PrescriptionList() {
                             Surtir
                           </motion.button>
                         ) : (
-                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-455 flex items-center gap-1 group-hover:text-sky-500 transition-colors cursor-pointer" onClick={() => {
+                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-400 flex items-center gap-1 group-hover:text-sky-500 transition-colors cursor-pointer" onClick={() => {
                             useAuthStore.getState().setPrescriptionId(presc.id);
                             navigate('prescription-detail', presc.id);
                           }}>
@@ -286,7 +286,7 @@ export function PrescriptionList() {
 
       {/* Secure QR Dialog */}
       <Dialog open={!!qrDialog} onOpenChange={(open) => !open && setQrDialog(null)}>
-        <DialogContent className="sm:rounded-[2.5rem] rounded-3xl bg-zinc-950/90 border-zinc-800 max-w-md mx-auto p-6 shadow-2xl backdrop-blur-xl">
+        <DialogContent className="sm:rounded-[2.5rem] rounded-3xl bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 max-w-md mx-auto p-6 shadow-2xl backdrop-blur-xl">
           <DialogHeader className="sr-only">
             <DialogTitle>Código QR Seguro de Receta</DialogTitle>
           </DialogHeader>
@@ -294,14 +294,14 @@ export function PrescriptionList() {
           {qrDialog && (
             <div className="flex flex-col items-center py-2 space-y-6">
               {/* Boarding Pass Ticket */}
-              <div className="w-full flex flex-col items-stretch space-y-0 text-left bg-zinc-900 border border-zinc-800 rounded-[2rem] overflow-hidden shadow-2xl relative">
+              <div className="w-full flex flex-col items-stretch space-y-0 text-left bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[2.5rem] overflow-hidden shadow-2xl relative">
                 
                 {/* Top Section */}
                 <div className="p-6 space-y-5">
                   {/* Header */}
-                  <div className="flex justify-between items-center pb-3 border-b border-zinc-800/60">
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-zinc-800/60">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-455 border border-sky-500/25">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/25">
                         <Shield className="size-3" /> MINSA Valido
                       </span>
                     </div>
@@ -316,47 +316,47 @@ export function PrescriptionList() {
 
                   {/* Doctor Info */}
                   <div className="flex items-center gap-4">
-                    <Avatar className="size-14 border border-zinc-850 shrink-0 shadow-sm">
-                      <AvatarFallback className="bg-sky-500/5 text-sky-450 text-xs font-black font-serif">
+                    <Avatar className="size-14 border border-slate-200 dark:border-zinc-800 shrink-0 shadow-sm">
+                      <AvatarFallback className="bg-sky-500/5 text-sky-500 dark:text-sky-400 text-xs font-black font-serif">
                         {getInitials(qrDialog.doctor?.name || '')}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-black text-zinc-555 uppercase tracking-widest leading-none">Médico Emisor</p>
-                      <p className="text-sm font-black text-white mt-1.5 truncate font-serif">Dr. {qrDialog.doctor?.name}</p>
+                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest leading-none">Médico Emisor</p>
+                      <p className="text-sm font-black text-slate-900 dark:text-white mt-1.5 truncate font-serif">Dr. {qrDialog.doctor?.name}</p>
                       {qrDialog.doctor?.doctor_profile?.specialty && (
-                        <p className="text-[9px] font-black text-teal-450 uppercase tracking-widest mt-0.5">{qrDialog.doctor.doctor_profile.specialty}</p>
+                        <p className="text-[9px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-0.5">{qrDialog.doctor.doctor_profile.specialty}</p>
                       )}
                     </div>
                   </div>
 
                   {/* Schedule & Clinic Details Grid */}
-                  <div className="grid grid-cols-2 gap-4 pt-1.5 border-t border-zinc-850/60">
+                  <div className="grid grid-cols-2 gap-4 pt-1.5 border-t border-slate-200 dark:border-zinc-800/60">
                     <div className="space-y-1">
-                      <p className="text-[9px] font-black text-zinc-555 uppercase tracking-widest leading-none">Fecha de Emisión</p>
-                      <p className="text-xs font-bold text-zinc-200 mt-1">{formatDate(qrDialog.issue_date, "dd 'de' MMMM")}</p>
+                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest leading-none">Fecha de Emisión</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-zinc-200 mt-1">{formatDate(qrDialog.issue_date, "dd 'de' MMMM")}</p>
                       {qrDialog.expiration_date && (
                         <p className="text-[9px] text-amber-500 font-black uppercase tracking-wider mt-0.5">Vence: {formatDate(qrDialog.expiration_date, 'dd/MM/yyyy')}</p>
                       )}
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[9px] font-black text-zinc-555 uppercase tracking-widest leading-none">Medicamentos</p>
-                      <p className="text-xs font-bold text-zinc-200 mt-1">{qrDialog.lines?.length || 0} Formulados</p>
-                      <p className="text-[10px] text-zinc-400 font-semibold truncate mt-0.5">Autorizado para Surtido</p>
+                      <p className="text-[9px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest leading-none">Medicamentos</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-zinc-200 mt-1">{qrDialog.lines?.length || 0} Formulados</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold truncate mt-0.5">Autorizado para Surtido</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Perforated separator (punch holes) */}
                 <div className="relative h-4 w-full flex items-center justify-center pointer-events-none select-none my-0.5">
-                  <div className="w-full border-t-2 border-dashed border-zinc-800" />
-                  <div className="absolute left-0 -translate-x-1/2 size-6 rounded-full bg-zinc-950 border border-zinc-800" />
-                  <div className="absolute right-0 translate-x-1/2 size-6 rounded-full bg-zinc-950 border border-zinc-800" />
+                  <div className="w-full border-t-2 border-dashed border-slate-200 dark:border-zinc-800" />
+                  <div className="absolute left-0 -translate-x-1/2 size-6 rounded-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800" />
+                  <div className="absolute right-0 translate-x-1/2 size-6 rounded-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800" />
                 </div>
 
                 {/* Bottom Section - QR pass focused */}
-                <div className="p-6 flex flex-col items-center text-center space-y-4 bg-zinc-950/20">
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.25em]">Pase Digital de Receta</p>
+                <div className="p-6 flex flex-col items-center text-center space-y-4 bg-slate-100/30 dark:bg-zinc-950/20">
+                  <p className="text-[9px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-[0.25em]">Pase Digital de Receta</p>
                   
                   {/* QR container */}
                   <div className="relative bg-white p-4 rounded-2xl shadow-xl overflow-hidden shrink-0">
@@ -383,8 +383,8 @@ export function PrescriptionList() {
                   </div>
 
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-sky-400 tracking-[0.2em]">Escánear en Farmacia</p>
-                    <p className="text-[9px] text-zinc-450 max-w-[250px] font-semibold leading-normal">
+                    <p className="text-[10px] font-black uppercase text-sky-600 dark:text-sky-400 tracking-[0.2em]">Escánear en Farmacia</p>
+                    <p className="text-[9px] text-slate-500 dark:text-zinc-400 max-w-[250px] font-semibold leading-normal">
                       Presenta este código al farmacéutico para despachar y registrar tus medicamentos autorizados.
                     </p>
                   </div>
@@ -395,7 +395,7 @@ export function PrescriptionList() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-bold text-xs h-11 border border-zinc-800 cursor-pointer transition-colors"
+                className="w-full rounded-full bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white font-bold text-xs h-11 border border-slate-200 dark:border-zinc-800 cursor-pointer transition-colors"
                 onClick={() => setQrDialog(null)}
               >
                 Cerrar Recibo

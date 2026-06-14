@@ -117,7 +117,7 @@ export function AppointmentList() {
           whileHover={{ scale: 1.03, y: -1 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('new-appointment')}
-          className="w-full sm:w-auto h-11 px-6 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-450 to-cyan-550 hover:from-teal-600 hover:to-cyan-650 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] transition-all duration-300 border-none"
+          className="w-full sm:w-auto h-11 px-6 rounded-[16px_50px_16px_50px] bg-gradient-to-r from-teal-500 via-teal-400 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-[inset_0_3px_6px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.15),0_10px_25px_rgba(20,184,166,0.2)] transition-all duration-300 border-none"
         >
           <Plus className="size-4 shrink-0" />
           Nueva cita médica
@@ -143,7 +143,7 @@ export function AppointmentList() {
                   'px-3.5 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 select-none flex-1 text-center min-w-[95px] sm:min-w-0 border',
                   isActive
                     ? 'bg-teal-500 border-teal-500 text-white shadow-md shadow-teal-500/15'
-                    : 'text-slate-550 dark:text-zinc-400 border-transparent hover:bg-white/10 hover:text-slate-800 dark:hover:text-white'
+                    : 'text-slate-500 dark:text-zinc-400 border-transparent hover:bg-white/10 hover:text-slate-800 dark:hover:text-white'
                 )}
               >
                 {tab.label}
@@ -185,11 +185,11 @@ export function AppointmentList() {
             <div className="border border-slate-200 dark:border-white/5 bg-white/20 dark:bg-zinc-950/20 sm:rounded-[80px_40px_32px_120px] rounded-3xl p-6 backdrop-blur-xl">
               <div className="flex flex-col items-center py-14 text-center max-w-sm mx-auto space-y-4.5">
                 <div className="size-16 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
-                  <Calendar className="size-7 text-slate-400 dark:text-zinc-550" />
+                  <Calendar className="size-7 text-slate-400 dark:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5">
                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 dark:text-white font-serif">Sin consultas</h3>
-                  <p className="text-xs text-slate-550 dark:text-zinc-450 font-bold leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold leading-relaxed">
                     {activeTab === 'upcoming'
                       ? 'No tienes citas programadas pendientes en este momento.'
                       : activeTab === 'past'
@@ -274,12 +274,12 @@ export function AppointmentList() {
 
                     {/* Right side telemetry info */}
                     <div className="flex items-center justify-between md:justify-end gap-5 pl-2 md:pl-0 border-t md:border-t-0 border-dashed border-slate-200 dark:border-white/5 pt-3.5 md:pt-0">
-                      <div className="text-left md:text-right font-bold text-[11px] text-slate-655 dark:text-zinc-350 space-y-0.5">
+                      <div className="text-left md:text-right font-bold text-[11px] text-slate-600 dark:text-zinc-350 space-y-0.5">
                         <div className="flex items-center md:justify-end gap-1.5">
                           <Clock className="size-3.5 text-teal-500 shrink-0" />
                           <span>{formatDate(apt.date_time, "dd MMM yyyy • HH:mm")}</span>
                         </div>
-                        <p className="font-mono text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-wider">
+                        <p className="font-mono text-[9px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-wider">
                           DURACIÓN: {formatDuration(apt.duration_minutes)}
                         </p>
                       </div>
@@ -319,10 +319,9 @@ export function AppointmentList() {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Modern High-Fidelity Appointment Detail Modal */}
       <Dialog open={!!selectedApt} onOpenChange={(open) => !open && setSelectedApt(null)}>
-        <DialogContent className="sm:rounded-[2.5rem] rounded-3xl bg-zinc-950/90 border-zinc-800 max-w-md mx-auto p-6 shadow-2xl backdrop-blur-xl">
+        <DialogContent className="sm:rounded-[2.5rem] rounded-3xl bg-white/95 dark:bg-zinc-950/90 border-slate-200 dark:border-zinc-800 max-w-md mx-auto p-6 shadow-2xl backdrop-blur-xl">
           <DialogHeader className="sr-only">
             <DialogTitle>Ticket Clínico Digital</DialogTitle>
           </DialogHeader>
@@ -330,14 +329,14 @@ export function AppointmentList() {
           {selectedApt && (
             <div className="flex flex-col items-center py-2 space-y-6">
               {/* Boarding Pass Ticket */}
-              <div className="w-full flex flex-col items-stretch space-y-0 text-left bg-zinc-900 border border-zinc-800 rounded-[2rem] overflow-hidden shadow-2xl relative">
+              <div className="w-full flex flex-col items-stretch space-y-0 text-left bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[2rem] overflow-hidden shadow-2xl relative">
                 
                 {/* Top Section */}
                 <div className="p-6 space-y-5">
                   {/* Header */}
-                  <div className="flex justify-between items-center pb-3 border-b border-zinc-800/60">
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-zinc-800/60">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-400 border border-teal-500/25">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/25">
                         <ShieldCheck className="size-3" /> Verificado
                       </span>
                     </div>
@@ -352,48 +351,48 @@ export function AppointmentList() {
 
                   {/* Doctor Info */}
                   <div className="flex items-center gap-4">
-                    <Avatar className="size-14 border border-zinc-850 shrink-0 shadow-sm">
-                      <AvatarFallback className="bg-teal-500/5 text-teal-400 text-xs font-black font-serif">
+                    <Avatar className="size-14 border border-slate-200 dark:border-zinc-800 shrink-0 shadow-sm">
+                      <AvatarFallback className="bg-teal-500/5 text-teal-600 dark:text-teal-400 text-xs font-black font-serif">
                         {getInitials(selectedApt.doctor?.name || '')}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-black text-zinc-550 uppercase tracking-widest leading-none">Médico Tratante</p>
-                      <p className="text-sm font-black text-white mt-1.5 truncate font-serif">Dr. {selectedApt.doctor?.name}</p>
+                      <p className="text-[9px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest leading-none">Médico Tratante</p>
+                      <p className="text-sm font-black text-slate-900 dark:text-white mt-1.5 truncate font-serif">Dr. {selectedApt.doctor?.name}</p>
                       {selectedApt.doctor?.doctor_profile?.specialty && (
-                        <p className="text-[9px] font-black text-teal-450 uppercase tracking-widest mt-0.5">{selectedApt.doctor.doctor_profile.specialty}</p>
+                        <p className="text-[9px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-0.5">{selectedApt.doctor.doctor_profile.specialty}</p>
                       )}
                     </div>
                   </div>
 
                   {/* Schedule & Clinic Details Grid */}
-                  <div className="grid grid-cols-2 gap-4 pt-1.5 border-t border-zinc-850/60">
+                  <div className="grid grid-cols-2 gap-4 pt-1.5 border-t border-slate-200 dark:border-zinc-800/60">
                     <div className="space-y-1">
-                      <p className="text-[9px] font-black text-zinc-550 uppercase tracking-widest leading-none">Fecha y hora</p>
-                      <p className="text-xs font-bold text-zinc-200 mt-1">{formatDate(selectedApt.date_time, "dd 'de' MMMM")}</p>
-                      <p className="text-[10px] text-zinc-400 font-semibold">{formatDate(selectedApt.date_time, "HH:mm")} hrs • {formatDuration(selectedApt.duration_minutes)}</p>
+                      <p className="text-[9px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest leading-none">Fecha y hora</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-zinc-200 mt-1">{formatDate(selectedApt.date_time, "dd 'de' MMMM")}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{formatDate(selectedApt.date_time, "HH:mm")} hrs • {formatDuration(selectedApt.duration_minutes)}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[9px] font-black text-zinc-550 uppercase tracking-widest leading-none">Consultorio</p>
-                      <p className="text-xs font-bold text-zinc-200 mt-1 truncate">{selectedApt.clinic?.name}</p>
-                      <p className="text-[10px] text-zinc-400 font-semibold truncate leading-none mt-1">{selectedApt.clinic?.address}</p>
+                      <p className="text-[9px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest leading-none">Consultorio</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-zinc-200 mt-1 truncate">{selectedApt.clinic?.name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold truncate leading-none mt-1">{selectedApt.clinic?.address}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Perforated separator (punch holes) */}
                 <div className="relative h-4 w-full flex items-center justify-center pointer-events-none select-none my-0.5">
-                  <div className="w-full border-t-2 border-dashed border-zinc-800" />
-                  <div className="absolute left-0 -translate-x-1/2 size-6 rounded-full bg-zinc-950 border border-zinc-800" />
-                  <div className="absolute right-0 translate-x-1/2 size-6 rounded-full bg-zinc-950 border border-zinc-800" />
+                  <div className="w-full border-t-2 border-dashed border-slate-200 dark:border-zinc-800" />
+                  <div className="absolute left-0 -translate-x-1/2 size-6 rounded-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800" />
+                  <div className="absolute right-0 translate-x-1/2 size-6 rounded-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800" />
                 </div>
 
                 {/* Bottom Section - QR pass focused */}
-                <div className="p-6 flex flex-col items-center text-center space-y-4 bg-zinc-950/20">
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.25em]">Pase de Entrada QR</p>
+                <div className="p-6 flex flex-col items-center text-center space-y-4 bg-slate-100/50 dark:bg-zinc-950/20">
+                  <p className="text-[9px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.25em]">Pase de Entrada QR</p>
                   
                   {/* QR container */}
-                  <div className="relative bg-white p-4 rounded-2xl shadow-xl overflow-hidden shrink-0">
+                  <div className="relative bg-white p-4 rounded-2xl shadow-xl overflow-hidden shrink-0 border border-slate-200/60">
                     {/* Scanner glow animation */}
                     <motion.div 
                       animate={{ top: ['-100%', '200%'] }}
@@ -417,8 +416,8 @@ export function AppointmentList() {
                   </div>
 
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-teal-400 tracking-[0.2em]">Escánear en Recepción</p>
-                    <p className="text-[9px] text-zinc-450 max-w-[250px] font-semibold leading-normal">
+                    <p className="text-[10px] font-black uppercase text-teal-600 dark:text-teal-400 tracking-[0.2em]">Escánear en Recepción</p>
+                    <p className="text-[9px] text-slate-500 dark:text-zinc-400 max-w-[250px] font-semibold leading-normal">
                       Muestra este pase al llegar a la clínica para confirmar tu asistencia al instante.
                     </p>
                   </div>
@@ -430,7 +429,7 @@ export function AppointmentList() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-bold text-xs h-11 border border-zinc-800 cursor-pointer transition-colors"
+                  className="flex-1 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white font-bold text-xs h-11 border border-slate-200 dark:border-zinc-800 cursor-pointer transition-colors"
                   onClick={() => setSelectedApt(null)}
                 >
                   Cerrar
@@ -439,7 +438,7 @@ export function AppointmentList() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 rounded-full bg-teal-650 hover:bg-teal-700 text-white font-bold text-xs h-11 border-none shadow-md cursor-pointer transition-colors"
+                    className="flex-1 rounded-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs h-11 border-none shadow-md cursor-pointer transition-colors"
                     onClick={() => {
                       setReviewApt(selectedApt);
                       setSelectedApt(null);
@@ -474,7 +473,7 @@ export function AppointmentList() {
               <ShieldAlert className="size-6 text-red-500 animate-pulse animate-spin-slow" />
             </div>
             <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-800 dark:text-white font-serif">¿Cancelar Consulta?</DialogTitle>
-            <DialogDescription className="text-xs text-slate-550 dark:text-zinc-455 leading-relaxed pt-1.5">
+            <DialogDescription className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed pt-1.5">
               ¿Confirmas la cancelación definitiva de tu consulta programada con{' '}
               <strong className="text-slate-800 dark:text-white">Dr. {cancelDialog?.doctor?.name}</strong> el{' '}
               <span className="font-bold text-teal-600 dark:text-teal-400">{cancelDialog ? formatDate(cancelDialog.date_time, "dd/MM/yyyy") : ''}</span>?
@@ -485,7 +484,7 @@ export function AppointmentList() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full rounded-[16px_50px_16px_50px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-850 dark:text-zinc-200 font-black text-[10px] h-11 border border-slate-200/50 dark:border-white/5 uppercase tracking-widest cursor-pointer"
+              className="w-full rounded-[16px_50px_16px_50px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 font-black text-[10px] h-11 border border-slate-200/50 dark:border-white/5 uppercase tracking-widest cursor-pointer"
               onClick={() => setCancelDialog(null)}
               disabled={cancelMutation.isPending}
             >
@@ -494,7 +493,7 @@ export function AppointmentList() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-655 text-white font-black text-[10px] h-11 uppercase tracking-widest flex items-center justify-center gap-1.5 border-none shadow-md cursor-pointer"
+              className="w-full rounded-[50px_16px_50px_16px] bg-red-500 hover:bg-red-600 text-white font-black text-[10px] h-11 uppercase tracking-widest flex items-center justify-center gap-1.5 border-none shadow-md cursor-pointer"
               onClick={handleCancel}
               disabled={cancelMutation.isPending}
             >

@@ -280,7 +280,7 @@ export function DeliveryRequest() {
         >
           <ArrowLeft className="size-4" /> Volver
         </Button>
-        <p className="text-xs font-bold text-slate-450 mt-4">Error al conectar con la farmacia.</p>
+        <p className="text-xs font-bold text-slate-500 mt-4">Error al conectar con la farmacia.</p>
       </div>
     );
   }
@@ -361,7 +361,7 @@ export function DeliveryRequest() {
 
       {/* 2. Seamless Address & Map configuration — Cardless Glass Panel */}
       <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-5 shadow-xl space-y-4">
-        <p className="text-[8.5px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:border-white/5">DIRECCIÓN Y COBERTURA</p>
+        <p className="text-[8.5px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:border-white/5">DIRECCIÓN Y COBERTURA</p>
         
         <div className="space-y-3">
           <div className="space-y-1">
@@ -400,7 +400,7 @@ export function DeliveryRequest() {
       {/* 3. Product Catalog Shopping manifest — Cardless list with inline search */}
       <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-5 shadow-xl space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-dashed border-slate-200 dark:border-white/5">
-          <p className="text-[8.5px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-[0.2em]">FÁRMACOS Y PRODUCTOS</p>
+          <p className="text-[8.5px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-[0.2em]">FÁRMACOS Y PRODUCTOS</p>
           <button
             className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 dark:border-teal-500/10 hover:bg-teal-500/20 rounded-full h-8 text-[9px] font-black uppercase tracking-widest px-4 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm"
             onClick={() => setShowMedicineSearch(!showMedicineSearch)}
@@ -420,7 +420,7 @@ export function DeliveryRequest() {
               className="overflow-hidden space-y-3"
             >
               <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-450 dark:text-zinc-550" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-500 dark:text-zinc-400" />
                 <Input
                   placeholder="Buscar en farmacia..."
                   value={medicineSearch}
@@ -459,7 +459,7 @@ export function DeliveryRequest() {
                     >
                       <div>
                         <p className="text-xs font-black text-slate-800 dark:text-white font-serif">{item.name}</p>
-                        <p className="text-[10px] text-slate-500 dark:text-zinc-450 font-bold mt-0.5">
+                        <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold mt-0.5">
                           {item.dosage_form && `${item.dosage_form} · `}
                           {item.strength && `${item.strength} · `}
                           {item.price > 0 ? formatCurrency(item.price) : 'Sin precio'}
@@ -491,7 +491,7 @@ export function DeliveryRequest() {
               <div key={item.medicine_id} className="py-3 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <h4 className="text-xs font-black text-slate-800 dark:text-white font-serif truncate">{item.name}</h4>
-                  <p className="text-[10px] text-slate-500 dark:text-zinc-450 font-mono mt-0.5">
+                  <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono mt-0.5">
                     {formatCurrency(item.unit_price)} c/u
                   </p>
                 </div>
@@ -499,7 +499,7 @@ export function DeliveryRequest() {
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="flex items-center gap-1 bg-slate-500/[0.04] dark:bg-white/5 p-1 rounded-xl border border-slate-200/40 dark:border-white/5">
                     <button
-                      className="size-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white cursor-pointer border-none bg-transparent"
+                      className="size-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white cursor-pointer border-none bg-transparent"
                       onClick={() => updateQuantity(item.medicine_id, -1)}
                     >
                       <Minus className="size-3" />
@@ -508,7 +508,7 @@ export function DeliveryRequest() {
                       {item.quantity}
                     </span>
                     <button
-                      className="size-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-zinc-450 dark:hover:text-white cursor-pointer border-none bg-transparent"
+                      className="size-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white cursor-pointer border-none bg-transparent"
                       onClick={() => updateQuantity(item.medicine_id, 1)}
                     >
                       <Plus className="size-3" />
@@ -530,14 +530,14 @@ export function DeliveryRequest() {
 
       {/* 4. Resumen & Confirm action capsule */}
       <div className="bg-white/10 dark:bg-zinc-950/10 border border-slate-200/50 dark:border-white/5 rounded-[40px_16px_40px_16px] backdrop-blur-md p-5 shadow-xl space-y-4">
-        <p className="text-[8.5px] font-black text-slate-450 dark:text-zinc-550 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:border-white/5">RESUMEN LIQUIDACIÓN</p>
+        <p className="text-[8.5px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-[0.2em] pb-2 border-b border-dashed border-slate-200 dark:border-white/5">RESUMEN LIQUIDACIÓN</p>
         
         <div className="space-y-2 text-xs font-bold">
-          <div className="flex justify-between items-center text-slate-550 dark:text-zinc-400">
+          <div className="flex justify-between items-center text-slate-500 dark:text-zinc-400">
             <span>Fármacos ({orderItems.length})</span>
             <span className="font-mono">{formatCurrency(totalPrice)}</span>
           </div>
-          <div className="flex justify-between items-center text-slate-550 dark:text-zinc-400">
+          <div className="flex justify-between items-center text-slate-500 dark:text-zinc-400">
             <span>Servicio Reparto</span>
             <span className="font-mono">{formatCurrency(deliveryFee)}</span>
           </div>
