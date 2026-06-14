@@ -28,6 +28,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://oasis_test:oasis_password@localhost:5432/oasis_db_test
+      DIRECT_DATABASE_URL: postgresql://oasis_test:oasis_password@localhost:5432/oasis_db_test
       JWT_SECRET: test_jwt_secret_oasis_liquida_2026_super_secure
       NODE_ENV: test
 
