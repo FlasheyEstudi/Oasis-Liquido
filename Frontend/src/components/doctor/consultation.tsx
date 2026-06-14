@@ -318,9 +318,9 @@ export function Consultation() {
         </div>
 
         {appointmentsQuery.isLoading ? (
-          <div className="bento-grid">
-            <div className="col-span-6 shimmer h-20 rounded-3xl" />
-            <div className="col-span-6 shimmer h-20 rounded-3xl" />
+          <div className="space-y-3">
+            <div className="shimmer h-20 rounded-3xl w-full" />
+            <div className="shimmer h-20 rounded-3xl w-full" />
           </div>
         ) : appointmentsQuery.isError ? (
           <ErrorBlock
@@ -374,8 +374,8 @@ export function Consultation() {
     return (
       <div className="p-4 md:p-6">
         <div className="bento-grid">
-          <div className="col-span-4 shimmer h-64 rounded-3xl" />
-          <div className="col-span-8 shimmer h-64 rounded-3xl" />
+          <div className="col-span-full lg:col-span-4 shimmer h-64 rounded-3xl" />
+          <div className="col-span-full lg:col-span-8 shimmer h-64 rounded-3xl" />
         </div>
       </div>
     );
@@ -451,7 +451,7 @@ export function Consultation() {
 
       <div className="bento-grid">
         {/* Left Column - Patient Info */}
-        <div className="col-span-4 space-y-4">
+        <div className="col-span-full lg:col-span-4 space-y-4">
           {/* Patient Card */}
           <GlassCard>
             <h3 className="text-sm font-medium text-muted-foreground mb-4">Paciente</h3>
@@ -572,7 +572,7 @@ export function Consultation() {
         </div>
 
         {/* Right Column - Consultation Form */}
-        <div className="col-span-8 space-y-4">
+        <div className="col-span-full lg:col-span-8 space-y-4">
           {/* Step navigation */}
           <div className="flex items-center gap-2">
             <Button

@@ -164,7 +164,7 @@ export function PrescriptionDetail() {
         {/* Header Section: Doctor Profile & Status Indicator with timeline ribbon */}
         <div className="relative pl-4 py-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           {/* Vertical accent ribbon */}
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-full" />
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-sky-500 rounded-full" />
           
           <div className="flex items-center gap-4 min-w-0">
             <Avatar className="size-14 border border-slate-200 dark:border-white/5 shrink-0 shadow-sm">
@@ -195,7 +195,7 @@ export function PrescriptionDetail() {
 
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] font-bold text-slate-500 dark:text-zinc-400 md:text-right md:justify-end">
             <span className="flex items-center gap-1.5">
-              <Calendar className="size-3.5 text-indigo-500" />
+              <Calendar className="size-3.5 text-sky-500" />
               Emitida: {formatDate(prescription.issue_date, 'dd/MM/yyyy')}
             </span>
             {prescription.clinic && (
@@ -277,8 +277,8 @@ export function PrescriptionDetail() {
         {/* Medication Lines list - Cardless troquel feed */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-1">
-            <div className="flex size-7 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/15">
-              <FileText className="size-3.5 text-indigo-500" />
+            <div className="flex size-7 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/15">
+              <FileText className="size-3.5 text-sky-500" />
             </div>
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Medicamentos Formulados</h3>
           </div>
@@ -307,7 +307,7 @@ export function PrescriptionDetail() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-slate-800 dark:text-white font-serif group-hover:text-indigo-600 transition-colors">
+                      <p className="text-sm font-black text-slate-800 dark:text-white font-serif group-hover:text-sky-600 transition-colors">
                         {line.medicine?.name || 'Medicamento'}
                       </p>
                       {line.dosage_instructions && (

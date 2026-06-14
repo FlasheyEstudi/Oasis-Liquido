@@ -467,7 +467,7 @@ export function DeliveryDetail() {
                     <SwipeButton
                       text={isUpdating ? 'PROCESANDO...' : 'Deslizar para iniciar Ruta'}
                       onConfirm={() => handleStatusUpdate('in_transit')}
-                      colorClasses="from-sky-500 to-blue-600"
+                      colorClasses="from-sky-500 to-sky-700"
                       icon={Navigation}
                       disabled={isUpdating}
                     />

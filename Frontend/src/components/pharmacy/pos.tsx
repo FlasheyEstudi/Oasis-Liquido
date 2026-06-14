@@ -541,7 +541,7 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
               variant="outline" 
               className={cn(
                 "w-full gap-2 border-dashed",
-                isPrescriptionApplied && "bg-blue-50 border-blue-500 text-blue-700"
+                isPrescriptionApplied && "bg-sky-50 dark:bg-sky-950/20 border-sky-500 text-sky-700 dark:text-sky-400"
               )}
               onClick={() => setQrMode(true)}
             >
@@ -592,7 +592,7 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
               className="bg-white dark:bg-gray-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl"
             >
               <div className="text-center mb-6">
-                <div className="size-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-4">
+                <div className="size-16 bg-sky-100 dark:bg-sky-900/30 rounded-2xl flex items-center justify-center text-sky-600 dark:text-sky-400 mx-auto mb-4">
                   <QrCode className="size-10" />
                 </div>
                 <h3 className="text-xl font-bold">Vincular Receta</h3>
@@ -608,7 +608,7 @@ export function PharmacyPOS({ pharmacyId }: { pharmacyId: string }) {
 
               <div className="flex gap-3">
                 <Button variant="ghost" className="flex-1" onClick={() => setQrMode(false)}>Cancelar</Button>
-                <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={applyPrescription}>Vincular</Button>
+                <Button className="flex-1 bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600" onClick={applyPrescription}>Vincular</Button>
               </div>
             </motion.div>
           </div>

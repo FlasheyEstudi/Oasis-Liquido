@@ -470,7 +470,7 @@ export function ProfileScreen() {
             <div className="flex items-center gap-2.5">
               <div className={cn(
                 'w-7 h-5 sm:w-9 sm:h-6 rounded-[4px] border relative shadow-md overflow-hidden flex shrink-0',
-                role === 'doctor'           && 'bg-gradient-to-br from-sky-300 via-indigo-500 to-sky-700 border-sky-400/40',
+                role === 'doctor'           && 'bg-gradient-to-br from-sky-300 via-sky-500 to-sky-700 border-sky-400/40',
                 role === 'pharmacy_manager' && 'bg-gradient-to-br from-emerald-300 via-teal-500 to-emerald-600 border-emerald-400/40',
                 role === 'delivery_driver'  && 'bg-gradient-to-br from-amber-300 via-orange-500 to-amber-700 border-amber-400/40',
                 (role === 'patient' || !role || role === 'receptionist') && 'bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 border-amber-400/40'
@@ -1417,7 +1417,7 @@ export function ProfileScreen() {
                     </div>
 
                     <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/5 dark:bg-zinc-950/20 border border-slate-200/50 dark:border-white/5 shadow-sm">
-                      <div className="size-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-650 dark:text-indigo-400">
+                      <div className="size-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400">
                         <Sparkles className="size-5.5" />
                       </div>
                       <div>
@@ -1460,8 +1460,8 @@ export function ProfileScreen() {
                     <span className="text-[7.5px] font-black text-slate-400 uppercase mt-0.5 block">KM Totales</span>
                   </div>
 
-                  <div className="p-4 rounded-[1.8rem] bg-indigo-500/[0.03] border border-indigo-500/10 text-center shadow-inner relative overflow-hidden group">
-                    <p className="text-[8px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">Valoración</p>
+                  <div className="p-4 rounded-[1.8rem] bg-sky-500/[0.03] border border-sky-500/10 text-center shadow-inner relative overflow-hidden group">
+                    <p className="text-[8px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">Valoración</p>
                     <p className="text-xl font-black text-foreground tracking-tight mt-1">4.96</p>
                     <span className="text-[7.5px] font-black text-slate-400 uppercase mt-0.5 block">Estrellas</span>
                   </div>
@@ -1649,7 +1649,7 @@ export function ProfileScreen() {
               exit={{ scale: 0.9, opacity: 0, y: 30 }}
               className="relative max-w-sm w-full p-6 rounded-[2.5rem] bg-white/95 dark:bg-slate-950/95 border border-teal-500/30 shadow-2xl z-10 overflow-hidden text-center backdrop-blur-3xl"
             >
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-400 to-indigo-500" />
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-400 to-sky-500" />
               
               <div className="flex flex-col items-center mb-6">
                 <div className="size-11 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 dark:text-teal-400 border border-teal-500/20 mb-3">

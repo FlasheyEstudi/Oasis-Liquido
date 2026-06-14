@@ -65,14 +65,14 @@ export function PrescriptionList() {
     )}>
       
       {/* Dynamic Ambient Background Blobs */}
-      <div className="absolute top-[10%] left-[-10%] size-80 rounded-full bg-gradient-to-br from-indigo-500/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-[10%] left-[-10%] size-80 rounded-full bg-gradient-to-br from-sky-500/5 to-transparent blur-3xl pointer-events-none" />
       <div className="absolute bottom-[20%] right-[-10%] size-80 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
 
       {/* Header Grid */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-dashed border-slate-200/50 dark:border-white/5 transition-colors duration-300">
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2 font-serif">
-            <Sparkles className="size-5.5 text-indigo-500 shrink-0" />
+            <Sparkles className="size-5.5 text-sky-500 shrink-0" />
             <span>Mis Recetas Digitales</span>
           </h2>
           <p className="text-[11px] text-slate-500 dark:text-zinc-455 font-bold mt-1 tracking-wide">
@@ -103,7 +103,7 @@ export function PrescriptionList() {
                 className={cn(
                   'rounded-xl px-3.5 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all duration-300 select-none flex-1 text-center min-w-[85px] sm:min-w-0 border',
                   isTabActive
-                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
+                    ? 'bg-sky-600 border-sky-600 text-white shadow-md'
                     : 'text-slate-550 dark:text-zinc-400 border-transparent hover:bg-white/5 hover:text-slate-800 dark:hover:text-white'
                 )}
               >
@@ -175,7 +175,7 @@ export function PrescriptionList() {
                 const accentColor = 
                   presc.status === 'fulfilled' ? 'bg-emerald-500' :
                   presc.status === 'expired' ? 'bg-amber-500' :
-                  'bg-indigo-500';
+                  'bg-sky-500';
 
                 return (
                   <motion.div
@@ -204,7 +204,7 @@ export function PrescriptionList() {
                       </Avatar>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-xs sm:text-sm font-black text-slate-800 dark:text-white truncate font-serif group-hover:text-indigo-600 transition-colors">
+                          <p className="text-xs sm:text-sm font-black text-slate-800 dark:text-white truncate font-serif group-hover:text-sky-600 transition-colors">
                             Dr. {presc.doctor?.name || 'Médico'}
                           </p>
                           <span className={cn(
@@ -231,7 +231,7 @@ export function PrescriptionList() {
                     <div className="flex items-center justify-between md:justify-end gap-5 pl-3 md:pl-0 border-t md:border-t-0 border-dashed border-slate-200 dark:border-white/5 pt-3.5 md:pt-0">
                       <div className="text-left md:text-right font-bold text-[11px] text-slate-655 dark:text-zinc-355 space-y-0.5">
                         <div className="flex items-center md:justify-end gap-1.5">
-                          <Calendar className="size-3.5 text-indigo-500 shrink-0" />
+                          <Calendar className="size-3.5 text-sky-500 shrink-0" />
                           <span>Emitida: {formatDate(presc.issue_date, 'dd MMM yyyy')}</span>
                         </div>
                         {presc.status === 'active' && presc.expiration_date && (
@@ -257,7 +257,7 @@ export function PrescriptionList() {
                             Surtir
                           </motion.button>
                         ) : (
-                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-455 flex items-center gap-1 group-hover:text-indigo-500 transition-colors cursor-pointer" onClick={() => {
+                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-zinc-455 flex items-center gap-1 group-hover:text-sky-500 transition-colors cursor-pointer" onClick={() => {
                             useAuthStore.getState().setPrescriptionId(presc.id);
                             navigate('prescription-detail', presc.id);
                           }}>
@@ -269,7 +269,7 @@ export function PrescriptionList() {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="size-8 rounded-full bg-slate-500/5 hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-500 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+                          className="size-8 rounded-full bg-slate-500/5 hover:bg-sky-500/10 text-slate-400 hover:text-sky-500 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
                           onClick={() => setQrDialog(presc)}
                         >
                           <QrCodeIcon className="size-4 shrink-0" />
@@ -289,7 +289,7 @@ export function PrescriptionList() {
         <DialogContent className="sm:rounded-[40px_16px_40px_16px] rounded-3xl glass-strong border-slate-200 dark:border-white/10 max-w-sm mx-auto p-6 text-center shadow-2xl">
           <DialogHeader className="items-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Shield className="size-5 text-indigo-500 animate-pulse" />
+              <Shield className="size-5 text-sky-500 animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-400">Verificación de Receta</span>
             </div>
             <DialogTitle className="text-base font-black uppercase tracking-wider text-slate-800 dark:text-white font-serif">Código QR Seguro</DialogTitle>

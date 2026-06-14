@@ -265,7 +265,7 @@ export function AppointmentList() {
                         )}
                         {apt.clinic && (
                           <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1.5 flex items-center gap-1">
-                            <Building2 className="size-3 text-indigo-400 shrink-0" />
+                            <Building2 className="size-3 text-sky-400 shrink-0" />
                             <span className="truncate">{apt.clinic.name}</span>
                           </p>
                         )}

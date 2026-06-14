@@ -165,7 +165,7 @@ export function NewAppointment() {
       
       {/* Dynamic Background Organic Blobs */}
       <div className="absolute top-[20%] left-[-15%] size-80 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-15%] size-80 rounded-full bg-gradient-to-br from-indigo-500/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[-15%] size-80 rounded-full bg-gradient-to-br from-sky-500/5 to-transparent blur-3xl pointer-events-none" />
 
       {/* Stepper Bar - Premium Floating Capsule */}
       <div className="bg-white/60 dark:bg-zinc-950/40 border border-slate-250/60 dark:border-white/10 rounded-full pt-4 pb-7 px-8 shadow-xl backdrop-blur-xl max-w-xl mx-auto">
@@ -518,8 +518,8 @@ export function NewAppointment() {
                   </div>
 
                   {/* Warning banner */}
-                  <div className="flex items-center gap-2.5 p-3.5 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-300 shadow-sm leading-relaxed">
-                    <Sparkles className="size-4.5 text-indigo-500 shrink-0 animate-pulse" />
+                  <div className="flex items-center gap-2.5 p-3.5 bg-sky-500/5 rounded-2xl border border-sky-500/10 text-[10px] font-bold text-slate-600 dark:text-zinc-300 shadow-sm leading-relaxed">
+                    <Sparkles className="size-4.5 text-sky-500 shrink-0 animate-pulse" />
                     <span>Recibirás un recordatorio seguro por notificación PWA antes del horario pactado.</span>
                   </div>
 

@@ -117,10 +117,45 @@ export function OrderManagement() {
 
   if (isLoading) {
     return (
-      <div className="bento-grid p-4 md:p-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="col-span-6"><div className="shimmer rounded-3xl h-40" /></div>
-        ))}
+      <div className="space-y-6 p-4 md:p-6">
+        {/* Header Skeleton */}
+        <div className="space-y-2">
+          <div className="shimmer rounded-xl h-7 w-48" />
+          <div className="shimmer rounded-xl h-4 w-64" />
+        </div>
+
+        {/* Tab Filters Skeleton */}
+        <div className="flex items-center gap-2 pb-2">
+          <div className="shimmer rounded-full size-6 shrink-0" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="shimmer rounded-full h-8 w-24 shrink-0" />
+          ))}
+        </div>
+
+        {/* List Skeleton */}
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="glass rounded-3xl p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2 w-1/3">
+                  <div className="shimmer rounded-xl h-5 w-full" />
+                  <div className="shimmer rounded-full h-5 w-20" />
+                </div>
+                <div className="shimmer rounded-xl h-5 w-16" />
+              </div>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="shimmer rounded-full size-4" />
+                  <div className="shimmer rounded-xl h-4 w-48" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="shimmer rounded-full size-4" />
+                  <div className="shimmer rounded-xl h-4 w-full max-w-sm" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

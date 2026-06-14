@@ -167,7 +167,7 @@ export function FamilyList() {
 
       {/* 2. Cuidadores (Dependent Mode) */}
       <div className="space-y-4 pt-4">
-        <h3 className="text-sm font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+        <h3 className="text-sm font-extrabold uppercase tracking-widest text-sky-600 dark:text-sky-400 flex items-center gap-2">
           <ShieldCheck className="h-4.5 w-4.5" />
           Familiares / Supervisores autorizados
         </h3>
@@ -186,7 +186,7 @@ export function FamilyList() {
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600">
+                    <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-600">
                       {member.relationship}
                     </span>
                     <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">

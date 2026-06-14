@@ -67,7 +67,7 @@ export function PatientRegistrationModal({ isOpen, onClose }: { isOpen: boolean;
             </button>
 
             <div className="text-center mb-8">
-              <div className="size-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-4">
+              <div className="size-16 bg-sky-100 dark:bg-sky-900/30 rounded-2xl flex items-center justify-center text-sky-600 dark:text-sky-400 mx-auto mb-4">
                 <UserPlus className="size-10" />
               </div>
               <h3 className="text-2xl font-bold">Registro Rápido</h3>
@@ -123,7 +123,7 @@ export function PatientRegistrationModal({ isOpen, onClose }: { isOpen: boolean;
               </div>
 
               <Button 
-                className="w-full h-14 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 rounded-xl mt-4"
+                className="w-full h-14 text-lg font-bold bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 shadow-lg shadow-sky-500/20 rounded-xl mt-4"
                 disabled={createUser.isPending}
                 onClick={handleRegister}
               >

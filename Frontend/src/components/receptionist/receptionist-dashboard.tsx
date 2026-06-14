@@ -155,10 +155,10 @@ export function ReceptionistDashboard() {
   if (isLoading || reportLoading) {
     return (
       <div className="bento-grid p-4 md:p-6">
-        <div className="col-span-8"><div className="shimmer rounded-3xl h-36" /></div>
-        <div className="col-span-4"><div className="shimmer rounded-3xl h-36" /></div>
-        <div className="col-span-12"><div className="shimmer rounded-3xl h-28" /></div>
-        <div className="col-span-12"><div className="shimmer rounded-3xl h-64" /></div>
+        <div className="col-span-full lg:col-span-8"><div className="shimmer rounded-3xl h-36" /></div>
+        <div className="col-span-full md:col-span-3 lg:col-span-4"><div className="shimmer rounded-3xl h-36" /></div>
+        <div className="col-span-full"><div className="shimmer rounded-3xl h-28" /></div>
+        <div className="col-span-full"><div className="shimmer rounded-3xl h-64" /></div>
       </div>
     );
   }
@@ -176,7 +176,7 @@ export function ReceptionistDashboard() {
   return (
     <motion.div className="bento-grid p-4 md:p-6" variants={stagger} initial="initial" animate="animate">
       {/* Clinic Stats — col-span-8 */}
-      <motion.div className="col-span-8" variants={fadeUp}>
+      <motion.div className="col-span-full lg:col-span-8" variants={fadeUp}>
         <AnalyticsCard
           title="Flujo de Pacientes"
           subtitle="Citas agendadas (Últimos 7 días)"
@@ -191,7 +191,7 @@ export function ReceptionistDashboard() {
       </motion.div>
 
       {/* Revenue Summary — col-span-4 */}
-      <motion.div className="col-span-4" variants={fadeUp}>
+      <motion.div className="col-span-full md:col-span-3 lg:col-span-4" variants={fadeUp}>
         <GlassCard className="h-full flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex size-12 items-center justify-center rounded-full bg-emerald-500/10">
@@ -210,7 +210,7 @@ export function ReceptionistDashboard() {
       </motion.div>
 
       {/* Welcome Card — col-span-12 */}
-      <motion.div className="col-span-12" variants={fadeUp}>
+      <motion.div className="col-span-full" variants={fadeUp}>
         <GlassCard>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -226,7 +226,7 @@ export function ReceptionistDashboard() {
       </motion.div>
 
       {/* Stats Quick Cards */}
-      <motion.div className="col-span-4" variants={fadeUp}>
+      <motion.div className="col-span-full md:col-span-3 lg:col-span-4" variants={fadeUp}>
         <GlassCard>
           <div className="flex items-center gap-3">
             <div className="flex size-14 items-center justify-center rounded-full bg-sky-500/10">
@@ -241,11 +241,11 @@ export function ReceptionistDashboard() {
       </motion.div>
 
       {/* Quick Actions — col-span-12 */}
-      <motion.div className="col-span-8" variants={fadeUp}>
+      <motion.div className="col-span-full lg:col-span-8" variants={fadeUp}>
         <GlassCard>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { icon: UserPlus, label: 'Registrar Walk-in', count: '+', iconBg: 'bg-blue-500/10', iconColor: 'text-blue-600 dark:text-blue-400', onClick: () => setRegistrationOpen(true) },
+              { icon: UserPlus, label: 'Registrar Walk-in', count: '+', iconBg: 'bg-teal-500/10', iconColor: 'text-teal-600 dark:text-teal-400', onClick: () => setRegistrationOpen(true) },
               { icon: CheckCircle2, label: 'Confirmar', count: scheduled, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-600 dark:text-sky-400', onClick: () => {} },
               { icon: PlayCircle, label: 'En consulta', count: inProgress, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400', onClick: () => {} },
               { icon: DollarSign, label: 'Por Cobrar', count: completed, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-600 dark:text-purple-400', onClick: () => {} },
@@ -262,7 +262,7 @@ export function ReceptionistDashboard() {
       </motion.div>
 
       {/* Patient Check-in / Today's Appointments — col-span-12 */}
-      <motion.div className="col-span-12" variants={fadeUp}>
+      <motion.div className="col-span-full" variants={fadeUp}>
         <GlassCard>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-foreground">Citas de Hoy</h3>
@@ -337,9 +337,9 @@ export function ReceptionistDashboard() {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleStatusUpdate(apt.id, 'confirmed')}
                             disabled={isUpdatingThis}
-                            className="glass-btn-primary rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 disabled:opacity-50"
+                            className="glass-btn-primary rounded-full px-3.5 py-2 text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
                           >
-                            <CheckCircle2 className="size-3" />
+                            <CheckCircle2 className="size-3.5" />
                             Confirmar
                           </motion.button>
                         )}
@@ -354,9 +354,9 @@ export function ReceptionistDashboard() {
                               whileTap={{ scale: 0.95 }}
                               onClick={() => { setSelectedApt(apt); setRescheduleOpen(true); }}
                               disabled={isUpdatingThis}
-                              className="rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/15 hover:bg-sky-500/15 transition-all disabled:opacity-50"
+                              className="rounded-full px-3.5 py-2 text-xs font-medium flex items-center gap-1.5 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/15 hover:bg-sky-500/15 transition-all disabled:opacity-50"
                             >
-                              <Calendar className="size-3" />
+                              <Calendar className="size-3.5" />
                               Reagendar
                             </motion.button>
 
@@ -364,9 +364,9 @@ export function ReceptionistDashboard() {
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleStatusUpdate(apt.id, 'cancelled')}
                               disabled={isUpdatingThis}
-                              className="rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/15 hover:bg-red-500/15 transition-all disabled:opacity-50"
+                              className="rounded-full px-3.5 py-2 text-xs font-medium flex items-center gap-1.5 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/15 hover:bg-red-500/15 transition-all disabled:opacity-50"
                             >
-                              <XCircle className="size-3" />
+                              <XCircle className="size-3.5" />
                               Cancelar
                             </motion.button>
                           </div>
@@ -375,9 +375,9 @@ export function ReceptionistDashboard() {
                           <motion.button
                             whileTap={{ scale: 0.95 }}
                             onClick={() => { setSelectedApt(apt); setBillingOpen(true); }}
-                            className="rounded-full px-4 py-1 text-xs font-bold flex items-center gap-1 bg-purple-600 text-white shadow-lg shadow-purple-500/20 hover:bg-purple-700 transition-all"
+                            className="rounded-full px-4 py-2 text-xs font-bold flex items-center gap-1.5 bg-purple-600 text-white shadow-lg shadow-purple-500/20 hover:bg-purple-700 transition-all"
                           >
-                            <Receipt className="size-3" />
+                            <Receipt className="size-3.5" />
                             Cobrar
                           </motion.button>
                         )}

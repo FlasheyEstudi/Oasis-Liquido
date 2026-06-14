@@ -119,7 +119,7 @@ export function ClinicBillingModal({ isOpen, onClose, appointment, onSuccess }: 
                   <span className="font-medium">{appointment.patient?.name}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Stethoscope className="size-4 text-blue-600" />
+                  <Stethoscope className="size-4 text-teal-600 dark:text-teal-400" />
                   <span>Dr. {appointment.doctor?.name}</span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-white/10">

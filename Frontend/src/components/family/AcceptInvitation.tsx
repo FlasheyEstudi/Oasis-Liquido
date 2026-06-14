@@ -55,7 +55,7 @@ export function AcceptInvitation() {
     <div className="glass-card rounded-3xl p-6 md:p-8 max-w-lg mx-auto shadow-xl relative overflow-hidden">
       {/* Title */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+        <div className="h-10 w-10 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400">
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div>

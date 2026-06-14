@@ -214,17 +214,11 @@ export function PharmacyMap() {
   if (isLoading) {
     return (
       <div className="bento-grid">
-        <div className="col-span-12 lg:col-span-8">
+        <div className="col-span-full lg:col-span-8">
           <div className="shimmer rounded-3xl h-96" />
         </div>
-        <div className="col-span-12 lg:col-span-4">
+        <div className="col-span-full lg:col-span-4">
           <div className="shimmer rounded-3xl h-96" />
-        </div>
-        <div className="col-span-6">
-          <div className="shimmer rounded-3xl h-24" />
-        </div>
-        <div className="col-span-6">
-          <div className="shimmer rounded-3xl h-24" />
         </div>
       </div>
     );
@@ -403,7 +397,7 @@ export function PharmacyMap() {
       <div className="bento-grid">
         {/* Map View */}
         {viewMode === 'map' && (
-          <GlassCard className="col-span-12 lg:col-span-8 !p-3 min-h-[460px] flex flex-col relative overflow-hidden rounded-[2.5rem] shadow-2xl">
+          <GlassCard className="col-span-full lg:col-span-8 !p-3 min-h-[460px] flex flex-col relative overflow-hidden rounded-[2.5rem] shadow-2xl">
             <div className="flex-1 relative rounded-[2rem] overflow-hidden border border-white/5 shadow-inner">
               <MapView
                 markers={markers}
@@ -445,7 +439,7 @@ export function PharmacyMap() {
         )}
 
         {/* Pharmacy sidebar / list */}
-        <div className={viewMode === 'map' ? 'col-span-12 lg:col-span-4' : 'col-span-12'}>
+        <div className={viewMode === 'map' ? 'col-span-full lg:col-span-4' : 'col-span-full'}>
           <GlassCard className={cn(
             "rounded-[2.5rem] shadow-2xl",
             viewMode === 'list' ? 'p-6' : '!p-4 min-h-[460px] flex flex-col justify-between'

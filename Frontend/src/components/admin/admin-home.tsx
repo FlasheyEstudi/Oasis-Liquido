@@ -104,7 +104,7 @@ export function GlobalBusinessAlerts() {
   ];
 
   return (
-    <GlassCard className="col-span-12 relative overflow-hidden border border-rose-500/10 dark:border-rose-500/20 shadow-lg">
+    <GlassCard className="col-span-full relative overflow-hidden border border-rose-500/10 dark:border-rose-500/20 shadow-lg">
       {/* Background glow */}
       <div className="absolute -right-24 -top-24 size-48 rounded-full bg-amber-500/5 blur-3xl" />
       <div className="absolute -left-24 -bottom-24 size-48 rounded-full bg-rose-500/5 blur-3xl" />
@@ -238,10 +238,10 @@ export function AdminHome() {
   if (statsLoading) {
     return (
       <div className="bento-grid">
-        <ShimmerBlock className="col-span-8 h-36" />
-        <ShimmerBlock className="col-span-4 h-36" />
-        <ShimmerBlock className="col-span-6 h-64" />
-        <ShimmerBlock className="col-span-6 h-64" />
+        <ShimmerBlock className="col-span-full lg:col-span-8 h-36" />
+        <ShimmerBlock className="col-span-full lg:col-span-4 h-36" />
+        <ShimmerBlock className="col-span-full lg:col-span-8 h-64" />
+        <ShimmerBlock className="col-span-full lg:col-span-4 h-64" />
       </div>
     );
   }
@@ -279,7 +279,7 @@ export function AdminHome() {
   return (
     <div className="bento-grid">
       {/* Welcome Card - col-span-8 */}
-      <GlassCard className="col-span-12 lg:col-span-8">
+      <GlassCard className="col-span-full lg:col-span-8">
         <div className="flex items-center justify-between">
           <div>
             <motion.h1
@@ -307,7 +307,7 @@ export function AdminHome() {
       </GlassCard>
 
       {/* Stats Mini Card - col-span-4 */}
-      <GlassCard className="col-span-12 lg:col-span-4">
+      <GlassCard className="col-span-full lg:col-span-4">
         <div className="flex items-center gap-2 mb-3">
           <BarChart3 className="size-4 text-teal-600 dark:text-teal-400" />
           <h3 className="text-sm font-semibold">Resumen</h3>
@@ -351,11 +351,11 @@ export function AdminHome() {
       <GlobalBusinessAlerts />
 
       {/* 2026 Premium Analíticas Integradas */}
-      <motion.div className="col-span-12 lg:col-span-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      <motion.div className="col-span-full lg:col-span-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <RevenueHeatmapCalendar />
       </motion.div>
 
-      <motion.div className="col-span-12 lg:col-span-4 flex flex-col gap-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+      <motion.div className="col-span-full lg:col-span-4 flex flex-col gap-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
         <PredictiveKPIGauges />
         <RealTimeSystemStatus />
       </motion.div>
@@ -368,12 +368,12 @@ export function AdminHome() {
         <SalesByEntityChart />
       </motion.div>
 
-      <motion.div className="col-span-12 lg:col-span-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+      <motion.div className="col-span-full lg:col-span-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
         <SankeyFlowDiagram />
       </motion.div>
 
       {/* Appointments by Status Chart */}
-      <GlassCard className="col-span-12 md:col-span-6">
+      <GlassCard className="col-span-full md:col-span-3 lg:col-span-6">
         <div className="flex items-center gap-2 mb-4">
           <Activity className="size-4 text-teal-600 dark:text-teal-400" />
           <h3 className="text-sm font-semibold">Citas por estado</h3>
@@ -417,7 +417,7 @@ export function AdminHome() {
       </GlassCard>
 
       {/* Clinics - col-span-6 */}
-      <GlassCard className="col-span-12 md:col-span-6">
+      <GlassCard className="col-span-full md:col-span-3 lg:col-span-6">
         <div className="flex items-center gap-2 mb-4">
           <ClipboardList className="size-4 text-sky-600 dark:text-sky-400" />
           <h3 className="text-sm font-semibold">Acciones rápidas</h3>
@@ -448,7 +448,7 @@ export function AdminHome() {
 
       {/* Recent Activity */}
       {auditLogs.length > 0 && (
-        <GlassCard className="col-span-12">
+        <GlassCard className="col-span-full">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <FileText className="size-4 text-amber-600 dark:text-amber-400" />

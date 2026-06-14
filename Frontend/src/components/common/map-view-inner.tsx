@@ -1262,8 +1262,8 @@ export function MapViewInner({
       {etaText && (
         <div className="absolute top-4 left-4 z-10 rounded-full border border-slate-200/50 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 px-3 py-1.5 shadow-xl backdrop-blur-md flex items-center gap-2">
           <span className="relative flex size-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex size-2 rounded-full bg-blue-500"></span>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
+            <span className="relative inline-flex size-2 rounded-full bg-sky-500"></span>
           </span>
           <span className="text-[9px] font-black uppercase tracking-wider text-slate-800 dark:text-white">ETA: {etaText}</span>
         </div>

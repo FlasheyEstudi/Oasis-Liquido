@@ -129,11 +129,11 @@ export function PharmacyDashboard() {
   if (isLoading) {
     return (
       <div className="bento-grid p-4 md:p-6">
-        <div className="col-span-8"><div className="shimmer rounded-3xl h-40" /></div>
-        <div className="col-span-4"><div className="shimmer rounded-3xl h-40" /></div>
-        <div className="col-span-12"><div className="shimmer rounded-3xl h-28" /></div>
-        <div className="col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
-        <div className="col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
+        <div className="col-span-full lg:col-span-8"><div className="shimmer rounded-3xl h-40" /></div>
+        <div className="col-span-full md:col-span-3 lg:col-span-4"><div className="shimmer rounded-3xl h-40" /></div>
+        <div className="col-span-full"><div className="shimmer rounded-3xl h-28" /></div>
+        <div className="col-span-full lg:col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
+        <div className="col-span-full lg:col-span-6"><div className="shimmer rounded-3xl h-64" /></div>
       </div>
     );
   }
@@ -158,7 +158,7 @@ export function PharmacyDashboard() {
   return (
     <motion.div className="bento-grid p-4 md:p-6" variants={stagger} initial="initial" animate="animate">
       {/* Revenue Analytics — col-span-8 */}
-      <motion.div className="col-span-8" variants={fadeUp}>
+      <motion.div className="col-span-full lg:col-span-8" variants={fadeUp}>
         <AnalyticsCard
           title="Ingresos (Últimos 7 días)"
           currentValue={formatCurrency(report.todaySalesAmount)}
@@ -174,7 +174,7 @@ export function PharmacyDashboard() {
       {/* Low Stock Warning Card — col-span-4 */}
       {lowStockItems > 0 && (
         <motion.div 
-          className="col-span-4" 
+          className="col-span-full md:col-span-3 lg:col-span-4" 
           variants={fadeUp}
           animate={{ 
             boxShadow: [
@@ -206,7 +206,7 @@ export function PharmacyDashboard() {
       )}
 
       {/* Inventory Value — col-span-4 (only if no low stock or shared space) */}
-      <motion.div className={cn(lowStockItems > 0 ? "col-span-4" : "col-span-4")} variants={fadeUp}>
+      <motion.div className={cn(lowStockItems > 0 ? "col-span-full md:col-span-3 lg:col-span-4" : "col-span-full md:col-span-3 lg:col-span-4")} variants={fadeUp}>
         <GlassCard className="h-full flex flex-col justify-center">
           <div className="flex items-center gap-3">
             <div className="flex size-14 items-center justify-center rounded-full bg-emerald-500/10">
@@ -221,7 +221,7 @@ export function PharmacyDashboard() {
       </motion.div>
 
       {/* Welcome Card */}
-      <motion.div className="col-span-8" variants={fadeUp}>
+      <motion.div className="col-span-full lg:col-span-8" variants={fadeUp}>
         <GlassCard>
           <div className="flex items-center justify-between">
             <div>
@@ -265,7 +265,7 @@ export function PharmacyDashboard() {
       </motion.div>
 
       {/* Delivery Efficiency KPI Card — col-span-4 */}
-      <motion.div className="col-span-4" variants={fadeUp}>
+      <motion.div className="col-span-full md:col-span-3 lg:col-span-4" variants={fadeUp}>
         <GlassCard hover onClick={() => navigate('gestion-pedidos')}>
           <div className="flex flex-col gap-4 justify-between h-full">
             <div className="flex items-center gap-3">
@@ -297,7 +297,7 @@ export function PharmacyDashboard() {
       </motion.div>
 
       {/* Stock Velocity Bar Chart — col-span-12 */}
-      <motion.div className="col-span-12" variants={fadeUp}>
+      <motion.div className="col-span-full" variants={fadeUp}>
         <GlassCard>
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -368,10 +368,10 @@ export function PharmacyDashboard() {
 
 
       {/* Quick Actions */}
-      <motion.div className="col-span-12" variants={fadeUp}>
+      <motion.div className="col-span-full" variants={fadeUp}>
         <GlassCard>
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">Acciones rápidas</h3>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { icon: Warehouse, label: 'Escanear QR', page: 'surtimiento' as const, iconBg: 'bg-teal-500/10', iconColor: 'text-teal-600 dark:text-teal-400', hoverBg: 'hover:bg-teal-500/10 hover:border-teal-500/30' },
               { icon: ShoppingCart, label: 'Punto de Venta', page: 'venta' as const, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-600 dark:text-purple-400', hoverBg: 'hover:bg-purple-500/10 hover:border-purple-500/30' },
@@ -400,7 +400,7 @@ export function PharmacyDashboard() {
       </motion.div>
 
       {/* Recent Prescriptions */}
-      <motion.div className="col-span-6" variants={fadeUp}>
+      <motion.div className="col-span-full lg:col-span-6" variants={fadeUp}>
         <GlassCard>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-foreground">Recetas activas</h3>
@@ -455,7 +455,7 @@ export function PharmacyDashboard() {
       </motion.div>
 
       {/* Orders Summary */}
-      <motion.div className="col-span-6" variants={fadeUp}>
+      <motion.div className="col-span-full lg:col-span-6" variants={fadeUp}>
         <GlassCard>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-foreground">Resumen de pedidos</h3>
@@ -508,7 +508,7 @@ export function PharmacyDashboard() {
       </motion.div>
 
       {/* FEFO Timeline Widget - col-span-12 */}
-      <motion.div className="col-span-12" variants={fadeUp}>
+      <motion.div className="col-span-full" variants={fadeUp}>
         <GlassCard>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">

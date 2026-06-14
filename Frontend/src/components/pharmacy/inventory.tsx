@@ -119,10 +119,39 @@ export function Inventory() {
 
   if (isLoading) {
     return (
-      <div className="bento-grid p-4 md:p-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="col-span-6"><div className="shimmer rounded-3xl h-28" /></div>
-        ))}
+      <div className="space-y-6 p-4 md:p-6">
+        {/* Header & Filters Skeleton */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="space-y-2">
+            <div className="shimmer rounded-xl h-7 w-48" />
+            <div className="shimmer rounded-xl h-4 w-32" />
+          </div>
+          <div className="shimmer rounded-full h-8 w-28" />
+        </div>
+
+        {/* Search Bar Skeleton */}
+        <div className="shimmer rounded-full h-10 w-full max-w-md" />
+
+        {/* Table Skeleton */}
+        <div className="glass rounded-3xl overflow-hidden p-6 space-y-4">
+          <div className="hidden md:grid grid-cols-[1fr_120px_100px_80px] gap-2 pb-3 border-b border-border/50">
+            <div className="shimmer rounded-md h-3.5 w-24" />
+            <div className="shimmer rounded-md h-3.5 w-16 justify-self-center" />
+            <div className="shimmer rounded-md h-3.5 w-12 justify-self-end" />
+            <div className="shimmer rounded-md h-3.5 w-10 justify-self-center" />
+          </div>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_80px] gap-2 py-4 border-b border-border/30 last:border-0 items-center">
+              <div className="flex items-center gap-3">
+                <div className="shimmer rounded-full size-9 shrink-0" />
+                <div className="shimmer rounded-xl h-5 w-40" />
+              </div>
+              <div className="shimmer rounded-xl h-5 w-20 justify-self-center hidden md:block" />
+              <div className="shimmer rounded-xl h-5 w-16 justify-self-end hidden md:block" />
+              <div className="shimmer rounded-xl h-6 w-12 justify-self-end md:justify-self-center" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -306,7 +335,7 @@ export function Inventory() {
                         <span className={cn(
                           "text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full",
                           mov.type === 'restock' ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
-                          mov.type === 'sale' ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                          mov.type === 'sale' ? "bg-sky-500/10 text-sky-600 dark:text-sky-400" :
                           "bg-amber-500/10 text-amber-650 dark:text-amber-400"
                         )}>
                           {mov.type === 'restock' ? 'Entrada' : mov.type === 'sale' ? 'Salida' : 'Ajuste'}

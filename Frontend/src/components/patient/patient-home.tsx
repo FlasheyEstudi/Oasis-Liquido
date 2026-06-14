@@ -324,7 +324,7 @@ export function PatientHome() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-1">
         {[
           { label: 'Nueva Cita', icon: Plus, page: 'nueva-cita' as const, bg: 'from-teal-500/10 via-teal-500/5 to-transparent border-teal-500/20 text-teal-700 dark:text-teal-400' },
-          { label: 'Ver Recetas', icon: FileText, page: 'recetas' as const, bg: 'from-indigo-500/10 via-indigo-500/5 to-transparent border-indigo-500/20 text-indigo-700 dark:text-indigo-400' },
+          { label: 'Ver Recetas', icon: FileText, page: 'recetas' as const, bg: 'from-sky-500/10 via-sky-500/5 to-transparent border-sky-500/20 text-sky-700 dark:text-sky-400' },
           { label: 'Farmacias', icon: MapPin, page: 'mapa-farmacias' as const, bg: 'from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20 text-amber-700 dark:text-amber-400' },
           { label: 'Delivery', icon: Truck, page: 'seguimiento' as const, bg: 'from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/20 text-emerald-700 dark:text-emerald-400' },
         ].map((action, i) => (
@@ -561,14 +561,14 @@ export function PatientHome() {
           <div>
             <div className="flex items-center justify-between pb-3.5 border-b border-dashed border-slate-200 dark:border-white/5 mb-3.5">
               <div className="flex items-center gap-2">
-                <div className="flex size-7.5 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/15">
-                  <Pill className="size-4 text-indigo-500" />
+                <div className="flex size-7.5 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/15">
+                  <Pill className="size-4 text-sky-500" />
                 </div>
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-550 dark:text-zinc-400">Recetas Recientes</h3>
               </div>
               <motion.button
                 whileHover={{ x: 2 }}
-                className="text-indigo-600 dark:text-indigo-400 text-[10px] font-black hover:bg-transparent flex items-center gap-0.5 cursor-pointer border-none bg-transparent"
+                className="text-sky-600 dark:text-sky-400 text-[10px] font-black hover:bg-transparent flex items-center gap-0.5 cursor-pointer border-none bg-transparent"
                 onClick={() => navigate('recetas')}
               >
                 Todas <ChevronRight className="size-3.5" />
@@ -590,7 +590,7 @@ export function PatientHome() {
                     onClick={() => navigate('detalle-receta', presc.id)}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 border border-indigo-500/15 text-indigo-500">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 border border-sky-500/15 text-sky-500">
                         <QrCodeIcon className="size-4 shrink-0" />
                       </div>
                       <div className="min-w-0">
@@ -633,8 +633,8 @@ export function PatientHome() {
               </div>
 
               {/* Active Prescriptions */}
-              <div className="rounded-xl bg-indigo-500/5 border border-indigo-500/10 p-2.5 text-center shadow-inner">
-                <p className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Recetas</p>
+              <div className="rounded-xl bg-sky-500/5 border border-sky-500/10 p-2.5 text-center shadow-inner">
+                <p className="text-[8px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest">Recetas</p>
                 <p className="text-base font-black text-slate-800 dark:text-white mt-1 font-serif">{activePrescriptions}</p>
                 <p className="text-[7.5px] text-slate-450 dark:text-zinc-550 font-extrabold uppercase mt-0.5">{prescriptions.length} emitidas</p>
               </div>

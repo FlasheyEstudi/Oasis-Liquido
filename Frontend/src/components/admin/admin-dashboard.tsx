@@ -175,11 +175,11 @@ export function AdminDashboard() {
                     <div
                       className={`h-full rounded-full transition-all ${
                         status === 'completed'
-                          ? 'bg-green-500'
+                          ? 'bg-emerald-500'
                           : status === 'scheduled'
-                          ? 'bg-blue-500'
+                          ? 'bg-sky-500'
                           : status === 'confirmed'
-                          ? 'bg-cyan-500'
+                          ? 'bg-teal-500'
                           : status === 'in_progress'
                           ? 'bg-amber-500'
                           : 'bg-red-500'

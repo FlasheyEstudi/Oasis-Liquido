@@ -78,10 +78,10 @@ export function DoctorDashboard() {
   if (appointmentsQuery.isLoading) {
     return (
       <div className="bento-grid p-4 md:p-6">
-        <ShimmerBlock className="col-span-8 h-36" />
-        <ShimmerBlock className="col-span-4 h-36" />
-        <ShimmerBlock className="col-span-6 h-64" />
-        <ShimmerBlock className="col-span-6 h-64" />
+        <ShimmerBlock className="col-span-full lg:col-span-8 h-36" />
+        <ShimmerBlock className="col-span-full lg:col-span-4 h-36" />
+        <ShimmerBlock className="col-span-full md:col-span-3 lg:col-span-6 h-64" />
+        <ShimmerBlock className="col-span-full md:col-span-3 lg:col-span-6 h-64" />
       </div>
     );
   }
@@ -100,7 +100,7 @@ export function DoctorDashboard() {
   return (
     <div className="bento-grid p-4 md:p-6">
       {/* Welcome Card - col-span-12 md:col-span-8 with Spatial Gyroscope Depth */}
-      <GlassCard spatial className="col-span-12 md:col-span-8">
+      <GlassCard spatial className="col-span-full lg:col-span-8">
         <div className="flex items-center justify-between">
           <div>
             <motion.h1
@@ -176,7 +176,7 @@ export function DoctorDashboard() {
       </GlassCard>
 
       {/* Next Appointment - col-span-12 md:col-span-4 with Spatial Gyroscope Depth */}
-      <GlassCard spatial className="col-span-12 md:col-span-4">
+      <GlassCard spatial className="col-span-full lg:col-span-4">
         <h3 className="text-sm font-medium text-muted-foreground mb-3">
           Próxima cita
         </h3>
@@ -228,7 +228,7 @@ export function DoctorDashboard() {
       </GlassCard>
 
       {/* Patient Queue - col-span-12 md:col-span-6 */}
-      <GlassCard className="col-span-12 md:col-span-6">
+      <GlassCard className="col-span-full md:col-span-3 lg:col-span-6">
         <h3 className="text-base font-semibold text-foreground mb-4">
           Pacientes de hoy
         </h3>
@@ -300,14 +300,14 @@ export function DoctorDashboard() {
                     {canStart && (
                       <Button
                         size="sm"
-                        className="glass-btn-primary rounded-full h-7 px-3 text-xs"
+                        className="glass-btn-primary rounded-full h-10 px-4 text-xs font-bold"
                         disabled={startMutation.isPending}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleStartConsultation(appointment.id);
                         }}
                       >
-                        <Play className="size-3 mr-0.5" />
+                        <Play className="size-3 mr-1" />
                         Iniciar
                       </Button>
                     )}
@@ -321,7 +321,7 @@ export function DoctorDashboard() {
       </GlassCard>
 
       {/* Quick Actions - col-span-12 md:col-span-6 */}
-      <GlassCard className="col-span-12 md:col-span-6">
+      <GlassCard className="col-span-full md:col-span-3 lg:col-span-6">
         <h3 className="text-base font-semibold text-foreground mb-4">
           Acciones rápidas
         </h3>
@@ -377,7 +377,7 @@ export function DoctorDashboard() {
       </GlassCard>
 
       {/* Recent Reviews - col-span-12 */}
-      <GlassCard className="col-span-12">
+      <GlassCard className="col-span-full">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
             <Star className="size-4 text-amber-500" />
