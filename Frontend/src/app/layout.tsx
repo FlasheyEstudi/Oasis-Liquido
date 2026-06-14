@@ -43,7 +43,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <Head>
         <title>Oasis Líquida – Salud Premium</title>
-        <link rel="icon" href="/images/nuevo logo y mascota/logo.png" />
+        <link rel="icon" href="/images/nuevo-logo-y-mascota/logo.png" />
         <meta name="description" content="Plataforma de salud digital premium con diseño futurista, cumplimiento MINSA y experiencias inmersivas." />
       </Head>
       <body className={`${inter.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}>

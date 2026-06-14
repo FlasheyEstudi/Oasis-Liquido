@@ -75,11 +75,20 @@ export function OrderManagement() {
 
   const assignDriver = useAssignDriver();
 
-  // Filter orders for current tab's statuses
   const allOrders = ordersResult?.data ?? [];
   const orders = tabStatuses.length > 1
     ? allOrders.filter((o) => tabStatuses.includes(o.status))
     : allOrders;
+
+  if (!pharmacyId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Loader2 className="size-12 text-teal-500 animate-spin mb-4" />
+        <h3 className="text-lg font-semibold mb-1">Cargando farmacia activa...</h3>
+        <p className="text-sm text-muted-foreground">Por favor espera un momento mientras sincronizamos tu establecimiento.</p>
+      </div>
+    );
+  }
 
   const handleAssignDriver = () => {
     if (!selectedOrder || !selectedDriverId) return;

@@ -21,6 +21,7 @@ export interface ClinicListParams {
   radius?: number;
   search?: string;
   is_active?: boolean;
+  owner_id?: string;
   page?: number;
   limit?: number;
 }

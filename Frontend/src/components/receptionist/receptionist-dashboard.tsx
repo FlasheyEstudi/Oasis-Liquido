@@ -100,18 +100,18 @@ export function ReceptionistDashboard() {
     refetch: refetchReport
   } = useClinicReport(clinicId, 'summary', !!clinicId);
 
-  const report = reportResult?.data ?? { totalAppointments: 0, todayRevenue: 0, chartData: [] };
+  const report = reportResult?.data ?? { totalAppointments: 0, todayRevenue: 0, pendingBilling: 0, chartData: [] };
 
   const today = new Date();
   const todayStr = formatDate(today.toISOString(), "EEEE, dd 'de' MMMM 'de' yyyy");
 
-  // React Query hooks
+  // Guard: do NOT fetch if clinicId is missing (would return ALL appointments in the system)
   const {
     data: appointmentsResult,
     isLoading,
     error,
     refetch,
-  } = useAppointments({ clinic_id: clinicId, limit: 50 });
+  } = useAppointments({ clinic_id: clinicId, limit: 50 }, !!clinicId);
 
   const updateAppointmentStatus = useUpdateAppointmentStatus();
 
@@ -141,6 +141,16 @@ export function ReceptionistDashboard() {
       }
     );
   };
+
+  // Guard: no clinic assigned yet
+  if (!clinicId) {
+    return (
+      <div className="glass rounded-3xl p-8 text-center m-4">
+        <Activity className="size-12 text-amber-500/50 mx-auto mb-3" />
+        <p className="text-sm text-muted-foreground">No tienes una clínica asignada. Contacta a tu administrador.</p>
+      </div>
+    );
+  }
 
   if (isLoading || reportLoading) {
     return (
@@ -334,17 +344,9 @@ export function ReceptionistDashboard() {
                           </motion.button>
                         )}
 
-                        {apt.status === 'confirmed' && (
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleStatusUpdate(apt.id, 'in_progress')}
-                            disabled={isUpdatingThis}
-                            className="glass-btn-primary rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 disabled:opacity-50"
-                          >
-                            <PlayCircle className="size-3" />
-                            Iniciar
-                          </motion.button>
-                        )}
+                        {/* Receptionist cannot transition 'confirmed' → 'in_progress'.
+                            Only a doctor can start a consultation (in_progress).
+                            Receptionist can only confirm (scheduled → confirmed) or cancel. */}
 
                         {(apt.status === 'scheduled' || apt.status === 'confirmed') && (
                           <div className="flex items-center gap-1.5">

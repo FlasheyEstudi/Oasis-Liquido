@@ -13,7 +13,6 @@ import { OrganicBlobs } from '@/components/oasis/organic-blobs';
 import type { Variants } from 'framer-motion';
 
 import { AnimatedLogo } from '@/components/ui/animated-logo';
-import { MascotaIcon } from '@/components/ui/mascota-icon';
 import { cn } from '@/lib/utils';
 import type { AuthResponse } from '@/types';
 
@@ -245,7 +244,7 @@ export function RegisterForm() {
       return;
     }
 
-    if (role === 'pharmacy_manager' && !pharmacyId) {
+    if ((role === 'pharmacy_manager' || role === 'delivery_driver') && !pharmacyId) {
       setApiError('Por favor selecciona una farmacia.');
       return;
     }
@@ -286,6 +285,7 @@ export function RegisterForm() {
       } else if (role === 'delivery_driver') {
         payload.vehicleType = vehicleType;
         payload.licensePlate = licensePlate;
+        payload.pharmacyId = pharmacyId;
       }
 
       console.log('[REGISTER-GOOGLE-FRONTEND] Completando registro federado:', payload);
@@ -346,7 +346,7 @@ export function RegisterForm() {
           return;
         }
       }
-      if (role === 'pharmacy_manager' && !pharmacyId) {
+      if ((role === 'pharmacy_manager' || role === 'delivery_driver') && !pharmacyId) {
         setApiError('Por favor selecciona una farmacia.');
         return;
       }
@@ -374,7 +374,7 @@ export function RegisterForm() {
   // Load pharmacies and clinics lists dynamically based on role
   useEffect(() => {
     async function fetchLists() {
-      if (role === 'pharmacy_manager') {
+      if (role === 'pharmacy_manager' || role === 'delivery_driver') {
         if (pharmacies.length > 0) return;
         setIsLoadingLists(true);
         try {
@@ -433,7 +433,7 @@ export function RegisterForm() {
       return;
     }
 
-    if (role === 'pharmacy_manager' && !pharmacyId) {
+    if ((role === 'pharmacy_manager' || role === 'delivery_driver') && !pharmacyId) {
       setApiError('Por favor selecciona una farmacia.');
       return;
     }
@@ -471,6 +471,7 @@ export function RegisterForm() {
       } else if (role === 'delivery_driver') {
         payload.vehicleType = vehicleType;
         payload.licensePlate = licensePlate;
+        payload.pharmacyId = pharmacyId;
       }
 
       console.log('[REGISTER-FRONTEND] Enviando registro:', payload);
@@ -583,7 +584,6 @@ export function RegisterForm() {
               {/* Logo */}
               <motion.div custom={0} variants={fadeInUp} className="flex flex-col items-center mb-4">
                 <div className="relative group flex flex-col items-center">
-                  <MascotaIcon size="lg" className="mx-auto mb-6 animate-bounce" />
                   <AnimatedLogo className="scale-[1.15] mb-2" showLabel={false} />
                 </div>
                 <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mt-1">Crea tu cuenta</h1>
@@ -882,7 +882,7 @@ export function RegisterForm() {
                       )}
 
                       {/* Pharmacy Linkage */}
-                      {role === 'pharmacy_manager' && (
+                      {(role === 'pharmacy_manager' || role === 'delivery_driver') && (
                         <div>
                           <label htmlFor="register-pharmacy" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
                             Seleccionar Farmacia

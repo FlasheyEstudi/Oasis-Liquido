@@ -29,12 +29,17 @@ export async function getClinics(filters: {
   lat?: number;
   lng?: number;
   radiusKm?: number;
+  ownerId?: string;
 }) {
   const where: Record<string, unknown> = {};
 
-  // Non-admin users only see active clinics
-  if (filters.userRole !== 'admin') {
-    where.isActive = true;
+  // Non-admin users only see active clinics (unless filtering by their own owner ID)
+  if (!filters.ownerId) {
+    if (filters.userRole !== 'admin') {
+      where.isActive = true;
+    } else if (filters.isActive !== undefined) {
+      where.isActive = filters.isActive === 'true';
+    }
   } else if (filters.isActive !== undefined) {
     where.isActive = filters.isActive === 'true';
   }
@@ -44,6 +49,11 @@ export async function getClinics(filters: {
       { name: { contains: filters.search } },
       { address: { contains: filters.search } },
     ];
+  }
+
+  // Filter by owner (for clinic_admin to find their own clinic)
+  if (filters.ownerId) {
+    where.ownerId = filters.ownerId;
   }
 
   let clinics = await db.clinic.findMany({

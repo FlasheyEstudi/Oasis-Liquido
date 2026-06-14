@@ -39,7 +39,6 @@ function getAllNavItems(role: UserRole): { page: AppPage; label: string; icon: R
       return [
         { page: 'manage-clinics', label: 'Mi Clínica', icon: <MapPin className="size-5" /> },
         { page: 'appointments', label: 'Agenda & Citas', icon: <Calendar className="size-5" /> },
-        { page: 'consultation', label: 'Consulta / ECE', icon: <Stethoscope className="size-5" /> },
         { page: 'clinic-staff', label: 'Mi Personal', icon: <Users className="size-5" /> },
         { page: 'clinic-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-5" /> },
         { page: 'clinic-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-5" /> },
@@ -79,6 +78,13 @@ function getAllNavItems(role: UserRole): { page: AppPage; label: string; icon: R
         { page: 'inventory', label: 'Inventario', icon: <Package className="size-5" /> },
         { page: 'order-management', label: 'Pedidos', icon: <FileText className="size-5" /> },
         { page: 'pharmacy-minsa', label: 'Reportes MINSA', icon: <Shield className="size-5" /> },
+      ];
+    case 'cashier':
+      return [
+        { page: 'home', label: 'Inicio', icon: <Home className="size-5" /> },
+        { page: 'pos', label: 'Punto de Venta (POS)', icon: <DollarSign className="size-5" /> },
+        { page: 'fulfillment', label: 'Surtir Receta', icon: <Pill className="size-5" /> },
+        { page: 'inventory', label: 'Inventario', icon: <Package className="size-5" /> },
       ];
     case 'delivery_driver':
       return [

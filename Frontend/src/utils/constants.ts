@@ -87,6 +87,7 @@ export const ROLE_LABELS: Record<string, string> = {
   delivery_driver: 'Repartidor',
   clinic_admin: 'Clínica',
   pharmacy_admin: 'Farmacia',
+  cashier: 'Cajero',
 };
 
 export const ROLE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -98,6 +99,7 @@ export const ROLE_COLORS: Record<string, { bg: string; text: string; border: str
   delivery_driver: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-500/20' },
   clinic_admin: { bg: 'bg-indigo-500/10', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-500/20' },
   pharmacy_admin: { bg: 'bg-fuchsia-500/10', text: 'text-fuchsia-600 dark:text-fuchsia-400', border: 'border-fuchsia-500/20' },
+  cashier: { bg: 'bg-purple-500/10', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-500/20' },
 };
 
 // Colores de estado para citas

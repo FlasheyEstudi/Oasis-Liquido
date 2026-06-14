@@ -39,7 +39,6 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
       return [
         { page: 'manage-clinics', label: 'Mi Clínica', icon: <MapPin className="size-[18px]" /> },
         { page: 'appointments', label: 'Agenda & Citas', icon: <Calendar className="size-[18px]" /> },
-        { page: 'consultation', label: 'Consulta / ECE', icon: <Stethoscope className="size-[18px]" /> },
         { page: 'clinic-staff', label: 'Mi Personal', icon: <Users className="size-[18px]" /> },
         { page: 'clinic-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-[18px]" /> },
         { page: 'clinic-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-[18px]" /> },
@@ -54,9 +53,9 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'pos', label: 'Punto de Venta (POS)', icon: <DollarSign className="size-[18px]" /> },
         { page: 'order-management', label: 'Pedidos Delivery', icon: <Truck className="size-[18px]" /> },
         { page: 'pharmacy-staff', label: 'Mi Personal', icon: <Users className="size-[18px]" /> },
-        { page: 'pharmacy-finances', label: 'Arqueo de Caja', icon: <DollarSign className="size-[18px]" /> },
-        { page: 'pharmacy-analytics', label: 'Métricas & KPIs', icon: <Activity className="size-[18px]" /> },
-        { page: 'pharmacy-minsa', label: 'Reportes MINSA', icon: <Shield className="size-[18px]" /> },
+        { page: 'pharmacy-finances', label: 'Arqueo de Caja', icon: <Activity className="size-[18px]" /> },
+        { page: 'pharmacy-analytics', label: 'Métricas & KPIs', icon: <Shield className="size-[18px]" /> },
+        { page: 'pharmacy-minsa', label: 'Reportes MINSA', icon: <FileText className="size-[18px]" /> },
         { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'patient':
@@ -83,6 +82,14 @@ function getNavItems(role: UserRole): { page: AppPage; label: string; icon: Reac
         { page: 'inventory', label: 'Inventario', icon: <Package className="size-[18px]" /> },
         { page: 'order-management', label: 'Pedidos', icon: <FileText className="size-[18px]" /> },
         { page: 'pharmacy-minsa', label: 'Reportes MINSA', icon: <Shield className="size-[18px]" /> },
+        { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
+      ];
+    case 'cashier':
+      return [
+        { page: 'home', label: 'Inicio', icon: <Home className="size-[18px]" /> },
+        { page: 'pos', label: 'Punto de Venta (POS)', icon: <DollarSign className="size-[18px]" /> },
+        { page: 'fulfillment', label: 'Surtir Receta', icon: <Pill className="size-[18px]" /> },
+        { page: 'inventory', label: 'Inventario', icon: <Package className="size-[18px]" /> },
         { page: 'manage-settings', label: 'Configuración', icon: <Settings className="size-[18px]" /> },
       ];
     case 'delivery_driver':

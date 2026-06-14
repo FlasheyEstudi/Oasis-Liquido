@@ -90,9 +90,79 @@ function getHomeForRole(role: UserRole): AppPage {
   }
 }
 
-/** Normalizes user details */
+/** Normalizes user details to bridge differences between backend camelCase and frontend snake_case nested profiles */
 function normalizeUser(user: User | null): User | null {
-  return user;
+  if (!user) return null;
+  
+  const normalized = { ...user } as any;
+  
+  // Normalize patient profile
+  const patientProfile = normalized.patientProfile || normalized.patient_profile;
+  if (patientProfile) {
+    const p = { ...patientProfile };
+    p.user_id = p.user_id || p.userId;
+    p.userId = p.userId || p.user_id;
+    normalized.patient_profile = p;
+    normalized.patientProfile = p;
+  }
+  
+  // Normalize doctor profile
+  const doctorProfile = normalized.doctorProfile || normalized.doctor_profile;
+  if (doctorProfile) {
+    const d = { ...doctorProfile };
+    d.user_id = d.user_id || d.userId;
+    d.userId = d.userId || d.user_id;
+    d.clinic_id = d.clinic_id || d.clinicId;
+    d.clinicId = d.clinicId || d.clinic_id;
+    d.license_number = d.license_number || d.licenseNumber;
+    d.licenseNumber = d.licenseNumber || d.license_number;
+    normalized.doctor_profile = d;
+    normalized.doctorProfile = d;
+  }
+  
+  // Normalize receptionist profile
+  const receptionistProfile = normalized.receptionistProfile || normalized.receptionist_profile;
+  if (receptionistProfile) {
+    const r = { ...receptionistProfile };
+    r.user_id = r.user_id || r.userId;
+    r.userId = r.userId || r.user_id;
+    r.clinic_id = r.clinic_id || r.clinicId;
+    r.clinicId = r.clinicId || r.clinic_id;
+    normalized.receptionist_profile = r;
+    normalized.receptionistProfile = r;
+  }
+  
+  // Normalize pharmacy manager profile
+  const pharmacyManagerProfile = normalized.pharmacyManagerProfile || normalized.pharmacy_manager_profile;
+  if (pharmacyManagerProfile) {
+    const m = { ...pharmacyManagerProfile };
+    m.user_id = m.user_id || m.userId;
+    m.userId = m.userId || m.user_id;
+    m.pharmacy_id = m.pharmacy_id || m.pharmacyId;
+    m.pharmacyId = m.pharmacyId || m.pharmacy_id;
+    normalized.pharmacy_manager_profile = m;
+    normalized.pharmacyManagerProfile = m;
+  }
+  
+  // Normalize delivery driver profile
+  const deliveryDriverProfile = normalized.deliveryDriverProfile || normalized.delivery_driver_profile;
+  if (deliveryDriverProfile) {
+    const dd = { ...deliveryDriverProfile };
+    dd.user_id = dd.user_id || dd.userId;
+    dd.userId = dd.userId || dd.user_id;
+    dd.pharmacy_id = dd.pharmacy_id || dd.pharmacyId;
+    dd.pharmacyId = dd.pharmacyId || dd.pharmacy_id;
+    dd.vehicle_type = dd.vehicle_type || dd.vehicleType;
+    dd.vehicleType = dd.vehicleType || dd.vehicle_type;
+    dd.license_plate = dd.license_plate || dd.licensePlate;
+    dd.licensePlate = dd.licensePlate || dd.license_plate;
+    dd.is_available = dd.is_available !== undefined ? dd.is_available : dd.isAvailable;
+    dd.isAvailable = dd.isAvailable !== undefined ? dd.isAvailable : dd.is_available;
+    normalized.delivery_driver_profile = dd;
+    normalized.deliveryDriverProfile = dd;
+  }
+  
+  return normalized;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({

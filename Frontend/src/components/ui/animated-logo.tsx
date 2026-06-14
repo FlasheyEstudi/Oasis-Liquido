@@ -57,7 +57,7 @@ export function AnimatedLogo({ className, onClick, priority = true, showLabel = 
       >
         {!error ? (
           <Image
-            src="/images/nuevo logo y mascota/logo.png"
+            src="/images/nuevo-logo-y-mascota/logo.png"
             alt="Oasis Logo"
             width={160}
             height={160}

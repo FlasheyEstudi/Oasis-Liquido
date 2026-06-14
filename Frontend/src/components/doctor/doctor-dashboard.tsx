@@ -377,7 +377,7 @@ export function DoctorDashboard() {
       </GlassCard>
 
       {/* Recent Reviews - col-span-12 */}
-      <GlassCard className="col-span-12 mt-6">
+      <GlassCard className="col-span-12">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
             <Star className="size-4 text-amber-500" />

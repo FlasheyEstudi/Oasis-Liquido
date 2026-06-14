@@ -112,12 +112,18 @@ export function ManageClinics() {
     );
   };
 
+  // For clinic_admin, filter by their own user ID to avoid pagination misses
+  const isClinicOwner = user?.role === 'clinic_admin';
+  const clinicQueryParams = isClinicOwner 
+    ? { owner_id: user?.id, search: search || undefined } 
+    : { search: search || undefined };
+
   const {
     data: clinicsResult,
     isLoading,
     error,
     refetch,
-  } = useClinics({ search: search || undefined });
+  } = useClinics(clinicQueryParams);
 
   const clinics = clinicsResult?.data ?? [];
 
@@ -282,8 +288,6 @@ export function ManageClinics() {
       </div>
     );
   }
-
-  const isClinicOwner = user?.role === 'clinic_admin';
 
   if (isClinicOwner) {
     if (!ownedClinic) {
@@ -664,6 +668,23 @@ export function ManageClinics() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
+    );
+  }
+
+  const isAdmin = user?.role === 'admin';
+
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6 p-4 md:p-6 flex items-center justify-center min-h-[50vh]">
+        <GlassCard className="text-center p-8 max-w-md border border-rose-500/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl pointer-events-none" />
+          <Shield className="size-16 text-rose-500/50 mx-auto mb-4 animate-pulse" />
+          <h2 className="text-xl font-bold text-foreground mb-2">Acceso Restringido</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            No tienes los privilegios necesarios para ver o modificar el listado global de clínicas del sistema.
+          </p>
+        </GlassCard>
       </div>
     );
   }

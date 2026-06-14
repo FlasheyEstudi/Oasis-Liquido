@@ -74,6 +74,16 @@ export function Inventory() {
   const movements = movementsResult?.data ?? [];
   const isAdjusting = adjustInventory.isPending;
 
+  if (!pharmacyId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Loader2 className="size-12 text-teal-500 animate-spin mb-4" />
+        <h3 className="text-lg font-semibold mb-1">Cargando farmacia activa...</h3>
+        <p className="text-sm text-muted-foreground">Por favor espera un momento mientras sincronizamos tu establecimiento.</p>
+      </div>
+    );
+  }
+
   const handleAdjustStock = () => {
     if (!adjustingItem) return;
     const data: { medicine_id: string; quantity_change: number; price?: number } = {

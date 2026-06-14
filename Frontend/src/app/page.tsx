@@ -80,7 +80,7 @@ export default function Home() {
   // Read pathname on mount/popstate
   useEffect(() => {
     const handlePopState = () => {
-      const path = window.location.pathname.replace('/', '');
+      const path = window.location.pathname.slice(1);
       const targetPage = path || 'bienvenida';
       if (targetPage !== currentPage) {
         navigate(targetPage as any);
@@ -89,7 +89,7 @@ export default function Home() {
 
     window.addEventListener('popstate', handlePopState);
     // Handle initial path
-    const initialPath = window.location.pathname.replace('/', '');
+    const initialPath = window.location.pathname.slice(1);
     if (initialPath) navigate(initialPath as any);
 
     return () => window.removeEventListener('popstate', handlePopState);

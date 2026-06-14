@@ -60,6 +60,13 @@ function getMobileNavItems(role: UserRole): { page: AppPage; label: string; icon
         { page: 'inventory', label: 'Inventario', icon: <Package className="size-[20px]" /> },
         { page: 'order-management', label: 'Pedidos', icon: <FileText className="size-[20px]" /> },
       ];
+    case 'cashier':
+      return [
+        { page: 'home', label: 'Inicio', icon: <Home className="size-[20px]" /> },
+        { page: 'pos', label: 'POS', icon: <DollarSign className="size-[20px]" /> },
+        { page: 'fulfillment', label: 'Surtir', icon: <Pill className="size-[20px]" /> },
+        { page: 'inventory', label: 'Inventario', icon: <Package className="size-[20px]" /> },
+      ];
     case 'delivery_driver':
       return [
         { page: 'driver-home', label: 'Inicio', icon: <Home className="size-[20px]" /> },

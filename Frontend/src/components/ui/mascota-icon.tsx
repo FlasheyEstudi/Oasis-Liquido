@@ -23,7 +23,7 @@ export function MascotaIcon({ size = 'md', className }: MascotaIconProps) {
   return (
     <div className={cn('relative', sizes[size], className)}>
       <Image
-        src="/images/nuevo logo y mascota/mascota.png"
+        src="/images/nuevo-logo-y-mascota/mascota.png"
         alt="Mascota Oasis"
         width={256}
         height={256}

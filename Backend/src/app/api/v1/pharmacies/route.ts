@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
       radiusKm,
       medicineIds,
       isActive: searchParams.get('is_active') || undefined,
+      ownerId: searchParams.get('owner_id') || undefined,
     });
 
     return successResponse(pharmacies);

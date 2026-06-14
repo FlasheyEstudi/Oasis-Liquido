@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
       lat,
       lng,
       radiusKm,
+      ownerId: searchParams.get('owner_id') || undefined,
     });
 
     return successResponse(clinics);

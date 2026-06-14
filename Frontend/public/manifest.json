@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/images/nuevo logo y mascota/mascota.png",
+      "src": "/images/nuevo-logo-y-mascota/mascota.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/images/nuevo logo y mascota/mascota.png",
+      "src": "/images/nuevo-logo-y-mascota/mascota.png",
       "sizes": "512x512",
       "type": "image/png"
     }

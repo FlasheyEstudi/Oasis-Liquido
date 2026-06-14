@@ -29,11 +29,19 @@ export async function getPharmacies(filters: {
   radiusKm?: number;
   medicineIds?: string[];
   isActive?: string;
+  ownerId?: string;
 }) {
-  const where: Record<string, unknown> = { isActive: true };
+  const where: Record<string, unknown> = {};
 
-  if (filters.isActive && filters.isActive !== 'true') {
-    delete where.isActive; // Admin can see inactive
+  // Only filter by isActive when NOT filtering by owner (owners always see their own pharmacy)
+  if (!filters.ownerId) {
+    if (filters.isActive && filters.isActive !== 'true') {
+      // Admin sees inactive too if explicitly requested
+    } else {
+      where.isActive = true;
+    }
+  } else if (filters.isActive !== undefined) {
+    where.isActive = filters.isActive === 'true';
   }
 
   if (filters.search) {
@@ -51,6 +59,11 @@ export async function getPharmacies(filters: {
         quantity: { gt: 0 },
       },
     };
+  }
+
+  // Filter by owner (for pharmacy_admin to find their own pharmacy)
+  if (filters.ownerId) {
+    where.ownerId = filters.ownerId;
   }
 
   let pharmacies = await db.pharmacy.findMany({

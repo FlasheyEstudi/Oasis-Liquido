@@ -118,12 +118,18 @@ export function ManagePharmacies() {
     );
   };
 
+  // For pharmacy_admin, filter by their own user ID to avoid pagination misses
+  const isPharmacyOwner = user?.role === 'pharmacy_admin';
+  const pharmacyQueryParams = isPharmacyOwner
+    ? { owner_id: user?.id, search: search || undefined }
+    : { search: search || undefined };
+
   const {
     data: pharmaciesResult,
     isLoading,
     error,
     refetch,
-  } = usePharmacies({ search: search || undefined });
+  } = usePharmacies(pharmacyQueryParams);
 
   const { data: ownersResult } = useUsers({ role: 'pharmacy_admin' });
   const owners = ownersResult?.data ?? [];
@@ -223,7 +229,6 @@ export function ManagePharmacies() {
     );
   }
 
-  const isPharmacyOwner = user?.role === 'pharmacy_admin';
   const ownedPharmacy = pharmacies.find(
     (p) => p.ownerId === user?.id || p.owner_id === user?.id
   );
@@ -437,6 +442,23 @@ export function ManagePharmacies() {
             </Button>
           </GlassCard>
         </div>
+      </div>
+    );
+  }
+
+  const isAdmin = user?.role === 'admin';
+
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6 p-4 md:p-6 flex items-center justify-center min-h-[50vh]">
+        <GlassCard className="text-center p-8 max-w-md border border-rose-500/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl pointer-events-none" />
+          <Shield className="size-16 text-rose-500/50 mx-auto mb-4 animate-pulse" />
+          <h2 className="text-xl font-bold text-foreground mb-2">Acceso Restringido</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            No tienes los privilegios necesarios para ver o modificar el listado global de farmacias del sistema.
+          </p>
+        </GlassCard>
       </div>
     );
   }
