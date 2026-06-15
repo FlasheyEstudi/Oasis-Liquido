@@ -151,6 +151,18 @@ export function Consultation() {
   const createPrescriptionMutation = useCreatePrescription();
   const updateStatusMutation = useUpdateAppointmentStatus();
 
+  // Auto-transition confirmed appointments to in_progress when starting consultation
+  useEffect(() => {
+    if (selectedAppointmentId && step === 2) {
+      if (appointment && appointment.status === 'confirmed') {
+        updateStatusMutation.mutate({
+          id: selectedAppointmentId,
+          data: { status: 'in_progress' },
+        });
+      }
+    }
+  }, [selectedAppointmentId, step, appointment, updateStatusMutation]);
+
   const patient = appointment?.patient;
   const patientProfile = patient?.patient_profile || (patient as any)?.patientProfile;
 
