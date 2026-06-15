@@ -294,8 +294,8 @@ export class DocumentService {
     let userVerificationStatus = 'submitted';
     if (rejectedCount > 0) {
       userVerificationStatus = 'rejected';
-    } else if (pendingCount === 0 && allDocs.length >= 3) {
-      // Assuming minimum 3 essential documents are approved
+    } else if (pendingCount === 0 && allDocs.length >= 1) {
+      // Approve if all uploaded documents are approved (minimum 1 required)
       userVerificationStatus = 'approved';
     }
 
