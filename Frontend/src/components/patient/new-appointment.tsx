@@ -285,7 +285,7 @@ export function NewAppointment() {
                                 </p>
                                 <div className="mt-2.5 flex items-center gap-4 text-[10px] font-bold text-zinc-500">
                                   <span className="flex items-center gap-1"><Phone className="size-3" /> {clinic.phone || 'N/A'}</span>
-                                  <span className="flex items-center gap-1"><Mail className="size-3" /> {clinic.email || 'Contacto en sede'}</span>
+                                  <span className="flex items-center gap-1"><Mail className="size-3" /> {(clinic as any).email || 'Contacto en sede'}</span>
                                 </div>
                               </div>
                             </motion.div>

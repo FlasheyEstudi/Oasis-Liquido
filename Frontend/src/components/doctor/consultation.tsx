@@ -152,7 +152,30 @@ export function Consultation() {
   const updateStatusMutation = useUpdateAppointmentStatus();
 
   const patient = appointment?.patient;
-  const patientProfile = patient?.patient_profile;
+  const patientProfile = patient?.patient_profile || (patient as any)?.patientProfile;
+
+  // Safe helper to get allergies as an array (bridges DB JSON-string/array and frontend types)
+  const getAllergiesArray = (profile: any): string[] => {
+    if (!profile) return [];
+    const algs = profile.allergies;
+    if (!algs) return [];
+    if (Array.isArray(algs)) return algs;
+    if (typeof algs === 'string') {
+      try {
+        const parsed = JSON.parse(algs);
+        if (Array.isArray(parsed)) return parsed;
+        return algs.split(',').map((s: string) => s.trim()).filter(Boolean);
+      } catch {
+        return algs.split(',').map((s: string) => s.trim()).filter(Boolean);
+      }
+    }
+    return [];
+  };
+
+  const dob = patientProfile?.date_of_birth || (patientProfile as any)?.dateOfBirth;
+  const bloodType = patientProfile?.blood_type || (patientProfile as any)?.bloodType;
+  const medicalNotes = patientProfile?.medical_notes || (patientProfile as any)?.medicalNotes;
+  const allergies = getAllergiesArray(patientProfile);
 
   const addPrescriptionLine = () => {
     setPrescriptionLines((prev) => [
@@ -184,9 +207,9 @@ export function Consultation() {
       followUpDate.setMonth(followUpDate.getMonth() + 1);
 
       await createAppointmentMutation.mutateAsync({
-        patient_id: appointment.patient_id,
-        doctor_id: appointment.doctor_id,
-        clinic_id: appointment.clinic_id,
+        patient_id: appointment.patient_id || (appointment as any).patientId,
+        doctor_id: appointment.doctor_id || (appointment as any).doctorId,
+        clinic_id: appointment.clinic_id || (appointment as any).clinicId,
         date_time: followUpDate.toISOString(),
         duration_minutes: 30,
         notes: 'Cita de seguimiento automática',
@@ -223,7 +246,7 @@ export function Consultation() {
       await handleCreatePrescription(signaturePin);
     } catch (err: any) {
       console.error(err);
-      const errMsg = err?.response?.data?.message || 'Error al configurar el PIN de firma';
+      const errMsg = err?.response?.data?.error?.message || err?.response?.data?.message || err?.message || 'Error al configurar el PIN de firma';
       setPinError(errMsg);
       setNotification({ type: 'error', message: errMsg });
     } finally {
@@ -252,8 +275,8 @@ export function Consultation() {
       expirationDate.setMonth(expirationDate.getMonth() + 3);
 
       const prescription = await createPrescriptionMutation.mutateAsync({
-        patient_id: appointment.patient_id,
-        clinic_id: appointment.clinic_id,
+        patient_id: appointment.patient_id || (appointment as any).patientId,
+        clinic_id: appointment.clinic_id || (appointment as any).clinicId,
         expiration_date: expirationDate.toISOString().split('T')[0],
         notes: notes || undefined,
         signature_pin: pin,
@@ -270,7 +293,7 @@ export function Consultation() {
       setSignaturePin('');
     } catch (err: any) {
       console.error(err);
-      const errMsg = err?.response?.data?.message || err?.message || 'PIN de firma incorrecto o perfil no verificado';
+      const errMsg = err?.response?.data?.error?.message || err?.response?.data?.message || err?.message || 'PIN de firma incorrecto o perfil no verificado';
       
       if (errMsg === 'PIN_NOT_CONFIGURED') {
         setIsConfiguringPin(true);
@@ -359,7 +382,7 @@ export function Consultation() {
                     </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="size-3" />
-                      {formatDate(apt.date_time, "dd/MM/yyyy 'a las' HH:mm")}
+                      {formatDate(apt.date_time || (apt as any).dateTime, "dd/MM/yyyy 'a las' HH:mm")}
                       <span>•</span>
                       <span>{apt.clinic?.name || 'Clínica'}</span>
                     </div>
@@ -447,7 +470,7 @@ export function Consultation() {
         <div className="flex-1">
           <h1 className="text-xl font-bold text-foreground">Consulta médica</h1>
           <p className="text-sm text-muted-foreground">
-            {formatDate(appointment.date_time, "dd/MM/yyyy 'a las' HH:mm")}
+            {formatDate(appointment.date_time || (appointment as any).dateTime, "dd/MM/yyyy 'a las' HH:mm")}
           </p>
         </div>
         <StatusBadge status={appointment.status} type="appointment" />
@@ -494,20 +517,20 @@ export function Consultation() {
               <Separator className="opacity-50" />
 
               <div className="space-y-3">
-                {patientProfile?.date_of_birth && (
+                {dob && (
                   <div className="flex items-center gap-2 text-sm">
                     <User className="size-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Edad:</span>
                     <span className="font-medium text-foreground">
                       {Math.floor(
-                        (Date.now() - new Date(patientProfile.date_of_birth).getTime()) /
+                        (Date.now() - new Date(dob).getTime()) /
                           (365.25 * 24 * 60 * 60 * 1000)
                       )}{' '}
                       años
                     </span>
                   </div>
                 )}
-                {patientProfile?.blood_type && (
+                {bloodType && (
                   <div className="flex items-center gap-2 text-sm">
                     <Droplets className="size-4 text-red-400" />
                     <span className="text-muted-foreground">Tipo de sangre:</span>
@@ -515,13 +538,13 @@ export function Consultation() {
                       variant="outline"
                       className="border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full"
                     >
-                      {patientProfile.blood_type}
+                      {bloodType}
                     </Badge>
                   </div>
                 )}
               </div>
 
-              {patientProfile?.allergies && patientProfile.allergies.length > 0 && (
+              {allergies && allergies.length > 0 && (
                 <>
                   <Separator className="opacity-50" />
                   <div>
@@ -530,7 +553,7 @@ export function Consultation() {
                       Alergias
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {patientProfile.allergies.map((allergy, i) => (
+                      {allergies.map((allergy, i) => (
                         <Badge
                           key={i}
                           variant="outline"
@@ -544,7 +567,7 @@ export function Consultation() {
                 </>
               )}
 
-              {patientProfile?.medical_notes && (
+              {medicalNotes && (
                 <>
                   <Separator className="opacity-50" />
                   <div>
@@ -553,7 +576,7 @@ export function Consultation() {
                       Notas médicas
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {patientProfile.medical_notes}
+                      {medicalNotes}
                     </p>
                   </div>
                 </>
