@@ -27,7 +27,14 @@ export async function getByPharmacy(pharmacyId: string, params?: InventoryListPa
 
 /** Adjust inventory stock for a pharmacy */
 export async function adjust(pharmacyId: string, data: AdjustInventoryRequest): Promise<InventoryItem> {
-  const result = await post<InventoryItem>(`/pharmacies/${pharmacyId}/inventory/adjust`, data);
+  const payload: any = {
+    medicine_id: data.medicine_id,
+    quantity_change: data.quantity_change,
+  };
+  if (data.price !== undefined) {
+    payload.new_price = data.price;
+  }
+  const result = await post<InventoryItem>(`/pharmacies/${pharmacyId}/inventory/adjust`, payload);
   return result.data;
 }
 

@@ -845,7 +845,7 @@ export function DriverHome() {
                 <div>
                   <span className="block text-slate-400 dark:text-zinc-400 text-[7px] sm:text-[8px] uppercase font-sans">Coordenadas GPS</span>
                   <span className="text-[10px] font-black text-slate-800 dark:text-white font-mono mt-1 tracking-tight">
-                    {radarCoordinates ? `${radarCoordinates.lat.toFixed(4)} N, ${radarCoordinates.lng.toFixed(4)} W` : 'Buscando satélites...'}
+                    {driverCoords ? `${driverCoords.lat.toFixed(4)} N, ${driverCoords.lng.toFixed(4)} W` : 'Buscando satélites...'}
                   </span>
                 </div>
                 <div className="bg-slate-500/[0.03] dark:bg-white/5 p-3 rounded-2xl border border-slate-200/50 dark:border-white/5 text-center min-w-[100px]">
