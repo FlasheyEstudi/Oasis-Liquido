@@ -33,6 +33,15 @@ export async function POST(req: NextRequest) {
       return errorResponse(ErrorCodes.NOT_FOUND, `No active demo user found for role: ${role}`, 404);
     }
 
+    // Auto-approve doctor verification status in demo login for testing purposes
+    if (role === 'doctor' && user.verificationStatus !== 'approved') {
+      await db.user.update({
+        where: { id: user.id },
+        data: { verificationStatus: 'approved' },
+      });
+      user.verificationStatus = 'approved';
+    }
+
     // Generate tokens
     const payload: AccessTokenPayload = {
       userId: user.id,

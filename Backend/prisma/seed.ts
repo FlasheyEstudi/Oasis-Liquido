@@ -250,6 +250,7 @@ async function main() {
       phone: '+505 8812-3456',
       isActive: true,
       emailVerified: true,
+      verificationStatus: 'approved',
       doctorProfile: {
         create: {
           clinicId: clinic1.id,
@@ -270,6 +271,7 @@ async function main() {
       phone: '+505 8823-4567',
       isActive: true,
       emailVerified: true,
+      verificationStatus: 'approved',
       doctorProfile: {
         create: {
           clinicId: clinic1.id,
