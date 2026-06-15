@@ -237,11 +237,15 @@ export function Consultation() {
       setNotification({ type: 'warning', message: 'Selecciona un medicamento para cada línea' });
       return;
     }
+    if (prescriptionLines.some((l) => !l.dosage_instructions || !l.dosage_instructions.trim())) {
+      setNotification({ type: 'warning', message: 'Debes ingresar indicaciones de dosificación para cada medicamento' });
+      return;
+    }
     try {
       const lines: CreatePrescriptionLineRequest[] = prescriptionLines.map((l) => ({
         medicine_id: l.medicine_id,
         quantity: l.quantity,
-        dosage_instructions: l.dosage_instructions || undefined,
+        dosage_instructions: l.dosage_instructions.trim(),
       }));
 
       const expirationDate = new Date();
