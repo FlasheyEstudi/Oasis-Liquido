@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode } from '@/components/common/qr-code';
+import { useNativeBridge } from '@/components/providers/native-provider';
 import { LoadingAnimation } from '@/components/ui/loading-animation';
 import {
   Calendar,
@@ -76,6 +77,7 @@ export function PatientHome() {
   const [showQrModal, setShowQrModal] = useState(false);
   
   const { user, representedUser, setRepresentedUser, isElderlyMode, toggleElderlyMode, navigate } = useAuthStore();
+  const { isWebView, triggerNativeVibration } = useNativeBridge();
 
   useEffect(() => {
     setMounted(true);
@@ -189,9 +191,13 @@ export function PatientHome() {
       isElderlyMode && "text-base font-medium [&_h2]:text-3xl [&_h3]:text-xl [&_p]:text-sm [&_span]:text-xs [&_button]:py-3.5 [&_button]:text-sm [&_svg]:size-5.5"
     )}>
       
-      {/* Dynamic Background Organic Blobs */}
-      <div className="absolute top-[10%] left-[-10%] size-96 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl animate-blob-pulse pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-10%] size-96 rounded-full bg-gradient-to-br from-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
+      {/* Dynamic Background Organic Blobs - Disabled in WebView for GPU performance */}
+      {!isWebView && (
+        <>
+          <div className="absolute top-[10%] left-[-10%] size-96 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl animate-blob-pulse pointer-events-none" />
+          <div className="absolute bottom-[20%] right-[-10%] size-96 rounded-full bg-gradient-to-br from-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
+        </>
+      )}
 
       {/* Top Console Bar (Caregiver & System Telemetry) - Spatial floating borderless tab */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-500/[0.02] dark:bg-zinc-950/20 md:bg-white/30 md:dark:bg-zinc-950/20 border border-slate-200/20 dark:border-white/5 rounded-[2rem] p-3 shadow-sm backdrop-blur-xl">
@@ -522,9 +528,7 @@ export function PatientHome() {
                               whileTap={{ scale: 0.98 }}
                               onClick={() => {
                                 updateReminderStatusMutation.mutate({ id: reminder.id, status: 'taken' });
-                                if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-                                  navigator.vibrate(30);
-                                }
+                                triggerNativeVibration([30]);
                               }}
                               className="flex-1 py-1.5 rounded-lg bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1 shadow-sm shadow-emerald-500/10 cursor-pointer border-none"
                             >
@@ -536,9 +540,7 @@ export function PatientHome() {
                               whileTap={{ scale: 0.98 }}
                               onClick={() => {
                                 updateReminderStatusMutation.mutate({ id: reminder.id, status: 'skipped' });
-                                if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-                                  navigator.vibrate(15);
-                                }
+                                triggerNativeVibration([15]);
                               }}
                               className="py-1.5 px-3 rounded-lg bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 cursor-pointer"
                             >
@@ -551,9 +553,7 @@ export function PatientHome() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => {
                               updateReminderStatusMutation.mutate({ id: reminder.id, status: 'pending' });
-                              if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-                                navigator.vibrate(20);
-                              }
+                              triggerNativeVibration([20]);
                             }}
                             className="w-full py-1.5 rounded-lg bg-slate-500/5 hover:bg-slate-500/10 border border-slate-200 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 cursor-pointer"
                           >

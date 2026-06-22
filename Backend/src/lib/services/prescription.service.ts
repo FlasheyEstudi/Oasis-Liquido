@@ -190,6 +190,11 @@ export async function createPrescription(
     throw new Error('DOCTOR_PROFILE_NOT_FOUND');
   }
 
+  // Security: Verify the doctor actually works at the specified clinic
+  if (doctor.doctorProfile.clinicId !== data.clinic_id) {
+    throw new Error('FORBIDDEN: El doctor no pertenece a la clínica especificada.');
+  }
+
   // Validate that doctor's medical accreditation is approved by MINSA
   if (doctor.verificationStatus !== 'approved') {
     throw new Error('DOCTOR_NOT_VERIFIED');

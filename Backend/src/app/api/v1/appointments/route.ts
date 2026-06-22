@@ -58,6 +58,15 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         return errorResponse(ErrorCodes.VALIDATION_ERROR, 'ID de paciente requerido', 400);
       }
       patientId = body.patient_id;
+
+      // Anti-spoofing: Verify clinic staff belongs to the clinic they are booking for
+      if (req.user.role === 'receptionist' || req.user.role === 'doctor' || req.user.role === 'clinic_admin') {
+        const { verifyFacilityAccess } = await import('@/lib/auth/access');
+        const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, body.clinic_id, 'clinic');
+        if (!hasAccess) {
+          return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permiso para crear citas en esta clínica', 403);
+        }
+      }
     }
 
     const appointment = await appointmentService.createAppointment(

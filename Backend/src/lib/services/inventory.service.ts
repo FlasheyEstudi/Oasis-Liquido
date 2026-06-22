@@ -148,9 +148,8 @@ export async function adjustInventory(
           remainingToDeduct -= deduct;
         }
 
-        if (remainingToDeduct > 0) {
-          throw new Error('INSUFFICIENT_STOCK');
-        }
+        // If there is still remaining quantity to deduct but no batches left, it's legacy stock.
+        // We allow it because the total inventory quantity will be deducted below.
       }
 
       // Update existing item

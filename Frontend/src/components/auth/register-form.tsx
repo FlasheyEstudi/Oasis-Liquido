@@ -244,7 +244,7 @@ export function RegisterForm() {
       return;
     }
 
-    if ((role === 'pharmacy_manager' || role === 'delivery_driver') && !pharmacyId) {
+    if (role === 'pharmacy_manager' && !pharmacyId) {
       setApiError('Por favor selecciona una farmacia.');
       return;
     }
@@ -346,7 +346,7 @@ export function RegisterForm() {
           return;
         }
       }
-      if ((role === 'pharmacy_manager' || role === 'delivery_driver') && !pharmacyId) {
+      if (role === 'pharmacy_manager' && !pharmacyId) {
         setApiError('Por favor selecciona una farmacia.');
         return;
       }
@@ -433,7 +433,7 @@ export function RegisterForm() {
       return;
     }
 
-    if ((role === 'pharmacy_manager' || role === 'delivery_driver') && !pharmacyId) {
+    if (role === 'pharmacy_manager' && !pharmacyId) {
       setApiError('Por favor selecciona una farmacia.');
       return;
     }
@@ -882,10 +882,10 @@ export function RegisterForm() {
                       )}
 
                       {/* Pharmacy Linkage */}
-                      {(role === 'pharmacy_manager' || role === 'delivery_driver') && (
+                      {role === 'delivery_driver' && (
                         <div>
                           <label htmlFor="register-pharmacy" className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
-                            Seleccionar Farmacia
+                            ¿Trabajas para una farmacia específica? (Opcional)
                           </label>
                           <div className="relative">
                             <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
@@ -903,15 +903,12 @@ export function RegisterForm() {
                                   onChange={(e) => setPharmacyId(e.target.value)}
                                   className="w-full h-11 pl-11 pr-10 rounded-xl text-sm bg-white/45 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:border-teal-500/50 focus:outline-none disabled:opacity-50 appearance-none bg-transparent cursor-pointer font-medium"
                                 >
-                                  {pharmacies.length === 0 ? (
-                                    <option value="" className="bg-white dark:bg-zinc-950 text-slate-500">No hay farmacias activas</option>
-                                  ) : (
-                                    pharmacies.map((pharmacy) => (
-                                      <option key={pharmacy.id} value={pharmacy.id} className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">
-                                        {pharmacy.name} ({pharmacy.address})
-                                      </option>
-                                    ))
-                                  )}
+                                  <option value="" className="bg-white dark:bg-zinc-950 text-slate-500">No, soy Repartidor Independiente</option>
+                                  {pharmacies.map((pharmacy) => (
+                                    <option key={pharmacy.id} value={pharmacy.id} className="bg-white dark:bg-zinc-950 text-slate-800 dark:text-zinc-200">
+                                      {pharmacy.name} ({pharmacy.address})
+                                    </option>
+                                  ))}
                                 </select>
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                                   <ChevronDown className="h-4 w-4 text-slate-400 dark:text-zinc-500" />

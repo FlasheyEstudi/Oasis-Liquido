@@ -105,7 +105,7 @@ model PharmacyManagerProfile {
 
 model DeliveryDriverProfile {
   userId         String   @id @map("user_id")
-  pharmacyId     String   @map("pharmacy_id")
+  pharmacyId     String?  @map("pharmacy_id")
   vehicleType    String   @default("motocicleta")
   licensePlate   String?
   isAvailable    Boolean  @default(true)
@@ -115,8 +115,8 @@ model DeliveryDriverProfile {
   baseSalary     Float?   @map("base_salary")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  pharmacy       Pharmacy @relation(fields: [pharmacyId], references: [id])
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pharmacy       Pharmacy? @relation(fields: [pharmacyId], references: [id])
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([pharmacyId])
   @@map("delivery_driver_profiles")

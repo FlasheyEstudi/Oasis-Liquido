@@ -78,6 +78,9 @@ export async function POST(req: NextRequest) {
       return errorResponse(ErrorCodes.VALIDATION_ERROR, 'Se requiere una clínica válida para registrarse con este rol.', 400);
     }
 
+    if (error.message === 'CANNOT_CLAIM_EXISTING_ENTITY_WITHOUT_INVITATION') {
+      return errorResponse(ErrorCodes.FORBIDDEN, 'Para unirte a una clínica o farmacia existente debes recibir una invitación.', 403);
+    }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor en el registro.', 500);
   }
 }

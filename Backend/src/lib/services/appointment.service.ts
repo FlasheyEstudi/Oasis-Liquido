@@ -132,6 +132,18 @@ export async function createAppointment(data: {
   const duration = data.duration_minutes || 30;
   const endTime = new Date(startTime.getTime() + duration * 60000);
 
+  // Security: Verify the doctor actually works at the specified clinic
+  const doctorProfile = await db.doctorProfile.findFirst({
+    where: {
+      userId: data.doctor_id,
+      clinicId: data.clinic_id,
+    }
+  });
+
+  if (!doctorProfile) {
+    throw new Error('FORBIDDEN: El doctor no pertenece a la clínica especificada.');
+  }
+
   // Check for overlapping appointments for this doctor
   const conflict = await db.appointment.findFirst({
     where: {
@@ -351,12 +363,22 @@ export async function updateAppointment(
     throw new Error('NOT_FOUND');
   }
 
-  const isAuthorized = 
-    userRole === 'admin' || 
-    userRole === 'clinic_admin' || 
-    userRole === 'receptionist' ||
-    current.patientId === userId ||
-    current.doctorId === userId;
+  let isAuthorized = false;
+  if (userRole === 'admin') {
+    isAuthorized = true;
+  } else if (current.patientId === userId || current.doctorId === userId) {
+    isAuthorized = true;
+  } else if (userRole === 'receptionist') {
+    const profile = await db.receptionistProfile.findUnique({ where: { userId } });
+    if (profile && profile.clinicId === current.clinicId) {
+      isAuthorized = true;
+    }
+  } else if (userRole === 'clinic_admin') {
+    const clinic = await db.clinic.findFirst({ where: { id: current.clinicId, ownerId: userId } });
+    if (clinic) {
+      isAuthorized = true;
+    }
+  }
 
   if (!isAuthorized) {
     throw new Error('UNAUTHORIZED');

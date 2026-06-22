@@ -49,7 +49,7 @@ export async function createSale(
         if (!inventoryItem) {
           throw new Error(`INSUFFICIENT_STOCK: Medicine ${item.medicine_id} insufficient stock`);
         }
-        if (!data.prescription_id && inventoryItem.quantity < item.quantity) {
+        if (inventoryItem.quantity < item.quantity) {
           throw new Error(`INSUFFICIENT_STOCK: Medicine ${item.medicine_id} insufficient stock`);
         }
         unitPrice = inventoryItem.unitPrice;
@@ -103,7 +103,7 @@ export async function createSale(
           paidTotalInNio += amt;
         }
       }
-      if (paidTotalInNio < totalAmount) {
+      if (paidTotalInNio < totalAmount - 0.01) {
         throw new Error('INSUFFICIENT_PAYMENT');
       }
       changeAmount = paidTotalInNio - totalAmount;
@@ -158,8 +158,8 @@ export async function createSale(
       },
     });
 
-    // Decrement inventory only for pharmacy sales using FEFO, unless it's a prescription sale
-    if (pharmacyId && !data.clinic_id && !data.prescription_id) {
+    // Decrement inventory only for pharmacy sales using FEFO
+    if (pharmacyId && !data.clinic_id) {
       for (const item of data.items) {
         const inventoryItem = await tx.inventory.findFirst({
           where: { pharmacyId, medicineId: item.medicine_id },
@@ -210,7 +210,6 @@ export async function createSale(
             console.error('Error triggering low stock warning:', stockErr);
           }
 
-          // Record movement for Kardex safely
           if ('inventoryMovement' in tx) {
             try {
               await (tx as any).inventoryMovement.create({
@@ -226,6 +225,44 @@ export async function createSale(
               console.error('Failed to create Kardex inventory movement record:', kardexErr);
             }
           }
+        }
+        
+        // Fulfill prescription line if this sale is for a prescription
+        if (data.prescription_id) {
+          const pLine = await tx.prescriptionLine.findFirst({
+            where: { prescriptionId: data.prescription_id, medicineId: item.medicine_id }
+          });
+          if (pLine) {
+            const newFulfilled = pLine.quantityFulfilled + item.quantity;
+            await tx.prescriptionLine.update({
+              where: { id: pLine.id },
+              data: { quantityFulfilled: newFulfilled > pLine.quantity ? pLine.quantity : newFulfilled }
+            });
+          }
+        }
+      }
+
+      // Update prescription status if all lines are fulfilled
+      if (data.prescription_id) {
+        const pLines = await tx.prescriptionLine.findMany({
+          where: { prescriptionId: data.prescription_id }
+        });
+        const allFulfilled = pLines.length > 0 && pLines.every((l: any) => l.quantityFulfilled >= l.quantity);
+        const anyFulfilled = pLines.some((l: any) => l.quantityFulfilled > 0);
+        
+        let newStatus = 'active';
+        if (allFulfilled) {
+          newStatus = 'fulfilled';
+        } else if (anyFulfilled) {
+          newStatus = 'partially_fulfilled';
+        }
+        
+        const existingPrescription = await tx.prescription.findUnique({ where: { id: data.prescription_id } });
+        if (existingPrescription && existingPrescription.status !== newStatus) {
+          await tx.prescription.update({
+            where: { id: data.prescription_id },
+            data: { status: newStatus as any }
+          });
         }
       }
     }

@@ -39,6 +39,14 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
     const validation = validateBody(updatePharmacySchema, body);
     if (!validation.success) return validation.error;
 
+    if (req.user.role !== 'admin') {
+      const { verifyFacilityAccess } = await import('@/lib/auth/access');
+      const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, id, 'pharmacy');
+      if (!hasAccess) {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permiso para actualizar esta farmacia', 403);
+      }
+    }
+
     const updated = await pharmacyService.updatePharmacy(
       id,
       validation.data,
@@ -54,4 +62,4 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
-}, { roles: ['admin'] });
+}, { roles: ['admin', 'pharmacy_admin'] });

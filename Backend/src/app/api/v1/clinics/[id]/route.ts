@@ -36,6 +36,14 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
     const validation = validateBody(updateClinicSchema, body);
     if (!validation.success) return validation.error;
 
+    if (req.user.role !== 'admin') {
+      const { verifyFacilityAccess } = await import('@/lib/auth/access');
+      const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, id, 'clinic');
+      if (!hasAccess) {
+        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes permiso para actualizar esta clínica', 403);
+      }
+    }
+
     const updated = await clinicService.updateClinic(
       id,
       validation.data,
@@ -51,5 +59,5 @@ export const PATCH = withAuth(async (req: AuthenticatedRequest, context: { param
     }
     return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
   }
-}, { roles: ['admin'] });
+}, { roles: ['admin', 'clinic_admin'] });
 

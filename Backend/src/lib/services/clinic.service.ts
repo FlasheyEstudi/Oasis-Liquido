@@ -56,6 +56,16 @@ export async function getClinics(filters: {
     where.ownerId = filters.ownerId;
   }
 
+  if (filters.lat !== undefined && filters.lng !== undefined) {
+    const radiusKm = filters.radiusKm || 10;
+    // Bounding box approximation (1 degree is ~111km) to filter at the DB level
+    const latDelta = radiusKm / 111;
+    const lngDelta = radiusKm / (111 * Math.cos(filters.lat * (Math.PI / 180)));
+    
+    where.latitude = { gte: filters.lat - latDelta, lte: filters.lat + latDelta };
+    where.longitude = { gte: filters.lng - lngDelta, lte: filters.lng + lngDelta };
+  }
+
   let clinics = await db.clinic.findMany({
     where,
     include: {

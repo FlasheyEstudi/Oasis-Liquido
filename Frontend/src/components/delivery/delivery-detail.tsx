@@ -22,6 +22,7 @@ import type { MapMarker } from '@/components/common/map-view';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useNativeBridge } from '@/components/providers/native-provider';
 import {
   ArrowLeft,
   MapPin,
@@ -69,6 +70,7 @@ function SwipeButton({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragRange, setDragRange] = useState(150);
   const x = useMotionValue(0);
+  const { triggerNativeVibration } = useNativeBridge();
 
   useEffect(() => {
     if (containerRef.current) {
@@ -79,9 +81,7 @@ function SwipeButton({
 
   const handleDragEnd = () => {
     if (x.get() >= dragRange * 0.85) {
-      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate([80, 30, 80]);
-      }
+      triggerNativeVibration([80, 30, 80]);
       onConfirm();
     }
     animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
@@ -134,6 +134,7 @@ function SwipeButton({
 export function DeliveryDetail() {
   const { user, selectedItemId, setNotification, navigate, isElderlyMode } = useAuthStore();
   const driverId = user?.id || '';
+  const { isWebView, triggerNativeVibration, startNativeQRScan, toggleNativeLocationTracking } = useNativeBridge();
 
   const [confirmDeliveryOpen, setConfirmDeliveryOpen] = useState(false);
   const [receiverName, setReceiverName] = useState('');
@@ -174,6 +175,19 @@ export function DeliveryDetail() {
 
   // Use the optimized telemetry hook
   useDriverLocationStream(order?.id || '', order?.status === 'in_transit');
+
+  // Toggle native location tracking service in Android WebView wrapper
+  useEffect(() => {
+    if (order?.id) {
+      const isTracking = order.status === 'in_transit';
+      toggleNativeLocationTracking(isTracking, order.id);
+    }
+    return () => {
+      if (order?.id) {
+        toggleNativeLocationTracking(false, order.id);
+      }
+    };
+  }, [order?.id, order?.status, toggleNativeLocationTracking]);
 
   const handleStatusUpdate = (newStatus: 'picked_up' | 'in_transit' | 'delivered') => {
     if (!order) return;
@@ -229,9 +243,7 @@ export function DeliveryDetail() {
 
     if (scannedPatientId !== expectedId) {
       setVerificationError('Código QR incorrecto. No coincide con el ID digital de este paciente.');
-      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate([200, 100, 200]);
-      }
+      triggerNativeVibration([200, 100, 200]);
       return;
     }
 
@@ -244,9 +256,7 @@ export function DeliveryDetail() {
             type: 'success', 
             message: `Pedido entregado exitosamente a: ${receiverName || order.patient?.name}` 
           });
-          if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-            navigator.vibrate([150, 40, 150]);
-          }
+          triggerNativeVibration([150, 40, 150]);
           setConfirmDeliveryOpen(false);
           setReceiverName('');
           setPatientQrCode('');
@@ -548,10 +558,26 @@ export function DeliveryDetail() {
                       size="sm"
                       type="button"
                       className="bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-[9px] font-black uppercase tracking-widest rounded-xl px-3 border border-teal-500/10 cursor-pointer flex items-center gap-1 shrink-0"
-                      onClick={() => setIsScannerActive(!isScannerActive)}
+                      onClick={() => {
+                        if (isWebView) {
+                          startNativeQRScan(
+                            (scannedData) => {
+                              setPatientQrCode(scannedData);
+                              setReceiverName(order.patient?.name || '');
+                              setVerificationError('');
+                              triggerNativeVibration([100]);
+                            },
+                            (error) => {
+                              setVerificationError('Error al escanear con la cámara del sistema.');
+                            }
+                          );
+                        } else {
+                          setIsScannerActive(!isScannerActive);
+                        }
+                      }}
                     >
                       <Camera className="size-3.5" />
-                      {isScannerActive ? 'Cerrar' : 'Cámara'}
+                      {isWebView ? 'Escanear QR' : (isScannerActive ? 'Cerrar' : 'Cámara')}
                     </Button>
                     <Button
                       size="sm"

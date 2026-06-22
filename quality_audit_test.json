@@ -1,0 +1,52 @@
+{
+  "backend": {
+    "build": {
+      "success": true,
+      "raw_error_snippet": ""
+    },
+    "lint": {
+      "success": true,
+      "summary": {
+        "total_problems": 0,
+        "errors": 0,
+        "warnings": 0
+      },
+      "raw_error_snippet": ""
+    },
+    "test": {
+      "success": true,
+      "summary": {
+        "total_tests": 7,
+        "passed": 7,
+        "failed": 0,
+        "success_rate": 100.0
+      },
+      "raw_error_snippet": ""
+    }
+  },
+  "frontend": {
+    "build": {
+      "success": true,
+      "raw_error_snippet": ""
+    },
+    "lint": {
+      "success": true,
+      "summary": {
+        "total_problems": 0,
+        "errors": 0,
+        "warnings": 0
+      },
+      "raw_error_snippet": ""
+    },
+    "test": {
+      "success": true,
+      "summary": {
+        "total_tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "success_rate": 0
+      },
+      "raw_error_snippet": "No test files found"
+    }
+  }
+}

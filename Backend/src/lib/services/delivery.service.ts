@@ -26,8 +26,17 @@ export async function getDeliveryOrders(filters: {
   if (filters.userRole === 'patient' && filters.userId) {
     where.patientId = filters.userId;
   } else if (filters.userRole === 'delivery_driver' && filters.userId) {
-    where.deliveryDriverId = filters.userId;
-  } else if (filters.userRole === 'pharmacy_manager' && filters.userId) {
+    const profile = await db.deliveryDriverProfile.findUnique({ where: { userId: filters.userId } });
+    
+    where.OR = [
+      { deliveryDriverId: filters.userId },
+      { 
+        status: 'pending', 
+        deliveryDriverId: null,
+        ...(profile?.pharmacyId ? { pharmacyId: profile.pharmacyId } : {}) 
+      }
+    ];
+  } else if ((filters.userRole === 'pharmacy_manager' || filters.userRole === 'cashier') && filters.userId) {
     // Get pharmacy_manager's pharmacy
     const profile = await db.pharmacyManagerProfile.findUnique({
       where: { userId: filters.userId },
@@ -105,6 +114,15 @@ export async function updateDeliveryStatus(
   const currentStatus = order.status;
 
   if (userRole === 'pharmacy_manager' || userRole === 'pharmacy_admin' || userRole === 'admin') {
+    // Verify multi-tenant access
+    if (userRole === 'pharmacy_manager') {
+      const profile = await db.pharmacyManagerProfile.findUnique({ where: { userId } });
+      if (!profile || profile.pharmacyId !== order.pharmacyId) throw new Error('FORBIDDEN');
+    } else if (userRole === 'pharmacy_admin') {
+      const pharmacy = await db.pharmacy.findUnique({ where: { id: order.pharmacyId } });
+      if (!pharmacy || pharmacy.ownerId !== userId) throw new Error('FORBIDDEN');
+    }
+
     // Managers and Admins can: pending → assigned (with driver_id)
     if (currentStatus !== 'pending' || newStatus !== 'assigned') {
       throw new Error('INVALID_STATUS_TRANSITION');
@@ -113,8 +131,9 @@ export async function updateDeliveryStatus(
       throw new Error('VALIDATION_ERROR: delivery_driver_id required for assignment');
     }
   } else if (userRole === 'delivery_driver') {
-    // delivery_driver can: assigned → picked_up, picked_up → in_transit, in_transit → delivered
+    // delivery_driver can: pending -> assigned (self assign), assigned → picked_up, picked_up → in_transit, in_transit → delivered
     const driverTransitions: Record<string, string> = {
+      pending: 'assigned',
       assigned: 'picked_up',
       picked_up: 'in_transit',
       in_transit: 'delivered',
@@ -122,9 +141,19 @@ export async function updateDeliveryStatus(
     if (driverTransitions[currentStatus] !== newStatus) {
       throw new Error('INVALID_STATUS_TRANSITION');
     }
-    // Verify this driver is assigned
-    if (order.deliveryDriverId !== userId) {
-      throw new Error('FORBIDDEN');
+    
+    if (currentStatus === 'pending' && newStatus === 'assigned') {
+      // Self assignment
+      const profile = await db.deliveryDriverProfile.findUnique({ where: { userId } });
+      if (!profile) throw new Error('FORBIDDEN');
+      if (profile.pharmacyId && profile.pharmacyId !== order.pharmacyId) throw new Error('FORBIDDEN');
+      
+      deliveryDriverId = userId; // Override requested driver ID with self
+    } else {
+      // Verify this driver is assigned for subsequent steps
+      if (order.deliveryDriverId !== userId) {
+        throw new Error('FORBIDDEN');
+      }
     }
   } else {
     throw new Error('FORBIDDEN');
@@ -161,13 +190,7 @@ export async function updateDeliveryStatus(
     });
   }
 
-  // Deactivate chat session if delivery is completed or failed
-  if (['delivered', 'failed'].includes(newStatus)) {
-    await db.chatSession.updateMany({
-      where: { targetId: id },
-      data: { isActive: false }
-    }).catch(e => console.error('Failed to deactivate chat session in updateDeliveryStatus:', e));
-  }
+  // Chat sessions remain active post-delivery for a grace period (handled by cron) to allow offline messages and post-delivery support.
 
   await createAuditLog({
     userId,

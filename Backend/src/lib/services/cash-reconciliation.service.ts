@@ -91,9 +91,9 @@ export async function getCashSummary(
     entityId,
     entityType,
     date: startOfDay.toISOString().split('T')[0],
-    expectedCash: parseFloat(expectedCash.toFixed(2)),
-    expectedCard: parseFloat(expectedCard.toFixed(2)),
-    expectedTotal: parseFloat((expectedCash + expectedCard).toFixed(2)),
+    expectedCash: Math.round(expectedCash * 100) / 100,
+    expectedCard: Math.round(expectedCard * 100) / 100,
+    expectedTotal: Math.round((expectedCash + expectedCard) * 100) / 100,
     salesCount: sales.length,
   };
 }
@@ -163,9 +163,9 @@ export async function createCashReconciliation(
       total: totalActualDeclared,
     },
     discrepancies: {
-      cash: parseFloat(discrepancyCash.toFixed(2)),
-      card: parseFloat(discrepancyCard.toFixed(2)),
-      total: parseFloat(totalDiscrepancy.toFixed(2)),
+      cash: Math.round(discrepancyCash * 100) / 100,
+      card: Math.round(discrepancyCard * 100) / 100,
+      total: Math.round(totalDiscrepancy * 100) / 100,
     },
     status: reconciliationStatus,
     notes: notes || '',

@@ -33,6 +33,7 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { BetaFeedback } from "@/components/common/BetaFeedback";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { FamilyProvider } from "@/contexts/FamilyContext";
+import { NativeProvider } from "@/components/providers/native-provider";
 
 export default function RootLayout({
   children,
@@ -54,11 +55,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            <FamilyProvider>
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
-            </FamilyProvider>
+            <NativeProvider>
+              <FamilyProvider>
+                <ErrorBoundary>
+                  {children}
+                </ErrorBoundary>
+              </FamilyProvider>
+            </NativeProvider>
             <Toaster />
             <BetaFeedback />
             <PWAInitializer />

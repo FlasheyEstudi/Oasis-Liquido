@@ -261,7 +261,7 @@ export async function verifyFamilyLink(
  * Update permissions for a family relationship
  */
 export async function updateFamilyPermissions(
-  caregiverId: string,
+  userId: string,
   relationshipId: string,
   permissions: string[],
   ipAddress?: string,
@@ -270,7 +270,7 @@ export async function updateFamilyPermissions(
   const existing = await db.familyRelationship.findFirst({
     where: {
       id: relationshipId,
-      caregiverId,
+      patientId: userId,
     },
   });
 
@@ -285,7 +285,7 @@ export async function updateFamilyPermissions(
 
   // Audit log
   await createAuditLog({
-    userId: caregiverId,
+    userId,
     action: 'update',
     entityType: 'family_relationship',
     entityId: relationshipId,

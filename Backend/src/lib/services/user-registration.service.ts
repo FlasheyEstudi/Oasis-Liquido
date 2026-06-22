@@ -88,6 +88,14 @@ export async function registerUser(
     }
   }
 
+  // Security: Prevent hijacking existing clinics or pharmacies
+  if (role !== 'patient' && role !== 'admin') {
+    if ((pharmacyId || clinicId) && !invitationToken) {
+      console.log('[REGISTER] Error: Intento de secuestro de entidad existente sin invitación.');
+      throw new Error('CANNOT_CLAIM_EXISTING_ENTITY_WITHOUT_INVITATION');
+    }
+  }
+
   // Pharmacy admin/manager validation
   if (role === 'pharmacy_admin' || role === 'pharmacy_manager') {
     if (!pharmacyId) {
@@ -155,7 +163,7 @@ export async function registerUser(
         await tx.deliveryDriverProfile.create({
           data: {
             userId: user.id,
-            pharmacyId: pharmacyId!,
+            pharmacyId: pharmacyId || null,
             vehicleType: vehicleType || 'motocicleta',
             licensePlate: licensePlate || null,
             isAvailable: true,
