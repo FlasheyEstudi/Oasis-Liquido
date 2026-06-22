@@ -32,6 +32,9 @@ export const POST = withAuth(
       if (error.message === 'PRESCRIPTION_FULFILLED') {
         return errorResponse(ErrorCodes.INVALID_STATUS_TRANSITION, 'Receta ya dispensada completamente', 400);
       }
+      if (error.message === 'PRESCRIPTION_SIGNATURE_TAMPERED') {
+        return errorResponse(ErrorCodes.UNAUTHORIZED, 'La firma de la receta ha sido alterada o es inválida', 401);
+      }
       return errorResponse(ErrorCodes.INTERNAL_ERROR, 'Error interno del servidor', 500);
     }
   },
