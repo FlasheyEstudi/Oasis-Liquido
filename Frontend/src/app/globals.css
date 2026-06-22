@@ -472,6 +472,7 @@
   padding-right: 10px;
   padding-top: 1rem;
   padding-bottom: 1.5rem;
+  overflow-anchor: none; /* Fix: Evita advertencias de scroll anchoring */
 }
 
 @media (min-width: 480px) {

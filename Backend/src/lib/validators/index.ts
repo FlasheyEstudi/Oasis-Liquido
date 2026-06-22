@@ -258,6 +258,7 @@ export function validateBody<T>(schema: z.ZodSchema<T>, data: unknown): { succes
   const result = schema.safeParse(data);
   if (!result.success) {
     const messages = result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ');
+    console.error('[Validation Error]:', messages);
     return {
       success: false,
       error: NextResponse.json(

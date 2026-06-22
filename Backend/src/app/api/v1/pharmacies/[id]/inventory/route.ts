@@ -14,9 +14,11 @@ export const GET = withAuth(
       const { id } = await context.params;
 
       // Verify access to this pharmacy using centralized access control helper
-      const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, id, 'pharmacy');
-      if (!hasAccess) {
-        return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
+      if (!['patient', 'doctor'].includes(req.user.role)) {
+        const hasAccess = await verifyFacilityAccess(req.user.userId, req.user.role, id, 'pharmacy');
+        if (!hasAccess) {
+          return errorResponse(ErrorCodes.FORBIDDEN, 'No tienes acceso a esta farmacia', 403);
+        }
       }
 
       const { searchParams } = new URL(req.url);

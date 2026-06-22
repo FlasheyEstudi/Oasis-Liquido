@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 
 const PHOTON_URL = process.env.PHOTON_URL || 'https://photon.komoot.io';
 
@@ -35,7 +34,12 @@ export function formatPhotonName(p: PhotonFeature['properties']): string {
 export async function searchPhoton(query: string, limit = 8): Promise<any[]> {
   try {
     const url = `${PHOTON_URL}/api?q=${encodeURIComponent(query)}&limit=${limit}&lang=es&lat=12.1149&lon=-86.2362`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(url, { 
+      signal: AbortSignal.timeout(5000),
+      headers: {
+        'User-Agent': 'OasisLiquidaApp/1.0 (contact@oasisliquida.com)'
+      }
+    });
     if (!res.ok) {
       throw new Error(`Photon API search error: ${res.statusText}`);
     }
@@ -55,7 +59,12 @@ export async function searchPhoton(query: string, limit = 8): Promise<any[]> {
 export async function reversePhoton(lat: number, lng: number): Promise<string> {
   try {
     const url = `${PHOTON_URL}/reverse?lon=${lng}&lat=${lat}&lang=es`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(url, { 
+      signal: AbortSignal.timeout(5000),
+      headers: {
+        'User-Agent': 'OasisLiquidaApp/1.0 (contact@oasisliquida.com)'
+      }
+    });
     if (!res.ok) {
       throw new Error(`Photon API reverse error: ${res.statusText}`);
     }
