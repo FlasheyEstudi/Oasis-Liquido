@@ -160,6 +160,10 @@ export async function createSale(
 
     // Decrement inventory only for pharmacy sales using FEFO
     if (pharmacyId && !data.clinic_id) {
+      const existingPrescription = data.prescription_id
+        ? await tx.prescription.findUnique({ where: { id: data.prescription_id } })
+        : null;
+
       for (const item of data.items) {
         const inventoryItem = await tx.inventory.findFirst({
           where: { pharmacyId, medicineId: item.medicine_id },
@@ -171,7 +175,7 @@ export async function createSale(
           }
         });
 
-        if (inventoryItem) {
+        if (inventoryItem && (!existingPrescription || existingPrescription.status !== 'fulfilled')) {
           let remainingToDiscount = item.quantity;
 
           // FEFO: Discount from batches
@@ -202,7 +206,7 @@ export async function createSale(
             });
             const threshold = pharmacySettings?.minStockAlertThreshold ?? 10;
             if (newQty <= threshold) {
-              const { notifyLowStockAlert } = require('./event-notifications');
+              const { notifyLowStockAlert } = await import('./event-notifications');
               const medicine = await tx.medicine.findUnique({ where: { id: item.medicine_id } });
               notifyLowStockAlert(pharmacyId, medicine?.name || 'Medicamento', newQty).catch((err: any) => console.error(err));
             }

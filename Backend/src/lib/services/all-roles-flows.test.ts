@@ -264,6 +264,12 @@ vi.mock('@/lib/db', () => {
       findUnique: vi.fn(({ where }) => {
         const profile = mockDoctorProfiles.find(d => d.userId === where.userId);
         return Promise.resolve(profile || null);
+      }),
+      findFirst: vi.fn(({ where }) => {
+        const profile = mockDoctorProfiles.find(d => {
+          return Object.keys(where).every(k => d[k] === where[k]);
+        });
+        return Promise.resolve(profile || null);
       })
     },
     pharmacyManagerProfile: {
@@ -516,6 +522,12 @@ vi.mock('@/lib/db', () => {
           return Promise.resolve(mockPrescriptionLines[idx]);
         }
         return Promise.resolve(null);
+      }),
+      findFirst: vi.fn(({ where }) => {
+        const line = mockPrescriptionLines.find(l => {
+          return Object.keys(where).every(k => l[k] === where[k]);
+        });
+        return Promise.resolve(line || null);
       })
     },
     sale: {

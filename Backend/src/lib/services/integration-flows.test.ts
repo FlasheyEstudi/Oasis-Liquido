@@ -24,6 +24,7 @@ vi.mock('../db', () => {
     prescriptionLine: {
       update: vi.fn(),
       findMany: vi.fn(),
+      findFirst: vi.fn(),
     },
     inventory: {
       findFirst: vi.fn(),
@@ -90,6 +91,7 @@ describe('Oasis Nicaragua - End-to-End Business Flow Integration Tests', () => {
         id: doctorId,
         verificationStatus: 'approved',
         doctorProfile: {
+          clinicId: 'clinic-1',
           signaturePin: 'hashed-pin-1234', // Matches password verification helper mock
         },
       });
@@ -142,6 +144,7 @@ describe('Oasis Nicaragua - End-to-End Business Flow Integration Tests', () => {
         doctor: {
           id: doctorId,
           doctorProfile: {
+            clinicId: 'clinic-1',
             signaturePin: 'hashed-pin-1234',
           }
         }
@@ -235,6 +238,14 @@ describe('Oasis Nicaragua - End-to-End Business Flow Integration Tests', () => {
       expect(fulfilledResult!.status).toBe('fulfilled');
 
       // Create the Sale record
+      (db.prescriptionLine.findFirst as any).mockResolvedValue({
+        id: 'line-1',
+        prescriptionId: prescriptionId,
+        medicineId: 'med-1',
+        quantity: 5,
+        quantityFulfilled: 0,
+      });
+
       (db.sale.create as any).mockResolvedValue({
         id: 'sale-1',
         totalAmount: 250.0,

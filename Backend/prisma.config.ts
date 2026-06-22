@@ -1,8 +1,7 @@
-import { defineConfig } from 'prisma/config';
+import { defineConfig } from 'prisma';
 
 export default defineConfig({
-  schema: 'prisma/schema.prisma',
-  migrations: {
-    seed: 'npx jiti prisma/seed.ts',
+  seed: {
+    command: 'npx jiti prisma/seed.ts',
   },
 });

@@ -379,12 +379,12 @@ export async function acceptInvitation(
     // 4. Trigger in-app notifications to admins
     if (invitation.role === 'doctor' || invitation.role === 'receptionist') {
       if (invitation.clinicId) {
-        const { notifyInvitationAccepted } = require('./event-notifications');
+        const { notifyInvitationAccepted } = await import('./event-notifications');
         notifyInvitationAccepted(invitation.clinicId, name, invitation.role).catch((err: any) => console.error(err));
       }
     } else if (invitation.role === 'cashier' || invitation.role === 'delivery_driver') {
       if (invitation.pharmacyId) {
-        const { notifyPharmacyInvitationAccepted } = require('./event-notifications');
+        const { notifyPharmacyInvitationAccepted } = await import('./event-notifications');
         notifyPharmacyInvitationAccepted(invitation.pharmacyId, name, invitation.role).catch((err: any) => console.error(err));
       }
     }

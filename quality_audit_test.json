@@ -16,8 +16,8 @@
     "test": {
       "success": true,
       "summary": {
-        "total_tests": 7,
-        "passed": 7,
+        "total_tests": 34,
+        "passed": 34,
         "failed": 0,
         "success_rate": 100.0
       },
